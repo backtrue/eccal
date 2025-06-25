@@ -98,6 +98,19 @@ This is a full-stack web application built to help e-commerce businesses calcula
 - **Start**: `npm run start` - Runs production server
 - **Database**: `npm run db:push` - Pushes schema changes to database
 
+## Database Architecture
+
+### Core Tables
+- **sessions**: Google OAuth session management with PostgreSQL store
+- **users**: User profile data with Google tokens for API access
+- **user_metrics**: Historical analytics data with source tracking and raw data preservation
+
+### Data Flow
+1. Google OAuth authentication stores user profile and API tokens
+2. GA4 API integration fetches ecommerce metrics (AOV, conversion rate)
+3. Metrics stored with period tracking and source attribution
+4. Auto-fill calculator from most recent saved metrics
+
 ## Changelog
 
 ```
@@ -113,6 +126,7 @@ Changelog:
 - June 25, 2025. Added Google OAuth login and Analytics API integration
 - June 25, 2025. Updated for production deployment at eccal.thinkwithblack.com
 - June 25, 2025. Fixed redirect loop issue and proxy configuration for production
+- June 25, 2025. Completed GA4 data integration with multiple metric fallbacks and number formatting
 ```
 
 ## User Preferences
