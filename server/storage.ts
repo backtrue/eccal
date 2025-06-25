@@ -31,6 +31,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
+    // Check if user already exists
+    const existingUser = await this.getUser(userData.id);
+    const isNewUser = !existingUser;
+
     const [user] = await db
       .insert(users)
       .values(userData)
@@ -42,6 +46,22 @@ export class DatabaseStorage implements IStorage {
         },
       })
       .returning();
+
+    // If this is a new user and they have an email, add them to Brevo
+    if (isNewUser && user.email) {
+      try {
+        await brevoService.addContactToList({
+          email: user.email,
+          firstName: user.firstName || undefined,
+          lastName: user.lastName || undefined,
+          gaResourceName: '', // Will be updated later when they select GA resource
+        });
+      } catch (error) {
+        console.error('Failed to add user to Brevo:', error);
+        // Don't fail the user creation if Brevo fails
+      }
+    }
+
     return user;
   }
 
@@ -61,6 +81,25 @@ export class DatabaseStorage implements IStorage {
       .insert(userMetrics)
       .values(metrics)
       .returning();
+
+    // Update Brevo with GA resource name when user saves metrics
+    if (metrics.userId && metrics.gaResourceName) {
+      try {
+        const user = await this.getUser(metrics.userId);
+        if (user?.email) {
+          await brevoService.addContactToList({
+            email: user.email,
+            firstName: user.firstName || undefined,
+            lastName: user.lastName || undefined,
+            gaResourceName: metrics.gaResourceName,
+          });
+        }
+      } catch (error) {
+        console.error('Failed to update Brevo with GA resource name:', error);
+        // Don't fail the metrics save if Brevo fails
+      }
+    }
+
     return savedMetrics;
   }
 

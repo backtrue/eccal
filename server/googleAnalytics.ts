@@ -144,12 +144,23 @@ export class GoogleAnalyticsService {
         conversionRate,
       };
 
+      // Get GA resource name for Brevo integration
+      let gaResourceName = '';
+      try {
+        const properties = await this.getUserAnalyticsProperties(userId);
+        const selectedProperty = properties.find(p => p.id === propertyId);
+        gaResourceName = selectedProperty ? `${selectedProperty.displayName} (${selectedProperty.accountName})` : '';
+      } catch (error) {
+        console.error('Error getting GA resource name for Brevo:', error);
+      }
+
       // Save metrics to database
       await storage.saveUserMetrics({
         userId,
         averageOrderValue: averageOrderValue.toString(),
         conversionRate: (conversionRate / 100).toString(), // Store as decimal
         dataSource: 'google_analytics',
+        gaResourceName,
         periodStart: startDate,
         periodEnd: endDate,
         rawData: result,
