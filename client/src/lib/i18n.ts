@@ -46,6 +46,7 @@ export interface TranslationData {
   percentage: string;
   orders: string;
   visitors: string;
+  cpcValue: number;
   
   // Meta
   metaTitle: string;

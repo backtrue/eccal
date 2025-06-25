@@ -47,7 +47,7 @@ export default function Calculator() {
   });
 
   const onSubmit = (data: CalculatorFormData) => {
-    const cpc = 5; // Fixed CPC value
+    const cpc = t.cpcValue; // Locale-specific CPC value
     
     // Calculations
     const requiredOrders = Math.ceil(data.targetRevenue / data.averageOrderValue);
@@ -95,7 +95,14 @@ export default function Calculator() {
     form.setValue("conversionRate", data.conversionRate);
   };
 
-  const formatNumber = (num: number) => num.toLocaleString('zh-TW');
+  const formatNumber = (num: number) => {
+    const localeMap = {
+      'zh-TW': 'zh-TW',
+      'en': 'en-US', 
+      'ja': 'ja-JP'
+    };
+    return num.toLocaleString(localeMap[locale]);
+  };
 
   return (
     <div className="bg-gray-50 font-sans">
@@ -267,7 +274,7 @@ export default function Calculator() {
                       <div>
                         <h4 className="text-sm font-medium text-yellow-800">{locale === 'zh-TW' ? '固定參數' : locale === 'en' ? 'Fixed Parameters' : '固定パラメータ'}</h4>
                         <p className="text-sm text-yellow-700 mt-1">
-                          {t.costPerClick}：<span className="font-semibold">{t.currency} 5</span>
+                          {t.costPerClick}：<span className="font-semibold">{t.currency} {t.cpcValue}</span>
                         </p>
                       </div>
                     </div>
@@ -327,7 +334,7 @@ export default function Calculator() {
                         <div className="flex-1">
                           <h4 className="font-semibold text-gray-900">{locale === 'zh-TW' ? '計算廣告預算' : locale === 'en' ? 'Calculate Ad Budget' : '広告予算の計算'}</h4>
                           <p className="text-sm text-gray-600 mt-1">
-                            {formatNumber(results.requiredTraffic)} × {t.currency} 5 = <span className="font-semibold text-purple-600">{t.currency} {formatNumber(results.monthlyAdBudget)}</span>
+                            {formatNumber(results.requiredTraffic)} × {t.currency} {t.cpcValue} = <span className="font-semibold text-purple-600">{t.currency} {formatNumber(results.monthlyAdBudget)}</span>
                           </p>
                         </div>
                       </div>
@@ -442,7 +449,7 @@ export default function Calculator() {
                   <span className="text-2xl font-bold text-purple-600">3</span>
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">{locale === 'zh-TW' ? '計算月廣告預算' : locale === 'en' ? 'Calculate Monthly Ad Budget' : '月間広告予算を計算'}</h3>
-                <p className="text-sm text-gray-600">{locale === 'zh-TW' ? `所需流量 × CPC (${t.currency} 5)` : locale === 'en' ? `Required Traffic × CPC (${t.currency} 5)` : `必要トラフィック × CPC (${t.currency} 5)`}</p>
+                <p className="text-sm text-gray-600">{locale === 'zh-TW' ? `所需流量 × CPC (${t.currency} ${t.cpcValue})` : locale === 'en' ? `Required Traffic × CPC (${t.currency} ${t.cpcValue})` : `必要トラフィック × CPC (${t.currency} ${t.cpcValue})`}</p>
               </div>
 
               <div className="text-center">
