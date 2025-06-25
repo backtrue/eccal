@@ -9,6 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import Footer from "@/components/Footer";
+import GoogleLoginButton from "@/components/GoogleLoginButton";
+import AnalyticsDataLoader from "@/components/AnalyticsDataLoader";
+import { useAuth } from "@/hooks/useAuth";
 import { trackEvent } from "@/lib/analytics";
 import { trackCalculatorUsage, trackMetaEvent } from "@/lib/meta-pixel";
 
@@ -30,6 +33,7 @@ interface CalculationResults {
 export default function Calculator() {
   const [results, setResults] = useState<CalculationResults | null>(null);
   const [showSteps, setShowSteps] = useState(false);
+  const { isAuthenticated, user } = useAuth();
 
   const form = useForm<CalculatorFormData>({
     resolver: zodResolver(calculatorSchema),
@@ -84,6 +88,11 @@ export default function Calculator() {
     });
   };
 
+  const handleAnalyticsDataLoaded = (data: { averageOrderValue: number; conversionRate: number }) => {
+    form.setValue("averageOrderValue", data.averageOrderValue);
+    form.setValue("conversionRate", data.conversionRate);
+  };
+
   const formatNumber = (num: number) => num.toLocaleString('zh-TW');
 
   return (
@@ -106,6 +115,39 @@ export default function Calculator() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Google Login Section */}
+        {!isAuthenticated && (
+          <div className="mb-8 text-center">
+            <Card className="shadow-lg border border-blue-200 bg-blue-50">
+              <CardContent className="p-6">
+                <h2 className="text-xl font-semibold text-blue-900 mb-3">
+                  登入 Google 自動取得您的電商數據
+                </h2>
+                <p className="text-blue-700 mb-4">
+                  連接您的 Google Analytics 帳戶，自動取得平均客單價和轉換率，讓計算更精準。
+                </p>
+                <GoogleLoginButton />
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Welcome back message for authenticated users */}
+        {isAuthenticated && user && (
+          <div className="mb-6 text-center">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="text-green-700">
+                歡迎回來，{user.firstName || user.email}！您可以使用 Google Analytics 數據來自動填入計算機。
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Analytics Data Loader */}
+        {isAuthenticated && (
+          <AnalyticsDataLoader onDataLoaded={handleAnalyticsDataLoaded} />
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
           {/* Calculator Form */}
