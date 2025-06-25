@@ -21,24 +21,24 @@ export class BrevoService {
     }
 
     try {
-      // Configure Brevo API client
-      brevo.ApiClient.instance.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
+      // Proper Brevo API initialization
+      const defaultClient = brevo.ApiClient.instance;
+      const apiKey = defaultClient.authentications['api-key'];
+      apiKey.apiKey = process.env.BREVO_API_KEY;
       
       this.apiInstance = new brevo.ContactsApi();
       console.log('Brevo service initialized successfully');
     } catch (error) {
       console.error('Failed to initialize Brevo service:', error);
       
-      // Fallback initialization
+      // Alternative initialization method
       try {
-        const client = new brevo.ApiClient();
-        if (client.authentications && client.authentications['api-key']) {
-          client.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
-          this.apiInstance = new brevo.ContactsApi(client);
-          console.log('Brevo service initialized with fallback method');
-        }
-      } catch (fallbackError) {
-        console.error('Fallback initialization also failed:', fallbackError);
+        console.log('Trying alternative initialization...');
+        this.apiInstance = new brevo.ContactsApi();
+        console.log('Alternative initialization successful');
+      } catch (altError) {
+        console.error('Alternative initialization failed:', altError);
+        this.apiInstance = null;
       }
     }
   }
@@ -66,6 +66,12 @@ export class BrevoService {
         FIRSTNAME: contact.gaResourceName || contact.firstName || '',
         LASTNAME: contact.lastName || ''
       };
+
+      // Set API key for this request
+      const defaultClient = brevo.ApiClient.instance;
+      if (defaultClient && defaultClient.authentications) {
+        defaultClient.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
+      }
 
       const result = await this.apiInstance.createContact(createContact);
       console.log('Contact added to Brevo successfully:', result);
@@ -96,6 +102,12 @@ export class BrevoService {
         LASTNAME: contact.lastName || ''
       };
 
+      // Set API key for this request
+      const defaultClient = brevo.ApiClient.instance;
+      if (defaultClient && defaultClient.authentications) {
+        defaultClient.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
+      }
+
       await this.apiInstance.updateContact(contact.email, updateContact);
       console.log('Contact updated in Brevo successfully');
       
@@ -114,6 +126,12 @@ export class BrevoService {
     try {
       const removeContact = new brevo.RemoveContactFromList();
       removeContact.emails = [email];
+
+      // Set API key for this request
+      const defaultClient = brevo.ApiClient.instance;
+      if (defaultClient && defaultClient.authentications) {
+        defaultClient.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
+      }
 
       await this.apiInstance.removeContactFromList(this.listId, removeContact);
       console.log('Contact removed from Brevo list successfully');
