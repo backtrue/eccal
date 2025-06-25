@@ -67,18 +67,33 @@ export class BrevoService {
         LASTNAME: contact.lastName || ''
       };
 
-      // Set API key for this request
-      const defaultClient = brevo.ApiClient.instance;
-      if (defaultClient && defaultClient.authentications) {
-        defaultClient.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
-      }
+      // Direct API call with fetch
+      const result = await fetch('https://api.brevo.com/v3/contacts', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'content-type': 'application/json',
+          'api-key': process.env.BREVO_API_KEY!
+        },
+        body: JSON.stringify({
+          email: contact.email,
+          attributes: {
+            FIRSTNAME: contact.gaResourceName || contact.firstName || '',
+            LASTNAME: contact.lastName || ''
+          },
+          listIds: [this.listId]
+        })
+      });
 
-      const result = await this.apiInstance.createContact(createContact);
+      if (!result.ok) {
+        const errorText = await result.text();
+        throw new Error(`Brevo API error: ${result.status} - ${errorText}`);
+      }
       console.log('Contact added to Brevo successfully:', result);
       
     } catch (error: any) {
       // Check if contact already exists
-      if (error.status === 400 && error.response?.text?.includes('Contact already exist')) {
+      if (error.message.includes('400') && (error.message.includes('duplicate') || error.message.includes('already exists'))) {
         console.log('Contact already exists in Brevo, updating...');
         await this.updateContact(contact);
       } else {
@@ -102,13 +117,27 @@ export class BrevoService {
         LASTNAME: contact.lastName || ''
       };
 
-      // Set API key for this request
-      const defaultClient = brevo.ApiClient.instance;
-      if (defaultClient && defaultClient.authentications) {
-        defaultClient.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
-      }
+      // Direct API call with fetch for update
+      const result = await fetch(`https://api.brevo.com/v3/contacts/${encodeURIComponent(contact.email)}`, {
+        method: 'PUT',
+        headers: {
+          'accept': 'application/json',
+          'content-type': 'application/json',
+          'api-key': process.env.BREVO_API_KEY!
+        },
+        body: JSON.stringify({
+          attributes: {
+            FIRSTNAME: contact.gaResourceName || contact.firstName || '',
+            LASTNAME: contact.lastName || ''
+          },
+          listIds: [this.listId]
+        })
+      });
 
-      await this.apiInstance.updateContact(contact.email, updateContact);
+      if (!result.ok) {
+        const errorText = await result.text();
+        throw new Error(`Brevo API error: ${result.status} - ${errorText}`);
+      }
       console.log('Contact updated in Brevo successfully');
       
     } catch (error) {
