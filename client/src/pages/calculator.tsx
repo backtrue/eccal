@@ -22,7 +22,7 @@ const createCalculatorSchema = (t: any) => z.object({
   conversionRate: z.number().positive(t.locale === 'zh-TW' ? "轉換率必須大於 0" : t.locale === 'en' ? "Conversion rate must be greater than 0" : "コンバージョン率は0より大きくなければなりません").max(100, t.locale === 'zh-TW' ? "轉換率不能超過 100%" : t.locale === 'en' ? "Conversion rate cannot exceed 100%" : "コンバージョン率は100%を超えることはできません"),
 });
 
-type CalculatorFormData = z.infer<typeof calculatorSchema>;
+type CalculatorFormData = z.infer<ReturnType<typeof createCalculatorSchema>>;
 
 interface CalculationResults {
   requiredOrders: number;
