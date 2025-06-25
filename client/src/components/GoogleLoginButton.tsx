@@ -7,7 +7,7 @@ interface GoogleLoginButtonProps {
 
 export default function GoogleLoginButton({ className }: GoogleLoginButtonProps) {
   const handleGoogleLogin = () => {
-    window.location.href = "/api/auth/google";
+    window.location.href = "https://eccal.thinkwithblack.com/api/auth/google";
   };
 
   return (

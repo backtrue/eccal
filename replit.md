@@ -110,6 +110,8 @@ Changelog:
 - June 25, 2025. Integrated Google Analytics (GA4) tracking
 - June 25, 2025. Integrated Meta Pixel tracking
 - June 25, 2025. Released V1.0 - Complete initial version with all core features
+- June 25, 2025. Added Google OAuth login and Analytics API integration
+- June 25, 2025. Updated for production deployment at eccal.thinkwithblack.com
 ```
 
 ## User Preferences

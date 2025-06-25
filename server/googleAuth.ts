@@ -23,8 +23,10 @@ export function setupGoogleAuth(app: Express) {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true,
       maxAge: sessionTtl,
+      sameSite: 'lax',
+      domain: '.thinkwithblack.com',
     },
   }));
 
@@ -35,7 +37,7 @@ export function setupGoogleAuth(app: Express) {
   passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    callbackURL: "/api/auth/google/callback",
+    callbackURL: "https://eccal.thinkwithblack.com/api/auth/google/callback",
     scope: [
       'profile',
       'email',
@@ -78,15 +80,15 @@ export function setupGoogleAuth(app: Express) {
   app.get('/api/auth/google', passport.authenticate('google'));
   
   app.get('/api/auth/google/callback', 
-    passport.authenticate('google', { failureRedirect: '/' }),
+    passport.authenticate('google', { failureRedirect: 'https://eccal.thinkwithblack.com/' }),
     (req, res) => {
-      res.redirect('/');
+      res.redirect('https://eccal.thinkwithblack.com/');
     }
   );
 
   app.get('/api/auth/logout', (req, res) => {
     req.logout(() => {
-      res.redirect('/');
+      res.redirect('https://eccal.thinkwithblack.com/');
     });
   });
 
