@@ -12,6 +12,7 @@ import { useAnalyticsProperties, useAnalyticsData, useUserMetrics } from "@/hook
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, Download, AlertCircle } from "lucide-react";
 import type { AnalyticsProperty } from "@/hooks/useAnalyticsData";
+import LogoutButton from "@/components/LogoutButton";
 
 interface AnalyticsDataLoaderProps {
   onDataLoaded: (data: { averageOrderValue: number; conversionRate: number }) => void;
