@@ -40,6 +40,7 @@ export interface TranslationData {
   companyName: string;
   allRightsReserved: string;
   courseLink: string;
+  blog: string;
   
   // Units
   currency: string;
