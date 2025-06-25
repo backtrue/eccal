@@ -77,7 +77,7 @@ export class GoogleAnalyticsService {
       // Calculate conversion rate: purchases / sessions
       const conversionRate = sessions > 0 ? (ecommercePurchases / sessions) * 100 : 0;
 
-      const analyticsData: AnalyticsData = {
+      const result: AnalyticsData = {
         sessions,
         totalRevenue,
         ecommercePurchases,
@@ -93,10 +93,10 @@ export class GoogleAnalyticsService {
         dataSource: 'google_analytics',
         periodStart: startDate,
         periodEnd: endDate,
-        rawData: analyticsData,
+        rawData: result,
       });
 
-      return analyticsData;
+      return result;
     } catch (error) {
       console.error('Error fetching Google Analytics data:', error);
       

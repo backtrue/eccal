@@ -1,7 +1,13 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { useAnalyticsProperties, useAnalyticsData, useUserMetrics } from "@/hooks/useAnalyticsData";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, Download, AlertCircle } from "lucide-react";
