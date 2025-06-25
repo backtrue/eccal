@@ -4,6 +4,8 @@
 
 This is a full-stack web application built to help e-commerce businesses calculate their advertising budget requirements based on revenue targets, average order value, and conversion rates. The application is branded as "報數據" (Report Data) and features a React frontend with a Node.js/Express backend, utilizing modern web technologies and UI components.
 
+**Version:** V1.0 - Complete initial release with core functionality, analytics tracking, and brand integration.
+
 ## System Architecture
 
 ### Frontend Architecture
@@ -105,6 +107,9 @@ Changelog:
 - June 25, 2025. Updated branding to "報數據-電商廣告預算計算機"
 - June 25, 2025. Added privacy policy and terms of service pages
 - June 25, 2025. Updated copyright to include 煜言顧問有限公司(TW) and 燈言顧問株式会社(JP)
+- June 25, 2025. Integrated Google Analytics (GA4) tracking
+- June 25, 2025. Integrated Meta Pixel tracking
+- June 25, 2025. Released V1.0 - Complete initial version with all core features
 ```
 
 ## User Preferences
