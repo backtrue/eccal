@@ -106,8 +106,8 @@ export default function Calculator() {
                 <CalcIcon className="text-white w-6 h-6" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">報數據-電商廣告預算計算機</h1>
-                <p className="text-sm text-gray-600">幫助您精準計算每日廣告投放預算</p>
+                <h1 className="text-2xl font-bold text-gray-900">廣告預算怎麼抓｜報數據來告訴你</h1>
+                <p className="text-sm text-gray-600">FB、IG 廣告預算流量要多少</p>
               </div>
             </div>
           </div>

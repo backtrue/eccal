@@ -38,18 +38,33 @@ export default function Footer() {
             <h4 className="text-lg font-semibold mb-4">快速連結</h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/" className="text-gray-300 hover:text-white transition-colors">
-                  預算計算機
-                </Link>
-              </li>
-              <li>
-                <a href="#features" className="text-gray-300 hover:text-white transition-colors">
-                  功能介紹
+                <a 
+                  href="https://www.pressplay.cc/link/s/88C22BDC" 
+                  className="text-gray-300 hover:text-white transition-colors"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  電商教學
                 </a>
               </li>
               <li>
-                <a href="#how-it-works" className="text-gray-300 hover:text-white transition-colors">
-                  使用方法
+                <a 
+                  href="https://www.pressplay.cc/link/s/5355C492" 
+                  className="text-gray-300 hover:text-white transition-colors"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  FB廣告初階教學
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="https://www.pressplay.cc/link/s/CAD627D3" 
+                  className="text-gray-300 hover:text-white transition-colors"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  FB廣告進階教學
                 </a>
               </li>
             </ul>

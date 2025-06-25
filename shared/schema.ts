@@ -43,6 +43,7 @@ export const userMetrics = pgTable("user_metrics", {
   averageOrderValue: decimal("average_order_value", { precision: 10, scale: 2 }),
   conversionRate: decimal("conversion_rate", { precision: 5, scale: 4 }), // e.g., 0.0125 for 1.25%
   dataSource: varchar("data_source", { length: 50 }), // 'google_analytics', 'google_ads', etc.
+  gaResourceName: varchar("ga_resource_name", { length: 255 }), // Store GA resource name for Brevo
   periodStart: timestamp("period_start").notNull(),
   periodEnd: timestamp("period_end").notNull(),
   rawData: jsonb("raw_data"), // Store the original API response
