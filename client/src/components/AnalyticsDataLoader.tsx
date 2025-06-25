@@ -127,11 +127,19 @@ export default function AnalyticsDataLoader({ onDataLoaded }: AnalyticsDataLoade
             )}
 
             {analyticsDataMutation.isError && (
-              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-center space-x-2 text-red-600">
-                  <AlertCircle className="w-4 h-4" />
-                  <span className="text-sm">取得數據失敗，請確認該資源有電商追蹤數據</span>
+              <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertCircle className="h-4 w-4 text-orange-600" />
+                  <span className="font-medium text-orange-800">數據載入提醒</span>
                 </div>
+                <p className="text-sm text-orange-700 mb-2">
+                  該 GA4 資源可能沒有電商追蹤數據，或數據量較少。您可以：
+                </p>
+                <ul className="text-sm text-orange-700 list-disc list-inside space-y-1">
+                  <li>確認 GA4 已設定增強型電子商務追蹤</li>
+                  <li>檢查是否有足夠的歷史數據（建議至少 7 天）</li>
+                  <li>或者手動輸入您已知的轉換率和客單價數據</li>
+                </ul>
               </div>
             )}
 

@@ -27,11 +27,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const data = await analyticsService.getEcommerceData(req.user.id, propertyId);
-      if (!data) {
-        return res.status(404).json({ error: 'No e-commerce data found for the specified period' });
-      }
-
-      res.json(data);
+      // Always return data, even if it's zero values
+      res.json(data || {
+        sessions: 0,
+        totalRevenue: 0,
+        ecommercePurchases: 0,
+        averageOrderValue: 0,
+        conversionRate: 0,
+      });
     } catch (error) {
       console.error('Error fetching Analytics data:', error);
       res.status(500).json({ error: 'Failed to fetch Analytics data' });

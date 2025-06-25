@@ -43,36 +43,77 @@ export class GoogleAnalyticsService {
         endDate: endDate.toISOString().split('T')[0],
       };
 
-      // Get e-commerce metrics from GA4
-      const response = await analyticsData.properties.runReport({
-        auth: oauth2Client,
-        property: `properties/${propertyId}`,
-        requestBody: {
-          dateRanges: [dateRange],
-          metrics: [
-            { name: 'sessions' },
-            { name: 'purchaseRevenue' }, // Total revenue from purchases
-            { name: 'purchases' }, // Number of purchase events
-            { name: 'averagePurchaseRevenue' }, // Average order value
-          ],
-          dimensions: [],
-        },
-      });
+      // Try multiple metric combinations to handle different GA4 setups
+      let response;
+      try {
+        // First try with enhanced ecommerce metrics
+        response = await analyticsData.properties.runReport({
+          auth: oauth2Client,
+          property: `properties/${propertyId}`,
+          requestBody: {
+            dateRanges: [dateRange],
+            metrics: [
+              { name: 'sessions' },
+              { name: 'purchaseRevenue' },
+              { name: 'purchases' },
+              { name: 'averagePurchaseRevenue' },
+            ],
+            dimensions: [],
+          },
+        });
+      } catch (error) {
+        console.log('Enhanced ecommerce metrics not available, trying basic metrics:', error);
+        // Fallback to basic metrics
+        response = await analyticsData.properties.runReport({
+          auth: oauth2Client,
+          property: `properties/${propertyId}`,
+          requestBody: {
+            dateRanges: [dateRange],
+            metrics: [
+              { name: 'sessions' },
+              { name: 'totalRevenue' },
+              { name: 'conversions' },
+              { name: 'eventValue' },
+            ],
+            dimensions: [],
+          },
+        });
+      }
 
       const rows = response.data.rows;
       if (!rows || rows.length === 0) {
-        return null;
+        console.log('No data rows returned from GA4');
+        // Return default values instead of null
+        return {
+          sessions: 0,
+          totalRevenue: 0,
+          ecommercePurchases: 0,
+          averageOrderValue: 0,
+          conversionRate: 0,
+        };
       }
 
       const metrics = rows[0].metricValues;
       if (!metrics || metrics.length < 4) {
-        return null;
+        console.log('Insufficient metrics returned from GA4');
+        return {
+          sessions: 0,
+          totalRevenue: 0,
+          ecommercePurchases: 0,
+          averageOrderValue: 0,
+          conversionRate: 0,
+        };
       }
 
       const sessions = parseFloat(metrics[0].value || '0');
       const totalRevenue = parseFloat(metrics[1].value || '0');
       const ecommercePurchases = parseFloat(metrics[2].value || '0');
-      const averageOrderValue = parseFloat(metrics[3].value || '0');
+      // Calculate AOV from revenue and purchases if not directly available
+      const averageOrderValue = metrics[3] ? 
+        parseFloat(metrics[3].value || '0') : 
+        (ecommercePurchases > 0 ? totalRevenue / ecommercePurchases : 0);
+
+      console.log(`GA4 Data Retrieved: Sessions: ${sessions}, Revenue: ${totalRevenue}, Purchases: ${ecommercePurchases}, AOV: ${averageOrderValue}`);
 
       // Calculate conversion rate: purchases / sessions
       const conversionRate = sessions > 0 ? (ecommercePurchases / sessions) * 100 : 0;
