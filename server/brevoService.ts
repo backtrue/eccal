@@ -8,22 +8,36 @@ export interface BrevoContact {
 }
 
 export class BrevoService {
-  private apiInstance: brevo.ContactsApi;
+  private apiInstance: brevo.ContactsApi | null = null;
   private readonly listId = 15; // Brevo list #15
 
   constructor() {
+    console.log('Initializing Brevo service...');
+    console.log('BREVO_API_KEY exists:', !!process.env.BREVO_API_KEY);
+    
     if (!process.env.BREVO_API_KEY) {
-      throw new Error('BREVO_API_KEY environment variable is required');
+      console.warn('BREVO_API_KEY not found, Brevo integration will be disabled');
+      return;
     }
 
-    const defaultClient = brevo.ApiClient.instance;
-    const apiKey = defaultClient.authentications['api-key'];
-    apiKey.apiKey = process.env.BREVO_API_KEY;
-    
-    this.apiInstance = new brevo.ContactsApi();
+    try {
+      const defaultClient = brevo.ApiClient.instance;
+      const apiKey = defaultClient.authentications['api-key'];
+      apiKey.apiKey = process.env.BREVO_API_KEY;
+      
+      this.apiInstance = new brevo.ContactsApi();
+      console.log('Brevo service initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize Brevo service:', error);
+    }
   }
 
   async addContactToList(contact: BrevoContact): Promise<void> {
+    if (!this.apiInstance) {
+      console.log('Brevo service not initialized, skipping contact addition');
+      return;
+    }
+
     try {
       console.log(`Adding contact to Brevo list #${this.listId}:`, {
         email: contact.email,
@@ -58,6 +72,11 @@ export class BrevoService {
   }
 
   private async updateContact(contact: BrevoContact): Promise<void> {
+    if (!this.apiInstance) {
+      console.log('Brevo service not initialized, skipping contact update');
+      return;
+    }
+
     try {
       const updateContact = new brevo.UpdateContact();
       updateContact.listIds = [this.listId];
@@ -76,6 +95,11 @@ export class BrevoService {
   }
 
   async removeContactFromList(email: string): Promise<void> {
+    if (!this.apiInstance) {
+      console.log('Brevo service not initialized, skipping contact removal');
+      return;
+    }
+
     try {
       const removeContact = new brevo.RemoveContactFromList();
       removeContact.emails = [email];

@@ -127,6 +127,10 @@ Changelog:
 - June 25, 2025. Updated for production deployment at eccal.thinkwithblack.com
 - June 25, 2025. Fixed redirect loop issue and proxy configuration for production
 - June 25, 2025. Completed GA4 data integration with multiple metric fallbacks and number formatting
+- June 25, 2025. Added Google logout functionality for switching between GA accounts
+- June 25, 2025. Integrated Brevo email marketing for list #15 automation
+- June 25, 2025. SEO optimization for "廣告預算怎麼抓" keyword with complete meta tags
+- June 25, 2025. Updated page content and footer links to course materials
 ```
 
 ## User Preferences
