@@ -10,6 +10,7 @@ import NotFound from "@/pages/not-found";
 import { useEffect } from "react";
 import { initGA } from "./lib/analytics";
 import { useAnalytics } from "./hooks/use-analytics";
+import { initMetaPixel } from "./lib/meta-pixel";
 
 function Router() {
   // Track page views when routes change
@@ -26,13 +27,20 @@ function Router() {
 }
 
 function App() {
-  // Initialize Google Analytics when app loads
+  // Initialize tracking when app loads
   useEffect(() => {
-    // Verify required environment variable is present
+    // Initialize Google Analytics
     if (!import.meta.env.VITE_GA_MEASUREMENT_ID) {
       console.warn('Missing required Google Analytics key: VITE_GA_MEASUREMENT_ID');
     } else {
       initGA();
+    }
+
+    // Initialize Meta Pixel
+    if (!import.meta.env.VITE_META_PIXEL_ID) {
+      console.warn('Missing required Meta Pixel ID: VITE_META_PIXEL_ID');
+    } else {
+      initMetaPixel();
     }
   }, []);
 

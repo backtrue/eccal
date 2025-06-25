@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import Footer from "@/components/Footer";
 import { trackEvent } from "@/lib/analytics";
+import { trackCalculatorUsage, trackMetaEvent } from "@/lib/meta-pixel";
 
 const calculatorSchema = z.object({
   targetRevenue: z.number().positive("目標營業額必須大於 0"),
@@ -64,6 +65,23 @@ export default function Calculator() {
     // Track additional metrics
     trackEvent('budget_result', 'calculator', 'monthly_budget', monthlyAdBudget);
     trackEvent('budget_result', 'calculator', 'daily_budget', dailyAdBudget);
+
+    // Track events in Meta Pixel
+    trackCalculatorUsage({
+      targetRevenue: data.targetRevenue,
+      averageOrderValue: data.averageOrderValue,
+      conversionRate: data.conversionRate,
+      monthlyAdBudget,
+      dailyAdBudget
+    });
+
+    // Track custom event for lead generation
+    trackMetaEvent('ViewContent', {
+      content_name: 'Budget Calculator Result',
+      content_type: 'calculator_result',
+      value: monthlyAdBudget,
+      currency: 'TWD'
+    });
   };
 
   const formatNumber = (num: number) => num.toLocaleString('zh-TW');
