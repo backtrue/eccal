@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import Footer from "@/components/Footer";
 
 const calculatorSchema = z.object({
   targetRevenue: z.number().positive("目標營業額必須大於 0"),
@@ -31,9 +32,9 @@ export default function Calculator() {
   const form = useForm<CalculatorFormData>({
     resolver: zodResolver(calculatorSchema),
     defaultValues: {
-      targetRevenue: undefined,
-      averageOrderValue: undefined,
-      conversionRate: undefined,
+      targetRevenue: 0,
+      averageOrderValue: 0,
+      conversionRate: 0,
     },
   });
 
@@ -110,7 +111,8 @@ export default function Calculator() {
                               placeholder="1000000"
                               className="pr-12"
                               {...field}
-                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                              value={field.value || ''}
+                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : 0)}
                             />
                             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                               <span className="text-gray-500 text-sm">NTD</span>
@@ -140,7 +142,8 @@ export default function Calculator() {
                               placeholder="1000"
                               className="pr-12"
                               {...field}
-                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                              value={field.value || ''}
+                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : 0)}
                             />
                             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                               <span className="text-gray-500 text-sm">NTD</span>
@@ -173,7 +176,8 @@ export default function Calculator() {
                               max="100"
                               className="pr-8"
                               {...field}
-                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                              value={field.value || ''}
+                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : 0)}
                             />
                             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                               <span className="text-gray-500 text-sm">%</span>
@@ -382,6 +386,7 @@ export default function Calculator() {
           </CardContent>
         </Card>
       </div>
+      <Footer />
     </div>
   );
 }
