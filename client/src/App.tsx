@@ -10,7 +10,9 @@ import NotFound from "@/pages/not-found";
 import { useEffect } from "react";
 import { initGA } from "./lib/analytics";
 import { useAnalytics } from "./hooks/use-analytics";
+import { useLocale } from "./hooks/useLocale";
 import { initMetaPixel } from "./lib/meta-pixel";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 function Router() {
   // Track page views when routes change
@@ -18,12 +20,29 @@ function Router() {
   const { t } = useLocale();
   
   return (
-    <Switch>
-      <Route path="/" component={Calculator} />
-      <Route path="/privacy-policy" component={PrivacyPolicy} />
-      <Route path="/terms-of-service" component={TermsOfService} />
-      <Route component={NotFound} />
-    </Switch>
+    <div className="min-h-screen flex flex-col">
+      {/* Header with Language Switcher */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-3">
+              <h1 className="text-xl font-bold text-gray-900">報數據</h1>
+            </div>
+            <LanguageSwitcher />
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1">
+        <Switch>
+          <Route path="/" component={Calculator} />
+          <Route path="/privacy-policy" component={PrivacyPolicy} />
+          <Route path="/terms-of-service" component={TermsOfService} />
+          <Route component={NotFound} />
+        </Switch>
+      </div>
+    </div>
   );
 }
 
