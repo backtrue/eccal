@@ -4,7 +4,7 @@
 
 This is a full-stack web application built to help e-commerce businesses calculate their advertising budget requirements based on revenue targets, average order value, and conversion rates. The application is branded as "報數據" (Report Data) and features a React frontend with a Node.js/Express backend, utilizing modern web technologies and UI components.
 
-**Version:** V1.0 - Complete initial release with core functionality, analytics tracking, and brand integration.
+**Version:** V1.1 - Brevo email marketing integration with contact sync functionality.
 
 ## System Architecture
 
@@ -130,6 +130,7 @@ Changelog:
 - June 25, 2025. Added Google logout functionality for switching between GA accounts
 - June 25, 2025. Integrated Brevo email marketing for list #15 automation
 - June 25, 2025. SEO optimization for "廣告預算怎麼抓" keyword with complete meta tags
+- June 25, 2025. Released V1.1 - Brevo email marketing integration with automatic contact sync to list #15
 - June 25, 2025. Updated page content and footer links to course materials
 ```
 
