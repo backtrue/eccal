@@ -43,41 +43,53 @@ export class GoogleAnalyticsService {
         endDate: endDate.toISOString().split('T')[0],
       };
 
-      // Try multiple metric combinations to handle different GA4 setups
+      // Try different metric combinations based on GA4 setup
       let response;
-      try {
-        // First try with enhanced ecommerce metrics
-        response = await analyticsData.properties.runReport({
-          auth: oauth2Client,
-          property: `properties/${propertyId}`,
-          requestBody: {
-            dateRanges: [dateRange],
-            metrics: [
-              { name: 'sessions' },
-              { name: 'purchaseRevenue' },
-              { name: 'purchases' },
-              { name: 'averagePurchaseRevenue' },
-            ],
-            dimensions: [],
-          },
-        });
-      } catch (error) {
-        console.log('Enhanced ecommerce metrics not available, trying basic metrics:', error);
-        // Fallback to basic metrics
-        response = await analyticsData.properties.runReport({
-          auth: oauth2Client,
-          property: `properties/${propertyId}`,
-          requestBody: {
-            dateRanges: [dateRange],
-            metrics: [
-              { name: 'sessions' },
-              { name: 'totalRevenue' },
-              { name: 'conversions' },
-              { name: 'eventValue' },
-            ],
-            dimensions: [],
-          },
-        });
+      let metricsUsed = '';
+      
+      const metricSets = [
+        {
+          name: 'Standard GA4 Ecommerce',
+          metrics: ['sessions', 'totalRevenue', 'ecommercePurchases', 'averagePurchaseRevenue']
+        },
+        {
+          name: 'Purchase Event Based', 
+          metrics: ['sessions', 'purchaseRevenue', 'purchases', 'itemRevenue']
+        },
+        {
+          name: 'Enhanced Ecommerce Legacy',
+          metrics: ['sessions', 'itemRevenue', 'itemPurchaseQuantity', 'averagePurchaseRevenue']
+        },
+        {
+          name: 'Basic Conversion Tracking',
+          metrics: ['sessions', 'conversions', 'eventValue', 'eventCount']
+        }
+      ];
+
+      for (const metricSet of metricSets) {
+        try {
+          console.log(`Trying metric set: ${metricSet.name} - [${metricSet.metrics.join(', ')}]`);
+          
+          response = await analyticsData.properties.runReport({
+            auth: oauth2Client,
+            property: `properties/${propertyId}`,
+            requestBody: {
+              dateRanges: [dateRange],
+              metrics: metricSet.metrics.map(name => ({ name })),
+              dimensions: [],
+            },
+          });
+          
+          metricsUsed = metricSet.name;
+          console.log(`Success with metric set: ${metricSet.name}`);
+          break;
+          
+        } catch (error) {
+          console.log(`Failed with ${metricSet.name}:`, error.message);
+          if (metricSet === metricSets[metricSets.length - 1]) {
+            throw error; // Re-throw if this was the last attempt
+          }
+        }
       }
 
       const rows = response.data.rows;
@@ -113,10 +125,16 @@ export class GoogleAnalyticsService {
         parseFloat(metrics[3].value || '0') : 
         (ecommercePurchases > 0 ? totalRevenue / ecommercePurchases : 0);
 
-      console.log(`GA4 Data Retrieved: Sessions: ${sessions}, Revenue: ${totalRevenue}, Purchases: ${ecommercePurchases}, AOV: ${averageOrderValue}`);
-
       // Calculate conversion rate: purchases / sessions
       const conversionRate = sessions > 0 ? (ecommercePurchases / sessions) * 100 : 0;
+
+      console.log(`GA4 Data Retrieved for property ${propertyId} using ${metricsUsed}:`);
+      console.log(`  Sessions: ${sessions}`);
+      console.log(`  Revenue: ${totalRevenue}`);
+      console.log(`  Purchases: ${ecommercePurchases}`);
+      console.log(`  AOV: ${averageOrderValue}`);
+      console.log(`  Conversion Rate: ${conversionRate}%`);
+      console.log(`  Raw metrics values:`, metrics.map(m => m.value));
 
       const result: AnalyticsData = {
         sessions,
