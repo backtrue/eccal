@@ -43,6 +43,8 @@ export const useLocale = () => {
       
       // Update HTML lang attribute
       document.documentElement.lang = locale === 'zh-TW' ? 'zh-TW' : locale;
+      
+      console.log('Locale changed to:', locale); // Debug log
     }
   }, [locale, translations]);
 

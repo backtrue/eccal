@@ -17,9 +17,31 @@ export default function LanguageSwitcher() {
   const availableLocales = getAvailableLocales();
 
   const handleLocaleChange = (newLocale: Locale) => {
+    console.log('Switching to locale:', newLocale); // Debug log
     changeLocale(newLocale);
     setOpen(false);
   };
+
+  // Simple button version for testing
+  if (true) {
+    return (
+      <div className="flex gap-1">
+        {availableLocales.map((loc) => (
+          <button
+            key={loc}
+            onClick={() => handleLocaleChange(loc)}
+            className={`px-2 py-1 text-sm rounded border ${
+              locale === loc 
+                ? 'bg-blue-600 text-white border-blue-600' 
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            {getLocaleDisplayName(loc)}
+          </button>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
