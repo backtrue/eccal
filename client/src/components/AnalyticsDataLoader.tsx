@@ -72,7 +72,10 @@ export default function AnalyticsDataLoader({ onDataLoaded }: AnalyticsDataLoade
             <Download className="text-green-600 w-5 h-5" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-green-900 mb-2">從 Google Analytics 自動取得數據</h3>
+            <div className="flex justify-between items-start mb-2">
+              <h3 className="font-semibold text-green-900">從 Google Analytics 自動取得數據</h3>
+              <LogoutButton />
+            </div>
             <p className="text-sm text-green-700 mb-4">
               自動取得過去 28 天的平均客單價和轉換率數據
             </p>
