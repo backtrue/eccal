@@ -2,8 +2,15 @@ import { Link } from "wouter";
 import { ArrowLeft, FileText, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import Footer from "@/components/Footer";
+import { getTranslations, type Locale } from "@/lib/i18n";
 
-export default function TermsOfService() {
+interface TermsOfServiceProps {
+  locale: Locale;
+}
+
+export default function TermsOfService({ locale }: TermsOfServiceProps) {
+  const t = getTranslations(locale);
+
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       {/* Header */}
@@ -14,144 +21,166 @@ export default function TermsOfService() {
               <ArrowLeft className="w-5 h-5 mr-2" />
               返回計算機
             </Link>
-            <div className="flex items-center space-x-3">
-              <div className="bg-blue-600 p-2 rounded-lg">
-                <FileText className="text-white w-6 h-6" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">報數據-使用者條款</h1>
-                <p className="text-sm text-gray-600">服務使用規範與條件</p>
-              </div>
-            </div>
+            <h1 className="text-2xl font-bold text-gray-900">服務條款</h1>
           </div>
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Card className="shadow-lg border border-gray-200">
-          <CardContent className="p-8">
-            <div className="prose max-w-none">
-              <div className="mb-8">
-                <p className="text-gray-600 mb-4">最後更新日期：2025年6月25日</p>
-                <p className="text-lg text-gray-700">
-                  歡迎使用報數據-電商廣告預算計算機。使用本服務即表示您同意遵守以下條款。
-                </p>
-              </div>
-
-              <div className="space-y-8">
-                <section>
-                  <div className="flex items-center space-x-2 mb-4">
-                    <CheckCircle className="text-green-600 w-5 h-5" />
-                    <h2 className="text-xl font-semibold text-gray-900">服務說明</h2>
-                  </div>
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <p className="text-green-800 mb-3">
-                      本計算機提供電商廣告預算估算服務，基於以下參數進行計算：
-                    </p>
-                    <ul className="text-green-800 space-y-1">
-                      <li>• 目標營業額（月）</li>
-                      <li>• 平均客單價</li>
-                      <li>• 網站轉換率</li>
-                      <li>• 固定點擊成本（CPC = NTD 5）</li>
-                    </ul>
-                  </div>
-                </section>
-
-                <section>
-                  <div className="flex items-center space-x-2 mb-4">
-                    <AlertTriangle className="text-yellow-600 w-5 h-5" />
-                    <h2 className="text-xl font-semibold text-gray-900">重要聲明</h2>
-                  </div>
-                  <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
-                    <ul className="text-yellow-800 space-y-2">
-                      <li>• 本工具提供的計算結果僅供參考</li>
-                      <li>• 實際廣告成本可能因市場狀況、競爭環境等因素而有所差異</li>
-                      <li>• 建議結合實際業務情況和專業意見制定廣告策略</li>
-                      <li>• 我們不保證使用本工具能達到預期的廣告效果</li>
-                    </ul>
-                  </div>
-                </section>
-
-                <section>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">使用規範</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-green-50 p-4 rounded-lg">
-                      <h3 className="font-semibold text-green-900 mb-2 flex items-center">
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        允許的使用
-                      </h3>
-                      <ul className="text-green-800 space-y-1 text-sm">
-                        <li>• 個人或商業用途的預算規劃</li>
-                        <li>• 教育和學習目的</li>
-                        <li>• 合理頻率的工具使用</li>
-                        <li>• 分享計算結果給他人參考</li>
-                      </ul>
-                    </div>
-                    <div className="bg-red-50 p-4 rounded-lg">
-                      <h3 className="font-semibold text-red-900 mb-2 flex items-center">
-                        <XCircle className="w-4 h-4 mr-2" />
-                        禁止的使用
-                      </h3>
-                      <ul className="text-red-800 space-y-1 text-sm">
-                        <li>• 惡意攻擊或破壞服務</li>
-                        <li>• 自動化爬蟲或大量請求</li>
-                        <li>• 逆向工程或複製功能</li>
-                        <li>• 散布不實資訊或誤導他人</li>
-                      </ul>
-                    </div>
-                  </div>
-                </section>
-
-                <section>  
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">智慧財產權</h2>
-                  <p className="text-gray-700 mb-4">
-                    本網站的所有內容，包括但不限於文字、圖片、設計、程式碼和商標，
-                    均受智慧財產權法保護。未經授權，不得複製、修改或商業使用。
+      {/* Main Content */}
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="space-y-8">
+          {/* Introduction */}
+          <Card>
+            <CardContent className="p-8">
+              <div className="flex items-start space-x-4">
+                <div className="bg-blue-100 p-3 rounded-lg">
+                  <FileText className="w-6 h-6 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">服務條款</h2>
+                  <p className="text-gray-700 leading-relaxed">
+                    歡迎使用我們的廣告預算計算機服務。透過使用本服務，您同意遵守以下服務條款。請仔細閱讀這些條款。
                   </p>
-                </section>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-                <section>
+          {/* Service Description */}
+          <Card>
+            <CardContent className="p-8">
+              <div className="flex items-start space-x-4">
+                <div className="bg-green-100 p-3 rounded-lg">
+                  <CheckCircle className="w-6 h-6 text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">服務說明</h2>
+                  <div className="text-gray-700 space-y-4">
+                    <p>我們提供的服務包括：</p>
+                    <ul className="space-y-2">
+                      <li>• 廣告預算計算工具</li>
+                      <li>• Google Analytics 數據整合</li>
+                      <li>• 電商廣告策略建議</li>
+                      <li>• 相關教育資源和課程資訊</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* User Responsibilities */}
+          <Card>
+            <CardContent className="p-8">
+              <div className="flex items-start space-x-4">
+                <div className="bg-yellow-100 p-3 rounded-lg">
+                  <AlertTriangle className="w-6 h-6 text-yellow-600" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">使用者責任</h2>
+                  <div className="text-gray-700 space-y-4">
+                    <p>使用本服務時，您同意：</p>
+                    <ul className="space-y-2">
+                      <li>• 提供準確的資訊和數據</li>
+                      <li>• 不濫用或干擾服務運作</li>
+                      <li>• 遵守所有適用的法律法規</li>
+                      <li>• 保護您的帳戶安全</li>
+                      <li>• 尊重其他使用者和我們的權利</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Disclaimers */}
+          <Card>
+            <CardContent className="p-8">
+              <div className="flex items-start space-x-4">
+                <div className="bg-red-100 p-3 rounded-lg">
+                  <XCircle className="w-6 h-6 text-red-600" />
+                </div>
+                <div className="flex-1">
                   <h2 className="text-xl font-semibold text-gray-900 mb-4">免責聲明</h2>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-gray-800 mb-3">
-                      我們致力於提供準確可靠的計算服務，但：
-                    </p>
-                    <ul className="text-gray-800 space-y-1">
-                      <li>• 不保證服務的完全準確性和可用性</li>
-                      <li>• 不對因使用本服務而產生的任何損失負責</li>
-                      <li>• 保留隨時修改或終止服務的權利</li>
-                      <li>• 使用者應自行承擔使用風險</li>
+                  <div className="text-gray-700 space-y-4">
+                    <p><strong>重要提醒：</strong></p>
+                    <ul className="space-y-2">
+                      <li>• 計算結果僅供參考，實際廣告效果可能因多種因素而有所不同</li>
+                      <li>• 我們不保證使用本服務會帶來特定的商業結果</li>
+                      <li>• 投資廣告存在風險，請謹慎評估您的預算能力</li>
+                      <li>• 我們不對因使用本服務而產生的任何損失負責</li>
                     </ul>
                   </div>
-                </section>
-
-                <section>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">服務變更</h2>
-                  <p className="text-gray-700 mb-4">
-                    我們保留隨時修改、暫停或終止服務的權利，恕不另行通知。
-                    重大變更將盡可能提前在網站上公告。
-                  </p>
-                </section>
-
-                <section>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">適用法律</h2>
-                  <p className="text-gray-700 mb-4">
-                    本條款受中華民國法律管轄。如有爭議，以台灣法院為管轄法院。
-                  </p>
-                </section>
-
-                <section>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">聯絡資訊</h2>
-                  <p className="text-gray-700">
-                    如對本條款有任何疑問，請透過網站提供的聯絡方式與我們聯繫。
-                    我們將盡快回覆您的詢問。
-                  </p>
-                </section>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+
+          {/* Intellectual Property */}
+          <Card>
+            <CardContent className="p-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">智慧財產權</h2>
+              <div className="text-gray-700 space-y-4">
+                <p>本服務的所有內容，包括但不限於：</p>
+                <ul className="space-y-2">
+                  <li>• 計算工具和演算法</li>
+                  <li>• 網站設計和介面</li>
+                  <li>• 文字、圖片和多媒體內容</li>
+                  <li>• 商標和品牌標識</li>
+                </ul>
+                <p>均受到智慧財產權法律保護，未經授權不得複製、修改或商業使用。</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Service Modifications */}
+          <Card>
+            <CardContent className="p-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">服務修改</h2>
+              <div className="text-gray-700 space-y-4">
+                <p>我們保留隨時修改或中止服務的權利，包括：</p>
+                <ul className="space-y-2">
+                  <li>• 功能更新和改進</li>
+                  <li>• 服務條款的變更</li>
+                  <li>• 暫時或永久停止服務</li>
+                </ul>
+                <p>重大變更將會事先通知使用者。</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Governing Law */}
+          <Card>
+            <CardContent className="p-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">適用法律</h2>
+              <div className="text-gray-700">
+                <p>本服務條款受中華民國法律管轄。如有爭議，雙方同意由台灣台北地方法院為第一審管轄法院。</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Contact Information */}
+          <Card>
+            <CardContent className="p-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">聯絡我們</h2>
+              <div className="text-gray-700">
+                <p className="mb-4">如果您對本服務條款有任何疑問，請聯絡我們：</p>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="font-medium">煜言顧問有限公司</p>
+                  <p>網站：<a href="https://thinkwithblack.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700">thinkwithblack.com</a></p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Last Updated */}
+          <div className="text-center text-gray-500 text-sm">
+            最後更新：2025年6月25日
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
       <Footer />
     </div>
   );

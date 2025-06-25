@@ -1,75 +1,55 @@
-import { useState } from 'react';
-import { Check, ChevronDown, Globe } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useLocale } from '@/hooks/useLocale';
-import { getAvailableLocales, getLocaleDisplayName, type Locale } from '@/lib/i18n';
+import { Button } from "@/components/ui/button";
+import { useLocation } from "wouter";
 
 export default function LanguageSwitcher() {
-  const { locale, changeLocale } = useLocale();
-  const [open, setOpen] = useState(false);
-  
-  const availableLocales = getAvailableLocales();
+  const [location, setLocation] = useLocation();
 
-  const handleLocaleChange = (newLocale: Locale) => {
-    console.log('Switching to locale:', newLocale); // Debug log
-    changeLocale(newLocale);
-    setOpen(false);
+  const getCurrentLocale = () => {
+    if (location.startsWith('/en')) return 'en';
+    if (location.startsWith('/jp')) return 'ja';
+    return 'zh-TW';
   };
 
-  // Simple button version for testing
-  if (true) {
-    return (
-      <div className="flex gap-1">
-        {availableLocales.map((loc) => (
-          <button
-            key={loc}
-            onClick={() => handleLocaleChange(loc)}
-            className={`px-2 py-1 text-sm rounded border ${
-              locale === loc 
-                ? 'bg-blue-600 text-white border-blue-600' 
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            {getLocaleDisplayName(loc)}
-          </button>
-        ))}
-      </div>
-    );
-  }
+  const handleLocaleChange = (newLocale: 'zh-TW' | 'en' | 'ja') => {
+    const currentPath = location.replace(/^\/(en|jp)/, '') || '/';
+    
+    if (newLocale === 'zh-TW') {
+      setLocation(currentPath === '/' ? '/' : currentPath);
+    } else if (newLocale === 'en') {
+      setLocation(`/en${currentPath === '/' ? '' : currentPath}`);
+    } else if (newLocale === 'ja') {
+      setLocation(`/jp${currentPath === '/' ? '' : currentPath}`);
+    }
+  };
+
+  const currentLocale = getCurrentLocale();
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="sm"
-          className="flex items-center gap-2 min-w-0"
-        >
-          <Globe className="h-4 w-4" />
-          <span className="hidden sm:inline">
-            {getLocaleDisplayName(locale)}
-          </span>
-          <ChevronDown className="h-3 w-3" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[120px]">
-        {availableLocales.map((loc) => (
-          <DropdownMenuItem
-            key={loc}
-            onClick={() => handleLocaleChange(loc)}
-            className="flex items-center justify-between cursor-pointer"
-          >
-            <span>{getLocaleDisplayName(loc)}</span>
-            {locale === loc && <Check className="h-4 w-4" />}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="flex items-center space-x-2">
+      <Button
+        variant={currentLocale === 'zh-TW' ? 'default' : 'outline'}
+        size="sm"
+        onClick={() => handleLocaleChange('zh-TW')}
+        className="text-xs"
+      >
+        繁中
+      </Button>
+      <Button
+        variant={currentLocale === 'en' ? 'default' : 'outline'}
+        size="sm"
+        onClick={() => handleLocaleChange('en')}
+        className="text-xs"
+      >
+        EN
+      </Button>
+      <Button
+        variant={currentLocale === 'ja' ? 'default' : 'outline'}
+        size="sm"
+        onClick={() => handleLocaleChange('ja')}
+        className="text-xs"
+      >
+        JP
+      </Button>
+    </div>
   );
 }

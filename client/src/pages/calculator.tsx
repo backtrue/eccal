@@ -31,11 +31,11 @@ interface CalculationResults {
   dailyAdBudget: number;
 }
 
-export default function Calculator() {
+export default function Calculator({ locale }: CalculatorProps) {
+  const t = getTranslations(locale);
   const [results, setResults] = useState<CalculationResults | null>(null);
   const [showSteps, setShowSteps] = useState(false);
   const { isAuthenticated, user } = useAuth();
-  const { t, locale } = useLocale();
 
   const form = useForm<CalculatorFormData>({
     resolver: zodResolver(createCalculatorSchema(t)),

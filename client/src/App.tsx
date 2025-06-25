@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -10,9 +10,9 @@ import NotFound from "@/pages/not-found";
 import { useEffect } from "react";
 import { initGA } from "./lib/analytics";
 import { useAnalytics } from "./hooks/use-analytics";
-import { useLocale } from "./hooks/useLocale";
 import { initMetaPixel } from "./lib/meta-pixel";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { getBrowserLocale } from "./lib/i18n";
 
 function Router() {
   // Track page views when routes change
@@ -68,16 +68,15 @@ function Router() {
 function App() {
   // Initialize tracking when app loads
   useEffect(() => {
-    // Initialize Google Analytics
+    // Verify required environment variables are present
     if (!import.meta.env.VITE_GA_MEASUREMENT_ID) {
       console.warn('Missing required Google Analytics key: VITE_GA_MEASUREMENT_ID');
     } else {
       initGA();
     }
 
-    // Initialize Meta Pixel
     if (!import.meta.env.VITE_META_PIXEL_ID) {
-      console.warn('Missing required Meta Pixel ID: VITE_META_PIXEL_ID');
+      console.warn('Missing required Meta Pixel key: VITE_META_PIXEL_ID');
     } else {
       initMetaPixel();
     }
@@ -86,8 +85,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
         <Router />
+        <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
   );
