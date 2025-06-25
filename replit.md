@@ -62,6 +62,16 @@ This is a full-stack web application built to help e-commerce businesses calcula
 4. **Database Operations**: Drizzle ORM handles database interactions
 5. **Session Management**: Express sessions maintain user state
 
+## Email Marketing Integration
+- **Service**: Brevo (formerly Sendinblue) API integration
+- **List Management**: Automatic sync to Brevo list #15 "報數據"
+- **Contact Data**: Email addresses with GA resource names stored in FIRSTNAME field
+- **Sync Features**: 
+  - Automatic new user registration sync
+  - Bulk sync of existing users via API endpoint
+  - Duplicate contact handling with update functionality
+  - IP authorization requirement for API access
+
 ## External Dependencies
 
 ### Core Dependencies
@@ -132,6 +142,7 @@ Changelog:
 - June 25, 2025. SEO optimization for "廣告預算怎麼抓" keyword with complete meta tags
 - June 25, 2025. Released V1.1 - Brevo email marketing integration with automatic contact sync to list #15
 - June 25, 2025. Updated page content and footer links to course materials
+- June 25, 2025. Completed V1.1 with working Brevo integration (requires IP whitelist maintenance due to dynamic Replit IPs)
 ```
 
 ## User Preferences
