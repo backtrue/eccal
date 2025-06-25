@@ -25,17 +25,27 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 className="hover:text-blue-300 transition-colors"
               >
-                報數據｜幫你算廣告預算
+                {getCurrentLocale() === 'zh-TW' ? '報數據｜幫你算廣告預算' :
+                 getCurrentLocale() === 'en' ? 'ReportData | Ad Budget Calculator' :
+                 'データ報告｜広告予算計算機'}
               </a>
             </h3>
             <p className="text-gray-300 mb-4">
-              想知道廣告預算怎麼抓？用《報數據》一鍵計算 FB、IG 廣告預算和所需流量，只要輸入目標金額、客單價、轉換率，馬上算出最適合你的廣告預算與流量需求，幫你告別瞎猜和試錯！
+              {getCurrentLocale() === 'zh-TW' ? 
+                '想知道廣告預算怎麼抓？用《報數據》一鍵計算 FB、IG 廣告預算和所需流量，只要輸入目標金額、客單價、轉換率，馬上算出最適合你的廣告預算與流量需求，幫你告別瞎猜和試錯！' :
+               getCurrentLocale() === 'en' ?
+                'Want to know how much to spend on ads? Use ReportData to calculate FB and IG ad budgets and required traffic with one click. Just input your target revenue, average order value, and conversion rate to instantly calculate the optimal ad budget and traffic requirements. Say goodbye to guessing and trial-and-error!' :
+                '広告予算をどう決めるかわからない？『データ報告』でFB・IG広告予算と必要トラフィックをワンクリック計算。目標売上、平均注文額、コンバージョン率を入力するだけで、最適な広告予算とトラフィック要件をすぐに算出。推測や試行錯誤とはもうお別れ！'}
             </p>
           </div>
 
           {/* Course Links */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">我們的課程</h4>
+            <h4 className="text-lg font-semibold mb-4">
+              {getCurrentLocale() === 'zh-TW' ? '我們的課程' :
+               getCurrentLocale() === 'en' ? 'Our Courses' :
+               '私たちのコース'}
+            </h4>
             <ul className="space-y-2">
               <li>
                 <a 
@@ -44,7 +54,9 @@ export default function Footer() {
                   rel="noopener noreferrer"
                   className="text-gray-300 hover:text-white transition-colors"
                 >
-                  電商教學
+                  {getCurrentLocale() === 'zh-TW' ? '電商教學' :
+                   getCurrentLocale() === 'en' ? 'E-commerce Training' :
+                   'ECサイト教育'}
                 </a>
               </li>
               <li>
@@ -54,7 +66,9 @@ export default function Footer() {
                   rel="noopener noreferrer"
                   className="text-gray-300 hover:text-white transition-colors"
                 >
-                  FB廣告初階教學
+                  {getCurrentLocale() === 'zh-TW' ? 'FB廣告初階教學' :
+                   getCurrentLocale() === 'en' ? 'FB Ads Beginner Course' :
+                   'FB広告基礎コース'}
                 </a>
               </li>
               <li>
@@ -64,7 +78,9 @@ export default function Footer() {
                   rel="noopener noreferrer"
                   className="text-gray-300 hover:text-white transition-colors"
                 >
-                  FB廣告進階教學
+                  {getCurrentLocale() === 'zh-TW' ? 'FB廣告進階教學' :
+                   getCurrentLocale() === 'en' ? 'FB Ads Advanced Course' :
+                   'FB広告上級コース'}
                 </a>
               </li>
             </ul>
@@ -72,13 +88,12 @@ export default function Footer() {
 
           {/* Service Content */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">服務內容</h4>
+            <h4 className="text-lg font-semibold mb-4">
+              {getCurrentLocale() === 'zh-TW' ? '服務內容' :
+               getCurrentLocale() === 'en' ? 'Services' :
+               'サービス内容'}
+            </h4>
             <ul className="space-y-2">
-              <li>
-                <Link href="/" className="text-gray-300 hover:text-white transition-colors">
-                  {t.home}
-                </Link>
-              </li>
               <li>
                 <a 
                   href={getCurrentLocale() === 'zh-TW' ? 'https://blog.thinkwithblack.com' : 
@@ -88,7 +103,7 @@ export default function Footer() {
                   rel="noopener noreferrer"
                   className="text-gray-300 hover:text-white transition-colors"
                 >
-                  部落格
+                  {t.blog}
                 </a>
               </li>
               <li>
