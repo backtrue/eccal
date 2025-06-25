@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Calculator, Edit, ListOrdered, TrendingUp, Target, ShoppingCart, Percent, Info, Lightbulb, Users, ShoppingBag, Calendar, CalendarDays } from "lucide-react";
+import { Calculator as CalcIcon, Edit, ListOrdered, TrendingUp, Target, ShoppingCart, Percent, Info, Lightbulb, Users, ShoppingBag, Calendar, CalendarDays } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,7 +67,7 @@ export default function Calculator() {
           <div className="flex items-center">
             <div className="flex items-center space-x-3">
               <div className="bg-blue-600 p-2 rounded-lg">
-                <Calculator className="text-white w-6 h-6" />
+                <CalcIcon className="text-white w-6 h-6" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">電商廣告預算計算機</h1>
@@ -200,7 +200,7 @@ export default function Calculator() {
                   </div>
 
                   <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
-                    <Calculator className="w-4 h-4 mr-2" />
+                    <CalcIcon className="w-4 h-4 mr-2" />
                     開始計算
                   </Button>
                 </form>
@@ -223,7 +223,7 @@ export default function Calculator() {
                 <div className="space-y-4">
                   {!showSteps || !results ? (
                     <div className="text-center py-8 text-gray-500">
-                      <Calculator className="w-8 h-8 mx-auto mb-3" />
+                      <CalcIcon className="w-8 h-8 mx-auto mb-3" />
                       <p>請填寫左側表單開始計算</p>
                     </div>
                   ) : (
@@ -276,7 +276,7 @@ export default function Calculator() {
                 <div className="space-y-4">
                   {!results ? (
                     <div className="text-center py-8 text-gray-500">
-                      <Calculator className="w-8 h-8 mx-auto mb-3" />
+                      <CalcIcon className="w-8 h-8 mx-auto mb-3" />
                       <p>計算結果將顯示在這裡</p>
                     </div>
                   ) : (
