@@ -87,6 +87,10 @@ export class DatabaseStorage implements IStorage {
       try {
         const user = await this.getUser(metrics.userId);
         if (user?.email) {
+          console.log('Updating Brevo contact with GA resource name:', {
+            email: user.email,
+            gaResourceName: metrics.gaResourceName
+          });
           await brevoService.addContactToList({
             email: user.email,
             firstName: user.firstName || undefined,
