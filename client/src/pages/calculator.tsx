@@ -98,23 +98,21 @@ export default function Calculator() {
   const formatNumber = (num: number) => num.toLocaleString('zh-TW');
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center">
-            <div className="flex items-center space-x-3">
-              <div className="bg-blue-600 p-2 rounded-lg">
-                <CalcIcon className="text-white w-6 h-6" />
+    <div className="bg-gray-50 font-sans">
+      {/* Hero Section */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">
+            <div className="flex items-center justify-center space-x-3 mb-4">
+              <div className="bg-blue-600 p-3 rounded-lg">
+                <CalcIcon className="text-white w-8 h-8" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">{t.calculatorTitle}</h1>
-                <p className="text-sm text-gray-600">{t.calculatorDescription}</p>
-              </div>
+              <h1 className="text-3xl font-bold text-gray-900">{t.calculatorTitle}</h1>
             </div>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">{t.calculatorDescription}</p>
           </div>
         </div>
-      </header>
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Google Login Section */}
@@ -359,37 +357,37 @@ export default function Calculator() {
                         <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white">
                           <div className="flex items-center space-x-2 mb-2">
                             <ShoppingBag className="w-4 h-4" />
-                            <h3 className="font-semibold">所需訂單</h3>
+                            <h3 className="font-semibold">{t.requiredOrders}</h3>
                           </div>
                           <p className="text-2xl font-bold">{formatNumber(results.requiredOrders)}</p>
-                          <p className="text-sm opacity-90">筆/月</p>
+                          <p className="text-sm opacity-90">{t.orders}/{locale === 'zh-TW' ? '月' : locale === 'en' ? 'month' : '月'}</p>
                         </div>
                         
                         <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white">
                           <div className="flex items-center space-x-2 mb-2">
                             <Users className="w-4 h-4" />
-                            <h3 className="font-semibold">所需流量</h3>
+                            <h3 className="font-semibold">{t.requiredTraffic}</h3>
                           </div>
                           <p className="text-2xl font-bold">{formatNumber(results.requiredTraffic)}</p>
-                          <p className="text-sm opacity-90">次訪問/月</p>
+                          <p className="text-sm opacity-90">{t.visitors}/{locale === 'zh-TW' ? '月' : locale === 'en' ? 'month' : '月'}</p>
                         </div>
                         
                         <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white">
                           <div className="flex items-center space-x-2 mb-2">
                             <Calendar className="w-4 h-4" />
-                            <h3 className="font-semibold">日廣告預算</h3>
+                            <h3 className="font-semibold">{t.dailyAdBudget}</h3>
                           </div>
-                          <p className="text-2xl font-bold">NTD {formatNumber(results.dailyAdBudget)}</p>
-                          <p className="text-sm opacity-90">建議每日投放</p>
+                          <p className="text-2xl font-bold">{t.currency} {formatNumber(results.dailyAdBudget)}</p>
+                          <p className="text-sm opacity-90">{locale === 'zh-TW' ? '建議每日投放' : locale === 'en' ? 'daily investment' : '日間投資'}</p>
                         </div>
                         
                         <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-4 text-white">
                           <div className="flex items-center space-x-2 mb-2">
                             <CalendarDays className="w-4 h-4" />
-                            <h3 className="font-semibold">月廣告預算</h3>
+                            <h3 className="font-semibold">{t.monthlyAdBudget}</h3>
                           </div>
-                          <p className="text-2xl font-bold">NTD {formatNumber(results.monthlyAdBudget)}</p>
-                          <p className="text-sm opacity-90">每月總預算</p>
+                          <p className="text-2xl font-bold">{t.currency} {formatNumber(results.monthlyAdBudget)}</p>
+                          <p className="text-sm opacity-90">{locale === 'zh-TW' ? '每月總預算' : locale === 'en' ? 'monthly budget' : '月間予算'}</p>
                         </div>
                       </div>
                       

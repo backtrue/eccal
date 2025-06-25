@@ -4,7 +4,7 @@
 
 This is a full-stack web application built to help e-commerce businesses calculate their advertising budget requirements based on revenue targets, average order value, and conversion rates. The application is branded as "報數據" (Report Data) and features a React frontend with a Node.js/Express backend, utilizing modern web technologies and UI components.
 
-**Version:** V1.1 - Brevo email marketing integration with contact sync functionality.
+**Version:** V1.2 - Multi-language support (Traditional Chinese, English, Japanese) with complete internationalization.
 
 ## System Architecture
 
@@ -143,6 +143,7 @@ Changelog:
 - June 25, 2025. Released V1.1 - Brevo email marketing integration with automatic contact sync to list #15
 - June 25, 2025. Updated page content and footer links to course materials
 - June 25, 2025. Completed V1.1 with working Brevo integration (requires IP whitelist maintenance due to dynamic Replit IPs)
+- June 25, 2025. Released V1.2 - Multi-language support with Traditional Chinese, English, and Japanese localization
 ```
 
 ## User Preferences

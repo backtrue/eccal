@@ -15,6 +15,7 @@ import { initMetaPixel } from "./lib/meta-pixel";
 function Router() {
   // Track page views when routes change
   useAnalytics();
+  const { t } = useLocale();
   
   return (
     <Switch>
