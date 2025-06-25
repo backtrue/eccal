@@ -12,13 +12,14 @@ import Footer from "@/components/Footer";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
 import AnalyticsDataLoader from "@/components/AnalyticsDataLoader";
 import { useAuth } from "@/hooks/useAuth";
+import { useLocale } from "@/hooks/useLocale";
 import { trackEvent } from "@/lib/analytics";
 import { trackCalculatorUsage, trackMetaEvent } from "@/lib/meta-pixel";
 
-const calculatorSchema = z.object({
-  targetRevenue: z.number().positive("目標營業額必須大於 0"),
-  averageOrderValue: z.number().positive("客單價必須大於 0"),
-  conversionRate: z.number().positive("轉換率必須大於 0").max(100, "轉換率不能超過 100%"),
+const createCalculatorSchema = (t: any) => z.object({
+  targetRevenue: z.number().positive(t.locale === 'zh-TW' ? "目標營業額必須大於 0" : t.locale === 'en' ? "Target revenue must be greater than 0" : "目標売上は0より大きくなければなりません"),
+  averageOrderValue: z.number().positive(t.locale === 'zh-TW' ? "客單價必須大於 0" : t.locale === 'en' ? "Average order value must be greater than 0" : "平均注文額は0より大きくなければなりません"),
+  conversionRate: z.number().positive(t.locale === 'zh-TW' ? "轉換率必須大於 0" : t.locale === 'en' ? "Conversion rate must be greater than 0" : "コンバージョン率は0より大きくなければなりません").max(100, t.locale === 'zh-TW' ? "轉換率不能超過 100%" : t.locale === 'en' ? "Conversion rate cannot exceed 100%" : "コンバージョン率は100%を超えることはできません"),
 });
 
 type CalculatorFormData = z.infer<typeof calculatorSchema>;
@@ -34,9 +35,10 @@ export default function Calculator() {
   const [results, setResults] = useState<CalculationResults | null>(null);
   const [showSteps, setShowSteps] = useState(false);
   const { isAuthenticated, user } = useAuth();
+  const { t, locale } = useLocale();
 
   const form = useForm<CalculatorFormData>({
-    resolver: zodResolver(calculatorSchema),
+    resolver: zodResolver(createCalculatorSchema(t)),
     defaultValues: {
       targetRevenue: 0,
       averageOrderValue: 0,
@@ -106,8 +108,8 @@ export default function Calculator() {
                 <CalcIcon className="text-white w-6 h-6" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">廣告預算怎麼抓｜報數據來告訴你</h1>
-                <p className="text-sm text-gray-600">FB、IG 廣告預算流量要多少</p>
+                <h1 className="text-2xl font-bold text-gray-900">{t.calculatorTitle}</h1>
+                <p className="text-sm text-gray-600">{t.calculatorDescription}</p>
               </div>
             </div>
           </div>
