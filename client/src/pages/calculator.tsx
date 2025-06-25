@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import Footer from "@/components/Footer";
+import { trackEvent } from "@/lib/analytics";
 
 const calculatorSchema = z.object({
   targetRevenue: z.number().positive("目標營業額必須大於 0"),
@@ -56,6 +57,13 @@ export default function Calculator() {
 
     setResults(calculationResults);
     setShowSteps(true);
+
+    // Track calculation event in Google Analytics
+    trackEvent('calculate_budget', 'calculator', 'budget_calculation', data.targetRevenue);
+    
+    // Track additional metrics
+    trackEvent('budget_result', 'calculator', 'monthly_budget', monthlyAdBudget);
+    trackEvent('budget_result', 'calculator', 'daily_budget', dailyAdBudget);
   };
 
   const formatNumber = (num: number) => num.toLocaleString('zh-TW');
