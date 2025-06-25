@@ -27,13 +27,8 @@ export function useAnalyticsData() {
   
   return useMutation({
     mutationFn: async (propertyId: string): Promise<AnalyticsData> => {
-      return apiRequest(`/api/analytics/data`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ propertyId }),
-      });
+      const response = await apiRequest("POST", "/api/analytics/data", { propertyId });
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user/metrics"] });
