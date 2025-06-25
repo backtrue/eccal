@@ -85,8 +85,11 @@ export function setupGoogleAuth(app: Express) {
     }
   });
 
-  // Auth routes
-  app.get('/api/auth/google', passport.authenticate('google'));
+  // Auth routes - force consent to ensure refresh token
+  app.get('/api/auth/google', passport.authenticate('google', {
+    accessType: 'offline',
+    prompt: 'consent'
+  }));
   
   app.get('/api/auth/google/callback', 
     passport.authenticate('google', { failureRedirect: '/' }),
