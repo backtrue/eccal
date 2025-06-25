@@ -38,8 +38,8 @@ export default function AnalyticsDataLoader({ onDataLoaded }: AnalyticsDataLoade
     if (userMetricsQuery.data && !analyticsDataMutation.isSuccess) {
       const metrics = userMetricsQuery.data;
       onDataLoaded({
-        averageOrderValue: parseFloat(metrics.averageOrderValue || "0"),
-        conversionRate: parseFloat(metrics.conversionRate || "0") * 100, // Convert to percentage
+        averageOrderValue: Math.round(parseFloat(metrics.averageOrderValue || "0")), // 取整數
+        conversionRate: Math.round(parseFloat(metrics.conversionRate || "0") * 10000) / 100, // 轉換為百分比並保留兩位小數
       });
     }
   }, [userMetricsQuery.data, onDataLoaded, analyticsDataMutation.isSuccess]);
@@ -50,8 +50,8 @@ export default function AnalyticsDataLoader({ onDataLoaded }: AnalyticsDataLoade
     try {
       const data = await analyticsDataMutation.mutateAsync(selectedProperty);
       onDataLoaded({
-        averageOrderValue: data.averageOrderValue,
-        conversionRate: data.conversionRate,
+        averageOrderValue: Math.round(data.averageOrderValue), // 取整數
+        conversionRate: Math.round(data.conversionRate * 100) / 100, // 保留小數點後兩位
       });
     } catch (error) {
       console.error("Failed to fetch analytics data:", error);
