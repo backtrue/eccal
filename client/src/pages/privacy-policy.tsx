@@ -19,7 +19,7 @@ export default function PrivacyPolicy() {
                 <Shield className="text-white w-6 h-6" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">隱私權政策</h1>
+                <h1 className="text-2xl font-bold text-gray-900">報數據-隱私權政策</h1>
                 <p className="text-sm text-gray-600">我們如何保護您的個人資料</p>
               </div>
             </div>

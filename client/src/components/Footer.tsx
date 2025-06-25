@@ -7,12 +7,29 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="col-span-1 md:col-span-2">
-            <h3 className="text-xl font-bold mb-4">電商廣告預算計算機</h3>
+            <h3 className="text-xl font-bold mb-4">
+              <a 
+                href="https://thinkwithblack.com/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-blue-300 transition-colors"
+              >
+                報數據
+              </a>
+              -電商廣告預算計算機
+            </h3>
             <p className="text-gray-300 mb-4 max-w-md">
               專業的廣告預算規劃工具，幫助電商企業精準計算廣告投放預算，優化行銷策略，提升營收表現。
             </p>
             <div className="text-sm text-gray-400">
-              © 2025 電商廣告預算計算機. 保留所有權利。
+              © 2025 報數據 由 煜言顧問有限公司(TW) 及 <a 
+                href="https://www.toldyou.co/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-blue-300 transition-colors"
+              >
+                燈言顧問株式会社(JP)
+              </a> 提供. All Rights Reserved.
             </div>
           </div>
 
@@ -44,32 +61,22 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <a 
-                  href="/privacy-policy" 
+                  href="https://thinkwithblack.com/privacy" 
                   className="text-gray-300 hover:text-white transition-colors"
                   target="_blank"
-                  rel="noopener noreferrer"
+                  rel="nofollow noopener noreferrer"
                 >
                   隱私權政策
                 </a>
               </li>
               <li>
                 <a 
-                  href="/terms-of-service" 
+                  href="https://thinkwithblack.com/terms" 
                   className="text-gray-300 hover:text-white transition-colors"
                   target="_blank"
-                  rel="noopener noreferrer"
+                  rel="nofollow noopener noreferrer"
                 >
                   使用者條款
-                </a>
-              </li>
-              <li>
-                <a 
-                  href="/disclaimer" 
-                  className="text-gray-300 hover:text-white transition-colors"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  免責聲明
                 </a>
               </li>
             </ul>
@@ -84,14 +91,18 @@ export default function Footer() {
             </div>
             <div className="flex space-x-6 text-sm">
               <a 
-                href="/privacy-policy" 
+                href="https://thinkwithblack.com/privacy" 
                 className="text-gray-400 hover:text-white transition-colors"
+                target="_blank"
+                rel="nofollow noopener noreferrer"
               >
                 隱私權政策
               </a>
               <a 
-                href="/terms-of-service" 
+                href="https://thinkwithblack.com/terms" 
                 className="text-gray-400 hover:text-white transition-colors"
+                target="_blank"
+                rel="nofollow noopener noreferrer"
               >
                 使用者條款
               </a>

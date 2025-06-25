@@ -19,7 +19,7 @@ export default function TermsOfService() {
                 <FileText className="text-white w-6 h-6" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">使用者條款</h1>
+                <h1 className="text-2xl font-bold text-gray-900">報數據-使用者條款</h1>
                 <p className="text-sm text-gray-600">服務使用規範與條件</p>
               </div>
             </div>
@@ -34,7 +34,7 @@ export default function TermsOfService() {
               <div className="mb-8">
                 <p className="text-gray-600 mb-4">最後更新日期：2025年6月25日</p>
                 <p className="text-lg text-gray-700">
-                  歡迎使用電商廣告預算計算機。使用本服務即表示您同意遵守以下條款。
+                  歡迎使用報數據-電商廣告預算計算機。使用本服務即表示您同意遵守以下條款。
                 </p>
               </div>
 

@@ -1,8 +1,8 @@
-# E-commerce Ad Budget Calculator
+# 報數據-電商廣告預算計算機 (Report Data - E-commerce Ad Budget Calculator)
 
 ## Overview
 
-This is a full-stack web application built to help e-commerce businesses calculate their advertising budget requirements based on revenue targets, average order value, and conversion rates. The application features a React frontend with a Node.js/Express backend, utilizing modern web technologies and UI components.
+This is a full-stack web application built to help e-commerce businesses calculate their advertising budget requirements based on revenue targets, average order value, and conversion rates. The application is branded as "報數據" (Report Data) and features a React frontend with a Node.js/Express backend, utilizing modern web technologies and UI components.
 
 ## System Architecture
 
@@ -100,7 +100,11 @@ This is a full-stack web application built to help e-commerce businesses calcula
 
 ```
 Changelog:
-- June 25, 2025. Initial setup
+- June 25, 2025. Initial setup with basic calculator functionality
+- June 25, 2025. Added Footer with company branding and legal links
+- June 25, 2025. Updated branding to "報數據-電商廣告預算計算機"
+- June 25, 2025. Added privacy policy and terms of service pages
+- June 25, 2025. Updated copyright to include 煜言顧問有限公司(TW) and 燈言顧問株式会社(JP)
 ```
 
 ## User Preferences
