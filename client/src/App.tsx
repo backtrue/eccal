@@ -17,7 +17,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 function Router() {
   // Track page views when routes change
   useAnalytics();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -34,7 +34,7 @@ function Router() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1">
+      <div className="flex-1" key={locale}>
         <Switch>
           <Route path="/" component={Calculator} />
           <Route path="/privacy-policy" component={PrivacyPolicy} />

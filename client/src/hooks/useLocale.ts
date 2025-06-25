@@ -28,6 +28,10 @@ export const useLocale = () => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(LOCALE_STORAGE_KEY, newLocale);
     }
+    // Force re-render by updating state
+    setTimeout(() => {
+      setLocale(newLocale);
+    }, 0);
   };
 
   // Update document title and meta tags when locale changes
