@@ -21,14 +21,25 @@ export class BrevoService {
     }
 
     try {
-      const defaultClient = brevo.ApiClient.instance;
-      const apiKey = defaultClient.authentications['api-key'];
-      apiKey.apiKey = process.env.BREVO_API_KEY;
+      // Configure Brevo API client
+      brevo.ApiClient.instance.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
       
       this.apiInstance = new brevo.ContactsApi();
       console.log('Brevo service initialized successfully');
     } catch (error) {
       console.error('Failed to initialize Brevo service:', error);
+      
+      // Fallback initialization
+      try {
+        const client = new brevo.ApiClient();
+        if (client.authentications && client.authentications['api-key']) {
+          client.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
+          this.apiInstance = new brevo.ContactsApi(client);
+          console.log('Brevo service initialized with fallback method');
+        }
+      } catch (fallbackError) {
+        console.error('Fallback initialization also failed:', fallbackError);
+      }
     }
   }
 
