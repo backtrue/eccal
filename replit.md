@@ -145,6 +145,7 @@ Changelog:
 - June 25, 2025. Completed V1.1 with working Brevo integration (requires IP whitelist maintenance due to dynamic Replit IPs)
 - June 25, 2025. Released V1.2 - Multi-language support with Traditional Chinese, English, and Japanese localization
 - June 25, 2025. Updated V1.2.1 - Localized CPC values: NTD 5 (Taiwan), USD 1 (English), JPY 120 (Japan)
+- June 25, 2025. Updated V1.2.2 - Route-based language switching (/en, /jp) with browser language auto-detection
 ```
 
 ## User Preferences

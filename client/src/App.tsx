@@ -17,7 +17,20 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 function Router() {
   // Track page views when routes change
   useAnalytics();
-  const { t, locale } = useLocale();
+  const [location, setLocation] = useLocation();
+  
+  // Auto-redirect based on browser language
+  useEffect(() => {
+    if (location === "/") {
+      const browserLocale = getBrowserLocale();
+      if (browserLocale === 'en') {
+        setLocation('/en');
+      } else if (browserLocale === 'ja') {
+        setLocation('/jp');
+      }
+      // Default to zh-TW (no redirect needed for /)
+    }
+  }, [location, setLocation]);
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -34,11 +47,17 @@ function Router() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1" key={locale}>
+      <div className="flex-1">
         <Switch>
-          <Route path="/" component={Calculator} />
-          <Route path="/privacy-policy" component={PrivacyPolicy} />
-          <Route path="/terms-of-service" component={TermsOfService} />
+          <Route path="/" component={() => <Calculator locale="zh-TW" />} />
+          <Route path="/en" component={() => <Calculator locale="en" />} />
+          <Route path="/jp" component={() => <Calculator locale="ja" />} />
+          <Route path="/privacy-policy" component={() => <PrivacyPolicy locale="zh-TW" />} />
+          <Route path="/en/privacy-policy" component={() => <PrivacyPolicy locale="en" />} />
+          <Route path="/jp/privacy-policy" component={() => <PrivacyPolicy locale="ja" />} />
+          <Route path="/terms-of-service" component={() => <TermsOfService locale="zh-TW" />} />
+          <Route path="/en/terms-of-service" component={() => <TermsOfService locale="en" />} />
+          <Route path="/jp/terms-of-service" component={() => <TermsOfService locale="ja" />} />
           <Route component={NotFound} />
         </Switch>
       </div>

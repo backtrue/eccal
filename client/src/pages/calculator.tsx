@@ -12,7 +12,7 @@ import Footer from "@/components/Footer";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
 import AnalyticsDataLoader from "@/components/AnalyticsDataLoader";
 import { useAuth } from "@/hooks/useAuth";
-import { useLocale } from "@/hooks/useLocale";
+import { getTranslations, type Locale } from "@/lib/i18n";
 import { trackEvent } from "@/lib/analytics";
 import { trackCalculatorUsage, trackMetaEvent } from "@/lib/meta-pixel";
 
@@ -192,7 +192,7 @@ export default function Calculator() {
                               onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : 0)}
                             />
                             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                              <span className="text-gray-500 text-sm">NTD</span>
+                              <span className="text-gray-500 text-sm">{t.currency}</span>
                             </div>
                           </div>
                         </FormControl>
@@ -223,7 +223,7 @@ export default function Calculator() {
                               onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : 0)}
                             />
                             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                              <span className="text-gray-500 text-sm">NTD</span>
+                              <span className="text-gray-500 text-sm">{t.currency}</span>
                             </div>
                           </div>
                         </FormControl>
