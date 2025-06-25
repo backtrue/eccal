@@ -109,6 +109,7 @@ const translations: Record<Locale, TranslationData> = {
     percentage: '%',
     orders: '筆',
     visitors: '人',
+    cpcValue: 5,
     
     // Meta
     metaTitle: '廣告預算怎麼抓｜報數據來告訴你FB, IG廣告預算流量要多少',
@@ -170,6 +171,7 @@ const translations: Record<Locale, TranslationData> = {
     percentage: '%',
     orders: 'orders',
     visitors: 'visitors',
+    cpcValue: 1,
     
     // Meta
     metaTitle: 'How to Set Ad Budget | Report Data tells you FB, IG ad budget and traffic requirements',
@@ -231,6 +233,7 @@ const translations: Record<Locale, TranslationData> = {
     percentage: '%',
     orders: '件',
     visitors: '人',
+    cpcValue: 120,
     
     // Meta
     metaTitle: '広告予算の決め方｜レポートデータがFB・IG広告予算とトラフィック要件をお教えします',
