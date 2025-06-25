@@ -23,21 +23,30 @@ export function setupGoogleAuth(app: Express) {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       maxAge: sessionTtl,
       sameSite: 'lax',
-      domain: '.thinkwithblack.com',
     },
   }));
 
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Get the base URL from environment or request
+  const getBaseUrl = (req?: any) => {
+    if (process.env.NODE_ENV === 'production') {
+      return 'https://eccal.thinkwithblack.com';
+    }
+    return req ? `${req.protocol}://${req.get('host')}` : 'http://localhost:5000';
+  };
+
   // Google OAuth Strategy
   passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    callbackURL: "https://eccal.thinkwithblack.com/api/auth/google/callback",
+    callbackURL: process.env.NODE_ENV === 'production' 
+      ? "https://eccal.thinkwithblack.com/api/auth/google/callback"
+      : "/api/auth/google/callback",
     scope: [
       'profile',
       'email',
@@ -80,15 +89,17 @@ export function setupGoogleAuth(app: Express) {
   app.get('/api/auth/google', passport.authenticate('google'));
   
   app.get('/api/auth/google/callback', 
-    passport.authenticate('google', { failureRedirect: 'https://eccal.thinkwithblack.com/' }),
+    passport.authenticate('google', { failureRedirect: '/' }),
     (req, res) => {
-      res.redirect('https://eccal.thinkwithblack.com/');
+      const baseUrl = getBaseUrl(req);
+      res.redirect(`${baseUrl}/`);
     }
   );
 
   app.get('/api/auth/logout', (req, res) => {
     req.logout(() => {
-      res.redirect('https://eccal.thinkwithblack.com/');
+      const baseUrl = getBaseUrl(req);
+      res.redirect(`${baseUrl}/`);
     });
   });
 

@@ -112,6 +112,7 @@ Changelog:
 - June 25, 2025. Released V1.0 - Complete initial version with all core features
 - June 25, 2025. Added Google OAuth login and Analytics API integration
 - June 25, 2025. Updated for production deployment at eccal.thinkwithblack.com
+- June 25, 2025. Fixed redirect loop issue and proxy configuration for production
 ```
 
 ## User Preferences
