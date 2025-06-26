@@ -11,7 +11,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // 完全停用 Google OAuth - 這是 401 錯誤的根源
   // setupGoogleAuth(app);
 
-  // API routes for Google Analytics data
+  // 完全停用所有需要認證的路由，註解掉所有 API 路由
+  /*
   app.get('/api/analytics/properties', requireAuth, async (req: any, res) => {
     try {
       const properties = await analyticsService.getUserAnalyticsProperties(req.user.id);
@@ -316,6 +317,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error adding credits to all users:", error);
       res.status(500).json({ message: "Failed to add credits" });
     }
+  });
+
+  */
+
+  // 簡化的路由，只保留基本功能
+  app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', maintenance: true });
   });
 
   const httpServer = createServer(app);

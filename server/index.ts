@@ -12,10 +12,37 @@ if (process.env.NODE_ENV === 'production') {
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// 添加攔截器阻止所有 /api/auth 請求
+// 超級詳細的攔截器 - 記錄所有可能的信息
 app.use('/api/auth', (req, res) => {
-  console.error(`🚫 BLOCKED AUTH REQUEST: ${req.method} ${req.path}`);
+  console.error(`=== 🚫 AUTH REQUEST BLOCKED ===`);
+  console.error(`Time: ${new Date().toISOString()}`);
+  console.error(`Method: ${req.method}`);
+  console.error(`Path: ${req.path}`);
+  console.error(`Full URL: ${req.url}`);
+  console.error(`Headers:`, JSON.stringify(req.headers, null, 2));
+  console.error(`Body:`, req.body);
+  console.error(`Query:`, req.query);
+  console.error(`IP: ${req.ip}`);
+  console.error(`Socket Remote Address: ${req.socket.remoteAddress}`);
+  console.error(`Connection Info:`, {
+    localAddress: req.socket.localAddress,
+    localPort: req.socket.localPort,
+    remoteFamily: req.socket.remoteFamily,
+    remotePort: req.socket.remotePort
+  });
+  console.error(`=== END AUTH REQUEST ===`);
   res.status(404).json({ error: 'Authentication system disabled' });
+});
+
+// 也攔截 /user 路徑 (因為 log 顯示的是 /user 而不是 /api/auth/user)
+app.use('/user', (req, res) => {
+  console.error(`=== 🚫 /user REQUEST BLOCKED ===`);
+  console.error(`Time: ${new Date().toISOString()}`);
+  console.error(`Method: ${req.method}`);
+  console.error(`Path: ${req.path}`);
+  console.error(`Headers:`, JSON.stringify(req.headers, null, 2));
+  console.error(`=== END /user REQUEST ===`);
+  res.status(404).json({ error: 'User endpoint disabled' });
 });
 
 app.use((req, res, next) => {
