@@ -186,6 +186,10 @@ const translations: Record<Locale, TranslationData> = {
     monthlyAdBudget: 'Monthly Ad Budget',
     dailyAdBudget: 'Daily Ad Budget',
     
+    // Campaign Planner
+    campaignPlanner: 'Campaign Planner',
+    campaignPlannerDescription: 'Professional campaign planning tool for complete strategy',
+    
     // Common
     loading: 'Loading...',
     error: 'Error',

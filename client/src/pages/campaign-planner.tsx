@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Calculator, TrendingUp, Target, Clock, DollarSign } from "lucide-react";
 import { format, addDays, subDays } from "date-fns";
-import { zh, enUS, ja } from "date-fns/locale";
+import { zhTW, enUS, ja } from "date-fns/locale";
 import ProtectedFeature from "@/components/ProtectedFeature";
 import { useAnalyticsData } from "@/hooks/useAnalyticsData";
 
@@ -67,7 +67,7 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
 
   const getDateLocale = () => {
     switch (locale) {
-      case 'zh-TW': return zh;
+      case 'zh-TW': return zhTW;
       case 'ja': return ja;
       default: return enUS;
     }

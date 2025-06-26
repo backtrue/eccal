@@ -151,6 +151,7 @@ Changelog:
 - June 26, 2025. Fixed V1.3.2 - Created missing database tables (user_credits, credit_transactions, user_referrals) and successfully distributed 25 credits (5 welcome + 20 admin bonus) to all 30 existing users
 - June 26, 2025. Released V1.3.4 - Fixed all frontend errors: creditsData variable scoping, TypeScript errors, and duplicate i18n identifiers. Confirmed Brevo sync working (35 contacts synced successfully). Created comprehensive README.md and prepared for GitHub repository with proper version tagging.
 - June 26, 2025. Implemented V1.4.0 - Membership tier system: Free users keep all current features, can upgrade to Pro for 350 credits (30 days). Added membership status tracking, upgrade functionality, protected feature components, and multi-language support for membership system.
+- June 26, 2025. Implemented V1.5.0 - Campaign Budget Planner: First Pro-exclusive feature with 8-step campaign planning workflow. Includes pre-heat period (4%), launch period (60%), main period (15%), final period (20%), and repurchase period (1%) budget allocation. Features GA4 integration for conversion rate suggestions and complete daily budget breakdown.
 ```
 
 ## User Preferences
