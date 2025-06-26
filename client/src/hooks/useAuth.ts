@@ -1,18 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+// 完全移除 useQuery 導入和使用
 
 export function useAuth() {
-  const { data: user, isLoading } = useQuery({
-    queryKey: ["/api/auth/user"],
-    retry: false,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchInterval: false,
-    staleTime: Infinity,
-    enabled: false, // 完全停用自動查詢
-  });
-
+  // 完全不使用任何查詢機制
   return {
-    user: null, // 暫時停用認證功能
+    user: null,
     isLoading: false,
     isAuthenticated: false,
   };

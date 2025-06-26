@@ -137,18 +137,7 @@ export function setupGoogleAuth(app: Express) {
     });
   });
 
-  app.get('/api/auth/user', (req, res) => {
-    console.error('🔍 AUTH USER API CALLED - User-Agent:', req.get('User-Agent'));
-    console.error('🔍 AUTH USER API CALLED - Referer:', req.get('Referer')); 
-    console.error('🔍 AUTH USER API CALLED - Origin:', req.get('Origin'));
-    console.error('🔍 AUTH USER API CALLED - X-Requested-With:', req.get('X-Requested-With'));
-    console.error('🔍 AUTH USER API CALLED - Session:', req.sessionID);
-    console.error('🔍 AUTH USER STACK:', new Error().stack?.split('\n').slice(0, 5).join('\n'));
-    res.status(401).json({ 
-      error: 'Not authenticated', 
-      debug: `Called by ${req.get('User-Agent')} from ${req.get('Referer')}` 
-    });
-  });
+  // 完全移除 /api/auth/user 路由 - 問題是瀏覽器緩存的舊 JavaScript
 }
 
 // Middleware to check if user is authenticated

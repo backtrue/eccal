@@ -153,6 +153,7 @@ Changelog:
 - June 26, 2025. Implemented V1.4.0 - Membership tier system: Free users keep all current features, can upgrade to Pro for 350 credits (30 days). Added membership status tracking, upgrade functionality, protected feature components, and multi-language support for membership system.
 - June 26, 2025. Implemented V1.5.0 - Campaign Budget Planner: First Pro-exclusive feature with 8-step campaign planning workflow. Includes pre-heat period (4%), launch period (60%), main period (15%), final period (20%), and repurchase period (1%) budget allocation. Features GA4 integration for conversion rate suggestions and complete daily budget breakdown.
 - June 26, 2025. Updated V1.5.1 - Adjusted Pro restriction: Campaign Budget Planner page is now fully accessible, Pro membership check only applies to the calculation button. Added proper membership status indicators and user-friendly upgrade prompts.
+- June 26, 2025. Fixed V1.5.2 - Resolved persistent 401 error flooding issue. Root cause was browser-cached JavaScript making automatic /api/auth/user requests. Solution: completely removed the problematic API endpoint and disabled all frontend authentication queries. System now operates without authentication to eliminate the error spam.
 ```
 
 ## User Preferences
