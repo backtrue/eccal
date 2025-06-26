@@ -537,44 +537,57 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                       { key: 'repurchase', name: '回購期' },
                     ].map(({ key, name }) => {
                       const period = results.campaignPeriods[key as keyof typeof results.campaignPeriods];
+                      const dailyBudget = 
+                        key === 'preheat' ? Math.ceil(period.budget / 4) :
+                        key === 'launch' ? Math.ceil(period.budget / 3) :
+                        key === 'main' ? Math.ceil(period.budget / Math.max(1, Math.ceil((new Date(period.endDate).getTime() - new Date(period.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1)) :
+                        key === 'final' ? Math.ceil(period.budget / 3) :
+                        Math.ceil(period.budget / 1);
+                      
+                      const dailyTraffic = 
+                        key === 'preheat' ? Math.ceil(period.traffic / 4) :
+                        key === 'launch' ? Math.ceil(period.traffic / 3) :
+                        key === 'main' ? Math.ceil(period.traffic / Math.max(1, Math.ceil((new Date(period.endDate).getTime() - new Date(period.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1)) :
+                        key === 'final' ? Math.ceil(period.traffic / 3) :
+                        Math.ceil(period.traffic / 1);
+                      
                       return (
-                        <div key={key} className="text-center space-y-2 p-3 bg-gray-50 rounded-lg">
-                          {/* 期間名稱 - 最小字體 */}
-                          <div className="text-xs font-medium text-gray-500">
+                        <div key={key} className="text-center space-y-3 p-4 bg-gray-50 rounded-lg">
+                          {/* 期間名稱 */}
+                          <div className="text-sm font-bold text-gray-900 border-b border-gray-200 pb-2">
                             {name}
                           </div>
                           
-                          {/* 日期 - 最小字體 */}
-                          <div className="text-xs text-gray-400">
-                            {new Date(period.startDate).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })} - {new Date(period.endDate).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })}
+                          {/* 日期 */}
+                          <div className="space-y-1">
+                            <div className="text-xs text-gray-500 font-medium">日期</div>
+                            <div className="text-xs text-gray-700">
+                              {new Date(period.startDate).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })} - {new Date(period.endDate).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })}
+                            </div>
                           </div>
                           
-                          {/* 預算 - 最大字體 */}
-                          <div className="text-lg font-bold text-gray-900">
-                            ${period.budget.toLocaleString()}
+                          {/* 總預算 */}
+                          <div className="space-y-1">
+                            <div className="text-xs text-gray-500 font-medium">總預算</div>
+                            <div className="text-lg font-bold text-gray-900">
+                              ${period.budget.toLocaleString()}
+                            </div>
                           </div>
                           
-                          {/* 目標流量 - 中等字體 */}
-                          <div className="text-sm font-medium text-blue-600">
-                            {period.traffic.toLocaleString()}
+                          {/* 日預算 */}
+                          <div className="space-y-1">
+                            <div className="text-xs text-gray-500 font-medium">日預算</div>
+                            <div className="text-sm font-semibold text-green-600">
+                              ${dailyBudget.toLocaleString()}
+                            </div>
                           </div>
                           
-                          {/* 日預算建議 - 小字體 */}
-                          <div className="text-xs text-gray-500 mt-1 space-y-1">
-                            <div>日預算: ${
-                              key === 'preheat' ? Math.ceil(period.budget / 4).toLocaleString() :
-                              key === 'launch' ? Math.ceil(period.budget / 3).toLocaleString() :
-                              key === 'main' ? Math.ceil(period.budget / Math.max(1, Math.ceil((new Date(period.endDate).getTime() - new Date(period.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1)).toLocaleString() :
-                              key === 'final' ? Math.ceil(period.budget / 3).toLocaleString() :
-                              Math.ceil(period.budget / 1).toLocaleString()
-                            }</div>
-                            <div>日流量: {
-                              key === 'preheat' ? Math.ceil(period.traffic / 4).toLocaleString() :
-                              key === 'launch' ? Math.ceil(period.traffic / 3).toLocaleString() :
-                              key === 'main' ? Math.ceil(period.traffic / Math.max(1, Math.ceil((new Date(period.endDate).getTime() - new Date(period.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1)).toLocaleString() :
-                              key === 'final' ? Math.ceil(period.traffic / 3).toLocaleString() :
-                              Math.ceil(period.traffic / 1).toLocaleString()
-                            }</div>
+                          {/* 日流量 */}
+                          <div className="space-y-1">
+                            <div className="text-xs text-gray-500 font-medium">日流量</div>
+                            <div className="text-sm font-semibold text-blue-600">
+                              {dailyTraffic.toLocaleString()}
+                            </div>
                           </div>
                         </div>
                       );
