@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { getTranslations, type Locale } from "@/lib/i18n";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
 import LogoutButton from "@/components/LogoutButton";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useAuth } from "@/hooks/useAuth";
 
 interface NavigationBarProps {
@@ -31,7 +32,7 @@ export default function NavigationBar({ locale }: NavigationBarProps) {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link href="/" className="text-gray-600 hover:text-gray-900 transition-colors">
+            <Link href="/calculator" className="text-gray-600 hover:text-gray-900 transition-colors">
               {t.calculator}
             </Link>
             
@@ -46,8 +47,9 @@ export default function NavigationBar({ locale }: NavigationBarProps) {
               </Link>
             )}
 
-            {/* Auth buttons */}
+            {/* Language switcher and Auth buttons */}
             <div className="flex items-center space-x-2">
+              <LanguageSwitcher />
               {isAuthenticated ? (
                 <LogoutButton />
               ) : (
@@ -72,28 +74,23 @@ export default function NavigationBar({ locale }: NavigationBarProps) {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t">
             <div className="flex flex-col space-y-4">
-              <Link href="/">
-                <a className="text-gray-600 hover:text-gray-900 transition-colors">
-                  {t.calculator}
-                </a>
+              <Link href="/calculator" className="text-gray-600 hover:text-gray-900 transition-colors">
+                {t.calculator}
               </Link>
               
-              <Link href="/campaign-planner">
-                <a className="flex items-center gap-2 text-purple-600 hover:text-purple-800 transition-colors">
-                  {t.campaignPlanner}
-                  <Badge variant="outline" className="text-xs">PRO</Badge>
-                </a>
+              <Link href="/campaign-planner" className="flex items-center gap-2 text-purple-600 hover:text-purple-800 transition-colors">
+                {t.campaignPlanner}
+                <Badge variant="outline" className="text-xs">PRO</Badge>
               </Link>
 
               {isAuthenticated && (
-                <Link href="/dashboard">
-                  <a className="text-gray-600 hover:text-gray-900 transition-colors">
-                    儀表板
-                  </a>
+                <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 transition-colors">
+                  儀表板
                 </Link>
               )}
 
-              <div className="pt-2 border-t">
+              <div className="pt-2 border-t flex flex-col space-y-2">
+                <LanguageSwitcher />
                 {isAuthenticated ? (
                   <LogoutButton />
                 ) : (
