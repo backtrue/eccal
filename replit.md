@@ -159,6 +159,7 @@ Changelog:
 - June 26, 2025. Released V1.5.5 - Complete system restoration. All previously disabled features fully restored: Google OAuth authentication, Analytics API integration, credit system, referral system, membership upgrades, campaign planner, and Brevo email sync. Root cause was Replit platform behavior, not user code issues. System now operates at full functionality.
 - June 26, 2025. Fixed V1.5.6 - Google OAuth authentication fully operational. Removed remaining maintenance mode interceptors from server/index.ts that were blocking authentication routes. All Google login functionality now working correctly.
 - June 26, 2025. Fixed V1.5.7 - Resolved mobile Google OAuth callback issues. Root cause was disabled user deserialization in passport.deserializeUser. Fixed session handling, cookie settings, and added comprehensive error handling for mobile authentication flow.
+- June 26, 2025. Fixed V1.5.8 - Resolved database schema mismatch errors. Added missing columns (membership_level, membership_expires, campaign_planner_usage) to users table. All database operations now function correctly without column existence errors.
 ```
 
 ## User Preferences

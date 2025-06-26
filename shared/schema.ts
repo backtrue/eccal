@@ -36,6 +36,7 @@ export const users = pgTable("users", {
   tokenExpiresAt: timestamp("token_expires_at"),
   membershipLevel: varchar("membership_level", { length: 10 }).default("free").notNull(), // "free" or "pro"
   membershipExpires: timestamp("membership_expires"), // null for free, date for pro
+  campaignPlannerUsage: integer("campaign_planner_usage").default(0).notNull(), // Track usage count
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
