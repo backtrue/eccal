@@ -24,9 +24,7 @@ export function useRecordCampaignPlannerUsage() {
   
   return useMutation({
     mutationFn: async () => {
-      return await apiRequest("/api/campaign-planner/use", {
-        method: "POST",
-      });
+      return await apiRequest("/api/campaign-planner/use", "POST");
     },
     onSuccess: () => {
       // Invalidate usage query to refresh the data
