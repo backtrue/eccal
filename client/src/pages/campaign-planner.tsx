@@ -528,38 +528,40 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                     活動期間規劃
                   </h3>
                   
-                  {[
-                    { key: 'preheat', name: '預熱期', color: 'bg-orange-50 border-orange-200', percentage: '4%' },
-                    { key: 'launch', name: '起跑期', color: 'bg-blue-50 border-blue-200', percentage: '60%' },
-                    { key: 'main', name: '活動期', color: 'bg-green-50 border-green-200', percentage: '15%' },
-                    { key: 'final', name: '倒數期', color: 'bg-red-50 border-red-200', percentage: '20%' },
-                    { key: 'repurchase', name: '回購期', color: 'bg-purple-50 border-purple-200', percentage: '1%' },
-                  ].map(({ key, name, color, percentage }) => {
-                    const period = results.campaignPeriods[key as keyof typeof results.campaignPeriods];
-                    return (
-                      <div key={key} className={`p-4 rounded-lg border ${color}`}>
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <div className="font-semibold">{name}</div>
-                            <div className="text-sm text-gray-600">
-                              {period.startDate} ~ {period.endDate}
-                            </div>
+                  <div className="grid grid-cols-5 gap-4">
+                    {[
+                      { key: 'preheat', name: '預熱期' },
+                      { key: 'launch', name: '起跑期' },
+                      { key: 'main', name: '活動期' },
+                      { key: 'final', name: '倒數期' },
+                      { key: 'repurchase', name: '回購期' },
+                    ].map(({ key, name }) => {
+                      const period = results.campaignPeriods[key as keyof typeof results.campaignPeriods];
+                      return (
+                        <div key={key} className="text-center space-y-2 p-3 bg-gray-50 rounded-lg">
+                          {/* 期間名稱 - 最小字體 */}
+                          <div className="text-xs font-medium text-gray-500">
+                            {name}
                           </div>
-                          <Badge variant="outline">{percentage}</Badge>
+                          
+                          {/* 日期 - 最小字體 */}
+                          <div className="text-xs text-gray-400">
+                            {new Date(period.startDate).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })} - {new Date(period.endDate).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })}
+                          </div>
+                          
+                          {/* 預算 - 最大字體 */}
+                          <div className="text-lg font-bold text-gray-900">
+                            ${period.budget.toLocaleString()}
+                          </div>
+                          
+                          {/* 目標流量 - 中等字體 */}
+                          <div className="text-sm font-medium text-blue-600">
+                            {period.traffic.toLocaleString()}
+                          </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <DollarSign className="h-4 w-4 inline mr-1" />
-                            預算: {period.budget.toLocaleString()}
-                          </div>
-                          <div>
-                            <TrendingUp className="h-4 w-4 inline mr-1" />
-                            流量: {period.traffic.toLocaleString()}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -578,31 +580,30 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-2">日期</th>
-                      <th className="text-left p-2">期間</th>
-                      <th className="text-right p-2">預算</th>
-                      <th className="text-right p-2">流量</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {results.dailyBudgets.map((day, index) => (
-                      <tr key={index} className="border-b hover:bg-gray-50">
-                        <td className="p-2">{day.date}</td>
-                        <td className="p-2">
-                          <Badge variant="outline" className="text-xs">
-                            {day.period}
-                          </Badge>
-                        </td>
-                        <td className="p-2 text-right">{day.budget.toLocaleString()}</td>
-                        <td className="p-2 text-right">{day.traffic.toLocaleString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="max-h-96 overflow-y-auto space-y-1">
+                {results.dailyBudgets.map((day, index) => (
+                  <div key={index} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-md">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-gray-600">
+                        {new Date(day.date).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })}
+                      </span>
+                      <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+                        {day.period === 'preheat' ? '預熱期' : 
+                         day.period === 'launch' ? '起跑期' :
+                         day.period === 'main' ? '活動期' :
+                         day.period === 'final' ? '倒數期' : '回購期'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm font-medium">
+                        日預算: ${day.budget.toLocaleString()}
+                      </span>
+                      <span className="text-sm text-blue-600">
+                        流量: {day.traffic.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
