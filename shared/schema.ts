@@ -5,6 +5,8 @@ import {
   timestamp,
   integer,
   decimal,
+  numeric,
+  boolean,
   jsonb,
   index,
 } from "drizzle-orm/pg-core";
@@ -50,7 +52,45 @@ export const userMetrics = pgTable("user_metrics", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Credit system tables
+export const userCredits = pgTable("user_credits", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  balance: integer("balance").notNull().default(5), // starting with 5 credits
+  totalEarned: integer("total_earned").notNull().default(5), // total credits earned
+  totalSpent: integer("total_spent").notNull().default(0), // total credits spent
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const creditTransactions = pgTable("credit_transactions", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  type: varchar("type").notNull(), // "earn" or "spend"
+  amount: integer("amount").notNull(),
+  source: varchar("source").notNull(), // "registration", "referral", "calculation", "admin_bonus"
+  referralUserId: varchar("referral_user_id").references(() => users.id), // who referred this user (for referral credits)
+  description: varchar("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Referral system
+export const userReferrals = pgTable("user_referrals", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  referrerId: varchar("referrer_id").notNull().references(() => users.id), // who made the referral
+  referredUserId: varchar("referred_user_id").notNull().references(() => users.id), // who was referred
+  referralCode: varchar("referral_code").notNull().unique(), // unique referral code
+  creditAwarded: boolean("credit_awarded").notNull().default(false), // whether credit was given
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type InsertUserMetrics = typeof userMetrics.$inferInsert;
 export type UserMetrics = typeof userMetrics.$inferSelect;
+export type UserCredits = typeof userCredits.$inferSelect;
+export type InsertUserCredits = typeof userCredits.$inferInsert;
+export type CreditTransaction = typeof creditTransactions.$inferSelect;
+export type InsertCreditTransaction = typeof creditTransactions.$inferInsert;
+export type UserReferral = typeof userReferrals.$inferSelect;
+export type InsertUserReferral = typeof userReferrals.$inferInsert;

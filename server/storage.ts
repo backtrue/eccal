@@ -34,6 +34,9 @@ export interface IStorage {
   processReferral(referralCode: string, newUserId: string): Promise<UserReferral | null>;
   getReferralsByUser(userId: string): Promise<UserReferral[]>;
   getUserByReferralCode(referralCode: string): Promise<User | undefined>;
+  
+  // Admin operations
+  addCreditsToAllUsers(amount: number, description: string): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {

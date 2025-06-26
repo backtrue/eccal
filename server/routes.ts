@@ -131,6 +131,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Credit system routes
+  app.get('/api/credits', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const credits = await storage.getUserCredits(userId);
+      const transactions = await storage.getCreditTransactions(userId);
+      
+      res.json({
+        credits: credits || { balance: 0, totalEarned: 0, totalSpent: 0 },
+        transactions
+      });
+    } catch (error) {
+      console.error("Error fetching credits:", error);
+      res.status(500).json({ message: "Failed to fetch credits" });
+    }
+  });
+
+  app.post('/api/credits/spend', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { amount, description } = req.body;
+      
+      const credits = await storage.getUserCredits(userId);
+      if (!credits || credits.balance < amount) {
+        return res.status(400).json({ message: "Insufficient credits" });
+      }
+      
+      // Update credits
+      await storage.updateUserCredits(
+        userId,
+        credits.balance - amount,
+        credits.totalEarned,
+        credits.totalSpent + amount
+      );
+      
+      // Add transaction
+      await storage.addCreditTransaction({
+        userId,
+        type: "spend",
+        amount,
+        source: "calculation",
+        description: description || "Calculator usage",
+      });
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error spending credits:", error);
+      res.status(500).json({ message: "Failed to spend credits" });
+    }
+  });
+
+  // Referral system routes
+  app.get('/api/referral/code', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const referralCode = await storage.createReferralCode(userId);
+      res.json({ referralCode });
+    } catch (error) {
+      console.error("Error creating referral code:", error);
+      res.status(500).json({ message: "Failed to create referral code" });
+    }
+  });
+
+  app.get('/api/referrals', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const referrals = await storage.getReferralsByUser(userId);
+      
+      // Get referred user details
+      const referralsWithUsers = await Promise.all(
+        referrals.map(async (referral) => {
+          const referredUser = await storage.getUser(referral.referredUserId);
+          return {
+            ...referral,
+            referredUser: referredUser ? {
+              id: referredUser.id,
+              firstName: referredUser.firstName,
+              lastName: referredUser.lastName,
+              email: referredUser.email
+            } : null
+          };
+        })
+      );
+      
+      res.json(referralsWithUsers);
+    } catch (error) {
+      console.error("Error fetching referrals:", error);
+      res.status(500).json({ message: "Failed to fetch referrals" });
+    }
+  });
+
+  app.post('/api/referral/process', async (req, res) => {
+    try {
+      const { referralCode, userId } = req.body;
+      
+      if (!referralCode || !userId) {
+        return res.status(400).json({ message: "Missing referralCode or userId" });
+      }
+      
+      const referral = await storage.processReferral(referralCode, userId);
+      res.json({ success: !!referral, referral });
+    } catch (error) {
+      console.error("Error processing referral:", error);
+      res.status(500).json({ message: "Failed to process referral" });
+    }
+  });
+
+  // Admin route to add credits to all users
+  app.post('/api/admin/credits/add-all', async (req, res) => {
+    try {
+      const { amount, description } = req.body;
+      
+      if (!amount || !description) {
+        return res.status(400).json({ message: "Missing amount or description" });
+      }
+      
+      const updatedCount = await storage.addCreditsToAllUsers(amount, description);
+      res.json({ 
+        success: true, 
+        message: `Added ${amount} credits to ${updatedCount} users`,
+        updatedCount 
+      });
+    } catch (error) {
+      console.error("Error adding credits to all users:", error);
+      res.status(500).json({ message: "Failed to add credits" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
