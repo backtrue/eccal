@@ -1,19 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 
 export function useAuth() {
-  const { data: user, isLoading } = useQuery({
+  const { data: user, isLoading, error } = useQuery({
     queryKey: ["/api/auth/user"],
     retry: false,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnMount: true,
     refetchInterval: false,
-    staleTime: Infinity, // Never refetch automatically
-    enabled: false, // Disable automatic fetching
+    staleTime: 10 * 60 * 1000, // 10 minutes
   });
 
   return {
-    user: null, // Always return null to prevent auth loops
-    isLoading: false,
-    isAuthenticated: false,
+    user: error ? null : user,
+    isLoading,
+    isAuthenticated: !!user && !error,
   };
 }

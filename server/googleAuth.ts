@@ -110,13 +110,17 @@ export function setupGoogleAuth(app: Express) {
         
         // Sync to Brevo (non-blocking)
         if (user?.email) {
-          brevoService.addContactToList({
-            email: user.email,
-            firstName: user.firstName || undefined,
-            lastName: user.lastName || undefined,
-            gaResourceName: '',
-          }).catch(error => {
-            console.error('Error syncing to Brevo:', error);
+          import('./brevoService').then(({ brevoService }) => {
+            brevoService.addContactToList({
+              email: user.email,
+              firstName: user.firstName || undefined,
+              lastName: user.lastName || undefined,
+              gaResourceName: '',
+            }).catch((error: any) => {
+              console.error('Error syncing to Brevo:', error);
+            });
+          }).catch(() => {
+            // Ignore brevo service errors
           });
         }
         
