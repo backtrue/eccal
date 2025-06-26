@@ -9,34 +9,18 @@ export default function LogoutButton() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/auth/logout");
-      return response.json();
-    },
-    onSuccess: () => {
+  const logoutMutation = {
+    mutate: () => {
       toast({
-        title: "登出成功",
-        description: "您已成功登出，可以使用其他 Google 帳號重新登入",
+        title: "登出功能暫時停用",
+        description: "請直接重新整理頁面",
       });
-      
-      // Clear all cached data
-      queryClient.clear();
-      
-      // Refresh the page to reset authentication state
       setTimeout(() => {
         window.location.reload();
       }, 1000);
     },
-    onError: (error) => {
-      console.error("Logout failed:", error);
-      toast({
-        title: "登出失敗",
-        description: "登出時發生錯誤，請重新整理頁面",
-        variant: "destructive",
-      });
-    },
-  });
+    isPending: false
+  };
 
   const handleLogout = () => {
     logoutMutation.mutate();
