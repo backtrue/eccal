@@ -33,6 +33,10 @@ interface CalculationResults {
   dailyAdBudget: number;
 }
 
+interface CalculatorProps {
+  locale: Locale;
+}
+
 export default function Calculator({ locale }: CalculatorProps) {
   const t = getTranslations(locale);
   const [results, setResults] = useState<CalculationResults | null>(null);
@@ -148,9 +152,9 @@ export default function Calculator({ locale }: CalculatorProps) {
           <div className="mb-6 text-center">
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <p className="text-green-700">
-                {locale === 'zh-TW' ? `歡迎回來，${user.firstName || user.email}！您可以使用 Google Analytics 數據來自動填入計算機。` : 
-                 locale === 'en' ? `Welcome back, ${user.firstName || user.email}! You can use Google Analytics data to auto-fill the calculator.` :
-                 `おかえりなさい、${user.firstName || user.email}さん！Google Analytics データを使って計算機を自動入力できます。`}
+                {locale === 'zh-TW' ? `歡迎回來，${(user as any).firstName || (user as any).email}！您可以使用 Google Analytics 數據來自動填入計算機。` : 
+                 locale === 'en' ? `Welcome back, ${(user as any).firstName || (user as any).email}! You can use Google Analytics data to auto-fill the calculator.` :
+                 `おかえりなさい、${(user as any).firstName || (user as any).email}さん！Google Analytics データを使って計算機を自動入力できます。`}
               </p>
             </div>
           </div>
