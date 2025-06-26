@@ -44,11 +44,15 @@ export const getQueryFn: <T>(options: {
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: getQueryFn({ on401: "returnNull" }),
+      queryFn: () => {
+        console.log("所有查詢已停用");
+        return Promise.resolve(null);
+      },
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: Infinity,
       retry: false,
+      enabled: false, // 全局停用所有查詢
     },
     mutations: {
       retry: false,
