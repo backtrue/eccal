@@ -1,79 +1,37 @@
-import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import Calculator from "@/pages/calculator";
-import Dashboard from "@/pages/dashboard";
-import CampaignPlanner from "@/pages/campaign-planner";
-import PrivacyPolicy from "@/pages/privacy-policy";
-import TermsOfService from "@/pages/terms-of-service";
-import NotFound from "@/pages/not-found";
-import { useEffect } from "react";
-import { initGA } from "./lib/analytics";
-import { useAnalytics } from "./hooks/use-analytics";
-import { initMetaPixel } from "./lib/meta-pixel";
+import { Wrench, Clock } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-function Router() {
-  // Track page views when routes change
-  useAnalytics();
-  
+function MaintenancePage() {
   return (
-    <Switch>
-      {/* Public routes - calculator accessible to everyone */}
-      <Route path="/" component={() => <Calculator locale="zh-TW" />} />
-      <Route path="/en" component={() => <Calculator locale="en" />} />
-      <Route path="/jp" component={() => <Calculator locale="ja" />} />
-      
-      {/* Dashboard routes */}
-      <Route path="/dashboard" component={() => <Dashboard locale="zh-TW" />} />
-      <Route path="/dashboard/en" component={() => <Dashboard locale="en" />} />
-      <Route path="/dashboard/jp" component={() => <Dashboard locale="ja" />} />
-      
-      {/* Campaign Planner routes - Pro only */}
-      <Route path="/campaign-planner" component={() => <CampaignPlanner locale="zh-TW" />} />
-      <Route path="/campaign-planner/en" component={() => <CampaignPlanner locale="en" />} />
-      <Route path="/campaign-planner/jp" component={() => <CampaignPlanner locale="ja" />} />
-      
-      {/* Privacy and Terms pages */}
-      <Route path="/privacy" component={() => <PrivacyPolicy locale="zh-TW" />} />
-      <Route path="/privacy/en" component={() => <PrivacyPolicy locale="en" />} />
-      <Route path="/privacy/jp" component={() => <PrivacyPolicy locale="ja" />} />
-      <Route path="/terms" component={() => <TermsOfService locale="zh-TW" />} />
-      <Route path="/terms/en" component={() => <TermsOfService locale="en" />} />
-      <Route path="/terms/jp" component={() => <TermsOfService locale="ja" />} />
-      
-      {/* Fallback to 404 */}
-      <Route component={NotFound} />
-    </Switch>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md text-center">
+        <CardHeader>
+          <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center">
+            <Wrench className="h-8 w-8 text-blue-600" />
+          </div>
+          <CardTitle className="text-2xl font-bold text-gray-800">
+            系統維修中
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-gray-600">
+            我們正在進行系統升級維護，為您提供更好的服務體驗。
+          </p>
+          <div className="flex items-center justify-center space-x-2 text-blue-600">
+            <Clock className="h-5 w-5" />
+            <span className="font-medium">明日 8:00 恢復服務</span>
+          </div>
+          <p className="text-sm text-gray-500">
+            感謝您的耐心等候，造成不便敬請見諒。
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
 function App() {
-  // Initialize tracking when app loads
-  useEffect(() => {
-    // Verify required environment variables are present
-    if (!import.meta.env.VITE_GA_MEASUREMENT_ID) {
-      console.warn('Missing required Google Analytics key: VITE_GA_MEASUREMENT_ID');
-    } else {
-      initGA();
-    }
-
-    if (!import.meta.env.VITE_META_PIXEL_ID) {
-      console.warn('Missing required Meta Pixel key: VITE_META_PIXEL_ID');
-    } else {
-      initMetaPixel();
-    }
-  }, []);
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Router />
-        <Toaster />
-      </TooltipProvider>
-    </QueryClientProvider>
-  );
+  return <MaintenancePage />;
 }
 
 export default App;
