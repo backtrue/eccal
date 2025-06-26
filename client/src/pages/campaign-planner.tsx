@@ -62,10 +62,10 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
     defaultValues: {
       startDate: "",
       endDate: "",
-      targetRevenue: undefined,
-      targetAov: undefined,
-      targetConversionRate: undefined,
-      cpc: undefined,
+      targetRevenue: "",
+      targetAov: "",
+      targetConversionRate: "",
+      cpc: "",
     },
   });
 
