@@ -1,4 +1,4 @@
-import { ApiClient, ContactsApi, CreateContact, UpdateContact, RemoveContactFromList } from '@getbrevo/brevo';
+import * as brevo from '@getbrevo/brevo';
 
 export interface BrevoContact {
   email: string;
@@ -8,7 +8,7 @@ export interface BrevoContact {
 }
 
 export class BrevoService {
-  private apiInstance: ContactsApi | null = null;
+  private apiInstance: brevo.ContactsApi | null = null;
   private readonly listId = 15; // Brevo list #15
 
   constructor() {
@@ -56,7 +56,7 @@ export class BrevoService {
         hasLastName: !!contact.lastName
       });
 
-      const createContact = new CreateContact();
+      const createContact = new brevo.CreateContact();
       createContact.email = contact.email;
       createContact.listIds = [this.listId];
       
@@ -109,7 +109,7 @@ export class BrevoService {
     }
 
     try {
-      const updateContact = new UpdateContact();
+      const updateContact = new brevo.UpdateContact();
       updateContact.listIds = [this.listId];
       updateContact.attributes = {
         FIRSTNAME: contact.gaResourceName || contact.firstName || '',
@@ -152,7 +152,7 @@ export class BrevoService {
     }
 
     try {
-      const removeContact = new RemoveContactFromList();
+      const removeContact = new brevo.RemoveContactFromList();
       removeContact.emails = [email];
 
       // API key is already set in the apiInstance during initialization
