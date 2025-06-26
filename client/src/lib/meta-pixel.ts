@@ -3,6 +3,7 @@ declare global {
   interface Window {
     fbq: (...args: any[]) => void;
     _fbq: (...args: any[]) => void;
+    _fbq_initialized?: boolean;
   }
 }
 

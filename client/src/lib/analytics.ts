@@ -15,6 +15,12 @@ export const initGA = () => {
     return;
   }
 
+  // Prevent duplicate initialization
+  if (window.gtag) {
+    console.warn('Google Analytics already initialized, skipping');
+    return;
+  }
+
   // Add Google Analytics script to the head
   const script1 = document.createElement('script');
   script1.async = true;
