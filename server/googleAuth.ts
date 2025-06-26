@@ -71,6 +71,20 @@ export function setupGoogleAuth(app: Express) {
     }
   }));
 
+  // User cache to reduce database queries
+  const userCache = new Map<string, { user: any; timestamp: number }>();
+  const CACHE_TTL = 5 * 60 * 1000; // 5分鐘快取
+
+  // Clean up expired cache entries every 10 minutes
+  setInterval(() => {
+    const now = Date.now();
+    userCache.forEach((value, key) => {
+      if (now - value.timestamp > CACHE_TTL) {
+        userCache.delete(key);
+      }
+    });
+  }, 10 * 60 * 1000);
+
   // Serialize/Deserialize user for sessions
   passport.serializeUser((user: any, done) => {
     done(null, user.id);
@@ -78,7 +92,20 @@ export function setupGoogleAuth(app: Express) {
 
   passport.deserializeUser(async (id: string, done) => {
     try {
+      // Check cache first
+      const cached = userCache.get(id);
+      if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        return done(null, cached.user);
+      }
+
+      // Fetch from database
       const user = await storage.getUser(id);
+      
+      // Cache the result
+      if (user) {
+        userCache.set(id, { user, timestamp: Date.now() });
+      }
+      
       done(null, user || false);
     } catch (error) {
       done(error, false);

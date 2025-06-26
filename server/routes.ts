@@ -11,16 +11,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Google OAuth authentication
   setupGoogleAuth(app);
 
-  // Protected route - Get user info
+  // Protected route - Get user info with caching
   app.get('/api/auth/user', requireAuth, async (req: any, res) => {
     try {
-      // req.user should be the complete user object from deserializeUser
       const user = req.user;
-      console.log('Auth user endpoint - user object:', user?.id);
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
+      
+      // Set cache headers to reduce frequent requests
+      res.set({
+        'Cache-Control': 'private, max-age=300', // 5分鐘快取
+        'ETag': `"user-${user.id}-${Date.now()}"`,
+      });
+      
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);

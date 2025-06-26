@@ -4,9 +4,13 @@ export function useAuth() {
   const { data: user, isLoading } = useQuery({
     queryKey: ["/api/auth/user"],
     retry: false,
-    staleTime: 5 * 60 * 1000, // 5分鐘內不重新請求
-    refetchOnWindowFocus: false, // 減少不必要的重新請求
-    refetchInterval: false, // 停用自動刷新
+    staleTime: 10 * 60 * 1000, // 延長到10分鐘
+    gcTime: 15 * 60 * 1000, // 15分鐘快取
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
+    refetchOnMount: false, // 只在必要時查詢
+    refetchOnReconnect: false,
+    enabled: true, // 只執行一次初始查詢
   });
 
   return {
