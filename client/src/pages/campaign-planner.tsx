@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useCampaignPlannerUsage, useRecordCampaignPlannerUsage } from "@/hooks/useCampaignPlannerUsage";
 
 const campaignPlannerSchema = z.object({
   startDate: z.string().min(1, "請選擇活動開始日期"),
@@ -61,16 +62,9 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
   const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   
-  // Campaign planner usage hooks - 暫時停用
-  const usageData = { canUse: true, usage: 0, limit: 3, membershipStatus: { level: "free", isActive: true } };
-  const usageLoading = false;
-
-  const recordUsage = {
-    mutate: () => {
-      console.log("記錄使用 - 暫時停用");
-    },
-    isPending: false
-  };
+  // Campaign planner usage hooks
+  const { data: usageData, isLoading: usageLoading } = useCampaignPlannerUsage();
+  const recordUsage = useRecordCampaignPlannerUsage();
   const { toast } = useToast();
 
   const form = useForm<CampaignPlannerFormData>({
@@ -78,10 +72,10 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
     defaultValues: {
       startDate: "",
       endDate: "",
-      targetRevenue: "",
-      targetAov: "",
-      targetConversionRate: "",
-      cpc: "",
+      targetRevenue: 0,
+      targetAov: 0,
+      targetConversionRate: 0,
+      cpc: 0,
     },
   });
 
@@ -132,13 +126,14 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
       return;
     }
 
-    // Check usage permissions
-    if (!usageData?.canUse) {
-      const isPro = usageData?.membershipStatus?.level === 'pro' && usageData?.membershipStatus?.isActive;
-      if (!isPro && (usageData?.usage || 0) >= 3) {
+    // Check usage permissions with type safety
+    const usageInfo = usageData as any;
+    if (usageInfo && !usageInfo.canUse) {
+      const isPro = usageInfo.membershipStatus?.level === 'pro' && usageInfo.membershipStatus?.isActive;
+      if (!isPro && (usageInfo.usage || 0) >= 3) {
         toast({
           title: "使用次數已達上限",
-          description: `免費會員每月可使用 3 次活動預算規劃器，您已使用 ${usageData?.usage || 0} 次。請升級至 Pro 會員享受無限使用。`,
+          description: `免費會員每月可使用 3 次活動預算規劃器，您已使用 ${usageInfo.usage || 0} 次。請升級至 Pro 會員享受無限使用。`,
           variant: "destructive",
         });
         return;
@@ -146,16 +141,12 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
     }
 
     // Record usage for free users
-    if (usageData?.membershipStatus?.level !== 'pro' || !usageData?.membershipStatus?.isActive) {
+    if (usageInfo && (usageInfo.membershipStatus?.level !== 'pro' || !usageInfo.membershipStatus?.isActive)) {
       try {
         await recordUsage.mutateAsync();
       } catch (error) {
-        toast({
-          title: "使用記錄失敗",
-          description: "無法記錄使用次數，請重試。",
-          variant: "destructive",
-        });
-        return;
+        console.error('Failed to record usage:', error);
+        // Continue with calculation even if usage recording fails
       }
     }
 
@@ -323,11 +314,11 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
             <Badge variant="outline">Pro 會員專屬</Badge>
             {!isAuthenticated ? (
               <Badge variant="destructive">需要 Google 登入</Badge>
-            ) : usageData?.membershipStatus?.level === 'pro' && usageData?.membershipStatus?.isActive ? (
+            ) : (usageData as any)?.membershipStatus?.level === 'pro' && (usageData as any)?.membershipStatus?.isActive ? (
               <Badge variant="default">Pro 會員 - 無限使用</Badge>
             ) : (
               <Badge variant="secondary">
-                免費試用 {usageData?.usage || 0}/3 次
+                免費試用 {(usageData as any)?.usage || 0}/3 次
               </Badge>
             )}
           </div>
