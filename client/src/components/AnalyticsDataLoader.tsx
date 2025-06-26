@@ -98,6 +98,13 @@ export default function AnalyticsDataLoader({ onDataLoaded }: AnalyticsDataLoade
               </div>
             )}
 
+            {/* 除錯資訊 */}
+            <div className="text-xs text-gray-500 mt-2">
+              除錯資訊: 載入中={propertiesQuery.isLoading ? '是' : '否'}, 
+              有錯誤={propertiesQuery.error ? '是' : '否'}, 
+              資源數量={properties.length}
+            </div>
+
             {properties.length > 0 && (
               <div className="space-y-3">
                 <Select value={selectedProperty} onValueChange={setSelectedProperty}>
