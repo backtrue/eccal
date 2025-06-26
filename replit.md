@@ -149,7 +149,7 @@ Changelog:
 - June 26, 2025. Implemented V1.3.0 - Credit system with referral rewards: 1 credit per calculation, 5 initial credits, referral tracking dashboard
 - June 26, 2025. Updated V1.3.1 - Fixed credit system: 20 credits for existing users, dashboard navigation, unique referral links with 5 credits for both referrer and referee
 - June 26, 2025. Fixed V1.3.2 - Created missing database tables (user_credits, credit_transactions, user_referrals) and successfully distributed 25 credits (5 welcome + 20 admin bonus) to all 30 existing users
-- June 26, 2025. Updated V1.3.3 - Re-enabled Brevo integration and synced all 30 users to email list #15
+- June 26, 2025. Updated V1.3.3 - Re-enabled Brevo integration and manually synced all 33 users to email list #15 (confirmed working, list now contains all registered users)
 ```
 
 ## User Preferences
