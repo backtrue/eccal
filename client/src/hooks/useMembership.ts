@@ -8,10 +8,11 @@ export interface MembershipStatus {
 }
 
 export function useMembershipStatus() {
-  return useQuery<MembershipStatus>({
-    queryKey: ["/api/membership/status"],
-    retry: false,
-  });
+  return {
+    data: { level: "free" as const, isActive: true, expiresAt: undefined },
+    isLoading: false,
+    error: null
+  };
 }
 
 export function useUpgradeToPro() {
