@@ -161,6 +161,7 @@ Changelog:
 - June 26, 2025. Fixed V1.5.7 - Resolved mobile Google OAuth callback issues. Root cause was disabled user deserialization in passport.deserializeUser. Fixed session handling, cookie settings, and added comprehensive error handling for mobile authentication flow.
 - June 26, 2025. Fixed V1.5.8 - Resolved database schema mismatch errors. Added missing columns (membership_level, membership_expires, campaign_planner_usage) to users table. All database operations now function correctly without column existence errors.
 - June 26, 2025. Fixed V1.5.9 - Complete Google OAuth authentication system overhaul. Fixed user serialization, smart redirect after login, frontend auth state refresh, and temporarily disabled Brevo sync due to IP whitelist. Users now return to original page after login with proper authentication state.
+- June 26, 2025. Fixed V1.5.10 - Resolved frontend authentication state update issues. Root cause was disabled TanStack Query client (enabled: false) preventing auth state refresh after login. Restored query functionality, optimized cache policies, and removed global no-cache headers that blocked API responses. Authentication state now updates immediately after Google OAuth login.
 ```
 
 ## User Preferences
