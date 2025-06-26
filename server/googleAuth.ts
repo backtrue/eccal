@@ -25,7 +25,7 @@ export function setupGoogleAuth(app: Express) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: sessionTtl,
-      sameSite: 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     },
   }));
 
@@ -93,9 +93,40 @@ export function setupGoogleAuth(app: Express) {
   
   app.get('/api/auth/google/callback', 
     passport.authenticate('google', { failureRedirect: '/' }),
-    (req, res) => {
-      const baseUrl = getBaseUrl(req);
-      res.redirect(`${baseUrl}/`);
+    async (req: any, res) => {
+      try {
+        const user = req.user;
+        
+        // Process referral if exists
+        const referralCode = (req.session as any)?.referralCode;
+        if (referralCode && user) {
+          try {
+            await storage.processReferral(referralCode, user.id);
+            delete (req.session as any).referralCode;
+          } catch (error) {
+            console.error('Error processing referral:', error);
+          }
+        }
+        
+        // Sync to Brevo (non-blocking)
+        if (user?.email) {
+          brevoService.addContactToList({
+            email: user.email,
+            firstName: user.firstName || undefined,
+            lastName: user.lastName || undefined,
+            gaResourceName: '',
+          }).catch(error => {
+            console.error('Error syncing to Brevo:', error);
+          });
+        }
+        
+        const baseUrl = getBaseUrl(req);
+        res.redirect(`${baseUrl}/`);
+      } catch (error) {
+        console.error('OAuth callback error:', error);
+        const baseUrl = getBaseUrl(req);
+        res.redirect(`${baseUrl}/?error=auth_failed`);
+      }
     }
   );
 
