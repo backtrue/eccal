@@ -1,6 +1,6 @@
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Calculator from "@/pages/calculator";
@@ -77,7 +77,7 @@ function Router() {
                     會員後台
                   </Link>
                   <div className="text-sm text-gray-600">
-                    Credits: {user?.credits?.balance || 0}
+                    Credits: {creditsData?.credits?.balance || 0}
                   </div>
                 </div>
               )}

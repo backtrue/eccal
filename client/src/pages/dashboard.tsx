@@ -257,7 +257,7 @@ export default function Dashboard({ locale }: DashboardProps) {
               <CardHeader>
                 <CardTitle>推薦連結</CardTitle>
                 <p className="text-sm text-gray-600">
-                  分享您的專屬連結，每當有朋友透過連結註冊並登入，您就能獲得 1 Credit！
+                  {t.referralDescription}
                 </p>
               </CardHeader>
               <CardContent>

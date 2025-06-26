@@ -66,6 +66,13 @@ export interface TranslationData {
   // Referral System
   referralDescription: string;
   shareText: string;
+  
+  // Footer
+  blog: string;
+  
+  // Referral System
+  referralDescription: string;
+  shareText: string;
 }
 
 const translations: Record<Locale, TranslationData> = {
