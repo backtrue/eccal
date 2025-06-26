@@ -48,6 +48,7 @@ function Router() {
       <Route path="/" component={() => <Home locale={locale} />} />
       <Route path="/calculator" component={() => <Calculator locale={locale} />} />
       <Route path="/campaign-planner" component={() => <CampaignPlanner locale={locale} />} />
+      <Route path="/dashboard" component={() => <Dashboard locale={locale} />} />
       <Route path="/privacy" component={() => <Privacy locale={locale} />} />
       <Route path="/terms" component={() => <Terms locale={locale} />} />
       
@@ -55,6 +56,7 @@ function Router() {
       <Route path="/en" component={() => <Home locale="en" />} />
       <Route path="/en/calculator" component={() => <Calculator locale="en" />} />
       <Route path="/en/campaign-planner" component={() => <CampaignPlanner locale="en" />} />
+      <Route path="/en/dashboard" component={() => <Dashboard locale="en" />} />
       <Route path="/en/privacy" component={() => <Privacy locale="en" />} />
       <Route path="/en/terms" component={() => <Terms locale="en" />} />
       
@@ -62,6 +64,7 @@ function Router() {
       <Route path="/jp" component={() => <Home locale="ja" />} />
       <Route path="/jp/calculator" component={() => <Calculator locale="ja" />} />
       <Route path="/jp/campaign-planner" component={() => <CampaignPlanner locale="ja" />} />
+      <Route path="/jp/dashboard" component={() => <Dashboard locale="ja" />} />
       <Route path="/jp/privacy" component={() => <Privacy locale="ja" />} />
       <Route path="/jp/terms" component={() => <Terms locale="ja" />} />
       
