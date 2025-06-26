@@ -21,6 +21,19 @@ export interface IStorage {
   getUserMetrics(userId: string): Promise<UserMetrics | undefined>;
   saveUserMetrics(metrics: InsertUserMetrics): Promise<UserMetrics>;
   getLatestUserMetrics(userId: string): Promise<UserMetrics | undefined>;
+  
+  // Credit system operations
+  getUserCredits(userId: string): Promise<UserCredits | undefined>;
+  createUserCredits(userId: string): Promise<UserCredits>;
+  updateUserCredits(userId: string, balance: number, totalEarned?: number, totalSpent?: number): Promise<UserCredits>;
+  addCreditTransaction(transaction: InsertCreditTransaction): Promise<CreditTransaction>;
+  getCreditTransactions(userId: string): Promise<CreditTransaction[]>;
+  
+  // Referral system operations
+  createReferralCode(userId: string): Promise<string>;
+  processReferral(referralCode: string, newUserId: string): Promise<UserReferral | null>;
+  getReferralsByUser(userId: string): Promise<UserReferral[]>;
+  getUserByReferralCode(referralCode: string): Promise<User | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
