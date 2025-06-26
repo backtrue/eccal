@@ -12,16 +12,16 @@ if (process.env.NODE_ENV === 'production') {
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// 強制瀏覽器緩存失效的策略
+// 選擇性緩存控制 - 只對 HTML 頁面禁用緩存，保留 API 回應的正常緩存
 app.use((req, res, next) => {
-  // 對所有回應設置強制不緩存的 headers
-  res.set({
-    'Cache-Control': 'no-cache, no-store, must-revalidate, proxy-revalidate, max-age=0',
-    'Pragma': 'no-cache',
-    'Expires': '0',
-    'Surrogate-Control': 'no-store',
-    'ETag': `"${Date.now()}"` // 每次都是新的 ETag
-  });
+  // 只對 HTML 頁面設置 no-cache，讓 API 回應保持可緩存
+  if (req.path === '/' || req.path.endsWith('.html') || req.accepts('html')) {
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
+  }
   next();
 });
 

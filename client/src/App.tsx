@@ -91,17 +91,16 @@ function App() {
       const newUrl = window.location.pathname;
       window.history.replaceState({}, '', newUrl);
       
-      // Invalidate auth queries to refresh user state
+      // Force immediate auth state refresh
+      queryClient.removeQueries({ queryKey: ["/api/auth/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       
-      // Redirect to stored return page if exists
-      const returnTo = sessionStorage.getItem('returnTo');
-      if (returnTo && returnTo !== '/') {
+      // Force a page reload to ensure clean state
+      setTimeout(() => {
+        const returnTo = sessionStorage.getItem('returnTo');
         sessionStorage.removeItem('returnTo');
-        setTimeout(() => {
-          window.location.href = returnTo;
-        }, 500); // Give time for auth state to update
-      }
+        window.location.href = returnTo || '/';
+      }, 100);
     }
   }, []);
 
