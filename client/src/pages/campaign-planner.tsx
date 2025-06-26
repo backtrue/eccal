@@ -126,38 +126,25 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
       return;
     }
 
-    // Check usage permissions with strict validation
+    // Check usage permissions - free users have 3 total uses
     const usageInfo = usageData as any;
     if (usageInfo) {
       const isPro = usageInfo.membershipStatus?.level === 'pro' && usageInfo.membershipStatus?.isActive;
       const currentUsage = usageInfo.usage || 0;
+      const remainingUses = Math.max(0, 3 - currentUsage);
       
-      // For free users, enforce 3 usage limit
-      if (!isPro && currentUsage >= 3) {
+      // For free users, check if they have remaining uses
+      if (!isPro && remainingUses <= 0) {
         toast({
           title: "使用次數已達上限",
-          description: `免費會員僅可使用 3 次活動預算規劃器，您已使用 ${currentUsage} 次。請升級至 Pro 會員享受無限使用。`,
+          description: `免費會員可使用 3 次活動預算規劃器，您已使用完畢 (3/3)。請升級至 Pro 會員享受無限使用。`,
           variant: "destructive",
         });
         return;
       }
     }
 
-    // Record usage for free users only
-    if (usageInfo && usageInfo.membershipStatus?.level === 'free') {
-      try {
-        await recordUsage.mutateAsync();
-      } catch (error) {
-        console.error('Failed to record usage:', error);
-        toast({
-          title: "使用記錄失敗",
-          description: "無法記錄使用次數，請重試。",
-          variant: "destructive",
-        });
-        return; // Stop execution if usage recording fails
-      }
-    }
-
+    // Perform calculation first
     const startDate = new Date(data.startDate);
     const endDate = new Date(data.endDate);
     
@@ -309,6 +296,16 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
     };
 
     setResults(result);
+    
+    // Record usage for free users after successful calculation
+    if (usageInfo && usageInfo.membershipStatus?.level === 'free') {
+      try {
+        await recordUsage.mutateAsync();
+      } catch (error) {
+        console.error('Failed to record usage:', error);
+        // Don't block the user even if usage recording fails
+      }
+    }
   };
 
   return (
@@ -326,7 +323,7 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
               <Badge variant="default">Pro 會員 - 無限使用</Badge>
             ) : (
               <Badge variant="secondary">
-                免費試用 {(usageData as any)?.usage || 0}/3 次
+                免費試用 剩餘 {Math.max(0, 3 - ((usageData as any)?.usage || 0))}/3 次
               </Badge>
             )}
           </div>
