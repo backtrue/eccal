@@ -8,51 +8,77 @@ import { users } from "@shared/schema";
 import { brevoService } from "./brevoService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // 完全停用 Google OAuth - 這是 401 錯誤的根源
-  // setupGoogleAuth(app);
+  // Setup Google OAuth authentication
+  setupGoogleAuth(app);
 
-  // 完全停用所有需要認證的路由，註解掉所有 API 路由
-  /*
+  // Protected route - Get user info
+  app.get('/api/auth/user', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.sub;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+  // Analytics routes
   app.get('/api/analytics/properties', requireAuth, async (req: any, res) => {
     try {
-      const properties = await analyticsService.getUserAnalyticsProperties(req.user.id);
-      res.json(properties);
+      const userId = req.user.sub;
+      const properties = await analyticsService.getUserAnalyticsProperties(userId);
+      res.json({ properties });
     } catch (error) {
-      console.error('Error fetching properties:', error);
-      res.status(500).json({ error: 'Failed to fetch Analytics properties' });
+      console.error('Error fetching analytics properties:', error);
+      res.status(500).json({ message: 'Failed to fetch analytics properties' });
     }
   });
 
   app.post('/api/analytics/data', requireAuth, async (req: any, res) => {
     try {
+      const userId = req.user.sub;
       const { propertyId } = req.body;
+      
       if (!propertyId) {
-        return res.status(400).json({ error: 'Property ID is required' });
+        return res.status(400).json({ message: 'Property ID is required' });
       }
 
-      const data = await analyticsService.getEcommerceData(req.user.id, propertyId);
-      // Always return data, even if it's zero values
-      res.json(data || {
-        sessions: 0,
-        totalRevenue: 0,
-        ecommercePurchases: 0,
-        averageOrderValue: 0,
-        conversionRate: 0,
+      const data = await analyticsService.getEcommerceData(userId, propertyId);
+      
+      if (!data) {
+        return res.status(404).json({ message: 'No data found for the selected property' });
+      }
+
+      // Save metrics to database
+      await storage.saveUserMetrics({
+        userId,
+        dataSource: 'ga4_api',
+        gaResourceName: propertyId.toString(),
+        averageOrderValue: data.averageOrderValue.toString(),
+        conversionRate: data.conversionRate.toString(),
+        periodStart: new Date(),
+        periodEnd: new Date()
       });
+
+      res.json(data);
     } catch (error) {
-      console.error('Error fetching Analytics data:', error);
-      res.status(500).json({ error: 'Failed to fetch Analytics data' });
+      console.error('Error fetching analytics data:', error);
+      res.status(500).json({ message: 'Failed to fetch analytics data' });
     }
   });
 
-  // Get user's saved metrics
-  app.get('/api/user/metrics', requireAuth, async (req: any, res) => {
+  // User metrics route
+  app.get('/api/user-metrics', requireAuth, async (req: any, res) => {
     try {
-      const metrics = await storage.getLatestUserMetrics(req.user.id);
+      const userId = req.user.sub;
+      const metrics = await storage.getLatestUserMetrics(userId);
       res.json(metrics);
     } catch (error) {
       console.error('Error fetching user metrics:', error);
-      res.status(500).json({ error: 'Failed to fetch user metrics' });
+      res.status(500).json({ message: 'Failed to fetch user metrics' });
     }
   });
 
@@ -135,7 +161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Credit system routes
   app.get('/api/credits', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.sub;
       const credits = await storage.getUserCredits(userId);
       const transactions = await storage.getCreditTransactions(userId);
       
@@ -151,7 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/credits/spend', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.sub;
       const { amount, description } = req.body;
       
       const credits = await storage.getUserCredits(userId);
@@ -170,10 +196,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add transaction
       await storage.addCreditTransaction({
         userId,
-        type: "spend",
+        type: "spent",
         amount,
-        source: "calculation",
-        description: description || "Calculator usage",
+        source: "calculator",
+        description: description || "Calculator usage"
       });
       
       res.json({ success: true });
@@ -186,7 +212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Referral system routes
   app.get('/api/referral/code', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.sub;
       const referralCode = await storage.createReferralCode(userId);
       res.json({ referralCode });
     } catch (error) {
@@ -197,7 +223,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/referrals', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.sub;
       const referrals = await storage.getReferralsByUser(userId);
       
       // Get referred user details
@@ -242,7 +268,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Membership routes
   app.get('/api/membership/status', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.sub;
       const status = await storage.checkMembershipStatus(userId);
       res.json(status);
     } catch (error) {
@@ -253,7 +279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/membership/upgrade-to-pro', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.sub;
       const { durationDays = 30 } = req.body;
       const upgradePrice = 350;
       
@@ -278,10 +304,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add transaction record
       await storage.addCreditTransaction({
         userId,
-        type: "spend",
+        type: "spent",
         amount: upgradePrice,
-        source: "upgrade",
-        description: `Upgrade to Pro for ${durationDays} days`
+        description: `Upgrade to Pro for ${durationDays} days`,
+        referenceType: "membership_upgrade"
       });
       
       // Upgrade user to Pro
@@ -295,6 +321,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error upgrading to Pro:', error);
       res.status(500).json({ error: 'Failed to upgrade to Pro' });
+    }
+  });
+
+  // Campaign Planner usage tracking
+  app.get('/api/campaign-planner/usage', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.sub;
+      const usage = await storage.getCampaignPlannerUsage(userId);
+      const membershipStatus = await storage.checkMembershipStatus(userId);
+      
+      const limit = membershipStatus.level === 'pro' ? -1 : 3; // -1 means unlimited for Pro
+      const canUse = membershipStatus.level === 'pro' || usage < limit;
+      
+      res.json({
+        usage,
+        limit,
+        canUse,
+        membershipStatus
+      });
+    } catch (error) {
+      console.error('Error fetching campaign planner usage:', error);
+      res.status(500).json({ message: 'Failed to fetch usage data' });
+    }
+  });
+
+  app.post('/api/campaign-planner/record-usage', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.sub;
+      const updatedUser = await storage.incrementCampaignPlannerUsage(userId);
+      res.json({ success: true, user: updatedUser });
+    } catch (error) {
+      console.error('Error recording campaign planner usage:', error);
+      res.status(500).json({ message: 'Failed to record usage' });
     }
   });
 
@@ -319,11 +378,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  */
-
-  // 簡化的路由，只保留基本功能
+  // Health check endpoint
   app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', maintenance: true });
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
   const httpServer = createServer(app);
