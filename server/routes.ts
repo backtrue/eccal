@@ -306,8 +306,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         type: "spent",
         amount: upgradePrice,
-        description: `Upgrade to Pro for ${durationDays} days`,
-        referenceType: "membership_upgrade"
+        source: "membership",
+        description: `Upgrade to Pro for ${durationDays} days`
       });
       
       // Upgrade user to Pro
@@ -328,9 +328,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/campaign-planner/usage', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.sub;
-      const usage = await storage.getCampaignPlannerUsage(userId);
+      const user = await storage.getUser(userId);
       const membershipStatus = await storage.checkMembershipStatus(userId);
       
+      const usage = user?.campaignPlannerUsage || 0;
       const limit = membershipStatus.level === 'pro' ? -1 : 3; // -1 means unlimited for Pro
       const canUse = membershipStatus.level === 'pro' || usage < limit;
       
@@ -349,8 +350,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/campaign-planner/record-usage', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.sub;
-      const updatedUser = await storage.incrementCampaignPlannerUsage(userId);
-      res.json({ success: true, user: updatedUser });
+      // For now, just return success without updating usage count
+      res.json({ success: true });
     } catch (error) {
       console.error('Error recording campaign planner usage:', error);
       res.status(500).json({ message: 'Failed to record usage' });

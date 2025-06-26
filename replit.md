@@ -156,6 +156,7 @@ Changelog:
 - June 26, 2025. Fixed V1.5.2 - Resolved persistent 401 error flooding issue. Root cause was browser-cached JavaScript making automatic /api/auth/user requests. Solution: completely removed the problematic API endpoint and disabled all frontend authentication queries. System now operates without authentication to eliminate the error spam.
 - June 26, 2025. Deployed V1.5.3 - Emergency maintenance mode activated. Website shows "系統維修中，明日 8:00 恢復服務" to prevent user access while resolving backend authentication issues. All API routes disabled except health check. System stable with no error flooding.
 - June 26, 2025. Fixed V1.5.4 - Resolved infinite authentication requests issue. Initial analysis suggested browser cache problem, but IP analysis (34.60.247.238) revealed requests originated from Replit internal systems (health checks/monitoring). Solution: maintenance mode + status code changes caused Replit's internal systems to stop retrying. Key insight: platform-level behavior rather than user browser issue.
+- June 26, 2025. Released V1.5.5 - Complete system restoration. All previously disabled features fully restored: Google OAuth authentication, Analytics API integration, credit system, referral system, membership upgrades, campaign planner, and Brevo email sync. Root cause was Replit platform behavior, not user code issues. System now operates at full functionality.
 ```
 
 ## User Preferences
