@@ -147,6 +147,7 @@ Changelog:
 - June 25, 2025. Updated V1.2.1 - Localized CPC values: NTD 5 (Taiwan), USD 1 (English), JPY 120 (Japan)
 - June 25, 2025. Updated V1.2.2 - Route-based language switching (/en, /jp) with browser language auto-detection
 - June 26, 2025. Implemented V1.3.0 - Credit system with referral rewards: 1 credit per calculation, 5 initial credits, referral tracking dashboard
+- June 26, 2025. Updated V1.3.1 - Fixed credit system: 20 credits for existing users, dashboard navigation, unique referral links with 5 credits for both referrer and referee
 ```
 
 ## User Preferences
