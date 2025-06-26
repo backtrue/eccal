@@ -44,6 +44,10 @@ export interface IStorage {
   getReferralsByUser(userId: string): Promise<UserReferral[]>;
   getUserByReferralCode(referralCode: string): Promise<User | undefined>;
   
+  // Membership operations
+  upgradeToPro(userId: string, durationDays: number): Promise<User>;
+  checkMembershipStatus(userId: string): Promise<{ level: "free" | "pro"; isActive: boolean; expiresAt?: Date }>;
+  
   // Admin operations
   addCreditsToAllUsers(amount: number, description: string): Promise<number>;
 }

@@ -370,6 +370,42 @@ export default function Dashboard({ locale }: DashboardProps) {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Membership Upgrade Section */}
+      {membership?.level === "free" && (
+        <Card>
+          <CardHeader>
+            <CardTitle>升級至 Pro 會員</CardTitle>
+            <CardDescription>
+              解鎖所有進階功能，提升您的廣告投放效果
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <MembershipUpgrade />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Pro Features Demo */}
+      <ProtectedFeature 
+        requiredLevel="pro"
+        featureName="進階分析報表"
+        description="需要 Pro 會員才能查看詳細的廣告效果分析報表"
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5" />
+              進階分析報表 (Pro 功能)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600">
+              這裡將顯示詳細的廣告效果分析，包括競爭對手分析、自動化建議等進階功能。
+            </p>
+          </CardContent>
+        </Card>
+      </ProtectedFeature>
     </div>
   );
 }

@@ -66,6 +66,15 @@ export interface TranslationData {
   // Referral System
   referralDescription: string;
   shareText: string;
+  
+  // Membership System
+  freeMember: string;
+  proMember: string;
+  upgradeToPro: string;
+  membershipExpires: string;
+  insufficientCredits: string;
+  upgradeSuccess: string;
+  upgradeError: string;
 }
 
 const translations: Record<Locale, TranslationData> = {

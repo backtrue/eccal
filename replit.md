@@ -150,6 +150,7 @@ Changelog:
 - June 26, 2025. Updated V1.3.1 - Fixed credit system: 20 credits for existing users, dashboard navigation, unique referral links with 5 credits for both referrer and referee
 - June 26, 2025. Fixed V1.3.2 - Created missing database tables (user_credits, credit_transactions, user_referrals) and successfully distributed 25 credits (5 welcome + 20 admin bonus) to all 30 existing users
 - June 26, 2025. Released V1.3.4 - Fixed all frontend errors: creditsData variable scoping, TypeScript errors, and duplicate i18n identifiers. Confirmed Brevo sync working (35 contacts synced successfully). Created comprehensive README.md and prepared for GitHub repository with proper version tagging.
+- June 26, 2025. Implemented V1.4.0 - Membership tier system: Free users keep all current features, can upgrade to Pro for 350 credits (30 days). Added membership status tracking, upgrade functionality, protected feature components, and multi-language support for membership system.
 ```
 
 ## User Preferences
