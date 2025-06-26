@@ -143,6 +143,15 @@ const translations: Record<Locale, TranslationData> = {
     referralDescription: '分享您的專屬連結，每當有朋友透過連結註冊並登入，雙方都能獲得 5 Credits！',
     shareText: '我在用「報數據」計算廣告預算，超好用！透過我的連結註冊，我們都能獲得 5 Credits：',
     
+    // Membership System
+    freeMember: 'Free 會員',
+    proMember: 'Pro 會員',
+    upgradeToPro: '升級至 Pro',
+    membershipExpires: '會員有效期至',
+    insufficientCredits: '積分不足',
+    upgradeSuccess: '升級成功！歡迎成為 Pro 會員',
+    upgradeError: '升級失敗，請稍後再試',
+    
     // Footer
     blog: '部落格',
   },
@@ -212,6 +221,15 @@ const translations: Record<Locale, TranslationData> = {
     referralDescription: 'Share your exclusive link - when friends register and login through your link, both of you get 5 Credits!',
     shareText: 'I\'m using "Report Data" for ad budget calculations - it\'s amazing! Register through my link and we both get 5 Credits:',
     
+    // Membership System
+    freeMember: 'Free Member',
+    proMember: 'Pro Member',
+    upgradeToPro: 'Upgrade to Pro',
+    membershipExpires: 'Membership expires on',
+    insufficientCredits: 'Insufficient credits',
+    upgradeSuccess: 'Upgrade successful! Welcome to Pro membership',
+    upgradeError: 'Upgrade failed, please try again later',
+    
     // Footer
     blog: 'Blog',
   },
@@ -280,6 +298,15 @@ const translations: Record<Locale, TranslationData> = {
     // Referral System
     referralDescription: 'あなた専用のリンクをシェアしましょう！友達がリンク経由で登録・ログインすると、お互いに5クレジットがもらえます！',
     shareText: '私は「報数據」で広告予算の計算をしています。とても便利です！私のリンクから登録すると、お互いに5クレジットがもらえます：',
+    
+    // Membership System
+    freeMember: 'フリー会員',
+    proMember: 'プロ会員',
+    upgradeToPro: 'プロにアップグレード',
+    membershipExpires: '会員有効期限',
+    insufficientCredits: 'クレジット不足',
+    upgradeSuccess: 'アップグレード成功！プロ会員へようこそ',
+    upgradeError: 'アップグレードに失敗しました。後でもう一度お試しください',
     
     // Footer
     blog: 'ブログ',

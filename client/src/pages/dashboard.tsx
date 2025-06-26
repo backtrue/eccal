@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,12 +11,16 @@ import {
   TrendingDown,
   Copy,
   CheckCircle,
-  Clock
+  Clock,
+  Crown
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { getTranslations, type Locale } from "@/lib/i18n";
 import { queryClient } from "@/lib/queryClient";
+import { useMembershipStatus } from "@/hooks/useMembership";
+import MembershipUpgrade from "@/components/MembershipUpgrade";
+import ProtectedFeature from "@/components/ProtectedFeature";
 
 interface DashboardProps {
   locale: Locale;
@@ -55,6 +59,7 @@ interface ReferralData {
 
 export default function Dashboard({ locale }: DashboardProps) {
   const t = getTranslations(locale);
+  const { data: membership, isLoading: membershipLoading } = useMembershipStatus();
   const { toast } = useToast();
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 

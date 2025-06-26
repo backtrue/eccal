@@ -308,6 +308,61 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Admin operations
+  async upgradeToPro(userId: string, durationDays: number): Promise<User> {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + durationDays);
+    
+    const [user] = await db
+      .update(users)
+      .set({
+        membershipLevel: "pro",
+        membershipExpires: expiresAt,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    return user;
+  }
+
+  async checkMembershipStatus(userId: string): Promise<{ level: "free" | "pro"; isActive: boolean; expiresAt?: Date }> {
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    
+    if (!user) {
+      return { level: "free", isActive: true };
+    }
+    
+    const now = new Date();
+    const level = user.membershipLevel as "free" | "pro";
+    
+    if (level === "free") {
+      return { level: "free", isActive: true };
+    }
+    
+    // Check if Pro membership is still active
+    const isActive = user.membershipExpires ? user.membershipExpires > now : false;
+    
+    // If Pro membership expired, downgrade to free
+    if (!isActive && user.membershipLevel === "pro") {
+      await db
+        .update(users)
+        .set({
+          membershipLevel: "free",
+          membershipExpires: null,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
+      
+      return { level: "free", isActive: true };
+    }
+    
+    return { 
+      level, 
+      isActive, 
+      expiresAt: user.membershipExpires || undefined 
+    };
+  }
+
   async addCreditsToAllUsers(amount: number, description: string): Promise<number> {
     // Get all users
     const allUsers = await db.select().from(users);

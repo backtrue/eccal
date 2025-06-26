@@ -19,13 +19,7 @@ export function useUpgradeToPro() {
   
   return useMutation({
     mutationFn: async (durationDays: number = 30) => {
-      return await apiRequest('/api/membership/upgrade-to-pro', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ durationDays }),
-      });
+      return await apiRequest('/api/membership/upgrade-to-pro', 'POST', { durationDays });
     },
     onSuccess: () => {
       // Invalidate relevant queries
