@@ -12,9 +12,10 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Calculator, TrendingUp, Target, Clock, DollarSign } from "lucide-react";
 import { format, addDays, subDays } from "date-fns";
 import { zhTW, enUS, ja } from "date-fns/locale";
-import ProtectedFeature from "@/components/ProtectedFeature";
 import NavigationBar from "@/components/NavigationBar";
 import { useAnalyticsData } from "@/hooks/useAnalyticsData";
+import { useMembershipStatus } from "@/hooks/useMembership";
+import { useToast } from "@/hooks/use-toast";
 
 const campaignPlannerSchema = z.object({
   startDate: z.string().min(1, "請選擇活動開始日期"),
@@ -53,6 +54,8 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
   const t = getTranslations(locale);
   const [results, setResults] = useState<PlanningResult | null>(null);
   const { data: analyticsData } = useAnalyticsData();
+  const { data: membershipStatus } = useMembershipStatus();
+  const { toast } = useToast();
 
   const form = useForm<CampaignPlannerFormData>({
     resolver: zodResolver(campaignPlannerSchema),
@@ -100,6 +103,16 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
   };
 
   const onSubmit = (data: CampaignPlannerFormData) => {
+    // Check Pro membership before calculation
+    if (!membershipStatus || membershipStatus.level !== 'pro' || !membershipStatus.isActive) {
+      toast({
+        title: "需要 Pro 會員",
+        description: "活動預算規劃器功能僅限 Pro 會員使用，請先升級至 Pro 會員。",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const startDate = new Date(data.startDate);
     const endDate = new Date(data.endDate);
     
@@ -256,12 +269,16 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       <NavigationBar locale={locale} />
-      <ProtectedFeature requiredLevel="pro" featureName="活動預算規劃器">
-        <div className="container mx-auto p-6 max-w-6xl">
+      <div className="container mx-auto p-6 max-w-6xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">活動預算規劃器</h1>
           <p className="text-gray-600">專業的活動預算規劃工具，幫助您制定完整的活動策略</p>
-          <Badge variant="outline" className="mt-2">Pro 會員專屬</Badge>
+          <div className="flex items-center gap-2 mt-2">
+            <Badge variant="outline">Pro 會員專屬</Badge>
+            {(!membershipStatus || membershipStatus.level !== 'pro' || !membershipStatus.isActive) && (
+              <Badge variant="destructive">需要升級 Pro 會員</Badge>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -419,10 +436,28 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                     )}
                   />
 
-                  <Button type="submit" className="w-full">
+                  <Button 
+                    type="submit" 
+                    className="w-full"
+                    disabled={!membershipStatus || membershipStatus.level !== 'pro' || !membershipStatus.isActive}
+                  >
                     <Calculator className="h-4 w-4 mr-2" />
-                    計算活動規劃
+                    {(!membershipStatus || membershipStatus.level !== 'pro' || !membershipStatus.isActive) 
+                      ? '需要 Pro 會員才能計算' 
+                      : '計算活動規劃'
+                    }
                   </Button>
+                  
+                  {(!membershipStatus || membershipStatus.level !== 'pro' || !membershipStatus.isActive) && (
+                    <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                      <p className="text-amber-800 text-sm font-medium">
+                        活動預算規劃器是 Pro 會員專屬功能
+                      </p>
+                      <p className="text-amber-700 text-sm mt-1">
+                        升級至 Pro 會員即可使用完整的活動預算規劃功能，包含 8 步驟專業規劃流程。
+                      </p>
+                    </div>
+                  )}
                 </form>
               </Form>
             </CardContent>
@@ -542,8 +577,7 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
             </CardContent>
           </Card>
         )}
-        </div>
-      </ProtectedFeature>
+      </div>
     </div>
   );
 }
