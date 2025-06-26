@@ -24,11 +24,11 @@ export function useRecordCampaignPlannerUsage() {
   
   return useMutation({
     mutationFn: async () => {
-      return await apiRequest("/api/campaign-planner-usage", "POST");
+      return await apiRequest("/api/campaign-planner/record-usage", "POST");
     },
     onSuccess: () => {
       // Invalidate campaign planner usage queries
-      queryClient.invalidateQueries({ queryKey: ["/api/campaign-planner-usage"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/campaign-planner/usage"] });
     },
   });
 }
