@@ -77,12 +77,8 @@ export function setupGoogleAuth(app: Express) {
   });
 
   passport.deserializeUser(async (id: string, done) => {
-    try {
-      const user = await storage.getUser(id);
-      done(null, user);
-    } catch (error) {
-      done(error, null);
-    }
+    // 停用用戶反序列化，避免不斷查詢
+    done(null, false);
   });
 
   // Auth routes - force consent to ensure refresh token
