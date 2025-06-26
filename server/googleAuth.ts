@@ -7,13 +7,15 @@ import { storage } from "./storage";
 
 export function setupGoogleAuth(app: Express) {
   // Session configuration
-  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+  const sessionTtl = 8 * 60 * 60 * 1000; // 8 hours - 減少系統負擔
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
     createTableIfMissing: false,
     ttl: sessionTtl,
     tableName: "sessions",
+    pruneSessionInterval: 60 * 60 * 1000, // 每小時清理過期 session
+    disableTouch: true, // 停用 touch 操作減少資料庫負擔
   });
 
   app.use(session({
@@ -21,6 +23,8 @@ export function setupGoogleAuth(app: Express) {
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
+    rolling: false, // 停用滾動過期以減少資料庫更新
+    unset: 'destroy', // 刪除 session 時立即清理
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -84,6 +88,17 @@ export function setupGoogleAuth(app: Express) {
       }
     });
   }, 30 * 60 * 1000);
+
+  // 每 2 小時清理過期 session 記錄以減少資料庫負擔
+  setInterval(async () => {
+    try {
+      if (sessionStore && typeof sessionStore.clear === 'function') {
+        await sessionStore.clear();
+      }
+    } catch (error) {
+      // 靜默處理清理錯誤
+    }
+  }, 2 * 60 * 60 * 1000);
 
   // Serialize/Deserialize user for sessions
   passport.serializeUser((user: any, done) => {
