@@ -12,6 +12,12 @@ if (process.env.NODE_ENV === 'production') {
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// 添加攔截器阻止所有 /api/auth 請求
+app.use('/api/auth', (req, res) => {
+  console.error(`🚫 BLOCKED AUTH REQUEST: ${req.method} ${req.path}`);
+  res.status(404).json({ error: 'Authentication system disabled' });
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -25,20 +31,14 @@ app.use((req, res, next) => {
 
   res.on("finish", () => {
     const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
+    if (path.startsWith("/api") && !path.startsWith("/api/auth")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
 
-      // 特別標記 auth/user 請求
-      if (path === '/api/auth/user') {
-        console.error(`🚨 AUTH USER REQUEST: ${req.get('User-Agent')} | ${req.get('Referer')}`);
-        logLine = `🚨 AUTH_USER_CALL ${logLine} FROM:${req.get('User-Agent')} REF:${req.get('Referer')}`;
-      }
-
-      if (logLine.length > 120) {
-        logLine = logLine.slice(0, 119) + "…";
+      if (logLine.length > 80) {
+        logLine = logLine.slice(0, 79) + "…";
       }
 
       log(logLine);

@@ -8,8 +8,8 @@ import { users } from "@shared/schema";
 import { brevoService } from "./brevoService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup Google OAuth authentication
-  setupGoogleAuth(app);
+  // 完全停用 Google OAuth - 這是 401 錯誤的根源
+  // setupGoogleAuth(app);
 
   // API routes for Google Analytics data
   app.get('/api/analytics/properties', requireAuth, async (req: any, res) => {
