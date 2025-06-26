@@ -22,7 +22,7 @@ export const initMetaPixel = () => {
 
   // Initialize fbq function
   if (!window.fbq) {
-    const fbq = function(...args: any[]) {
+    const fbq: any = function(...args: any[]) {
       if (fbq.callMethod) {
         fbq.callMethod.apply(fbq, args);
       } else {
@@ -38,7 +38,7 @@ export const initMetaPixel = () => {
     fbq.push = fbq;
     fbq.loaded = true;
     fbq.version = '2.0';
-    fbq.queue = [];
+    fbq.queue = [] as any[];
   }
 
   // Load the Meta Pixel script

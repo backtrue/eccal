@@ -18,8 +18,9 @@ export interface AnalyticsData {
 export function useAnalyticsProperties() {
   return useQuery({
     queryKey: ["/api/analytics/properties"],
-    enabled: true,
-    staleTime: 5 * 60 * 1000, // 5分鐘
+    enabled: false, // 只在需要時手動觸發
+    staleTime: 30 * 60 * 1000, // 30分鐘
+    gcTime: 60 * 60 * 1000, // 1小時快取
   });
 }
 
@@ -40,7 +41,8 @@ export function useAnalyticsData() {
 export function useUserMetrics() {
   return useQuery({
     queryKey: ["/api/user/metrics"],
-    enabled: true,
-    staleTime: 2 * 60 * 1000, // 2分鐘
+    enabled: false, // 只在需要時手動觸發
+    staleTime: 30 * 60 * 1000, // 30分鐘
+    gcTime: 60 * 60 * 1000, // 1小時快取
   });
 }

@@ -16,7 +16,7 @@ export const initGA = () => {
   }
 
   // Prevent duplicate initialization
-  if (window.gtag) {
+  if (window.dataLayer && window.gtag) {
     return; // Silent skip to reduce console noise
   }
 

@@ -75,7 +75,7 @@ export function setupGoogleAuth(app: Express) {
   const userCache = new Map<string, { user: any; timestamp: number }>();
   const CACHE_TTL = 5 * 60 * 1000; // 5分鐘快取
 
-  // Clean up expired cache entries every 10 minutes
+  // Clean up expired cache entries every 30 minutes to reduce overhead
   setInterval(() => {
     const now = Date.now();
     userCache.forEach((value, key) => {
@@ -83,7 +83,7 @@ export function setupGoogleAuth(app: Express) {
         userCache.delete(key);
       }
     });
-  }, 10 * 60 * 1000);
+  }, 30 * 60 * 1000);
 
   // Serialize/Deserialize user for sessions
   passport.serializeUser((user: any, done) => {
