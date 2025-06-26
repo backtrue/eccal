@@ -99,10 +99,14 @@ export default function AnalyticsDataLoader({ onDataLoaded }: AnalyticsDataLoade
             )}
 
             {/* 除錯資訊 */}
-            <div className="text-xs text-gray-500 mt-2">
-              除錯資訊: 載入中={propertiesQuery.isLoading ? '是' : '否'}, 
+            <div className="text-xs text-gray-500 mt-2 space-y-1">
+              <div>除錯資訊: 載入中={propertiesQuery.isLoading ? '是' : '否'}, 
               有錯誤={propertiesQuery.error ? '是' : '否'}, 
-              資源數量={properties.length}
+              資源數量={properties.length}</div>
+              <div>原始數據: {JSON.stringify(propertiesQuery.data)}</div>
+              {propertiesQuery.error && (
+                <div className="text-red-500">錯誤詳情: {propertiesQuery.error.message}</div>
+              )}
             </div>
 
             {properties.length > 0 && (

@@ -36,8 +36,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/analytics/properties', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
+      console.log(`Fetching GA properties for user: ${userId}`);
       const properties = await analyticsService.getUserAnalyticsProperties(userId);
-      res.json({ properties });
+      console.log(`Found ${properties?.length || 0} properties:`, properties);
+      // 直接返回陣列，不包裝在物件中
+      res.json(properties || []);
     } catch (error) {
       console.error('Error fetching analytics properties:', error);
       res.status(500).json({ message: 'Failed to fetch analytics properties' });
@@ -78,7 +81,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User metrics route
-  app.get('/api/user-metrics', requireAuth, async (req: any, res) => {
+  app.get('/api/user/metrics', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
       const metrics = await storage.getLatestUserMetrics(userId);
