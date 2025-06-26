@@ -25,7 +25,7 @@ export function setupGoogleAuth(app: Express) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: sessionTtl,
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax',
     },
   }));
 
@@ -65,9 +65,9 @@ export function setupGoogleAuth(app: Express) {
         tokenExpiresAt: new Date(Date.now() + 3600000), // 1 hour from now
       });
       
-      return done(null, user);
+      return done(null, user || false);
     } catch (error) {
-      return done(error, null);
+      return done(error, false);
     }
   }));
 
@@ -77,8 +77,12 @@ export function setupGoogleAuth(app: Express) {
   });
 
   passport.deserializeUser(async (id: string, done) => {
-    // 停用用戶反序列化，避免不斷查詢
-    done(null, false);
+    try {
+      const user = await storage.getUser(id);
+      done(null, user || false);
+    } catch (error) {
+      done(error, false);
+    }
   });
 
   // Auth routes - force consent to ensure refresh token
@@ -87,48 +91,62 @@ export function setupGoogleAuth(app: Express) {
     prompt: 'consent'
   }));
   
-  app.get('/api/auth/google/callback', 
-    passport.authenticate('google', { failureRedirect: '/' }),
-    async (req: any, res) => {
-      try {
-        const user = req.user;
-        
-        // Process referral if exists
-        const referralCode = (req.session as any)?.referralCode;
-        if (referralCode && user) {
-          try {
-            await storage.processReferral(referralCode, user.id);
-            delete (req.session as any).referralCode;
-          } catch (error) {
-            console.error('Error processing referral:', error);
-          }
-        }
-        
-        // Sync to Brevo (non-blocking)
-        if (user?.email) {
-          import('./brevoService').then(({ brevoService }) => {
-            brevoService.addContactToList({
-              email: user.email,
-              firstName: user.firstName || undefined,
-              lastName: user.lastName || undefined,
-              gaResourceName: '',
-            }).catch((error: any) => {
-              console.error('Error syncing to Brevo:', error);
-            });
-          }).catch(() => {
-            // Ignore brevo service errors
-          });
-        }
-        
-        const baseUrl = getBaseUrl(req);
-        res.redirect(`${baseUrl}/`);
-      } catch (error) {
-        console.error('OAuth callback error:', error);
-        const baseUrl = getBaseUrl(req);
-        res.redirect(`${baseUrl}/?error=auth_failed`);
+  app.get('/api/auth/google/callback', (req, res, next) => {
+    passport.authenticate('google', (err: any, user: any, info: any) => {
+      if (err) {
+        console.error('Google OAuth error:', err);
+        return res.status(500).send('Authentication failed');
       }
-    }
-  );
+      
+      if (!user) {
+        console.error('Google OAuth failed - no user returned:', info);
+        return res.status(401).send('Authentication failed');
+      }
+      
+      req.logIn(user, async (loginErr) => {
+        if (loginErr) {
+          console.error('Login error:', loginErr);
+          return res.status(500).send('Login failed');
+        }
+        
+        try {
+          // Process referral if exists
+          const referralCode = (req.session as any)?.referralCode;
+          if (referralCode && user) {
+            try {
+              await storage.processReferral(referralCode, user.id);
+              delete (req.session as any).referralCode;
+            } catch (error) {
+              console.error('Error processing referral:', error);
+            }
+          }
+          
+          // Sync to Brevo (non-blocking)
+          if (user?.email) {
+            import('./brevoService').then(({ brevoService }) => {
+              brevoService.addContactToList({
+                email: user.email,
+                firstName: user.firstName || undefined,
+                lastName: user.lastName || undefined,
+                gaResourceName: '',
+              }).catch((error: any) => {
+                console.error('Error syncing to Brevo:', error);
+              });
+            }).catch(() => {
+              // Ignore brevo service errors
+            });
+          }
+          
+          const baseUrl = getBaseUrl(req);
+          res.redirect(`${baseUrl}/`);
+        } catch (error) {
+          console.error('OAuth callback processing error:', error);
+          const baseUrl = getBaseUrl(req);
+          res.redirect(`${baseUrl}/?error=auth_failed`);
+        }
+      });
+    })(req, res, next);
+  });
 
   app.get('/api/auth/logout', (req, res) => {
     req.logout(() => {
