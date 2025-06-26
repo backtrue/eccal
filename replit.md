@@ -154,6 +154,7 @@ Changelog:
 - June 26, 2025. Implemented V1.5.0 - Campaign Budget Planner: First Pro-exclusive feature with 8-step campaign planning workflow. Includes pre-heat period (4%), launch period (60%), main period (15%), final period (20%), and repurchase period (1%) budget allocation. Features GA4 integration for conversion rate suggestions and complete daily budget breakdown.
 - June 26, 2025. Updated V1.5.1 - Adjusted Pro restriction: Campaign Budget Planner page is now fully accessible, Pro membership check only applies to the calculation button. Added proper membership status indicators and user-friendly upgrade prompts.
 - June 26, 2025. Fixed V1.5.2 - Resolved persistent 401 error flooding issue. Root cause was browser-cached JavaScript making automatic /api/auth/user requests. Solution: completely removed the problematic API endpoint and disabled all frontend authentication queries. System now operates without authentication to eliminate the error spam.
+- June 26, 2025. Deployed V1.5.3 - Emergency maintenance mode activated. Website shows "系統維修中，明日 8:00 恢復服務" to prevent user access while resolving backend authentication issues. All API routes disabled except health check. System stable with no error flooding.
 ```
 
 ## User Preferences
