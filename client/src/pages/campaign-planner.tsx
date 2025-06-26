@@ -15,7 +15,10 @@ import { zhTW, enUS, ja } from "date-fns/locale";
 import NavigationBar from "@/components/NavigationBar";
 import { useAnalyticsData } from "@/hooks/useAnalyticsData";
 import { useMembershipStatus } from "@/hooks/useMembership";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 const campaignPlannerSchema = z.object({
   startDate: z.string().min(1, "請選擇活動開始日期"),
