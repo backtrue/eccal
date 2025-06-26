@@ -126,22 +126,25 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
       return;
     }
 
-    // Check usage permissions with type safety
+    // Check usage permissions with strict validation
     const usageInfo = usageData as any;
-    if (usageInfo && !usageInfo.canUse) {
+    if (usageInfo) {
       const isPro = usageInfo.membershipStatus?.level === 'pro' && usageInfo.membershipStatus?.isActive;
-      if (!isPro && (usageInfo.usage || 0) >= 3) {
+      const currentUsage = usageInfo.usage || 0;
+      
+      // For free users, enforce 3 usage limit
+      if (!isPro && currentUsage >= 3) {
         toast({
           title: "使用次數已達上限",
-          description: `免費會員每月可使用 3 次活動預算規劃器，您已使用 ${usageInfo.usage || 0} 次。請升級至 Pro 會員享受無限使用。`,
+          description: `免費會員僅可使用 3 次活動預算規劃器，您已使用 ${currentUsage} 次。請升級至 Pro 會員享受無限使用。`,
           variant: "destructive",
         });
         return;
       }
     }
 
-    // Record usage for free users
-    if (usageInfo && (usageInfo.membershipStatus?.level !== 'pro' || !usageInfo.membershipStatus?.isActive)) {
+    // Record usage for free users only
+    if (usageInfo && usageInfo.membershipStatus?.level === 'free') {
       try {
         await recordUsage.mutateAsync();
       } catch (error) {

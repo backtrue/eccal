@@ -395,8 +395,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const membershipStatus = await storage.checkMembershipStatus(userId);
       
-      // Only record usage for non-Pro users
-      if (membershipStatus.level !== 'pro' || !membershipStatus.isActive) {
+      // Only record usage for non-Pro users (free users only)
+      if (membershipStatus.level === 'free') {
         await storage.incrementCampaignPlannerUsage(userId);
       }
       
