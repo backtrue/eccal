@@ -62,6 +62,10 @@ export interface TranslationData {
   // Brevo Integration
   emailSaved: string;
   emailSaveError: string;
+  
+  // Referral System
+  referralDescription: string;
+  shareText: string;
 }
 
 const translations: Record<Locale, TranslationData> = {
