@@ -48,6 +48,10 @@ export interface IStorage {
   upgradeToPro(userId: string, durationDays: number): Promise<User>;
   checkMembershipStatus(userId: string): Promise<{ level: "free" | "pro"; isActive: boolean; expiresAt?: Date }>;
   
+  // Campaign Planner usage tracking
+  incrementCampaignPlannerUsage(userId: string): Promise<User>;
+  getCampaignPlannerUsage(userId: string): Promise<number>;
+  
   // Admin operations
   addCreditsToAllUsers(amount: number, description: string): Promise<number>;
 }

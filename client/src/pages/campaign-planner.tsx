@@ -55,6 +55,9 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
   const [results, setResults] = useState<PlanningResult | null>(null);
   const { data: analyticsData } = useAnalyticsData();
   const { data: membershipStatus } = useMembershipStatus();
+  const { data: usageData, isLoading: usageLoading } = useCampaignPlannerUsage();
+  const { user, isAuthenticated } = useAuth();
+  const recordUsage = useRecordCampaignPlannerUsage();
   const { toast } = useToast();
 
   const form = useForm<CampaignPlannerFormData>({
@@ -102,19 +105,46 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
     return Math.max(0.01, Math.min(100, suggestedRate));
   };
 
-  const onSubmit = (data: CampaignPlannerFormData) => {
-    // TODO: Re-enable Pro membership check after testing
-    // Check Pro membership before calculation
-    // const isPro = membershipStatus?.level === 'pro' && membershipStatus?.isActive;
-    
-    // if (!isPro) {
-    //   toast({
-    //     title: "需要 Pro 會員",
-    //     description: "活動預算規劃器功能僅限 Pro 會員使用，請先登入並升級至 Pro 會員。",
-    //     variant: "destructive",
-    //   });
-    //   return;
-    // }
+  const onSubmit = async (data: CampaignPlannerFormData) => {
+    // Check authentication first
+    if (!isAuthenticated || !user) {
+      toast({
+        title: "需要登入",
+        description: "請先使用 Google 帳號登入才能使用活動預算規劃器。",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 1000);
+      return;
+    }
+
+    // Check usage permissions
+    if (!usageData?.canUse) {
+      const isPro = usageData?.membershipStatus?.level === 'pro' && usageData?.membershipStatus?.isActive;
+      if (!isPro && (usageData?.usage || 0) >= 3) {
+        toast({
+          title: "使用次數已達上限",
+          description: `免費會員每月可使用 3 次活動預算規劃器，您已使用 ${usageData?.usage || 0} 次。請升級至 Pro 會員享受無限使用。`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    // Record usage for free users
+    if (usageData?.membershipStatus?.level !== 'pro' || !usageData?.membershipStatus?.isActive) {
+      try {
+        await recordUsage.mutateAsync();
+      } catch (error) {
+        toast({
+          title: "使用記錄失敗",
+          description: "無法記錄使用次數，請重試。",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
 
     const startDate = new Date(data.startDate);
     const endDate = new Date(data.endDate);
@@ -276,13 +306,17 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">活動預算規劃器</h1>
           <p className="text-gray-600">專業的活動預算規劃工具，幫助您制定完整的活動策略</p>
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
             <Badge variant="outline">Pro 會員專屬</Badge>
-            <Badge variant="secondary">測試模式 - 暫時開放</Badge>
-            {/* TODO: Re-enable after testing */}
-            {/* {(!membershipStatus || membershipStatus?.level !== 'pro' || !membershipStatus?.isActive) && (
-              <Badge variant="destructive">需要升級 Pro 會員</Badge>
-            )} */}
+            {!isAuthenticated ? (
+              <Badge variant="destructive">需要 Google 登入</Badge>
+            ) : usageData?.membershipStatus?.level === 'pro' && usageData?.membershipStatus?.isActive ? (
+              <Badge variant="default">Pro 會員 - 無限使用</Badge>
+            ) : (
+              <Badge variant="secondary">
+                免費試用 {usageData?.usage || 0}/3 次
+              </Badge>
+            )}
           </div>
         </div>
 
