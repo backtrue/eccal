@@ -55,9 +55,25 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
   const [results, setResults] = useState<PlanningResult | null>(null);
   const { data: analyticsData } = useAnalyticsData();
   const { data: membershipStatus } = useMembershipStatus();
-  const { data: usageData, isLoading: usageLoading } = useCampaignPlannerUsage();
   const { user, isAuthenticated } = useAuth();
-  const recordUsage = useRecordCampaignPlannerUsage();
+  const queryClient = useQueryClient();
+  
+  // Campaign planner usage hooks
+  const { data: usageData, isLoading: usageLoading } = useQuery({
+    queryKey: ["/api/campaign-planner/usage"],
+    retry: false,
+    enabled: isAuthenticated,
+  });
+
+  const recordUsage = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("/api/campaign-planner/use", "POST");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/campaign-planner/usage"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/membership/status"] });
+    },
+  });
   const { toast } = useToast();
 
   const form = useForm<CampaignPlannerFormData>({
