@@ -108,6 +108,8 @@ export default function Calculator({ locale }: CalculatorProps) {
 
   return (
     <div className="bg-gray-50 font-sans">
+      <NavigationBar locale={locale} />
+      
       {/* Hero Section */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

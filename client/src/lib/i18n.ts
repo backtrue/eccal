@@ -109,6 +109,9 @@ const translations: Record<Locale, TranslationData> = {
     monthlyAdBudget: '月廣告預算',
     dailyAdBudget: '日廣告預算',
     
+    // Campaign Planner
+    campaignPlannerDescription: '專業的活動預算規劃工具，制定完整活動策略',
+    
     // Common
     loading: '載入中...',
     error: '錯誤',
