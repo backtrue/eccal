@@ -65,7 +65,9 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
   const { data: usageData, isLoading: usageLoading } = useQuery({
     queryKey: ["/api/campaign-planner/usage"],
     retry: false,
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !!user,
+    refetchOnWindowFocus: false,
+    staleTime: 60 * 1000, // 1 minute
   });
 
   const recordUsage = useMutation({
