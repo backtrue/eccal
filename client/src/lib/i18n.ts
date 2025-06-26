@@ -27,6 +27,10 @@ export interface TranslationData {
   monthlyAdBudget: string;
   dailyAdBudget: string;
   
+  // Campaign Planner
+  campaignPlanner: string;
+  campaignPlannerDescription: string;
+  
   // Common
   loading: string;
   error: string;

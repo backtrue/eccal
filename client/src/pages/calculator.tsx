@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import Footer from "@/components/Footer";
+import { Link } from "wouter";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
 import AnalyticsDataLoader from "@/components/AnalyticsDataLoader";
 import { useAuth } from "@/hooks/useAuth";

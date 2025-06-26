@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Calculator from "@/pages/calculator";
 import Dashboard from "@/pages/dashboard";
+import CampaignPlanner from "@/pages/campaign-planner";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import TermsOfService from "@/pages/terms-of-service";
 import NotFound from "@/pages/not-found";
@@ -28,6 +29,11 @@ function Router() {
       <Route path="/dashboard" component={() => <Dashboard locale="zh-TW" />} />
       <Route path="/dashboard/en" component={() => <Dashboard locale="en" />} />
       <Route path="/dashboard/jp" component={() => <Dashboard locale="ja" />} />
+      
+      {/* Campaign Planner routes - Pro only */}
+      <Route path="/campaign-planner" component={() => <CampaignPlanner locale="zh-TW" />} />
+      <Route path="/campaign-planner/en" component={() => <CampaignPlanner locale="en" />} />
+      <Route path="/campaign-planner/jp" component={() => <CampaignPlanner locale="ja" />} />
       
       {/* Privacy and Terms pages */}
       <Route path="/privacy" component={() => <PrivacyPolicy locale="zh-TW" />} />
