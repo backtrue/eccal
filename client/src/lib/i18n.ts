@@ -136,6 +136,13 @@ const translations: Record<Locale, TranslationData> = {
     // Brevo Integration
     emailSaved: '電子郵件已儲存',
     emailSaveError: '儲存電子郵件時發生錯誤',
+    
+    // Referral System
+    referralDescription: '分享您的專屬連結，每當有朋友透過連結註冊並登入，雙方都能獲得 5 Credits！',
+    shareText: '我在用「報數據」計算廣告預算，超好用！透過我的連結註冊，我們都能獲得 5 Credits：',
+    
+    // Footer
+    blog: '部落格',
   },
   
   'en': {
@@ -198,6 +205,13 @@ const translations: Record<Locale, TranslationData> = {
     // Brevo Integration
     emailSaved: 'Email saved',
     emailSaveError: 'Error saving email',
+    
+    // Referral System
+    referralDescription: 'Share your exclusive link - when friends register and login through your link, both of you get 5 Credits!',
+    shareText: 'I\'m using "Report Data" for ad budget calculations - it\'s amazing! Register through my link and we both get 5 Credits:',
+    
+    // Footer
+    blog: 'Blog',
   },
   
   'ja': {
@@ -260,6 +274,13 @@ const translations: Record<Locale, TranslationData> = {
     // Brevo Integration
     emailSaved: 'メールアドレスが保存されました',
     emailSaveError: 'メールアドレスの保存中にエラーが発生しました',
+    
+    // Referral System
+    referralDescription: 'あなた専用のリンクをシェアしましょう！友達がリンク経由で登録・ログインすると、お互いに5クレジットがもらえます！',
+    shareText: '私は「報数據」で広告予算の計算をしています。とても便利です！私のリンクから登録すると、お互いに5クレジットがもらえます：',
+    
+    // Footer
+    blog: 'ブログ',
   },
 };
 
