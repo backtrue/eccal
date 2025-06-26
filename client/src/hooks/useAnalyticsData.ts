@@ -18,7 +18,8 @@ export interface AnalyticsData {
 export function useAnalyticsProperties() {
   return useQuery({
     queryKey: ["/api/analytics/properties"],
-    enabled: false, // Only fetch when explicitly called
+    enabled: true,
+    staleTime: 5 * 60 * 1000, // 5分鐘
   });
 }
 
@@ -39,6 +40,7 @@ export function useAnalyticsData() {
 export function useUserMetrics() {
   return useQuery({
     queryKey: ["/api/user/metrics"],
-    enabled: false, // Only fetch when user is authenticated
+    enabled: true,
+    staleTime: 2 * 60 * 1000, // 2分鐘
   });
 }

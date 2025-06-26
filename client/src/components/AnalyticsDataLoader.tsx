@@ -22,27 +22,29 @@ export default function AnalyticsDataLoader({ onDataLoaded }: AnalyticsDataLoade
   const { isAuthenticated } = useAuth();
   const [selectedProperty, setSelectedProperty] = useState<string>("");
   
-  // 完全停用所有分析查詢
-  const propertiesQuery = { data: [], isLoading: false, error: null };
-  const analyticsDataMutation = { mutate: () => {}, isPending: false };
-  const userMetricsQuery = { data: null, isLoading: false, error: null };
+  // 重新啟用所有分析查詢
+  const propertiesQuery = useAnalyticsProperties();
+  const analyticsDataMutation = useAnalyticsData();
+  const userMetricsQuery = useUserMetrics();
 
   // Fetch properties when user is authenticated
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && propertiesQuery.refetch && userMetricsQuery.refetch) {
       propertiesQuery.refetch();
       userMetricsQuery.refetch();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, propertiesQuery.refetch, userMetricsQuery.refetch]);
 
   // Auto-fill from saved metrics if available
   useEffect(() => {
     if (userMetricsQuery.data && !analyticsDataMutation.isSuccess) {
-      const metrics = userMetricsQuery.data;
-      onDataLoaded({
-        averageOrderValue: Math.round(parseFloat(metrics.averageOrderValue || "0")), // 取整數
-        conversionRate: Math.round(parseFloat(metrics.conversionRate || "0") * 10000) / 100, // 轉換為百分比並保留兩位小數
-      });
+      const metrics = userMetricsQuery.data as any;
+      if (metrics && metrics.averageOrderValue && metrics.conversionRate) {
+        onDataLoaded({
+          averageOrderValue: Math.round(parseFloat(metrics.averageOrderValue || "0")),
+          conversionRate: Math.round(parseFloat(metrics.conversionRate || "0") * 10000) / 100,
+        });
+      }
     }
   }, [userMetricsQuery.data, onDataLoaded, analyticsDataMutation.isSuccess]);
 
@@ -64,7 +66,7 @@ export default function AnalyticsDataLoader({ onDataLoaded }: AnalyticsDataLoade
     return null;
   }
 
-  const properties: AnalyticsProperty[] = propertiesQuery.data || [];
+  const properties = Array.isArray(propertiesQuery.data) ? propertiesQuery.data as AnalyticsProperty[] : [];
 
   return (
     <Card className="mb-6 border-green-200 bg-green-50">
