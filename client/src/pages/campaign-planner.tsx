@@ -580,14 +580,14 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                         key === 'launch' ? Math.ceil(period.budget / 3) :
                         key === 'main' ? Math.ceil(period.budget / Math.max(1, Math.ceil((new Date(period.endDate).getTime() - new Date(period.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1)) :
                         key === 'final' ? Math.ceil(period.budget / 3) :
-                        Math.ceil(period.budget / 1);
+                        Math.ceil(period.budget / 7);
                       
                       const dailyTraffic = 
                         key === 'preheat' ? Math.ceil(period.traffic / 4) :
                         key === 'launch' ? Math.ceil(period.traffic / 3) :
                         key === 'main' ? Math.ceil(period.traffic / Math.max(1, Math.ceil((new Date(period.endDate).getTime() - new Date(period.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1)) :
                         key === 'final' ? Math.ceil(period.traffic / 3) :
-                        Math.ceil(period.traffic / 1);
+                        Math.ceil(period.traffic / 7);
                       
                       return (
                         <div key={key} className="text-center space-y-3 p-4 bg-gray-50 rounded-lg">
