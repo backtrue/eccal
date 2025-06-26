@@ -22,35 +22,27 @@ export default function NavigationBar({ locale }: NavigationBarProps) {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/">
-            <a className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">報</span>
-              </div>
-              <span className="font-bold text-xl text-gray-900">報數據</span>
-            </a>
+          <Link href="/" className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">報</span>
+            </div>
+            <span className="font-bold text-xl text-gray-900">報數據</span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link href="/">
-              <a className="text-gray-600 hover:text-gray-900 transition-colors">
-                {t.calculator}
-              </a>
+            <Link href="/" className="text-gray-600 hover:text-gray-900 transition-colors">
+              {t.calculator}
             </Link>
             
-            <Link href="/campaign-planner">
-              <a className="flex items-center gap-2 text-purple-600 hover:text-purple-800 transition-colors">
-                {t.campaignPlanner}
-                <Badge variant="outline" className="text-xs">PRO</Badge>
-              </a>
+            <Link href="/campaign-planner" className="flex items-center gap-2 text-purple-600 hover:text-purple-800 transition-colors">
+              {t.campaignPlanner}
+              <Badge variant="outline" className="text-xs">PRO</Badge>
             </Link>
 
             {isAuthenticated && (
-              <Link href="/dashboard">
-                <a className="text-gray-600 hover:text-gray-900 transition-colors">
-                  儀表板
-                </a>
+              <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 transition-colors">
+                儀表板
               </Link>
             )}
 
