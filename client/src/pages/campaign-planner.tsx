@@ -298,13 +298,18 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
     setResults(result);
     
     // Record usage for free users after successful calculation
+    console.log('Usage info:', usageInfo);
     if (usageInfo && usageInfo.membershipStatus?.level === 'free') {
+      console.log('Recording usage for free user...');
       try {
         await recordUsage.mutateAsync();
+        console.log('Usage recorded successfully');
       } catch (error) {
         console.error('Failed to record usage:', error);
         // Don't block the user even if usage recording fails
       }
+    } else {
+      console.log('Not recording usage - either Pro user or no usage info');
     }
   };
 
