@@ -103,17 +103,18 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
   };
 
   const onSubmit = (data: CampaignPlannerFormData) => {
+    // TODO: Re-enable Pro membership check after testing
     // Check Pro membership before calculation
-    const isPro = membershipStatus?.level === 'pro' && membershipStatus?.isActive;
+    // const isPro = membershipStatus?.level === 'pro' && membershipStatus?.isActive;
     
-    if (!isPro) {
-      toast({
-        title: "需要 Pro 會員",
-        description: "活動預算規劃器功能僅限 Pro 會員使用，請先登入並升級至 Pro 會員。",
-        variant: "destructive",
-      });
-      return;
-    }
+    // if (!isPro) {
+    //   toast({
+    //     title: "需要 Pro 會員",
+    //     description: "活動預算規劃器功能僅限 Pro 會員使用，請先登入並升級至 Pro 會員。",
+    //     variant: "destructive",
+    //   });
+    //   return;
+    // }
 
     const startDate = new Date(data.startDate);
     const endDate = new Date(data.endDate);
@@ -277,9 +278,11 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
           <p className="text-gray-600">專業的活動預算規劃工具，幫助您制定完整的活動策略</p>
           <div className="flex items-center gap-2 mt-2">
             <Badge variant="outline">Pro 會員專屬</Badge>
-            {(!membershipStatus || membershipStatus?.level !== 'pro' || !membershipStatus?.isActive) && (
+            <Badge variant="secondary">測試模式 - 暫時開放</Badge>
+            {/* TODO: Re-enable after testing */}
+            {/* {(!membershipStatus || membershipStatus?.level !== 'pro' || !membershipStatus?.isActive) && (
               <Badge variant="destructive">需要升級 Pro 會員</Badge>
-            )}
+            )} */}
           </div>
         </div>
 
@@ -441,16 +444,20 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                   <Button 
                     type="submit" 
                     className="w-full"
-                    disabled={!membershipStatus || membershipStatus?.level !== 'pro' || !membershipStatus?.isActive}
+                    // TODO: Re-enable Pro restriction after testing
+                    // disabled={!membershipStatus || membershipStatus?.level !== 'pro' || !membershipStatus?.isActive}
                   >
                     <Calculator className="h-4 w-4 mr-2" />
-                    {(!membershipStatus || membershipStatus?.level !== 'pro' || !membershipStatus?.isActive) 
+                    計算活動規劃
+                    {/* TODO: Re-enable Pro check after testing */}
+                    {/* {(!membershipStatus || membershipStatus?.level !== 'pro' || !membershipStatus?.isActive) 
                       ? '需要 Pro 會員才能計算' 
                       : '計算活動規劃'
-                    }
+                    } */}
                   </Button>
                   
-                  {(!membershipStatus || membershipStatus?.level !== 'pro' || !membershipStatus?.isActive) && (
+                  {/* TODO: Re-enable Pro upgrade prompt after testing */}
+                  {/* {(!membershipStatus || membershipStatus?.level !== 'pro' || !membershipStatus?.isActive) && (
                     <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                       <p className="text-amber-800 text-sm font-medium">
                         活動預算規劃器是 Pro 會員專屬功能
@@ -459,7 +466,16 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                         請先登入並升級至 Pro 會員即可使用完整的活動預算規劃功能，包含 8 步驟專業規劃流程。
                       </p>
                     </div>
-                  )}
+                  )} */}
+                  
+                  <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-blue-800 text-sm font-medium">
+                      🧪 測試模式
+                    </p>
+                    <p className="text-blue-700 text-sm mt-1">
+                      Pro 會員限制已暫時關閉，可以直接測試活動預算規劃功能。
+                    </p>
+                  </div>
                 </form>
               </Form>
             </CardContent>
