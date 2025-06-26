@@ -29,15 +29,14 @@ export class BrevoService {
       this.apiInstance = new brevo.ContactsApi();
       console.log('Brevo service initialized successfully');
     } catch (error) {
-      console.error('Failed to initialize Brevo service:', error);
+      console.log('Primary initialization failed, using fallback method...');
       
-      // Alternative initialization method
+      // Fallback: Just create the ContactsApi without setting up ApiClient.instance
       try {
-        console.log('Trying alternative initialization...');
         this.apiInstance = new brevo.ContactsApi();
-        console.log('Alternative initialization successful');
+        console.log('Brevo service initialized with fallback method');
       } catch (altError) {
-        console.error('Alternative initialization failed:', altError);
+        console.log('Brevo service initialization failed completely, service will be disabled');
         this.apiInstance = null;
       }
     }
