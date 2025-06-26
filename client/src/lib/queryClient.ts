@@ -44,8 +44,12 @@ export const getQueryFn: <T>(options: {
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: () => {
-        console.log("所有查詢已停用");
+      queryFn: (context) => {
+        console.log("🚨 有查詢被執行！", context.queryKey);
+        if (context.queryKey[0] === '/api/auth/user') {
+          console.log("🔥 發現 /api/auth/user 查詢！");
+          console.trace("查詢來源追蹤:");
+        }
         return Promise.resolve(null);
       },
       refetchInterval: false,

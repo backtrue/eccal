@@ -138,11 +138,13 @@ export function setupGoogleAuth(app: Express) {
   });
 
   app.get('/api/auth/user', (req, res) => {
-    if (req.user) {
-      res.json(req.user);
-    } else {
-      res.status(401).json({ error: 'Not authenticated' });
-    }
+    console.log('🔍 /api/auth/user 被調用了！');
+    console.log('🔍 請求來源:', req.headers);
+    console.log('🔍 User-Agent:', req.get('User-Agent'));
+    console.log('🔍 Referer:', req.get('Referer'));
+    console.log('🔍 Session ID:', req.sessionID);
+    console.log('🔍 調用堆棧:', new Error().stack);
+    res.status(401).json({ error: 'Not authenticated', debug: 'Request logged' });
   });
 }
 

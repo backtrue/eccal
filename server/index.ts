@@ -31,8 +31,13 @@ app.use((req, res, next) => {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
 
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
+      // 特別標記 auth/user 請求
+      if (path === '/api/auth/user') {
+        logLine = `🚨 ${logLine} - FROM: ${req.get('User-Agent')} - REFERER: ${req.get('Referer')}`;
+      }
+
+      if (logLine.length > 120) {
+        logLine = logLine.slice(0, 119) + "…";
       }
 
       log(logLine);
