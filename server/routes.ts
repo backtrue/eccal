@@ -4,7 +4,8 @@ import { setupGoogleAuth, requireAuth } from "./googleAuth";
 import { analyticsService } from "./googleAnalytics";
 import { storage } from "./storage";
 import { db } from "./db";
-import { users } from "@shared/schema";
+import { users, userMetrics } from "@shared/schema";
+import { eq } from "drizzle-orm";
 import { brevoService } from "./brevoService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -86,6 +87,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching user metrics:', error);
       res.status(500).json({ message: 'Failed to fetch user metrics' });
+    }
+  });
+
+  // User statistics route
+  app.get('/api/user/stats', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Get total calculations (from user_metrics table)
+      const allMetrics = await db
+        .select()
+        .from(userMetrics)
+        .where(eq(userMetrics.userId, userId));
+      
+      const stats = {
+        totalCalculations: allMetrics.length,
+        lastCalculation: allMetrics.length > 0 ? allMetrics[allMetrics.length - 1].createdAt : null,
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+      res.status(500).json({ message: 'Failed to fetch user stats' });
+    }
+  });
+
+  // User referrals route
+  app.get('/api/user/referrals', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const referrals = await storage.getReferralsByUser(userId);
+      res.json(referrals);
+    } catch (error) {
+      console.error('Error fetching referrals:', error);
+      res.status(500).json({ message: 'Failed to fetch referrals' });
     }
   });
 
