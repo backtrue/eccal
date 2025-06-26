@@ -18,7 +18,7 @@ export interface AnalyticsData {
 export function useAnalyticsProperties() {
   return useQuery({
     queryKey: ["/api/analytics/properties"],
-    enabled: false, // 只在需要時手動觸發
+    enabled: true, // 重新啟用以顯示 GA 資源選單
     staleTime: 30 * 60 * 1000, // 30分鐘
     gcTime: 60 * 60 * 1000, // 1小時快取
   });
@@ -41,7 +41,7 @@ export function useAnalyticsData() {
 export function useUserMetrics() {
   return useQuery({
     queryKey: ["/api/user/metrics"],
-    enabled: false, // 只在需要時手動觸發
+    enabled: true, // 重新啟用以支援 GA 資源選單
     staleTime: 30 * 60 * 1000, // 30分鐘
     gcTime: 60 * 60 * 1000, // 1小時快取
   });
