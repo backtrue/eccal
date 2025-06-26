@@ -14,8 +14,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Protected route - Get user info
   app.get('/api/auth/user', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
-      const user = await storage.getUser(userId);
+      // req.user should be the complete user object from deserializeUser
+      const user = req.user;
+      console.log('Auth user endpoint - user object:', user?.id);
+      
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -28,7 +30,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Analytics routes
   app.get('/api/analytics/properties', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.id;
       const properties = await analyticsService.getUserAnalyticsProperties(userId);
       res.json({ properties });
     } catch (error) {
@@ -39,7 +41,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/analytics/data', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.id;
       const { propertyId } = req.body;
       
       if (!propertyId) {
@@ -73,7 +75,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User metrics route
   app.get('/api/user-metrics', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.id;
       const metrics = await storage.getLatestUserMetrics(userId);
       res.json(metrics);
     } catch (error) {
@@ -161,7 +163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Credit system routes
   app.get('/api/credits', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.id;
       const credits = await storage.getUserCredits(userId);
       const transactions = await storage.getCreditTransactions(userId);
       
@@ -177,7 +179,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/credits/spend', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.id;
       const { amount, description } = req.body;
       
       const credits = await storage.getUserCredits(userId);
@@ -212,7 +214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Referral system routes
   app.get('/api/referral/code', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.id;
       const referralCode = await storage.createReferralCode(userId);
       res.json({ referralCode });
     } catch (error) {
@@ -223,7 +225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/referrals', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.id;
       const referrals = await storage.getReferralsByUser(userId);
       
       // Get referred user details
@@ -268,7 +270,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Membership routes
   app.get('/api/membership/status', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.id;
       const status = await storage.checkMembershipStatus(userId);
       res.json(status);
     } catch (error) {
@@ -279,7 +281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/membership/upgrade-to-pro', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.id;
       const { durationDays = 30 } = req.body;
       const upgradePrice = 350;
       
@@ -327,7 +329,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Campaign Planner usage tracking
   app.get('/api/campaign-planner/usage', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       const membershipStatus = await storage.checkMembershipStatus(userId);
       
@@ -349,7 +351,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/campaign-planner/record-usage', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.id;
       // For now, just return success without updating usage count
       res.json({ success: true });
     } catch (error) {

@@ -92,7 +92,10 @@ export function setupGoogleAuth(app: Express) {
   }));
   
   app.get('/api/auth/google/callback', (req, res, next) => {
+    console.log('Google OAuth callback triggered');
     passport.authenticate('google', (err: any, user: any, info: any) => {
+      console.log('Google OAuth authenticate result:', { err: !!err, user: !!user, userInfo: user?.email });
+      
       if (err) {
         console.error('Google OAuth error:', err);
         return res.status(500).send('Authentication failed');
@@ -103,11 +106,16 @@ export function setupGoogleAuth(app: Express) {
         return res.status(401).send('Authentication failed');
       }
       
+      console.log('Attempting to log in user:', user.id);
       req.logIn(user, async (loginErr) => {
         if (loginErr) {
           console.error('Login error:', loginErr);
           return res.status(500).send('Login failed');
         }
+        
+        console.log('User successfully logged in:', user.id);
+        console.log('Session ID:', (req.session as any).id);
+        console.log('Is authenticated:', req.isAuthenticated());
         
         try {
           // Process referral if exists
@@ -121,23 +129,11 @@ export function setupGoogleAuth(app: Express) {
             }
           }
           
-          // Sync to Brevo (non-blocking)
-          if (user?.email) {
-            import('./brevoService').then(({ brevoService }) => {
-              brevoService.addContactToList({
-                email: user.email,
-                firstName: user.firstName || undefined,
-                lastName: user.lastName || undefined,
-                gaResourceName: '',
-              }).catch((error: any) => {
-                console.error('Error syncing to Brevo:', error);
-              });
-            }).catch(() => {
-              // Ignore brevo service errors
-            });
-          }
+          // Temporarily disable Brevo sync due to IP whitelist issues
+          console.log('Brevo sync disabled due to IP whitelist - user email:', user.email);
           
           const baseUrl = getBaseUrl(req);
+          console.log('Redirecting to:', `${baseUrl}/`);
           res.redirect(`${baseUrl}/`);
         } catch (error) {
           console.error('OAuth callback processing error:', error);
