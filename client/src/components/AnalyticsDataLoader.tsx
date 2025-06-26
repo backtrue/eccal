@@ -22,9 +22,10 @@ export default function AnalyticsDataLoader({ onDataLoaded }: AnalyticsDataLoade
   const { isAuthenticated } = useAuth();
   const [selectedProperty, setSelectedProperty] = useState<string>("");
   
-  const propertiesQuery = useAnalyticsProperties();
-  const analyticsDataMutation = useAnalyticsData();
-  const userMetricsQuery = useUserMetrics();
+  // 完全停用所有分析查詢
+  const propertiesQuery = { data: [], isLoading: false, error: null };
+  const analyticsDataMutation = { mutate: () => {}, isPending: false };
+  const userMetricsQuery = { data: null, isLoading: false, error: null };
 
   // Fetch properties when user is authenticated
   useEffect(() => {
