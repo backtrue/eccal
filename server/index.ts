@@ -25,10 +25,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// 簡潔的認證路由阻擋
-app.use(['/api/auth', '/auth', '/user', '/api/user'], (req, res) => {
-  res.status(410).json({ error: 'Service unavailable during maintenance' });
-});
+// Authentication routes are now fully enabled
 
 // 完全停用所有 logging - 讓系統靜默運行
 app.use((req, res, next) => {
