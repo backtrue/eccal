@@ -16,7 +16,7 @@ import {
   type InsertUserReferral,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 
 // modify the interface with any CRUD methods
 // you might need
@@ -365,6 +365,29 @@ export class DatabaseStorage implements IStorage {
       isActive, 
       expiresAt: user.membershipExpires || undefined 
     };
+  }
+
+  async incrementCampaignPlannerUsage(userId: string): Promise<User> {
+    // Get current usage count
+    const [currentUser] = await db.select().from(users).where(eq(users.id, userId));
+    const currentUsage = currentUser?.campaignPlannerUsage || 0;
+    
+    // Update with incremented value
+    const [user] = await db
+      .update(users)
+      .set({
+        campaignPlannerUsage: currentUsage + 1,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    return user;
+  }
+
+  async getCampaignPlannerUsage(userId: string): Promise<number> {
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    return user?.campaignPlannerUsage || 0;
   }
 
   async addCreditsToAllUsers(amount: number, description: string): Promise<number> {
