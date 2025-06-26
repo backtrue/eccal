@@ -83,7 +83,7 @@ function Router() {
                     會員後台
                   </Link>
                   <div className="text-sm text-gray-600">
-                    Credits: {creditsData?.credits?.balance || 0}
+                    Credits: {(creditsData as any)?.credits?.balance || 0}
                   </div>
                 </div>
               )}

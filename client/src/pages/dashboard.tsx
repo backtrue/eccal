@@ -288,7 +288,7 @@ export default function Dashboard({ locale }: DashboardProps) {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <Button
                         variant="outline"
-                        onClick={() => shareToSocial('facebook', referralCode.referralCode)}
+                        onClick={() => shareToSocial('facebook', typedReferralCode?.referralCode || '')}
                         className="flex items-center justify-center space-x-2"
                       >
                         <Share2 className="w-4 h-4" />
@@ -297,7 +297,7 @@ export default function Dashboard({ locale }: DashboardProps) {
                       
                       <Button
                         variant="outline"
-                        onClick={() => shareToSocial('line', referralCode.referralCode)}
+                        onClick={() => shareToSocial('line', typedReferralCode?.referralCode || '')}
                         className="flex items-center justify-center space-x-2"
                       >
                         <Share2 className="w-4 h-4" />
@@ -306,7 +306,7 @@ export default function Dashboard({ locale }: DashboardProps) {
                       
                       <Button
                         variant="outline"
-                        onClick={() => shareToSocial('twitter', referralCode.referralCode)}
+                        onClick={() => shareToSocial('twitter', typedReferralCode?.referralCode || '')}
                         className="flex items-center justify-center space-x-2"
                       >
                         <Share2 className="w-4 h-4" />
