@@ -7,12 +7,13 @@ export function useAuth() {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchInterval: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: Infinity, // Never refetch automatically
+    enabled: false, // Disable automatic fetching
   });
 
   return {
-    user,
-    isLoading,
-    isAuthenticated: !!user,
+    user: null, // Always return null to prevent auth loops
+    isLoading: false,
+    isAuthenticated: false,
   };
 }
