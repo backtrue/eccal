@@ -188,8 +188,7 @@ const translations: Record<Locale, TranslationData> = {
     monthlyAdBudget: 'Monthly Ad Budget',
     dailyAdBudget: 'Daily Ad Budget',
     
-    // Campaign Planner
-    campaignPlanner: 'Campaign Planner',
+    // Campaign Planner  
     campaignPlannerDescription: 'Professional campaign planning tool for complete strategy',
     
     // Common
@@ -272,7 +271,6 @@ const translations: Record<Locale, TranslationData> = {
     dailyAdBudget: '日次広告予算',
     
     // Campaign Planner
-    campaignPlanner: 'キャンペーンプランナー',
     campaignPlannerDescription: '包括的な戦略のためのプロフェッショナルキャンペーン計画ツール',
     
     // Common
