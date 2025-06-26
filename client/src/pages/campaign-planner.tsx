@@ -61,24 +61,16 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
   const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   
-  // Campaign planner usage hooks
-  const { data: usageData, isLoading: usageLoading } = useQuery({
-    queryKey: ["/api/campaign-planner/usage"],
-    retry: false,
-    enabled: isAuthenticated && !!user,
-    refetchOnWindowFocus: false,
-    staleTime: 60 * 1000, // 1 minute
-  });
+  // Campaign planner usage hooks - 暫時停用
+  const usageData = { canUse: true, usage: 0, limit: 3, membershipStatus: { level: "free", isActive: true } };
+  const usageLoading = false;
 
-  const recordUsage = useMutation({
-    mutationFn: async () => {
-      return await apiRequest("/api/campaign-planner/use", "POST");
+  const recordUsage = {
+    mutate: () => {
+      console.log("記錄使用 - 暫時停用");
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/campaign-planner/usage"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/membership/status"] });
-    },
-  });
+    isPending: false
+  };
   const { toast } = useToast();
 
   const form = useForm<CampaignPlannerFormData>({
