@@ -207,7 +207,9 @@ export class GoogleAnalyticsService {
         await storage.upsertUser({
           ...user,
           googleAccessToken: credentials.access_token,
-          tokenExpiresAt: new Date(credentials.expiry_date || Date.now() + 3600000),
+          tokenExpiresAt: credentials.expiry_date ? 
+            new Date(Math.min(credentials.expiry_date, 2147483647)) : // 32-bit safe max
+            new Date(Date.now() + 3600000),
         });
       }
     } catch (error) {
