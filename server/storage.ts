@@ -81,7 +81,22 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
-    // Note: Brevo service temporarily disabled due to IP whitelist requirements
+    // Add to Brevo if this is a new user with email
+    if (isNewUser && user.email) {
+      try {
+        const { brevoService } = await import("./brevoService");
+        await brevoService.addContactToList({
+          email: user.email,
+          firstName: user.firstName || undefined,
+          lastName: user.lastName || undefined,
+          gaResourceName: '', // Will be updated later when they select GA resource
+        });
+        console.log('Added new user to Brevo:', user.email);
+      } catch (error) {
+        console.error('Failed to add user to Brevo:', error);
+        // Don't fail the user creation if Brevo fails
+      }
+    }
 
     return user;
   }
