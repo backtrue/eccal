@@ -238,6 +238,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Membership routes
+  app.get('/api/membership/status', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const status = await storage.checkMembershipStatus(userId);
+      res.json(status);
+    } catch (error) {
+      console.error('Error checking membership status:', error);
+      res.status(500).json({ error: 'Failed to check membership status' });
+    }
+  });
+
+  app.post('/api/membership/upgrade-to-pro', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { durationDays = 30 } = req.body;
+      const upgradePrice = 350;
+      
+      // Check if user has enough credits
+      const credits = await storage.getUserCredits(userId);
+      if (!credits || credits.balance < upgradePrice) {
+        return res.status(400).json({ 
+          error: 'Insufficient credits', 
+          required: upgradePrice,
+          current: credits?.balance || 0 
+        });
+      }
+      
+      // Deduct credits
+      await storage.updateUserCredits(
+        userId, 
+        credits.balance - upgradePrice,
+        credits.totalEarned,
+        credits.totalSpent + upgradePrice
+      );
+      
+      // Add transaction record
+      await storage.addCreditTransaction({
+        userId,
+        type: "spend",
+        amount: upgradePrice,
+        source: "upgrade",
+        description: `Upgrade to Pro for ${durationDays} days`
+      });
+      
+      // Upgrade user to Pro
+      const updatedUser = await storage.upgradeToPro(userId, durationDays);
+      
+      res.json({ 
+        success: true, 
+        message: `Successfully upgraded to Pro for ${durationDays} days`,
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error('Error upgrading to Pro:', error);
+      res.status(500).json({ error: 'Failed to upgrade to Pro' });
+    }
+  });
+
   // Admin route to add credits to all users
   app.post('/api/admin/credits/add-all', async (req, res) => {
     try {

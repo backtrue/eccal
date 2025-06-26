@@ -34,6 +34,8 @@ export const users = pgTable("users", {
   googleAccessToken: varchar("google_access_token"),
   googleRefreshToken: varchar("google_refresh_token"),
   tokenExpiresAt: timestamp("token_expires_at"),
+  membershipLevel: varchar("membership_level", { length: 10 }).default("free").notNull(), // "free" or "pro"
+  membershipExpires: timestamp("membership_expires"), // null for free, date for pro
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
