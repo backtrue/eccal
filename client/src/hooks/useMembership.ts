@@ -8,11 +8,11 @@ export interface MembershipStatus {
 }
 
 export function useMembershipStatus() {
-  return {
-    data: { level: "free" as const, isActive: true, expiresAt: undefined },
-    isLoading: false,
-    error: null
-  };
+  return useQuery({
+    queryKey: ["/api/membership/status"],
+    staleTime: 5 * 60 * 1000, // 5分鐘
+    gcTime: 10 * 60 * 1000, // 10分鐘快取
+  });
 }
 
 export function useUpgradeToPro() {
