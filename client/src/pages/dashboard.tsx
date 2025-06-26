@@ -1,4 +1,5 @@
 import { getTranslations, type Locale } from "@/lib/i18n";
+import NavigationBar from "@/components/NavigationBar";
 
 interface DashboardProps {
   locale: Locale;
