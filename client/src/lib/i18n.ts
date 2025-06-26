@@ -86,6 +86,7 @@ const translations: Record<Locale, TranslationData> = {
     // Navigation
     home: '首頁',
     calculator: '預算計算機',
+    campaignPlanner: '活動預算規劃器',
     privacy: '隱私政策',
     terms: '服務條款',
     
@@ -164,6 +165,7 @@ const translations: Record<Locale, TranslationData> = {
     // Navigation
     home: 'Home',
     calculator: 'Budget Calculator',
+    campaignPlanner: 'Campaign Planner',
     privacy: 'Privacy Policy',
     terms: 'Terms of Service',
     
@@ -246,6 +248,7 @@ const translations: Record<Locale, TranslationData> = {
     // Navigation
     home: 'ホーム',
     calculator: '予算計算機',
+    campaignPlanner: 'キャンペーンプランナー',
     privacy: 'プライバシーポリシー',
     terms: '利用規約',
     
@@ -267,6 +270,10 @@ const translations: Record<Locale, TranslationData> = {
     requiredTraffic: '必要トラフィック',
     monthlyAdBudget: '月次広告予算',
     dailyAdBudget: '日次広告予算',
+    
+    // Campaign Planner
+    campaignPlanner: 'キャンペーンプランナー',
+    campaignPlannerDescription: '包括的な戦略のためのプロフェッショナルキャンペーン計画ツール',
     
     // Common
     loading: '読み込み中...',

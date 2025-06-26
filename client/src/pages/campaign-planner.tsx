@@ -13,6 +13,7 @@ import { Calendar, Calculator, TrendingUp, Target, Clock, DollarSign } from "luc
 import { format, addDays, subDays } from "date-fns";
 import { zhTW, enUS, ja } from "date-fns/locale";
 import ProtectedFeature from "@/components/ProtectedFeature";
+import NavigationBar from "@/components/NavigationBar";
 import { useAnalyticsData } from "@/hooks/useAnalyticsData";
 
 const campaignPlannerSchema = z.object({
@@ -253,8 +254,10 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
   };
 
   return (
-    <ProtectedFeature requiredLevel="pro" featureName="活動預算規劃器">
-      <div className="container mx-auto p-6 max-w-6xl">
+    <div className="min-h-screen bg-gray-50">
+      <NavigationBar locale={locale} />
+      <ProtectedFeature requiredLevel="pro" featureName="活動預算規劃器">
+        <div className="container mx-auto p-6 max-w-6xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">活動預算規劃器</h1>
           <p className="text-gray-600">專業的活動預算規劃工具，幫助您制定完整的活動策略</p>
@@ -539,7 +542,8 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
             </CardContent>
           </Card>
         )}
-      </div>
-    </ProtectedFeature>
+        </div>
+      </ProtectedFeature>
+    </div>
   );
 }
