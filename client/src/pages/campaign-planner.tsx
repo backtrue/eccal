@@ -558,6 +558,24 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                           <div className="text-sm font-medium text-blue-600">
                             {period.traffic.toLocaleString()}
                           </div>
+                          
+                          {/* 日預算建議 - 小字體 */}
+                          <div className="text-xs text-gray-500 mt-1 space-y-1">
+                            <div>日預算: ${
+                              key === 'preheat' ? Math.ceil(period.budget / 4).toLocaleString() :
+                              key === 'launch' ? Math.ceil(period.budget / 3).toLocaleString() :
+                              key === 'main' ? Math.ceil(period.budget / Math.max(1, Math.ceil((new Date(period.endDate).getTime() - new Date(period.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1)).toLocaleString() :
+                              key === 'final' ? Math.ceil(period.budget / 3).toLocaleString() :
+                              Math.ceil(period.budget / 1).toLocaleString()
+                            }</div>
+                            <div>日流量: {
+                              key === 'preheat' ? Math.ceil(period.traffic / 4).toLocaleString() :
+                              key === 'launch' ? Math.ceil(period.traffic / 3).toLocaleString() :
+                              key === 'main' ? Math.ceil(period.traffic / Math.max(1, Math.ceil((new Date(period.endDate).getTime() - new Date(period.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1)).toLocaleString() :
+                              key === 'final' ? Math.ceil(period.traffic / 3).toLocaleString() :
+                              Math.ceil(period.traffic / 1).toLocaleString()
+                            }</div>
+                          </div>
                         </div>
                       );
                     })}
@@ -568,46 +586,7 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
           )}
         </div>
 
-        {results && (
-          <Card className="mt-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                每日預算分配
-              </CardTitle>
-              <CardDescription>
-                詳細的每日預算與流量分配建議
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="max-h-96 overflow-y-auto space-y-1">
-                {results.dailyBudgets.map((day, index) => (
-                  <div key={index} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-md">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm text-gray-600">
-                        {new Date(day.date).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })}
-                      </span>
-                      <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
-                        {day.period === 'preheat' ? '預熱期' : 
-                         day.period === 'launch' ? '起跑期' :
-                         day.period === 'main' ? '活動期' :
-                         day.period === 'final' ? '倒數期' : '回購期'}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm font-medium">
-                        日預算: ${day.budget.toLocaleString()}
-                      </span>
-                      <span className="text-sm text-blue-600">
-                        流量: {day.traffic.toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+
       </div>
     </div>
   );
