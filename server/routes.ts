@@ -393,17 +393,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/campaign-planner/record-usage', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
+      console.log('Recording usage for user:', userId);
+      
       const membershipStatus = await storage.checkMembershipStatus(userId);
+      console.log('User membership status:', membershipStatus);
       
       // Only record usage for non-Pro users (free users only)
       if (membershipStatus.level === 'free') {
-        await storage.incrementCampaignPlannerUsage(userId);
+        console.log('Recording usage for free user');
+        const updatedUser = await storage.incrementCampaignPlannerUsage(userId);
+        console.log('Usage recorded, new count:', updatedUser.campaignPlannerUsage);
+      } else {
+        console.log('Skipping usage recording for Pro user');
       }
       
       res.json({ success: true });
     } catch (error) {
       console.error('Error recording campaign planner usage:', error);
-      res.status(500).json({ message: 'Failed to record usage' });
+      res.status(500).json({ message: 'Failed to record usage', error: error.message });
     }
   });
 

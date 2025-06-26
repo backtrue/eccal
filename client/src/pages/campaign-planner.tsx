@@ -149,7 +149,12 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
         await recordUsage.mutateAsync();
       } catch (error) {
         console.error('Failed to record usage:', error);
-        // Continue with calculation even if usage recording fails
+        toast({
+          title: "使用記錄失敗",
+          description: "無法記錄使用次數，請重試。",
+          variant: "destructive",
+        });
+        return; // Stop execution if usage recording fails
       }
     }
 
