@@ -158,13 +158,13 @@ export default function AnalyticsDataLoader({ onDataLoaded }: AnalyticsDataLoade
               </div>
             )}
 
-            {userMetricsQuery.data && !analyticsDataMutation.isSuccess && (
+            {userMetricsQuery.data && !analyticsDataMutation.isSuccess ? (
               <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-700">
                   ℹ️ 已載入您上次儲存的 Analytics 數據
                 </p>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       </CardContent>
