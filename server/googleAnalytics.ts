@@ -242,10 +242,9 @@ export class GoogleAnalyticsService {
 
       const analyticsAdmin = google.analyticsadmin('v1beta');
       
-      // 只取前 3 個帳戶以減少系統負擔和 API 調用
+      // 取得所有帳戶
       const accountsResponse = await analyticsAdmin.accounts.list({
         auth: oauth2Client,
-        pageSize: 3, // 限制帳戶數量
       });
 
       const properties: any[] = [];
@@ -258,11 +257,10 @@ export class GoogleAnalyticsService {
             console.log(`Processing account: ${account.displayName} (${account.name})`);
             
             try {
-              // List properties for each account (限制數量)
+              // List all properties for each account
               const propertiesResponse = await analyticsAdmin.properties.list({
                 auth: oauth2Client,
                 filter: `parent:${account.name}`,
-                pageSize: 5, // 每個帳戶最多 5 個資源
               });
 
               if (propertiesResponse.data.properties) {

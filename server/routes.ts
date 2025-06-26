@@ -36,10 +36,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/analytics/properties', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      console.log(`Fetching GA properties for user: ${userId}`);
       const properties = await analyticsService.getUserAnalyticsProperties(userId);
-      console.log(`Found ${properties?.length || 0} properties:`, properties);
-      // 直接返回陣列，不包裝在物件中
       res.json(properties || []);
     } catch (error) {
       console.error('Error fetching analytics properties:', error);
