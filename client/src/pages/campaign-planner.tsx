@@ -62,9 +62,9 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
     defaultValues: {
       startDate: "",
       endDate: "",
-      targetRevenue: 0,
-      targetAov: 0,
-      targetConversionRate: 0,
+      targetRevenue: undefined,
+      targetAov: undefined,
+      targetConversionRate: undefined,
       cpc: locale === 'zh-TW' ? 5 : locale === 'ja' ? 120 : 1,
     },
   });
@@ -338,9 +338,12 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                         <FormControl>
                           <Input
                             type="number"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             placeholder="例如：500000"
                             {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
+                            value={field.value || ""}
+                            onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
                           />
                         </FormControl>
                         <FormDescription>
@@ -360,9 +363,13 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                         <FormControl>
                           <Input
                             type="number"
+                            inputMode="decimal"
+                            pattern="[0-9]*"
+                            step="0.01"
                             placeholder="例如：1200"
                             {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
+                            value={field.value || ""}
+                            onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
                           />
                         </FormControl>
                         <FormDescription>
@@ -396,10 +403,15 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                         <FormControl>
                           <Input
                             type="number"
+                            inputMode="decimal"
+                            pattern="[0-9.]*"
                             step="0.01"
+                            min="0"
+                            max="100"
                             placeholder="例如：2.5"
                             {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
+                            value={field.value || ""}
+                            onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
                           />
                         </FormControl>
                         <FormDescription>
