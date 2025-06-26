@@ -9,18 +9,33 @@ export default function LogoutButton() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const logoutMutation = {
-    mutate: () => {
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("/api/auth/logout", "POST");
+    },
+    onSuccess: () => {
+      // Clear all queries
+      queryClient.clear();
+      
       toast({
-        title: "登出功能暫時停用",
-        description: "請直接重新整理頁面",
+        title: "登出成功",
+        description: "正在重新導向到登入頁面...",
       });
+      
+      // Redirect to home page after a short delay
       setTimeout(() => {
-        window.location.reload();
+        window.location.href = "/";
       }, 1000);
     },
-    isPending: false
-  };
+    onError: (error: any) => {
+      console.error("Logout error:", error);
+      toast({
+        title: "登出錯誤",
+        description: "登出時發生錯誤，請重新整理頁面",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleLogout = () => {
     logoutMutation.mutate();

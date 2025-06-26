@@ -55,7 +55,8 @@ export default function Dashboard({ locale }: DashboardProps) {
     );
   }
 
-  const isPro = membershipStatus && membershipStatus.level === "pro" && membershipStatus.isActive;
+  const membershipData = membershipStatus as any;
+  const isPro = membershipData?.level === "pro" && membershipData?.isActive;
   const referralLink = `${window.location.origin}?ref=${(user as any)?.id || 'user'}`;
 
   return (
@@ -79,9 +80,9 @@ export default function Dashboard({ locale }: DashboardProps) {
                       {isPro && <Crown className="w-3 h-3" />}
                       {isPro ? "PRO 會員" : "免費會員"}
                     </Badge>
-                    {isPro && membershipStatus?.expiresAt && (
+                    {isPro && membershipData?.expiresAt && (
                       <span className="text-sm text-gray-500">
-                        到期：{new Date(membershipStatus.expiresAt).toLocaleDateString('zh-TW')}
+                        到期：{new Date(membershipData.expiresAt).toLocaleDateString('zh-TW')}
                       </span>
                     )}
                   </div>
