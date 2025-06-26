@@ -13,23 +13,31 @@ export interface CampaignPlannerUsage {
 }
 
 export function useCampaignPlannerUsage() {
-  return useQuery({
-    queryKey: ["/api/campaign-planner/usage"],
-    retry: false,
-  });
+  // 完全停用查詢
+  return {
+    data: {
+      usage: 0,
+      limit: 3,
+      canUse: true,
+      membershipStatus: {
+        level: "free" as const,
+        isActive: true
+      }
+    },
+    isLoading: false,
+    error: null
+  };
 }
 
 export function useRecordCampaignPlannerUsage() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async () => {
-      return await apiRequest("/api/campaign-planner/use", "POST");
+  // 完全停用 mutation
+  return {
+    mutate: () => {
+      console.log("Campaign planner usage recording disabled");
     },
-    onSuccess: () => {
-      // Invalidate usage query to refresh the data
-      queryClient.invalidateQueries({ queryKey: ["/api/campaign-planner/usage"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/membership/status"] });
+    mutateAsync: async () => {
+      console.log("Campaign planner usage recording disabled");
     },
-  });
+    isPending: false
+  };
 }
