@@ -85,11 +85,15 @@ export class GoogleAnalyticsService {
           break;
           
         } catch (error) {
-          console.log(`Failed with ${metricSet.name}:`, error.message);
+          console.log(`Failed with ${metricSet.name}:`, (error as any).message);
           if (metricSet === metricSets[metricSets.length - 1]) {
             throw error; // Re-throw if this was the last attempt
           }
         }
+      }
+
+      if (!response) {
+        throw new Error('No response received from GA4 API');
       }
 
       const rows = response.data.rows;

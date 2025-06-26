@@ -136,10 +136,10 @@ export default function Calculator({ locale }: CalculatorProps) {
             <Card className="shadow-lg border border-blue-200 bg-blue-50">
               <CardContent className="p-6">
                 <h2 className="text-xl font-semibold text-blue-900 mb-3">
-                  {t.gaLogin}
+                  使用 Google 登入
                 </h2>
                 <p className="text-blue-700 mb-4">
-                  {t.gaIntegration}
+                  連接您的 Google Analytics 帳戶來自動填入數據
                 </p>
                 <GoogleLoginButton />
               </CardContent>
