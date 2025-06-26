@@ -65,7 +65,7 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
       targetRevenue: undefined,
       targetAov: undefined,
       targetConversionRate: undefined,
-      cpc: locale === 'zh-TW' ? 5 : locale === 'ja' ? 120 : 1,
+      cpc: undefined,
     },
   });
 
