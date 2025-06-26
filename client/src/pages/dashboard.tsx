@@ -72,6 +72,7 @@ export default function Dashboard({ locale }: DashboardProps) {
 
   const credits = creditData as CreditData | undefined;
   const referralList = referrals as ReferralData[] | undefined;
+  const typedReferralCode = referralCode as { referralCode: string } | undefined;
 
   const copyReferralLink = async (code: string) => {
     const baseUrl = window.location.origin;
@@ -267,19 +268,19 @@ export default function Dashboard({ locale }: DashboardProps) {
                       <p className="text-sm text-gray-600 mb-2">您的推薦連結：</p>
                       <div className="flex items-center space-x-2">
                         <code className="flex-1 p-2 bg-white rounded border text-sm">
-                          {window.location.origin}?ref={(referralCode as any)?.referralCode}
+                          {window.location.origin}?ref={typedReferralCode?.referralCode}
                         </code>
                         <Button
                           size="sm"
-                          onClick={() => copyReferralLink(referralCode.referralCode)}
+                          onClick={() => copyReferralLink(typedReferralCode?.referralCode || '')}
                           className="flex items-center space-x-1"
                         >
-                          {copiedCode === referralCode.referralCode ? (
+                          {copiedCode === typedReferralCode?.referralCode ? (
                             <CheckCircle className="w-4 h-4" />
                           ) : (
                             <Copy className="w-4 h-4" />
                           )}
-                          <span>{copiedCode === referralCode.referralCode ? '已複製' : '複製'}</span>
+                          <span>{copiedCode === typedReferralCode?.referralCode ? '已複製' : '複製'}</span>
                         </Button>
                       </div>
                     </div>

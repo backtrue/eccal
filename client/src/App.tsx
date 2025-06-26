@@ -23,6 +23,12 @@ function Router() {
   const [location, setLocation] = useLocation();
   const { isAuthenticated, user } = useAuth();
   
+  // Fetch credits data when authenticated
+  const { data: creditsData } = useQuery({
+    queryKey: ['/api/credits'],
+    enabled: isAuthenticated,
+  });
+  
   // Auto-redirect based on browser language
   useEffect(() => {
     if (location === "/") {
