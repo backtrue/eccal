@@ -163,6 +163,7 @@ Changelog:
 - June 26, 2025. Fixed V1.5.9 - Complete Google OAuth authentication system overhaul. Fixed user serialization, smart redirect after login, frontend auth state refresh, and temporarily disabled Brevo sync due to IP whitelist. Users now return to original page after login with proper authentication state.
 - June 26, 2025. Fixed V1.5.10 - Resolved frontend authentication state update issues. Root cause was disabled TanStack Query client (enabled: false) preventing auth state refresh after login. Restored query functionality, optimized cache policies, and removed global no-cache headers that blocked API responses. Authentication state now updates immediately after Google OAuth login.
 - June 26, 2025. Fixed V1.5.11 - Resolved "s.refetch is not a function" TypeError in calculator page. Root cause was AnalyticsDataLoader component using hardcoded fake query objects without refetch methods. Fixed by re-enabling real useAnalyticsProperties, useAnalyticsData, and useUserMetrics hooks. All TypeScript errors resolved and calculator page now loads correctly.
+- June 26, 2025. Optimized V1.5.12 - Added resource monitoring and graceful shutdown handling to address "system: received signal terminated" issues. Implemented database connection pooling limits (max 5 connections), extended query cache times (10-15 minutes), disabled unnecessary auto-refetching, and added memory usage monitoring every 5 minutes. These optimizations reduce system resource consumption and improve stability.
 ```
 
 ## User Preferences

@@ -4,6 +4,36 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 
+// Process monitoring and graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('收到 SIGTERM 信號，正在優雅關閉...');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('收到 SIGINT 信號，正在優雅關閉...');
+  process.exit(0);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('未捕獲的異常:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('未處理的 Promise 拒絕:', reason);
+});
+
+// Memory usage monitoring
+const logMemoryUsage = () => {
+  const usage = process.memoryUsage();
+  const mb = (bytes: number) => Math.round(bytes / 1024 / 1024 * 100) / 100;
+  console.log(`記憶體使用: RSS ${mb(usage.rss)}MB, Heap ${mb(usage.heapUsed)}/${mb(usage.heapTotal)}MB`);
+};
+
+// Log memory usage every 5 minutes
+setInterval(logMemoryUsage, 5 * 60 * 1000);
+
 // Trust proxy for production deployment
 if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);

@@ -47,8 +47,12 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "returnNull" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnMount: false, // 減少掛載時的自動請求
+      refetchOnReconnect: false, // 減少重連時的自動請求
+      staleTime: 10 * 60 * 1000, // 延長到10分鐘
+      gcTime: 15 * 60 * 1000, // 15分鐘後清除快取
       retry: false,
+      retryOnMount: false, // 停用掛載重試
     },
     mutations: {
       retry: false,
