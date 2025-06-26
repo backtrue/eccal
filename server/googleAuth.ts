@@ -138,13 +138,16 @@ export function setupGoogleAuth(app: Express) {
   });
 
   app.get('/api/auth/user', (req, res) => {
-    console.log('🔍 /api/auth/user 被調用了！');
-    console.log('🔍 請求來源:', req.headers);
-    console.log('🔍 User-Agent:', req.get('User-Agent'));
-    console.log('🔍 Referer:', req.get('Referer'));
-    console.log('🔍 Session ID:', req.sessionID);
-    console.log('🔍 調用堆棧:', new Error().stack);
-    res.status(401).json({ error: 'Not authenticated', debug: 'Request logged' });
+    console.error('🔍 AUTH USER API CALLED - User-Agent:', req.get('User-Agent'));
+    console.error('🔍 AUTH USER API CALLED - Referer:', req.get('Referer')); 
+    console.error('🔍 AUTH USER API CALLED - Origin:', req.get('Origin'));
+    console.error('🔍 AUTH USER API CALLED - X-Requested-With:', req.get('X-Requested-With'));
+    console.error('🔍 AUTH USER API CALLED - Session:', req.sessionID);
+    console.error('🔍 AUTH USER STACK:', new Error().stack?.split('\n').slice(0, 5).join('\n'));
+    res.status(401).json({ 
+      error: 'Not authenticated', 
+      debug: `Called by ${req.get('User-Agent')} from ${req.get('Referer')}` 
+    });
   });
 }
 

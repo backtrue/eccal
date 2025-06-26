@@ -33,7 +33,8 @@ app.use((req, res, next) => {
 
       // 特別標記 auth/user 請求
       if (path === '/api/auth/user') {
-        logLine = `🚨 ${logLine} - FROM: ${req.get('User-Agent')} - REFERER: ${req.get('Referer')}`;
+        console.error(`🚨 AUTH USER REQUEST: ${req.get('User-Agent')} | ${req.get('Referer')}`);
+        logLine = `🚨 AUTH_USER_CALL ${logLine} FROM:${req.get('User-Agent')} REF:${req.get('Referer')}`;
       }
 
       if (logLine.length > 120) {
