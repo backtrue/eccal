@@ -82,6 +82,29 @@ function App() {
     }
   }, []);
 
+  // Handle authentication state refresh after OAuth login
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    if (urlParams.has('auth_success')) {
+      // Clear the auth_success parameter from URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+      
+      // Invalidate auth queries to refresh user state
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      
+      // Redirect to stored return page if exists
+      const returnTo = sessionStorage.getItem('returnTo');
+      if (returnTo && returnTo !== '/') {
+        sessionStorage.removeItem('returnTo');
+        setTimeout(() => {
+          window.location.href = returnTo;
+        }, 500); // Give time for auth state to update
+      }
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <Router />

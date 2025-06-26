@@ -7,6 +7,9 @@ interface GoogleLoginButtonProps {
 
 export default function GoogleLoginButton({ className }: GoogleLoginButtonProps) {
   const handleGoogleLogin = () => {
+    // Store current page for return redirect
+    const currentPage = window.location.pathname + window.location.search;
+    sessionStorage.setItem('returnTo', currentPage);
     window.location.href = "/api/auth/google";
   };
 

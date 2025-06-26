@@ -86,10 +86,14 @@ export function setupGoogleAuth(app: Express) {
   });
 
   // Auth routes - force consent to ensure refresh token
-  app.get('/api/auth/google', passport.authenticate('google', {
-    accessType: 'offline',
-    prompt: 'consent'
-  }));
+  app.get('/api/auth/google', (req, res, next) => {
+    console.log('Starting Google OAuth');
+    
+    passport.authenticate('google', {
+      accessType: 'offline',
+      prompt: 'consent'
+    })(req, res, next);
+  });
   
   app.get('/api/auth/google/callback', (req, res, next) => {
     console.log('Google OAuth callback triggered');
@@ -133,8 +137,9 @@ export function setupGoogleAuth(app: Express) {
           console.log('Brevo sync disabled due to IP whitelist - user email:', user.email);
           
           const baseUrl = getBaseUrl(req);
-          console.log('Redirecting to:', `${baseUrl}/`);
-          res.redirect(`${baseUrl}/`);
+          const redirectUrl = `${baseUrl}/?auth_success=1`;
+          console.log('Redirecting to:', redirectUrl);
+          res.redirect(redirectUrl);
         } catch (error) {
           console.error('OAuth callback processing error:', error);
           const baseUrl = getBaseUrl(req);
