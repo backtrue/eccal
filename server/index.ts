@@ -31,8 +31,8 @@ const logMemoryUsage = () => {
   console.log(`記憶體使用: RSS ${mb(usage.rss)}MB, Heap ${mb(usage.heapUsed)}/${mb(usage.heapTotal)}MB`);
 };
 
-// Log memory usage every 5 minutes
-setInterval(logMemoryUsage, 5 * 60 * 1000);
+// Log memory usage every 15 minutes to reduce overhead
+setInterval(logMemoryUsage, 15 * 60 * 1000);
 
 // Trust proxy for production deployment
 if (process.env.NODE_ENV === 'production') {

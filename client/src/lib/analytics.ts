@@ -17,8 +17,7 @@ export const initGA = () => {
 
   // Prevent duplicate initialization
   if (window.gtag) {
-    console.warn('Google Analytics already initialized, skipping');
-    return;
+    return; // Silent skip to reduce console noise
   }
 
   // Add Google Analytics script to the head

@@ -12,7 +12,11 @@ export const initMetaPixel = () => {
   const pixelId = import.meta.env.VITE_META_PIXEL_ID;
 
   if (!pixelId) {
-    console.warn('Missing required Meta Pixel ID: VITE_META_PIXEL_ID');
+    return; // Silent skip if no pixel ID
+  }
+
+  // Prevent duplicate initialization
+  if (window._fbq_initialized) {
     return;
   }
 
@@ -46,6 +50,9 @@ export const initMetaPixel = () => {
   // Initialize the pixel
   window.fbq('init', pixelId);
   window.fbq('track', 'PageView');
+  
+  // Mark as initialized
+  window._fbq_initialized = true;
 
   // Add noscript fallback
   const noscript = document.createElement('noscript');
