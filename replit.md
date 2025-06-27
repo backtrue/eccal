@@ -178,6 +178,7 @@ Changelog:
 - June 27, 2025. Fixed V1.5.24 - TimeoutOverflowWarning in Google Analytics API. Root cause was Google OAuth expiry_date values exceeding 32-bit integer limits when creating Date objects. Fixed by limiting expiry_date values to 32-bit safe maximum (2147483647) while preserving token functionality. Warning no longer appears in system logs.
 - June 27, 2025. Fixed V1.5.25 - Campaign Planner free user unlimited usage bug. Root cause was incorrect backend logic (recording usage for non-Pro OR inactive Pro users instead of only free users) and weak frontend validation. Fixed both backend usage recording logic and frontend permission checks to properly enforce 3-usage limit for free users. Set backtrue@seo-tw.org to 3 uses for testing - now correctly blocked from further usage.
 - June 27, 2025. Improved V1.5.26 - Campaign Planner UX for free users. Changed usage tracking to be more human-friendly: displays remaining uses instead of used count (3/3 → 2/3 → 1/3 → 0/3), records usage after successful calculation completion (not before), and doesn't block users if usage recording fails. Reset backtrue@seo-tw.org to 0 uses for testing the new decremental flow.
+- June 27, 2025. Fixed V1.5.27 - Campaign Planner usage recording API parameter order. Fixed frontend API call to use correct parameter sequence (method, url) instead of (url, method). Campaign period layout maintained as horizontal display with grid-cols-5 showing all 5 periods side by side for easy comparison.
 ```
 
 ## User Preferences
