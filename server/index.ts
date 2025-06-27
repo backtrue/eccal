@@ -12,6 +12,18 @@ process.on('warning', (warning) => {
   }
 });
 
+// Also filter console.error to reduce noise from connection refused errors
+const originalConsoleError = console.error;
+console.error = function(message: any, ...args: any[]) {
+  // Filter out temporary Vite proxy connection errors
+  if (typeof message === 'string' && 
+      (message.includes('connect: connection refused') || 
+       message.includes('ECONNREFUSED'))) {
+    return; // Silently ignore these temporary connection errors
+  }
+  originalConsoleError(message, ...args);
+};
+
 // Process monitoring and graceful shutdown
 process.on('SIGTERM', () => {
   console.log('收到 SIGTERM 信號，正在優雅關閉...');
