@@ -257,8 +257,8 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
       dailyBudgets.push({
         date,
         period: '活動期',
-        budget: Math.ceil(mainBudget / mainDays),
-        traffic: Math.ceil(mainTraffic / mainDays),
+        budget: Math.ceil(mainBudget / actualMainDays),
+        traffic: Math.ceil(mainTraffic / actualMainDays),
       });
     }
     
@@ -346,7 +346,15 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
       <div className="container mx-auto p-6 max-w-6xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">活動預算規劃器</h1>
-          <p className="text-gray-600">專業的活動預算規劃工具，幫助您制定完整的活動策略</p>
+          <p className="text-gray-600">專業的活動預算規劃工具，採用動態預算分配演算法，適合各種活動週期</p>
+          <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+            <h3 className="text-sm font-semibold text-blue-800 mb-2">🚀 動態預算分配技術</h3>
+            <div className="text-xs text-blue-700 space-y-1">
+              <p>• <strong>短期活動</strong>（10-20天）：起跑期重點投放，確保瞬間流量爆發</p>
+              <p>• <strong>長期活動</strong>（30-60天）：自動增加活動期預算，避免中段失血</p>
+              <p>• <strong>智能調配</strong>：活動期預算隨天數動態調整，保持熱度不間斷</p>
+            </div>
+          </div>
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             <Badge variant="outline">Pro 會員專屬</Badge>
             {!isAuthenticated ? (
@@ -580,7 +588,7 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <div className="text-2xl font-bold text-blue-600">
                       {results.totalBudget.toLocaleString()}
@@ -592,6 +600,44 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                       {results.totalTraffic.toLocaleString()}
                     </div>
                     <div className="text-sm text-gray-600">總流量需求</div>
+                  </div>
+                  <div className="text-center p-4 bg-purple-50 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-600">
+                      {(results.campaignPeriods.main.budget / results.totalBudget * 100).toFixed(0)}%
+                    </div>
+                    <div className="text-sm text-gray-600">活動期預算比例</div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* 預算分配分析 */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Calculator className="h-4 w-4" />
+                    動態預算分配分析
+                  </h3>
+                  <div className="grid grid-cols-5 gap-2 text-xs">
+                    {[
+                      { key: 'preheat', name: '預熱期', color: 'bg-gray-200' },
+                      { key: 'launch', name: '起跑期', color: 'bg-red-200' },
+                      { key: 'main', name: '活動期', color: 'bg-blue-200' },
+                      { key: 'final', name: '倒數期', color: 'bg-yellow-200' },
+                      { key: 'repurchase', name: '回購期', color: 'bg-green-200' },
+                    ].map(({ key, name, color }) => {
+                      const period = results.campaignPeriods[key as keyof typeof results.campaignPeriods];
+                      const percentage = (period.budget / results.totalBudget * 100);
+                      return (
+                        <div key={key} className={`p-2 rounded-lg ${color}`}>
+                          <div className="font-semibold text-gray-800">{name}</div>
+                          <div className="text-gray-700">{percentage.toFixed(1)}%</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
+                    <strong>智能分配邏輯：</strong>
+                    活動期預算會根據活動總天數自動調整，長期活動會增加活動期比例以避免中段失血，短期活動則重點投放起跑期與倒數期確保瞬間爆發效果。
                   </div>
                 </div>
 
