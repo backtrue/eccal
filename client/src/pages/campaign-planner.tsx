@@ -148,33 +148,60 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
     const startDate = new Date(data.startDate);
     const endDate = new Date(data.endDate);
     
-    // 計算活動總需要流量
-    const requiredOrders = data.targetRevenue / data.targetAov;
-    const totalTraffic = Math.ceil(requiredOrders / (data.targetConversionRate / 100));
+    // 計算活動總需要流量 
+    const totalTraffic = Math.ceil((data.targetRevenue / data.targetAov) / (data.targetConversionRate / 100));
     
     // 計算活動期間天數
     const campaignDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
     
-    // 流量分配：前三天 60%、中間 15%、後三天 20%
-    const launchTraffic = Math.ceil(totalTraffic * 0.60);
-    const mainTraffic = Math.ceil(totalTraffic * 0.15);
-    const finalTraffic = Math.ceil(totalTraffic * 0.20);
+    // 動態預算分配架構
+    const fixedDays = {
+      preheat: 4,    // 預熱期
+      launch: 3,     // 起跑期  
+      final: 3,      // 倒數期
+      repurchase: 7  // 回購期
+    };
     
-    // 計算各期間預算 (95% 的總預算)
-    const launchBudget = launchTraffic * data.cpc;
-    const mainBudget = mainTraffic * data.cpc;
-    const finalBudget = finalTraffic * data.cpc;
-    const campaignBudget = launchBudget + mainBudget + finalBudget;
+    // 計算活動期天數（總天數扣除固定期間）
+    const calculatedMainDays = Math.max(1, campaignDays - (fixedDays.launch + fixedDays.final));
     
-    // 總預算 = 活動預算 / 0.95
-    const totalBudget = Math.ceil(campaignBudget / 0.95);
+    // 動態預算分配比例
+    const budgetRatios = {
+      preheat: 0.04,     // 預熱期：4%
+      launch: 0.32,      // 起跑期：32%（降低避免過度集中）
+      final: 0.24,       // 倒數期：24%
+      repurchase: 0.02,  // 回購期：2%
+      main: 0.38         // 活動期：38%（基礎比例，會隨天數調整）
+    };
     
-    // 預熱期和回購期預算
-    const preheatBudget = Math.ceil(totalBudget * 0.04);
-    const repurchaseBudget = Math.ceil(totalBudget * 0.01);
+    // 如果活動天數超過20天，增加活動期預算比例
+    if (campaignDays > 20) {
+      const extraDays = campaignDays - 20;
+      const extraBudgetRatio = Math.min(0.20, extraDays * 0.008); // 每多一天增加0.8%，最多增加20%
+      
+      budgetRatios.main += extraBudgetRatio;
+      budgetRatios.launch -= extraBudgetRatio * 0.6; // 從起跑期調撥
+      budgetRatios.final -= extraBudgetRatio * 0.4;  // 從倒數期調撥
+    }
     
-    // 計算預熱期和回購期流量
+    // 計算總預算（先從目標營收推算）
+    const requiredTrafficForRevenue = Math.ceil((data.targetRevenue / data.targetAov) / (data.targetConversionRate / 100));
+    const estimatedTotalBudget = Math.ceil(requiredTrafficForRevenue * data.cpc * 1.15); // 增加15%緩衝
+    
+    // 各期間預算分配
+    const preheatBudget = Math.ceil(estimatedTotalBudget * budgetRatios.preheat);
+    const launchBudget = Math.ceil(estimatedTotalBudget * budgetRatios.launch);
+    const mainBudget = Math.ceil(estimatedTotalBudget * budgetRatios.main); 
+    const finalBudget = Math.ceil(estimatedTotalBudget * budgetRatios.final);
+    const repurchaseBudget = Math.ceil(estimatedTotalBudget * budgetRatios.repurchase);
+    
+    const totalBudget = preheatBudget + launchBudget + mainBudget + finalBudget + repurchaseBudget;
+    
+    // 各期間流量計算
     const preheatTraffic = Math.ceil(preheatBudget / data.cpc);
+    const launchTraffic = Math.ceil(launchBudget / data.cpc);
+    const mainTraffic = Math.ceil(mainBudget / data.cpc);
+    const finalTraffic = Math.ceil(finalBudget / data.cpc);
     const repurchaseTraffic = Math.ceil(repurchaseBudget / data.cpc);
     
     // 計算各期間日期
@@ -224,8 +251,8 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
     }
     
     // 活動期（中間天數）
-    const mainDays = Math.max(1, campaignDays - 6);
-    for (let i = 0; i < mainDays; i++) {
+    const actualMainDays = Math.max(1, campaignDays - 6);
+    for (let i = 0; i < actualMainDays; i++) {
       const date = format(addDays(startDate, 3 + i), 'yyyy-MM-dd');
       dailyBudgets.push({
         date,
