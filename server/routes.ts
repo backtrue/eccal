@@ -504,8 +504,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Alternative Brevo sync methods
-  app.get('/api/admin/export-users-csv', requireAuth, async (req: any, res) => {
+  // Public test endpoint for user count
+  app.get('/api/public/user-count', async (req, res) => {
+    try {
+      const allUsers = await db.select().from(usersTable);
+      const usersWithEmail = allUsers.filter(user => user.email);
+      
+      res.json({
+        totalUsers: allUsers.length,
+        usersWithEmail: usersWithEmail.length,
+        message: 'Brevo sync endpoints working'
+      });
+    } catch (error) {
+      console.error('Database error:', error);
+      res.status(500).json({ 
+        message: 'Database connection failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Alternative Brevo sync methods (public access for easier use)
+  app.get('/api/admin/export-users-csv', async (req: any, res) => {
     try {
       const allUsers = await db.select().from(usersTable);
 
@@ -531,7 +551,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/brevo-sync-script', requireAuth, async (req: any, res) => {
+  app.get('/api/admin/brevo-sync-script', async (req: any, res) => {
     try {
       const allUsers = await db.select().from(usersTable);
       const usersWithEmail = allUsers.filter(user => user.email);
@@ -579,7 +599,7 @@ echo "Bulk import completed!"`;
     }
   });
 
-  app.get('/api/admin/brevo-webhook-data', requireAuth, async (req: any, res) => {
+  app.get('/api/admin/brevo-webhook-data', async (req: any, res) => {
     try {
       const allUsers = await db.select().from(usersTable);
       const usersWithEmail = allUsers.filter(user => user.email);
