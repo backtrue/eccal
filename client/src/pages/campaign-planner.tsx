@@ -38,13 +38,7 @@ interface CampaignPlannerProps {
 
 interface PlanningResult {
   totalTraffic: number;
-  campaignPeriods: {
-    preheat: { startDate: string; endDate: string; budget: number; traffic: number };
-    launch: { startDate: string; endDate: string; budget: number; traffic: number };
-    main: { startDate: string; endDate: string; budget: number; traffic: number };
-    final: { startDate: string; endDate: string; budget: number; traffic: number };
-    repurchase: { startDate: string; endDate: string; budget: number; traffic: number };
-  };
+  campaignPeriods: any;
   totalBudget: number;
   dailyBudgets: Array<{
     date: string;
@@ -794,9 +788,9 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                   </div>
                   <div className="text-center p-4 bg-purple-50 rounded-lg">
                     <div className="text-2xl font-bold text-purple-600">
-                      {(results.campaignPeriods.main.budget / results.totalBudget * 100).toFixed(0)}%
+                      {Object.keys(results.campaignPeriods).length}
                     </div>
-                    <div className="text-sm text-gray-600">活動期預算比例</div>
+                    <div className="text-sm text-gray-600">活動階段數</div>
                   </div>
                 </div>
 
@@ -808,19 +802,24 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                     <Calculator className="h-4 w-4" />
                     動態預算分配分析
                   </h3>
-                  <div className="grid grid-cols-5 gap-2 text-xs">
-                    {[
-                      { key: 'preheat', name: '預熱期', color: 'bg-gray-200' },
-                      { key: 'launch', name: '起跑期', color: 'bg-red-200' },
-                      { key: 'main', name: '活動期', color: 'bg-blue-200' },
-                      { key: 'final', name: '倒數期', color: 'bg-yellow-200' },
-                      { key: 'repurchase', name: '回購期', color: 'bg-green-200' },
-                    ].map(({ key, name, color }) => {
-                      const period = results.campaignPeriods[key as keyof typeof results.campaignPeriods];
-                      const percentage = (period.budget / results.totalBudget * 100);
+                  <div className={`grid gap-2 text-xs ${Object.keys(results.campaignPeriods).length === 3 ? 'grid-cols-3' : Object.keys(results.campaignPeriods).length === 5 ? 'grid-cols-5' : 'grid-cols-3'}`}>
+                    {Object.entries(results.campaignPeriods).map(([key, period], index) => {
+                      const colors = ['bg-gray-200', 'bg-red-200', 'bg-blue-200', 'bg-yellow-200', 'bg-green-200'];
+                      const typedPeriod = period as { budget: number; traffic: number; startDate: string; endDate: string };
+                      const percentage = (typedPeriod.budget / results.totalBudget * 100);
+                      const periodNames: {[key: string]: string} = {
+                        'preheat': '預熱期',
+                        'launch': '起跑期', 
+                        'main': '活動期',
+                        'final': '倒數期',
+                        'repurchase': '回購期',
+                        'day1': '第一天',
+                        'day2': '第二天',
+                        'day3': '第三天'
+                      };
                       return (
-                        <div key={key} className={`p-2 rounded-lg ${color}`}>
-                          <div className="font-semibold text-gray-800">{name}</div>
+                        <div key={key} className={`p-2 rounded-lg ${colors[index % colors.length]}`}>
+                          <div className="font-semibold text-gray-800">{periodNames[key] || key}</div>
                           <div className="text-gray-700">{percentage.toFixed(1)}%</div>
                         </div>
                       );
@@ -840,53 +839,44 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                     活動期間規劃
                   </h3>
                   
-                  <div className="grid grid-cols-5 gap-4">
-                    {[
-                      { key: 'preheat', name: '預熱期' },
-                      { key: 'launch', name: '起跑期' },
-                      { key: 'main', name: '活動期' },
-                      { key: 'final', name: '倒數期' },
-                      { key: 'repurchase', name: '回購期' },
-                    ].map(({ key, name }) => {
-                      const period = results.campaignPeriods[key as keyof typeof results.campaignPeriods];
-                      const dailyBudget = 
-                        key === 'preheat' ? Math.ceil(period.budget / 4) :
-                        key === 'launch' ? Math.ceil(period.budget / 3) :
-                        key === 'main' ? Math.ceil(period.budget / Math.max(1, Math.ceil((new Date(period.endDate).getTime() - new Date(period.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1)) :
-                        key === 'final' ? Math.ceil(period.budget / 3) :
-                        Math.ceil(period.budget / 7);
+                  <div className={`grid gap-4 ${Object.keys(results.campaignPeriods).length === 3 ? 'grid-cols-3' : Object.keys(results.campaignPeriods).length === 5 ? 'grid-cols-5' : 'grid-cols-3'}`}>
+                    {Object.entries(results.campaignPeriods).map(([key, period]) => {
+                      const typedPeriod = period as { budget: number; traffic: number; startDate: string; endDate: string };
+                      const periodNames: {[key: string]: string} = {
+                        'preheat': '預熱期',
+                        'launch': '起跑期', 
+                        'main': '活動期',
+                        'final': '倒數期',
+                        'repurchase': '回購期',
+                        'day1': '第一天',
+                        'day2': '第二天',
+                        'day3': '第三天'
+                      };
                       
-                      const dailyTraffic = 
-                        key === 'preheat' ? Math.ceil(period.traffic / 4) :
-                        key === 'launch' ? Math.ceil(period.traffic / 3) :
-                        key === 'main' ? Math.ceil(period.traffic / Math.max(1, Math.ceil((new Date(period.endDate).getTime() - new Date(period.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1)) :
-                        key === 'final' ? Math.ceil(period.traffic / 3) :
-                        Math.ceil(period.traffic / 7);
+                      const daysDiff = Math.ceil((new Date(typedPeriod.endDate).getTime() - new Date(typedPeriod.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                      const dailyBudget = Math.ceil(typedPeriod.budget / Math.max(1, daysDiff));
+                      const dailyTraffic = Math.ceil(typedPeriod.traffic / Math.max(1, daysDiff));
                       
                       return (
                         <div key={key} className="text-center space-y-3 p-4 bg-gray-50 rounded-lg">
-                          {/* 期間名稱 */}
                           <div className="text-sm font-bold text-gray-900 border-b border-gray-200 pb-2">
-                            {name}
+                            {periodNames[key] || key}
                           </div>
                           
-                          {/* 日期 */}
                           <div className="space-y-1">
                             <div className="text-xs text-gray-500 font-medium">日期</div>
                             <div className="text-xs text-gray-700">
-                              {new Date(period.startDate).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })} - {new Date(period.endDate).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })}
+                              {new Date(typedPeriod.startDate).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })} - {new Date(typedPeriod.endDate).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })}
                             </div>
                           </div>
                           
-                          {/* 總預算 */}
                           <div className="space-y-1">
                             <div className="text-xs text-gray-500 font-medium">總預算</div>
                             <div className="text-lg font-bold text-gray-900">
-                              ${period.budget.toLocaleString()}
+                              ${typedPeriod.budget.toLocaleString()}
                             </div>
                           </div>
                           
-                          {/* 日預算 */}
                           <div className="space-y-1">
                             <div className="text-xs text-gray-500 font-medium">日預算</div>
                             <div className="text-sm font-semibold text-green-600">
@@ -894,7 +884,6 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                             </div>
                           </div>
                           
-                          {/* 日流量 */}
                           <div className="space-y-1">
                             <div className="text-xs text-gray-500 font-medium">日流量</div>
                             <div className="text-sm font-semibold text-blue-600">
@@ -906,12 +895,55 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                     })}
                   </div>
                 </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <DollarSign className="h-4 w-4" />
+                    每日預算詳細規劃
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm border-collapse border border-gray-200">
+                      <thead>
+                        <tr className="bg-gray-50">
+                          <th className="border border-gray-200 px-3 py-2 text-left">日期</th>
+                          <th className="border border-gray-200 px-3 py-2 text-left">期間</th>
+                          <th className="border border-gray-200 px-3 py-2 text-right">預算</th>
+                          <th className="border border-gray-200 px-3 py-2 text-right">流量</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {results.dailyBudgets.map((day, index) => (
+                          <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                            <td className="border border-gray-200 px-3 py-2">
+                              {new Date(day.date).toLocaleDateString('zh-TW', { 
+                                month: 'numeric', 
+                                day: 'numeric',
+                                weekday: 'short'
+                              })}
+                            </td>
+                            <td className="border border-gray-200 px-3 py-2">
+                              <Badge variant="outline" className="text-xs">
+                                {day.period}
+                              </Badge>
+                            </td>
+                            <td className="border border-gray-200 px-3 py-2 text-right font-medium">
+                              ${day.budget.toLocaleString()}
+                            </td>
+                            <td className="border border-gray-200 px-3 py-2 text-right">
+                              {day.traffic.toLocaleString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           )}
         </div>
-
-
       </div>
     </div>
   );
