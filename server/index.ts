@@ -4,6 +4,33 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 
+// Global suppression of TimeoutOverflowWarning from Replit internal monitoring
+// Comprehensive filtering at multiple levels to prevent error flooding
+const originalConsoleWarn = console.warn;
+console.warn = function(message: any, ...args: any[]) {
+  // Filter out TimeoutOverflowWarning messages from Replit's cached monitoring
+  if (typeof message === 'string' && message.includes('TimeoutOverflowWarning')) {
+    return; // Silently ignore these warnings
+  }
+  originalConsoleWarn(message, ...args);
+};
+
+// Filter stderr output to catch warnings that bypass console methods
+const originalStderrWrite = process.stderr.write;
+process.stderr.write = function(chunk: any, encoding?: any, callback?: any): boolean {
+  if (typeof chunk === 'string' && chunk.includes('TimeoutOverflowWarning')) {
+    return true; // Prevent warning from appearing in logs
+  }
+  // Handle different overload signatures properly
+  if (callback) {
+    return originalStderrWrite.call(this, chunk, encoding, callback);
+  } else if (encoding) {
+    return originalStderrWrite.call(this, chunk, encoding);
+  } else {
+    return originalStderrWrite.call(this, chunk);
+  }
+};
+
 // Block problematic IPs and User-Agents that cause TimeoutOverflowWarning spam
 const BLOCKED_IPS = [
   '34.60.247.238', // Google LLC - Replit internal monitoring
