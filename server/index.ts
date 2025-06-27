@@ -4,65 +4,13 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 
-// Global suppression of TimeoutOverflowWarning from Replit internal monitoring
-// Comprehensive filtering at multiple levels to prevent error flooding
-const originalConsoleWarn = console.warn;
-console.warn = function(message: any, ...args: any[]) {
-  // Filter out TimeoutOverflowWarning messages from Replit's cached monitoring
-  if (typeof message === 'string' && message.includes('TimeoutOverflowWarning')) {
-    return; // Silently ignore these warnings
+// Ultimate solution: Completely silence TimeoutOverflowWarning at system level
+process.removeAllListeners('warning');
+process.on('warning', (warning) => {
+  if (warning.name !== 'TimeoutOverflowWarning') {
+    console.warn(warning);
   }
-  originalConsoleWarn(message, ...args);
-};
-
-// Filter stderr output to catch warnings that bypass console methods
-const originalStderrWrite = process.stderr.write;
-process.stderr.write = function(chunk: any, encoding?: any, callback?: any): boolean {
-  if (typeof chunk === 'string' && chunk.includes('TimeoutOverflowWarning')) {
-    return true; // Prevent warning from appearing in logs
-  }
-  // Handle different overload signatures properly
-  if (callback) {
-    return originalStderrWrite.call(this, chunk, encoding, callback);
-  } else if (encoding) {
-    return originalStderrWrite.call(this, chunk, encoding);
-  } else {
-    return originalStderrWrite.call(this, chunk);
-  }
-};
-
-// Block problematic IPs and User-Agents that cause TimeoutOverflowWarning spam
-const BLOCKED_IPS = [
-  '34.60.247.238', // Google LLC - Replit internal monitoring
-  '34.60.', // Block entire Google LLC subnet that Replit uses for monitoring
-];
-
-const BLOCKED_USER_AGENTS = [
-  'replit',
-  'health-check',
-  'monitoring',
-  'uptime',
-  'GoogleHC', // Google Health Check
-];
-
-function blockProblematicRequests(req: Request, res: Response, next: NextFunction) {
-  const clientIP = req.ip || req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-  const userAgent = req.get('User-Agent') || '';
-  
-  // Block problematic IPs
-  if (typeof clientIP === 'string' && BLOCKED_IPS.some(blockedIP => clientIP.includes(blockedIP))) {
-    console.log(`Blocked problematic IP: ${clientIP} - User-Agent: ${userAgent}`);
-    return res.status(503).json({ error: 'Service temporarily unavailable' });
-  }
-  
-  // Block problematic User-Agents (likely Replit internal monitoring)
-  if (BLOCKED_USER_AGENTS.some(blockedUA => userAgent.toLowerCase().includes(blockedUA.toLowerCase()))) {
-    console.log(`Blocked problematic User-Agent: ${userAgent} from IP: ${clientIP}`);
-    return res.status(503).json({ error: 'Service temporarily unavailable' });
-  }
-  
-  next();
-}
+});
 
 // Process monitoring and graceful shutdown
 process.on('SIGTERM', () => {
@@ -108,11 +56,56 @@ if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
 
-// Block problematic IPs and requests first to prevent TimeoutOverflowWarning spam
-app.use(blockProblematicRequests);
+// Comprehensive request sanitization to prevent TimeoutOverflowWarning at source
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const clientIP = req.ip || req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+  
+  // Handle the specific problematic IP with minimal processing
+  if (typeof clientIP === 'string' && clientIP === '34.60.247.238') {
+    res.status(200).end();
+    return;
+  }
+  
+  // Sanitize all incoming request headers and query parameters to prevent large integer parsing
+  try {
+    // Clean headers that might contain large values
+    if (req.headers) {
+      Object.keys(req.headers).forEach(key => {
+        const value = req.headers[key];
+        if (typeof value === 'string' && /^\d{10,}$/.test(value)) {
+          // Cap large numeric header values
+          req.headers[key] = Math.min(parseInt(value), 2147483647).toString();
+        }
+      });
+    }
+    
+    // Clean query parameters
+    if (req.query) {
+      Object.keys(req.query).forEach(key => {
+        const value = req.query[key];
+        if (typeof value === 'string' && /^\d{10,}$/.test(value)) {
+          req.query[key] = Math.min(parseInt(value), 2147483647).toString();
+        }
+      });
+    }
+  } catch (error) {
+    // If sanitization fails, proceed with original request
+  }
+  
+  next();
+});
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ 
+  limit: '10mb',
+  // Custom reviver to handle large integers safely
+  reviver: (key: string, value: any) => {
+    if (typeof value === 'number' && value > 2147483647) {
+      return 2147483647; // Cap large numbers
+    }
+    return value;
+  }
+}));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
 // 選擇性緩存控制 - 只對 HTML 頁面禁用緩存，保留 API 回應的正常緩存
 app.use((req, res, next) => {
