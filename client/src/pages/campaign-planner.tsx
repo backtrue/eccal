@@ -839,60 +839,62 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                     活動期間規劃
                   </h3>
                   
-                  <div className={`grid gap-4 ${Object.keys(results.campaignPeriods).length === 3 ? 'grid-cols-3' : Object.keys(results.campaignPeriods).length === 5 ? 'grid-cols-5' : 'grid-cols-3'}`}>
-                    {Object.entries(results.campaignPeriods).map(([key, period]) => {
-                      const typedPeriod = period as { budget: number; traffic: number; startDate: string; endDate: string };
-                      const periodNames: {[key: string]: string} = {
-                        'preheat': '預熱期',
-                        'launch': '起跑期', 
-                        'main': '活動期',
-                        'final': '倒數期',
-                        'repurchase': '回購期',
-                        'day1': '第一天',
-                        'day2': '第二天',
-                        'day3': '第三天'
-                      };
-                      
-                      const daysDiff = Math.ceil((new Date(typedPeriod.endDate).getTime() - new Date(typedPeriod.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                      const dailyBudget = Math.ceil(typedPeriod.budget / Math.max(1, daysDiff));
-                      const dailyTraffic = Math.ceil(typedPeriod.traffic / Math.max(1, daysDiff));
-                      
-                      return (
-                        <div key={key} className="text-center space-y-3 p-4 bg-gray-50 rounded-lg">
-                          <div className="text-sm font-bold text-gray-900 border-b border-gray-200 pb-2">
-                            {periodNames[key] || key}
-                          </div>
-                          
-                          <div className="space-y-1">
-                            <div className="text-xs text-gray-500 font-medium">日期</div>
-                            <div className="text-xs text-gray-700">
-                              {new Date(typedPeriod.startDate).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })} - {new Date(typedPeriod.endDate).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })}
+                  <div className="overflow-x-auto">
+                    <div className={`flex gap-4 min-w-max ${Object.keys(results.campaignPeriods).length === 3 ? 'justify-center' : ''}`}>
+                      {Object.entries(results.campaignPeriods).map(([key, period]) => {
+                        const typedPeriod = period as { budget: number; traffic: number; startDate: string; endDate: string };
+                        const periodNames: {[key: string]: string} = {
+                          'preheat': '預熱期',
+                          'launch': '起跑期', 
+                          'main': '活動期',
+                          'final': '倒數期',
+                          'repurchase': '回購期',
+                          'day1': '第一天',
+                          'day2': '第二天',
+                          'day3': '第三天'
+                        };
+                        
+                        const daysDiff = Math.ceil((new Date(typedPeriod.endDate).getTime() - new Date(typedPeriod.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                        const dailyBudget = Math.ceil(typedPeriod.budget / Math.max(1, daysDiff));
+                        const dailyTraffic = Math.ceil(typedPeriod.traffic / Math.max(1, daysDiff));
+                        
+                        return (
+                          <div key={key} className="text-center space-y-3 p-4 bg-gray-50 rounded-lg min-w-[160px] flex-shrink-0">
+                            <div className="text-sm font-bold text-gray-900 border-b border-gray-200 pb-2">
+                              {periodNames[key] || key}
+                            </div>
+                            
+                            <div className="space-y-1">
+                              <div className="text-xs text-gray-500 font-medium">日期</div>
+                              <div className="text-xs text-gray-700">
+                                {new Date(typedPeriod.startDate).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })} - {new Date(typedPeriod.endDate).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })}
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-1">
+                              <div className="text-xs text-gray-500 font-medium">總預算</div>
+                              <div className="text-lg font-bold text-gray-900">
+                                ${typedPeriod.budget.toLocaleString()}
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-1">
+                              <div className="text-xs text-gray-500 font-medium">日預算</div>
+                              <div className="text-sm font-semibold text-green-600">
+                                ${dailyBudget.toLocaleString()}
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-1">
+                              <div className="text-xs text-gray-500 font-medium">日流量</div>
+                              <div className="text-sm font-semibold text-blue-600">
+                                {dailyTraffic.toLocaleString()}
+                              </div>
                             </div>
                           </div>
-                          
-                          <div className="space-y-1">
-                            <div className="text-xs text-gray-500 font-medium">總預算</div>
-                            <div className="text-lg font-bold text-gray-900">
-                              ${typedPeriod.budget.toLocaleString()}
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-1">
-                            <div className="text-xs text-gray-500 font-medium">日預算</div>
-                            <div className="text-sm font-semibold text-green-600">
-                              ${dailyBudget.toLocaleString()}
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-1">
-                            <div className="text-xs text-gray-500 font-medium">日流量</div>
-                            <div className="text-sm font-semibold text-blue-600">
-                              {dailyTraffic.toLocaleString()}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
 
