@@ -24,15 +24,24 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('未處理的 Promise 拒絕:', reason);
 });
 
-// Memory usage monitoring
+// Memory usage monitoring - optimized for lower overhead
 const logMemoryUsage = () => {
   const usage = process.memoryUsage();
   const mb = (bytes: number) => Math.round(bytes / 1024 / 1024 * 100) / 100;
-  console.log(`記憶體使用: RSS ${mb(usage.rss)}MB, Heap ${mb(usage.heapUsed)}/${mb(usage.heapTotal)}MB`);
+  
+  // Only log if memory usage is concerning (>120MB heap)
+  if (usage.heapUsed > 120 * 1024 * 1024) {
+    console.log(`記憶體使用: RSS ${mb(usage.rss)}MB, Heap ${mb(usage.heapUsed)}/${mb(usage.heapTotal)}MB`);
+    
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
+    }
+  }
 };
 
-// Log memory usage every 15 minutes to reduce overhead
-setInterval(logMemoryUsage, 15 * 60 * 1000);
+// Check memory usage every 60 minutes to reduce overhead
+setInterval(logMemoryUsage, 60 * 60 * 1000);
 
 // Trust proxy for production deployment
 if (process.env.NODE_ENV === 'production') {

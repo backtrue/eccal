@@ -49,8 +49,8 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       refetchOnMount: false, // 減少掛載時的自動請求
       refetchOnReconnect: false, // 減少重連時的自動請求
-      staleTime: 10 * 60 * 1000, // 延長到10分鐘
-      gcTime: 15 * 60 * 1000, // 15分鐘後清除快取
+      staleTime: 30 * 60 * 1000, // 延長到30分鐘減少API請求
+      gcTime: 45 * 60 * 1000, // 45分鐘後清除快取
       retry: false,
       retryOnMount: false, // 停用掛載重試
     },

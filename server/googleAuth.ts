@@ -14,7 +14,7 @@ export function setupGoogleAuth(app: Express) {
     createTableIfMissing: false,
     ttl: sessionTtl,
     tableName: "sessions",
-    pruneSessionInterval: 60 * 60 * 1000, // 每小時清理過期 session
+    pruneSessionInterval: 2 * 60 * 60 * 1000, // 每2小時清理過期 session
     disableTouch: true, // 停用 touch 操作減少資料庫負擔
   });
 
