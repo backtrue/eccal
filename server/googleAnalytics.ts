@@ -194,12 +194,12 @@ export class GoogleAnalyticsService {
       }
 
       // Use safe OAuth2 client for token refresh
-      const oauth2Client = createSafeOAuth2Client({
+      const refreshClient = createSafeOAuth2Client({
         refresh_token: user.googleRefreshToken,
         expiry_date: user.tokenExpiresAt,
       });
 
-      const { credentials } = await oauth2Client.refreshAccessToken();
+      const { credentials } = await refreshClient.refreshAccessToken();
       
       if (credentials.access_token) {
         await storage.upsertUser({

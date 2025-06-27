@@ -4,6 +4,22 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 
+// Block problematic IPs that cause TimeoutOverflowWarning spam
+const BLOCKED_IPS = [
+  '34.60.247.238', // Google LLC - Replit internal monitoring causing overflow warnings
+];
+
+function blockProblematicIPs(req: Request, res: Response, next: NextFunction) {
+  const clientIP = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
+  
+  if (BLOCKED_IPS.includes(clientIP)) {
+    console.log(`Blocked request from problematic IP: ${clientIP}`);
+    return res.status(503).json({ error: 'Service temporarily unavailable' });
+  }
+  
+  next();
+}
+
 // Process monitoring and graceful shutdown
 process.on('SIGTERM', () => {
   console.log('收到 SIGTERM 信號，正在優雅關閉...');
