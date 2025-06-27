@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import { storage } from './storage';
+import { createSafeOAuth2Client, sanitizeGoogleApiResponse } from './googleOAuthHelper';
 
 export interface AnalyticsData {
   averageOrderValue: number;
@@ -23,18 +24,11 @@ export class GoogleAnalyticsService {
         throw new Error('User not found or no access token');
       }
 
-      // Set up OAuth2 client with user's access token
-      const oauth2Client = new google.auth.OAuth2();
-      
-      // Ensure safe expiry date to prevent TimeoutOverflowWarning
-      const safeExpiryDate = user.tokenExpiresAt ? 
-        Math.min(user.tokenExpiresAt.getTime(), 2147483647) : 
-        Math.min(Date.now() + 3600000, 2147483647);
-      
-      oauth2Client.setCredentials({
+      // Set up OAuth2 client with user's access token using safe helper
+      const oauth2Client = createSafeOAuth2Client({
         access_token: user.googleAccessToken,
         refresh_token: user.googleRefreshToken,
-        expiry_date: safeExpiryDate,
+        expiry_date: user.tokenExpiresAt,
       });
 
       // Use Google Analytics Data API (GA4)
@@ -199,19 +193,10 @@ export class GoogleAnalyticsService {
         throw new Error('No refresh token available');
       }
 
-      const oauth2Client = new google.auth.OAuth2(
-        process.env.GOOGLE_CLIENT_ID,
-        process.env.GOOGLE_CLIENT_SECRET
-      );
-
-      // Set safe credentials to prevent TimeoutOverflowWarning
-      const safeRefreshExpiryDate = user.tokenExpiresAt ? 
-        Math.min(user.tokenExpiresAt.getTime(), 2147483647) : 
-        Math.min(Date.now() + 3600000, 2147483647);
-        
-      oauth2Client.setCredentials({
+      // Use safe OAuth2 client for token refresh
+      const oauth2Client = createSafeOAuth2Client({
         refresh_token: user.googleRefreshToken,
-        expiry_date: safeRefreshExpiryDate,
+        expiry_date: user.tokenExpiresAt,
       });
 
       const { credentials } = await oauth2Client.refreshAccessToken();
@@ -239,20 +224,17 @@ export class GoogleAnalyticsService {
         throw new Error('User not found or no access token');
       }
 
-      const oauth2Client = new google.auth.OAuth2();
-      oauth2Client.setCredentials({
-        access_token: user.googleAccessToken,
-        refresh_token: user.googleRefreshToken,
-      });
-
       // Try to refresh token first to ensure it's valid
       await this.refreshAccessToken(userId);
       
       // Get updated credentials after refresh
       const updatedUser = await storage.getUser(userId);
-      oauth2Client.setCredentials({
+      
+      // Use safe OAuth2 client for API calls
+      const oauth2Client = createSafeOAuth2Client({
         access_token: updatedUser?.googleAccessToken,
         refresh_token: updatedUser?.googleRefreshToken,
+        expiry_date: updatedUser?.tokenExpiresAt,
       });
 
       const analyticsAdmin = google.analyticsadmin('v1beta');
