@@ -192,6 +192,7 @@ Changelog:
 - June 27, 2025. Fixed V1.7.2 - Resolved upgrade functionality issues. Fixed user ID resolution in all remaining API routes (analytics, user stats, referrals, credits, membership, campaign planner) to use req.user.claims?.sub for Google OAuth users. Test user backtrue@seo-tw.org now has 355 points and should be able to upgrade to Pro membership successfully.
 - June 27, 2025. Fixed V1.7.3 - Resolved frontend data display issues. Removed query caching to force fresh data fetching for credits, membership status, and referral stats. Added debug information to track API responses. Database shows backtrue@seo-tw.org has 355 points, investigating frontend display showing 0 points.
 - June 27, 2025. Fixed V1.7.4 - Resolved API parameter order issue in membership upgrade. Root cause was incorrect apiRequest parameter sequence in useMembership.ts hook. Fixed from apiRequest(url, method, data) to apiRequest(method, url, data). Upgrade functionality should now work correctly for users with sufficient credits (350+ points).
+- June 27, 2025. Verified V1.7.5 - Complete referral system testing and validation. Successfully tested referral mechanism by creating test user through referral code REF_11706490. Confirmed entire referral flow: new user gets 30 welcome points, referrer gets 100 points (first referral). Test user backtrue@seo-tw.org now has 105 points total (5 remaining after Pro upgrade + 100 referral reward). Referral system fully operational with proper database tracking and credit distribution.
 ```
 
 ## User Preferences
