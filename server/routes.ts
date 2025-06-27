@@ -4,7 +4,7 @@ import { setupGoogleAuth, requireAuth } from "./googleAuth";
 import { analyticsService } from "./googleAnalytics";
 import { storage } from "./storage";
 import { db } from "./db";
-import { users, userMetrics } from "@shared/schema";
+import { users as usersTable, userMetrics } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { brevoService } from "./brevoService";
 
@@ -147,7 +147,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('開始同步現有用戶到 Brevo...');
       
       // 獲取所有現有用戶
-      const allUsers = await db.select().from(users);
+      const allUsers = await db.select().from(usersTable);
       console.log(`找到 ${allUsers.length} 個用戶`);
       
       let successCount = 0;
@@ -507,7 +507,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Alternative Brevo sync methods
   app.get('/api/admin/export-users-csv', requireAuth, async (req: any, res) => {
     try {
-      const allUsers = await db.select().from(users);
+      const allUsers = await db.select().from(usersTable);
 
       const csvHeader = 'EMAIL,FIRSTNAME,LASTNAME,GA_RESOURCE_NAME,SIGNUP_DATE\n';
       const csvRows = allUsers.filter(user => user.email).map(user => {
@@ -533,19 +533,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/admin/brevo-sync-script', requireAuth, async (req: any, res) => {
     try {
-      const [users] = await db.execute(`
-        SELECT email, first_name, last_name
-        FROM users 
-        WHERE email IS NOT NULL
-        ORDER BY created_at DESC
-      `);
+      const allUsers = await db.select().from(usersTable);
+      const usersWithEmail = allUsers.filter(user => user.email);
 
-      const curlCommands = (users as any[]).map((user, index) => {
+      const curlCommands = usersWithEmail.map((user, index) => {
         const payload = {
           email: user.email,
           attributes: {
-            FIRSTNAME: user.first_name || '',
-            LASTNAME: user.last_name || ''
+            FIRSTNAME: user.firstName || '',
+            LASTNAME: user.lastName || ''
           },
           listIds: [15]
         };
@@ -564,7 +560,7 @@ sleep 0.5  # Rate limiting
       const scriptContent = `#!/bin/bash
 # Brevo Bulk Contact Import Script
 # Generated: ${new Date().toISOString()}
-# Total contacts: ${(users as any[]).length}
+# Total contacts: ${usersWithEmail.length}
 
 echo "Starting Brevo bulk import..."
 echo "Please replace YOUR_BREVO_API_KEY with your actual API key"
@@ -585,22 +581,18 @@ echo "Bulk import completed!"`;
 
   app.get('/api/admin/brevo-webhook-data', requireAuth, async (req: any, res) => {
     try {
-      const [users] = await db.execute(`
-        SELECT email, first_name, last_name, created_at
-        FROM users 
-        WHERE email IS NOT NULL
-        ORDER BY created_at DESC
-      `);
+      const allUsers = await db.select().from(usersTable);
+      const usersWithEmail = allUsers.filter(user => user.email);
 
-      const webhookData = (users as any[]).map(user => ({
+      const webhookData = usersWithEmail.map(user => ({
         email: user.email,
-        firstName: user.first_name,
-        lastName: user.last_name,
-        signupDate: user.created_at,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        signupDate: user.createdAt,
         listId: 15,
         attributes: {
-          FIRSTNAME: user.first_name || '',
-          LASTNAME: user.last_name || ''
+          FIRSTNAME: user.firstName || '',
+          LASTNAME: user.lastName || ''
         }
       }));
       
