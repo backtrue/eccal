@@ -10,9 +10,10 @@ const BLOCKED_IPS = [
 ];
 
 function blockProblematicIPs(req: Request, res: Response, next: NextFunction) {
-  const clientIP = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
+  const clientIP = req.ip || req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
   
-  if (BLOCKED_IPS.includes(clientIP)) {
+  // Type safety: ensure clientIP is string before checking
+  if (typeof clientIP === 'string' && BLOCKED_IPS.some(blockedIP => clientIP.includes(blockedIP))) {
     console.log(`Blocked request from problematic IP: ${clientIP}`);
     return res.status(503).json({ error: 'Service temporarily unavailable' });
   }
@@ -63,6 +64,9 @@ setInterval(logMemoryUsage, 60 * 60 * 1000);
 if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
+
+// Block problematic IPs first to prevent TimeoutOverflowWarning spam
+app.use(blockProblematicIPs);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
