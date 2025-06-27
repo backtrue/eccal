@@ -154,55 +154,133 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
     // 計算活動期間天數
     const campaignDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
     
-    // 動態預算分配架構
-    const fixedDays = {
-      preheat: 4,    // 預熱期
-      launch: 3,     // 起跑期  
-      final: 3,      // 倒數期
-      repurchase: 7  // 回購期
-    };
+    // 根據活動天數決定分配策略
+    let budgetRatios: any = {};
+    let periodDays: any = {};
     
-    // 計算活動期天數（總天數扣除固定期間）
-    const calculatedMainDays = Math.max(1, campaignDays - (fixedDays.launch + fixedDays.final));
-    
-    // 動態預算分配比例
-    const budgetRatios = {
-      preheat: 0.04,     // 預熱期：4%
-      launch: 0.32,      // 起跑期：32%（降低避免過度集中）
-      final: 0.24,       // 倒數期：24%
-      repurchase: 0.02,  // 回購期：2%
-      main: 0.38         // 活動期：38%（基礎比例，會隨天數調整）
-    };
-    
-    // 如果活動天數超過20天，增加活動期預算比例
-    if (campaignDays > 20) {
-      const extraDays = campaignDays - 20;
-      const extraBudgetRatio = Math.min(0.20, extraDays * 0.008); // 每多一天增加0.8%，最多增加20%
+    if (campaignDays === 3) {
+      // 3天活動：前中後三天，首日最重、末日次重、中間最輕
+      budgetRatios = {
+        day1: 0.50,    // 第一天：50%
+        day2: 0.25,    // 第二天：25%
+        day3: 0.25     // 第三天：25%
+      };
+      periodDays = { total: 3 };
+    } else if (campaignDays >= 4 && campaignDays <= 9) {
+      // 4-9天活動：等比例縮減起跑期和倒數期天數，無預熱期和回購期
+      const launchDays = Math.max(1, Math.floor(campaignDays * 0.3)); // 約30%天數
+      const finalDays = Math.max(1, Math.floor(campaignDays * 0.3));  // 約30%天數
+      const mainDays = campaignDays - launchDays - finalDays;
       
-      budgetRatios.main += extraBudgetRatio;
-      budgetRatios.launch -= extraBudgetRatio * 0.6; // 從起跑期調撥
-      budgetRatios.final -= extraBudgetRatio * 0.4;  // 從倒數期調撥
+      budgetRatios = {
+        launch: 0.45,      // 起跑期：45%
+        main: 0.30,        // 活動期：30%
+        final: 0.25        // 倒數期：25%
+      };
+      
+      periodDays = {
+        launch: launchDays,
+        main: Math.max(1, mainDays),
+        final: finalDays
+      };
+    } else {
+      // 10天以上活動：完整5階段邏輯
+      const fixedDays = {
+        preheat: 4,    // 預熱期
+        launch: 3,     // 起跑期  
+        final: 3,      // 倒數期
+        repurchase: 7  // 回購期
+      };
+      
+      const calculatedMainDays = Math.max(1, campaignDays - (fixedDays.launch + fixedDays.final));
+      
+      budgetRatios = {
+        preheat: 0.04,     // 預熱期：4%
+        launch: 0.32,      // 起跑期：32%
+        final: 0.24,       // 倒數期：24%
+        repurchase: 0.02,  // 回購期：2%
+        main: 0.38         // 活動期：38%（基礎比例，會隨天數調整）
+      };
+      
+      // 如果活動天數超過20天，增加活動期預算比例
+      if (campaignDays > 20) {
+        const extraDays = campaignDays - 20;
+        const extraBudgetRatio = Math.min(0.20, extraDays * 0.008);
+        
+        budgetRatios.main += extraBudgetRatio;
+        budgetRatios.launch -= extraBudgetRatio * 0.6;
+        budgetRatios.final -= extraBudgetRatio * 0.4;
+      }
+      
+      periodDays = {
+        preheat: fixedDays.preheat,
+        launch: fixedDays.launch,
+        main: calculatedMainDays,
+        final: fixedDays.final,
+        repurchase: fixedDays.repurchase
+      };
     }
     
     // 計算總預算（先從目標營收推算）
     const requiredTrafficForRevenue = Math.ceil((data.targetRevenue / data.targetAov) / (data.targetConversionRate / 100));
     const estimatedTotalBudget = Math.ceil(requiredTrafficForRevenue * data.cpc * 1.15); // 增加15%緩衝
     
-    // 各期間預算分配
-    const preheatBudget = Math.ceil(estimatedTotalBudget * budgetRatios.preheat);
-    const launchBudget = Math.ceil(estimatedTotalBudget * budgetRatios.launch);
-    const mainBudget = Math.ceil(estimatedTotalBudget * budgetRatios.main); 
-    const finalBudget = Math.ceil(estimatedTotalBudget * budgetRatios.final);
-    const repurchaseBudget = Math.ceil(estimatedTotalBudget * budgetRatios.repurchase);
+    // 根據活動類型分配預算
+    let budgetBreakdown: any = {};
+    let totalBudget = 0;
     
-    const totalBudget = preheatBudget + launchBudget + mainBudget + finalBudget + repurchaseBudget;
+    if (campaignDays === 3) {
+      // 3天活動預算分配
+      budgetBreakdown = {
+        day1: Math.ceil(estimatedTotalBudget * budgetRatios.day1),
+        day2: Math.ceil(estimatedTotalBudget * budgetRatios.day2),
+        day3: Math.ceil(estimatedTotalBudget * budgetRatios.day3)
+      };
+      totalBudget = budgetBreakdown.day1 + budgetBreakdown.day2 + budgetBreakdown.day3;
+    } else if (campaignDays >= 4 && campaignDays <= 9) {
+      // 4-9天活動預算分配
+      budgetBreakdown = {
+        launch: Math.ceil(estimatedTotalBudget * budgetRatios.launch),
+        main: Math.ceil(estimatedTotalBudget * budgetRatios.main),
+        final: Math.ceil(estimatedTotalBudget * budgetRatios.final)
+      };
+      totalBudget = budgetBreakdown.launch + budgetBreakdown.main + budgetBreakdown.final;
+    } else {
+      // 10天以上活動預算分配
+      budgetBreakdown = {
+        preheat: Math.ceil(estimatedTotalBudget * budgetRatios.preheat),
+        launch: Math.ceil(estimatedTotalBudget * budgetRatios.launch),
+        main: Math.ceil(estimatedTotalBudget * budgetRatios.main),
+        final: Math.ceil(estimatedTotalBudget * budgetRatios.final),
+        repurchase: Math.ceil(estimatedTotalBudget * budgetRatios.repurchase)
+      };
+      totalBudget = budgetBreakdown.preheat + budgetBreakdown.launch + budgetBreakdown.main + budgetBreakdown.final + budgetBreakdown.repurchase;
+    }
     
-    // 各期間流量計算
-    const preheatTraffic = Math.ceil(preheatBudget / data.cpc);
-    const launchTraffic = Math.ceil(launchBudget / data.cpc);
-    const mainTraffic = Math.ceil(mainBudget / data.cpc);
-    const finalTraffic = Math.ceil(finalBudget / data.cpc);
-    const repurchaseTraffic = Math.ceil(repurchaseBudget / data.cpc);
+    // 根據活動類型計算各期間流量
+    let trafficBreakdown: any = {};
+    
+    if (campaignDays === 3) {
+      trafficBreakdown = {
+        day1: Math.ceil(budgetBreakdown.day1 / data.cpc),
+        day2: Math.ceil(budgetBreakdown.day2 / data.cpc),
+        day3: Math.ceil(budgetBreakdown.day3 / data.cpc)
+      };
+    } else if (campaignDays >= 4 && campaignDays <= 9) {
+      trafficBreakdown = {
+        launch: Math.ceil(budgetBreakdown.launch / data.cpc),
+        main: Math.ceil(budgetBreakdown.main / data.cpc),
+        final: Math.ceil(budgetBreakdown.final / data.cpc)
+      };
+    } else {
+      trafficBreakdown = {
+        preheat: Math.ceil(budgetBreakdown.preheat / data.cpc),
+        launch: Math.ceil(budgetBreakdown.launch / data.cpc),
+        main: Math.ceil(budgetBreakdown.main / data.cpc),
+        final: Math.ceil(budgetBreakdown.final / data.cpc),
+        repurchase: Math.ceil(budgetBreakdown.repurchase / data.cpc)
+      };
+    }
     
     // 計算各期間日期
     const preheatStart = format(subDays(startDate, 4), 'yyyy-MM-dd');
@@ -228,99 +306,212 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
       traffic: number;
     }> = [];
     
-    // 預熱期（4天）
-    for (let i = 0; i < 4; i++) {
-      const date = format(subDays(startDate, 4 - i), 'yyyy-MM-dd');
-      dailyBudgets.push({
-        date,
-        period: '預熱期',
-        budget: Math.ceil(preheatBudget / 4),
-        traffic: Math.ceil(preheatTraffic / 4),
-      });
-    }
-    
-    // 起跑期（3天）
-    for (let i = 0; i < 3; i++) {
-      const date = format(addDays(startDate, i), 'yyyy-MM-dd');
-      dailyBudgets.push({
-        date,
-        period: '起跑期',
-        budget: Math.ceil(launchBudget / 3),
-        traffic: Math.ceil(launchTraffic / 3),
-      });
-    }
-    
-    // 活動期（中間天數）
-    const actualMainDays = Math.max(1, campaignDays - 6);
-    for (let i = 0; i < actualMainDays; i++) {
-      const date = format(addDays(startDate, 3 + i), 'yyyy-MM-dd');
-      dailyBudgets.push({
-        date,
-        period: '活動期',
-        budget: Math.ceil(mainBudget / actualMainDays),
-        traffic: Math.ceil(mainTraffic / actualMainDays),
-      });
-    }
-    
-    // 倒數期（3天）
-    for (let i = 0; i < 3; i++) {
-      const date = format(subDays(endDate, 2 - i), 'yyyy-MM-dd');
-      dailyBudgets.push({
-        date,
-        period: '倒數期',
-        budget: Math.ceil(finalBudget / 3),
-        traffic: Math.ceil(finalTraffic / 3),
-      });
-    }
-    
-    // 回購期（7天）
-    for (let i = 0; i < 7; i++) {
-      const date = format(addDays(endDate, 1 + i), 'yyyy-MM-dd');
-      dailyBudgets.push({
-        date,
-        period: '回購期',
-        budget: Math.ceil(repurchaseBudget / 7),
-        traffic: Math.ceil(repurchaseTraffic / 7),
-      });
+    if (campaignDays === 3) {
+      // 3天活動：直接分配到每一天
+      const days = ['第一天', '第二天', '第三天'];
+      const budgets = [budgetBreakdown.day1, budgetBreakdown.day2, budgetBreakdown.day3];
+      const traffics = [trafficBreakdown.day1, trafficBreakdown.day2, trafficBreakdown.day3];
+      
+      for (let i = 0; i < 3; i++) {
+        const date = format(addDays(startDate, i), 'yyyy-MM-dd');
+        dailyBudgets.push({
+          date,
+          period: days[i],
+          budget: budgets[i],
+          traffic: traffics[i],
+        });
+      }
+    } else if (campaignDays >= 4 && campaignDays <= 9) {
+      // 4-9天活動：起跑期 + 活動期 + 倒數期
+      
+      // 起跑期
+      for (let i = 0; i < periodDays.launch; i++) {
+        const date = format(addDays(startDate, i), 'yyyy-MM-dd');
+        dailyBudgets.push({
+          date,
+          period: '起跑期',
+          budget: Math.ceil(budgetBreakdown.launch / periodDays.launch),
+          traffic: Math.ceil(trafficBreakdown.launch / periodDays.launch),
+        });
+      }
+      
+      // 活動期
+      for (let i = 0; i < periodDays.main; i++) {
+        const date = format(addDays(startDate, periodDays.launch + i), 'yyyy-MM-dd');
+        dailyBudgets.push({
+          date,
+          period: '活動期',
+          budget: Math.ceil(budgetBreakdown.main / periodDays.main),
+          traffic: Math.ceil(trafficBreakdown.main / periodDays.main),
+        });
+      }
+      
+      // 倒數期
+      for (let i = 0; i < periodDays.final; i++) {
+        const date = format(addDays(startDate, periodDays.launch + periodDays.main + i), 'yyyy-MM-dd');
+        dailyBudgets.push({
+          date,
+          period: '倒數期',
+          budget: Math.ceil(budgetBreakdown.final / periodDays.final),
+          traffic: Math.ceil(trafficBreakdown.final / periodDays.final),
+        });
+      }
+    } else {
+      // 10天以上活動：完整5階段
+      
+      // 預熱期（4天）
+      for (let i = 0; i < 4; i++) {
+        const date = format(subDays(startDate, 4 - i), 'yyyy-MM-dd');
+        dailyBudgets.push({
+          date,
+          period: '預熱期',
+          budget: Math.ceil(budgetBreakdown.preheat / 4),
+          traffic: Math.ceil(trafficBreakdown.preheat / 4),
+        });
+      }
+      
+      // 起跑期（3天）
+      for (let i = 0; i < 3; i++) {
+        const date = format(addDays(startDate, i), 'yyyy-MM-dd');
+        dailyBudgets.push({
+          date,
+          period: '起跑期',
+          budget: Math.ceil(budgetBreakdown.launch / 3),
+          traffic: Math.ceil(trafficBreakdown.launch / 3),
+        });
+      }
+      
+      // 活動期（動態天數）
+      for (let i = 0; i < periodDays.main; i++) {
+        const date = format(addDays(startDate, 3 + i), 'yyyy-MM-dd');
+        dailyBudgets.push({
+          date,
+          period: '活動期',
+          budget: Math.ceil(budgetBreakdown.main / periodDays.main),
+          traffic: Math.ceil(trafficBreakdown.main / periodDays.main),
+        });
+      }
+      
+      // 倒數期（3天）
+      for (let i = 0; i < 3; i++) {
+        const date = format(subDays(endDate, 2 - i), 'yyyy-MM-dd');
+        dailyBudgets.push({
+          date,
+          period: '倒數期',
+          budget: Math.ceil(budgetBreakdown.final / 3),
+          traffic: Math.ceil(trafficBreakdown.final / 3),
+        });
+      }
+      
+      // 回購期（7天）
+      for (let i = 0; i < 7; i++) {
+        const date = format(addDays(endDate, 1 + i), 'yyyy-MM-dd');
+        dailyBudgets.push({
+          date,
+          period: '回購期',
+          budget: Math.ceil(budgetBreakdown.repurchase / 7),
+          traffic: Math.ceil(trafficBreakdown.repurchase / 7),
+        });
+      }
     }
 
-    const result: PlanningResult = {
-      totalTraffic,
-      campaignPeriods: {
-        preheat: {
-          startDate: preheatStart,
-          endDate: preheatEnd,
-          budget: preheatBudget,
-          traffic: preheatTraffic,
+    // 根據活動類型構建結果物件
+    let result: PlanningResult;
+    
+    if (campaignDays === 3) {
+      // 3天活動結果
+      result = {
+        totalTraffic,
+        campaignPeriods: {
+          day1: {
+            startDate: format(startDate, 'yyyy-MM-dd'),
+            endDate: format(startDate, 'yyyy-MM-dd'),
+            budget: budgetBreakdown.day1,
+            traffic: trafficBreakdown.day1,
+          },
+          day2: {
+            startDate: format(addDays(startDate, 1), 'yyyy-MM-dd'),
+            endDate: format(addDays(startDate, 1), 'yyyy-MM-dd'),
+            budget: budgetBreakdown.day2,
+            traffic: trafficBreakdown.day2,
+          },
+          day3: {
+            startDate: format(addDays(startDate, 2), 'yyyy-MM-dd'),
+            endDate: format(addDays(startDate, 2), 'yyyy-MM-dd'),
+            budget: budgetBreakdown.day3,
+            traffic: trafficBreakdown.day3,
+          },
         },
-        launch: {
-          startDate: launchStart,
-          endDate: launchEnd,
-          budget: launchBudget,
-          traffic: launchTraffic,
+        totalBudget,
+        dailyBudgets,
+      };
+    } else if (campaignDays >= 4 && campaignDays <= 9) {
+      // 4-9天活動結果
+      result = {
+        totalTraffic,
+        campaignPeriods: {
+          launch: {
+            startDate: format(startDate, 'yyyy-MM-dd'),
+            endDate: format(addDays(startDate, periodDays.launch - 1), 'yyyy-MM-dd'),
+            budget: budgetBreakdown.launch,
+            traffic: trafficBreakdown.launch,
+          },
+          main: {
+            startDate: format(addDays(startDate, periodDays.launch), 'yyyy-MM-dd'),
+            endDate: format(addDays(startDate, periodDays.launch + periodDays.main - 1), 'yyyy-MM-dd'),
+            budget: budgetBreakdown.main,
+            traffic: trafficBreakdown.main,
+          },
+          final: {
+            startDate: format(addDays(startDate, periodDays.launch + periodDays.main), 'yyyy-MM-dd'),
+            endDate: format(endDate, 'yyyy-MM-dd'),
+            budget: budgetBreakdown.final,
+            traffic: trafficBreakdown.final,
+          },
         },
-        main: {
-          startDate: mainStart,
-          endDate: mainEnd,
-          budget: mainBudget,
-          traffic: mainTraffic,
+        totalBudget,
+        dailyBudgets,
+      };
+    } else {
+      // 10天以上活動結果
+      result = {
+        totalTraffic,
+        campaignPeriods: {
+          preheat: {
+            startDate: format(subDays(startDate, 4), 'yyyy-MM-dd'),
+            endDate: format(subDays(startDate, 1), 'yyyy-MM-dd'),
+            budget: budgetBreakdown.preheat,
+            traffic: trafficBreakdown.preheat,
+          },
+          launch: {
+            startDate: format(startDate, 'yyyy-MM-dd'),
+            endDate: format(addDays(startDate, 2), 'yyyy-MM-dd'),
+            budget: budgetBreakdown.launch,
+            traffic: trafficBreakdown.launch,
+          },
+          main: {
+            startDate: format(addDays(startDate, 3), 'yyyy-MM-dd'),
+            endDate: format(subDays(endDate, 3), 'yyyy-MM-dd'),
+            budget: budgetBreakdown.main,
+            traffic: trafficBreakdown.main,
+          },
+          final: {
+            startDate: format(subDays(endDate, 2), 'yyyy-MM-dd'),
+            endDate: format(endDate, 'yyyy-MM-dd'),
+            budget: budgetBreakdown.final,
+            traffic: trafficBreakdown.final,
+          },
+          repurchase: {
+            startDate: format(addDays(endDate, 1), 'yyyy-MM-dd'),
+            endDate: format(addDays(endDate, 7), 'yyyy-MM-dd'),
+            budget: budgetBreakdown.repurchase,
+            traffic: trafficBreakdown.repurchase,
+          },
         },
-        final: {
-          startDate: finalStart,
-          endDate: finalEnd,
-          budget: finalBudget,
-          traffic: finalTraffic,
-        },
-        repurchase: {
-          startDate: repurchaseStart,
-          endDate: repurchaseEnd,
-          budget: repurchaseBudget,
-          traffic: repurchaseTraffic,
-        },
-      },
-      totalBudget,
-      dailyBudgets,
-    };
+        totalBudget,
+        dailyBudgets,
+      };
+    }
 
     setResults(result);
     
