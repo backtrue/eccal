@@ -204,7 +204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Credit system routes
   app.get('/api/credits', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims?.sub || req.user.id;
       const credits = await storage.getUserCredits(userId);
       const transactions = await storage.getCreditTransactions(userId);
       
@@ -295,7 +295,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get referral statistics for progress tracking
   app.get('/api/referral/stats', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims?.sub || req.user.id;
       const referrals = await storage.getReferralsByUser(userId);
       
       const totalReferrals = referrals.length;
