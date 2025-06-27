@@ -3,6 +3,7 @@ import NavigationBar from "@/components/NavigationBar";
 import { useAuth } from "@/hooks/useAuth";
 import { useMembershipStatus } from "@/hooks/useMembership";
 import { useReferralStats } from "@/hooks/useReferralStats";
+import { useCredits } from "@/hooks/useCredits";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,8 @@ import {
   Users,
   Gift,
   Link2,
-  Target
+  Target,
+  Coins
 } from "lucide-react";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
 import MembershipUpgrade from "@/components/MembershipUpgrade";
@@ -29,6 +31,7 @@ export default function Dashboard({ locale }: DashboardProps) {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { data: membershipStatus, isLoading: membershipLoading } = useMembershipStatus();
   const { data: referralStats, isLoading: referralLoading } = useReferralStats();
+  const { data: creditsData, isLoading: creditsLoading } = useCredits();
 
   if (isLoading || membershipLoading) {
     return (
@@ -114,6 +117,22 @@ export default function Dashboard({ locale }: DashboardProps) {
             </CardContent>
           </Card>
 
+          {/* 點數餘額 */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">點數餘額</CardTitle>
+              <Coins className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {creditsLoading ? "..." : (creditsData?.credits?.balance || 0)} 點
+              </div>
+              <p className="text-xs text-muted-foreground">
+                可用於升級會員和功能
+              </p>
+            </CardContent>
+          </Card>
+
           {/* 活動規劃器 */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -160,7 +179,7 @@ export default function Dashboard({ locale }: DashboardProps) {
                 <ul className="text-xs space-y-1 bg-blue-50 p-3 rounded-lg">
                   <li>• <strong>推薦人</strong>：前3人每人100點，第4人起每人50點</li>
                   <li>• <strong>被推薦人</strong>：獲得30點歡迎獎勵</li>
-                  <li>• <strong>升級福利</strong>：推薦7人累積350點 = 免費Pro會員一個月</li>
+                  <li>• <strong>升級福利</strong>：推薦4人累積350點 = 免費Pro會員一個月</li>
                 </ul>
               </div>
 
@@ -173,7 +192,7 @@ export default function Dashboard({ locale }: DashboardProps) {
                       <span className="font-medium text-gray-800">推薦進度追蹤</span>
                     </div>
                     <Badge variant="outline" className="text-xs">
-                      {referralStats.totalReferrals}/7 人
+                      {referralStats.totalReferrals}/4 人
                     </Badge>
                   </div>
                   

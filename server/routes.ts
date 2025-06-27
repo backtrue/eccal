@@ -305,7 +305,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }, 0);
       
       const progressToProMembership = Math.min(creditsFromReferrals / 350, 1); // 350 credits = 1 month Pro
-      const referralsNeededForPro = Math.max(0, 7 - totalReferrals); // Need 7 referrals for 350 credits
+      const referralsNeededForPro = Math.max(0, 4 - totalReferrals); // Need 4 referrals for 350 credits (3×100 + 1×50)
       
       res.json({
         totalReferrals,
