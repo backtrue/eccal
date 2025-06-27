@@ -36,7 +36,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Analytics routes
   app.get('/api/analytics/properties', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims?.sub || req.user.id;
       const properties = await analyticsService.getUserAnalyticsProperties(userId);
       res.json(properties || []);
     } catch (error) {
@@ -47,7 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/analytics/data', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims?.sub || req.user.id;
       const { propertyId } = req.body;
       
       if (!propertyId) {
@@ -339,7 +339,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Membership routes
   app.get('/api/membership/status', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims?.sub || req.user.id;
       const status = await storage.checkMembershipStatus(userId);
       res.json(status);
     } catch (error) {
@@ -350,7 +350,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/membership/upgrade-to-pro', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims?.sub || req.user.id;
       const { durationDays = 30 } = req.body;
       const upgradePrice = 350;
       
@@ -398,7 +398,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Campaign Planner usage tracking
   app.get('/api/campaign-planner/usage', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims?.sub || req.user.id;
       const user = await storage.getUser(userId);
       const membershipStatus = await storage.checkMembershipStatus(userId);
       
