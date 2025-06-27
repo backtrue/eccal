@@ -504,6 +504,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Alternative Brevo sync methods
+  app.get('/api/admin/export-users-csv', requireAuth, async (req: any, res) => {
+    try {
+      const allUsers = await db.select().from(users);
+
+      const csvHeader = 'EMAIL,FIRSTNAME,LASTNAME,GA_RESOURCE_NAME,SIGNUP_DATE\n';
+      const csvRows = allUsers.filter(user => user.email).map(user => {
+        const email = user.email || '';
+        const firstName = user.firstName || '';
+        const lastName = user.lastName || '';
+        const gaResourceName = user.firstName || '';
+        const signupDate = user.createdAt ? new Date(user.createdAt).toISOString().split('T')[0] : '';
+        
+        return `"${email}","${firstName}","${lastName}","${gaResourceName}","${signupDate}"`;
+      }).join('\n');
+      
+      const csvContent = csvHeader + csvRows;
+      
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="brevo-contacts.csv"');
+      res.send(csvContent);
+    } catch (error) {
+      console.error('Error generating CSV export:', error);
+      res.status(500).json({ message: 'Failed to generate CSV export' });
+    }
+  });
+
+  app.get('/api/admin/brevo-sync-script', requireAuth, async (req: any, res) => {
+    try {
+      const [users] = await db.execute(`
+        SELECT email, first_name, last_name
+        FROM users 
+        WHERE email IS NOT NULL
+        ORDER BY created_at DESC
+      `);
+
+      const curlCommands = (users as any[]).map((user, index) => {
+        const payload = {
+          email: user.email,
+          attributes: {
+            FIRSTNAME: user.first_name || '',
+            LASTNAME: user.last_name || ''
+          },
+          listIds: [15]
+        };
+        
+        return `# Contact ${index + 1}: ${user.email}
+curl -X POST "https://api.brevo.com/v3/contacts" \\
+  -H "accept: application/json" \\
+  -H "api-key: YOUR_BREVO_API_KEY" \\
+  -H "content-type: application/json" \\
+  -d '${JSON.stringify(payload)}'
+echo "Added: ${user.email}"
+sleep 0.5  # Rate limiting
+`;
+      });
+      
+      const scriptContent = `#!/bin/bash
+# Brevo Bulk Contact Import Script
+# Generated: ${new Date().toISOString()}
+# Total contacts: ${(users as any[]).length}
+
+echo "Starting Brevo bulk import..."
+echo "Please replace YOUR_BREVO_API_KEY with your actual API key"
+echo ""
+
+${curlCommands.join('\n')}
+
+echo "Bulk import completed!"`;
+      
+      res.setHeader('Content-Type', 'text/plain');
+      res.setHeader('Content-Disposition', 'attachment; filename="brevo-bulk-import.sh"');
+      res.send(scriptContent);
+    } catch (error) {
+      console.error('Error generating sync script:', error);
+      res.status(500).json({ message: 'Failed to generate sync script' });
+    }
+  });
+
+  app.get('/api/admin/brevo-webhook-data', requireAuth, async (req: any, res) => {
+    try {
+      const [users] = await db.execute(`
+        SELECT email, first_name, last_name, created_at
+        FROM users 
+        WHERE email IS NOT NULL
+        ORDER BY created_at DESC
+      `);
+
+      const webhookData = (users as any[]).map(user => ({
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        signupDate: user.created_at,
+        listId: 15,
+        attributes: {
+          FIRSTNAME: user.first_name || '',
+          LASTNAME: user.last_name || ''
+        }
+      }));
+      
+      res.json({
+        success: true,
+        totalContacts: webhookData.length,
+        data: webhookData,
+        instructions: {
+          zapier: "Use this JSON data in Zapier webhook trigger to bulk import to Brevo",
+          make: "Use this JSON data in Make.com HTTP module to bulk import to Brevo",
+          manual: "Use individual contact objects to manually add to Brevo via API"
+        }
+      });
+    } catch (error) {
+      console.error('Error generating webhook data:', error);
+      res.status(500).json({ message: 'Failed to generate webhook data' });
+    }
+  });
+
   // Health check endpoint
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
