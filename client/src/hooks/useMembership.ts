@@ -10,8 +10,10 @@ export interface MembershipStatus {
 export function useMembershipStatus() {
   return useQuery({
     queryKey: ["/api/membership/status"],
-    staleTime: 5 * 60 * 1000, // 5分鐘
-    gcTime: 10 * 60 * 1000, // 10分鐘快取
+    staleTime: 0, // Force fresh data
+    gcTime: 1 * 60 * 1000, // 1分鐘快取
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 }
 

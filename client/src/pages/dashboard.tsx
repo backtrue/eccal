@@ -127,6 +127,11 @@ export default function Dashboard({ locale }: DashboardProps) {
               <div className="text-2xl font-bold">
                 {creditsLoading ? "..." : (creditsData?.credits?.balance || 0)} 點
               </div>
+              {process.env.NODE_ENV === 'development' && (
+                <div className="text-xs text-red-500 mt-1">
+                  Debug: {JSON.stringify(creditsData)}
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">
                 可用於升級會員和功能
               </p>

@@ -23,7 +23,9 @@ export interface CreditsData {
 export function useCredits() {
   return useQuery<CreditsData>({
     queryKey: ['/api/credits'],
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000,   // 10 minutes
+    staleTime: 0, // Force fresh data
+    gcTime: 1 * 60 * 1000, // 1 minute
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 }
