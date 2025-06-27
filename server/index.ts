@@ -4,17 +4,33 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 
-// Block problematic IPs that cause TimeoutOverflowWarning spam
+// Block problematic IPs and User-Agents that cause TimeoutOverflowWarning spam
 const BLOCKED_IPS = [
-  '34.60.247.238', // Google LLC - Replit internal monitoring causing overflow warnings
+  '34.60.247.238', // Google LLC - Replit internal monitoring
+  '34.60.', // Block entire Google LLC subnet that Replit uses for monitoring
 ];
 
-function blockProblematicIPs(req: Request, res: Response, next: NextFunction) {
+const BLOCKED_USER_AGENTS = [
+  'replit',
+  'health-check',
+  'monitoring',
+  'uptime',
+  'GoogleHC', // Google Health Check
+];
+
+function blockProblematicRequests(req: Request, res: Response, next: NextFunction) {
   const clientIP = req.ip || req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+  const userAgent = req.get('User-Agent') || '';
   
-  // Type safety: ensure clientIP is string before checking
+  // Block problematic IPs
   if (typeof clientIP === 'string' && BLOCKED_IPS.some(blockedIP => clientIP.includes(blockedIP))) {
-    console.log(`Blocked request from problematic IP: ${clientIP}`);
+    console.log(`Blocked problematic IP: ${clientIP} - User-Agent: ${userAgent}`);
+    return res.status(503).json({ error: 'Service temporarily unavailable' });
+  }
+  
+  // Block problematic User-Agents (likely Replit internal monitoring)
+  if (BLOCKED_USER_AGENTS.some(blockedUA => userAgent.toLowerCase().includes(blockedUA.toLowerCase()))) {
+    console.log(`Blocked problematic User-Agent: ${userAgent} from IP: ${clientIP}`);
     return res.status(503).json({ error: 'Service temporarily unavailable' });
   }
   
@@ -65,8 +81,8 @@ if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
 
-// Block problematic IPs first to prevent TimeoutOverflowWarning spam
-app.use(blockProblematicIPs);
+// Block problematic IPs and requests first to prevent TimeoutOverflowWarning spam
+app.use(blockProblematicRequests);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

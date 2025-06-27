@@ -1,6 +1,6 @@
 import { google } from 'googleapis';
 import { storage } from './storage';
-import { createSafeOAuth2Client, sanitizeGoogleApiResponse } from './googleOAuthHelper';
+import { createSafeOAuth2Client, sanitizeGoogleApiResponse, safeGoogleApiCall } from './googleOAuthHelper';
 
 export interface AnalyticsData {
   averageOrderValue: number;
