@@ -292,6 +292,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get referral statistics for progress tracking
+  app.get('/api/referral/stats', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const referrals = await storage.getReferralsByUser(userId);
+      
+      const totalReferrals = referrals.length;
+      const creditsFromReferrals = referrals.reduce((total, referral, index) => {
+        // First 3 referrals get 100 points each, rest get 50
+        return total + (index < 3 ? 100 : 50);
+      }, 0);
+      
+      const progressToProMembership = Math.min(creditsFromReferrals / 350, 1); // 350 credits = 1 month Pro
+      const referralsNeededForPro = Math.max(0, 7 - totalReferrals); // Need 7 referrals for 350 credits
+      
+      res.json({
+        totalReferrals,
+        creditsFromReferrals,
+        progressToProMembership,
+        referralsNeededForPro,
+        nextReferralValue: totalReferrals < 3 ? 100 : 50
+      });
+    } catch (error) {
+      console.error("Error fetching referral stats:", error);
+      res.status(500).json({ message: "Failed to fetch referral stats" });
+    }
+  });
+
   app.post('/api/referral/process', async (req, res) => {
     try {
       const { referralCode, userId } = req.body;

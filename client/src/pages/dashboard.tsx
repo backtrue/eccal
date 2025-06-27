@@ -2,9 +2,11 @@ import { getTranslations, type Locale } from "@/lib/i18n";
 import NavigationBar from "@/components/NavigationBar";
 import { useAuth } from "@/hooks/useAuth";
 import { useMembershipStatus } from "@/hooks/useMembership";
+import { useReferralStats } from "@/hooks/useReferralStats";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { 
   User, 
   Crown, 
@@ -12,7 +14,8 @@ import {
   TrendingUp,
   Users,
   Gift,
-  Link2
+  Link2,
+  Target
 } from "lucide-react";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
 import MembershipUpgrade from "@/components/MembershipUpgrade";
@@ -25,6 +28,7 @@ export default function Dashboard({ locale }: DashboardProps) {
   const t = getTranslations(locale);
   const { user, isAuthenticated, isLoading } = useAuth();
   const { data: membershipStatus, isLoading: membershipLoading } = useMembershipStatus();
+  const { data: referralStats, isLoading: referralLoading } = useReferralStats();
 
   if (isLoading || membershipLoading) {
     return (
@@ -151,9 +155,53 @@ export default function Dashboard({ locale }: DashboardProps) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600 mb-4">
-                分享您的專屬推薦連結，好友註冊後您和好友都可獲得 5 點數獎勵
-              </p>
+              <div className="text-sm text-gray-600 mb-4 space-y-2">
+                <p>分享您的專屬推薦連結，獲得以下獎勵：</p>
+                <ul className="text-xs space-y-1 bg-blue-50 p-3 rounded-lg">
+                  <li>• <strong>推薦人</strong>：前3人每人100點，第4人起每人50點</li>
+                  <li>• <strong>被推薦人</strong>：獲得30點歡迎獎勵</li>
+                  <li>• <strong>升級福利</strong>：推薦7人累積350點 = 免費Pro會員一個月</li>
+                </ul>
+              </div>
+
+              {/* 推薦進度追蹤 */}
+              {!referralLoading && referralStats && (
+                <div className="mb-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Target className="w-4 h-4 text-green-600" />
+                      <span className="font-medium text-gray-800">推薦進度追蹤</span>
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      {referralStats.totalReferrals}/7 人
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">免費Pro會員進度</span>
+                      <span className="font-medium">
+                        {referralStats.creditsFromReferrals}/350 點
+                      </span>
+                    </div>
+                    <Progress 
+                      value={referralStats.progressToProMembership * 100} 
+                      className="h-2"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>
+                        {referralStats.referralsNeededForPro > 0 
+                          ? `還需推薦 ${referralStats.referralsNeededForPro} 人`
+                          : '已達成免費Pro會員條件！'
+                        }
+                      </span>
+                      <span>
+                        下次推薦可獲得 {referralStats.nextReferralValue} 點
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="flex items-center space-x-2">
                 <div className="flex-1 p-3 bg-gray-100 rounded-lg text-sm font-mono">
                   {referralLink}

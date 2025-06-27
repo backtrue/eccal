@@ -250,43 +250,58 @@ export class DatabaseStorage implements IStorage {
   }
 
   private async awardReferralCredit(referrerId: string, referredUserId: string): Promise<void> {
-    // Award 5 credits to referrer
+    // Check how many successful referrals the referrer has made
+    const referrerReferrals = await db
+      .select()
+      .from(userReferrals)
+      .where(eq(userReferrals.referrerId, referrerId));
+    
+    const referralCount = referrerReferrals.length;
+    
+    // Calculate referrer reward: 50 base points + 50 bonus for first 3 referrals
+    let referrerReward = 50; // Base reward
+    if (referralCount <= 3) {
+      referrerReward += 50; // Bonus for first 3 referrals (total 100 points)
+    }
+    
+    // Award credits to referrer
     const referrerCredits = await this.getUserCredits(referrerId);
     if (referrerCredits) {
       await this.updateUserCredits(
         referrerId,
-        referrerCredits.balance + 5,
-        referrerCredits.totalEarned + 5,
+        referrerCredits.balance + referrerReward,
+        referrerCredits.totalEarned + referrerReward,
         referrerCredits.totalSpent
       );
       
+      const bonusText = referralCount <= 3 ? " (含前3人加碼獎勵)" : "";
       await this.addCreditTransaction({
         userId: referrerId,
         type: "earn",
-        amount: 5,
+        amount: referrerReward,
         source: "referral",
         referralUserId: referredUserId,
-        description: "Referral bonus - referring someone",
+        description: `推薦獎勵 - 第${referralCount}位推薦${bonusText}`,
       });
     }
     
-    // Award 5 credits to referred user
+    // Award 30 credits to referred user (welcome bonus)
     const referredCredits = await this.getUserCredits(referredUserId);
     if (referredCredits) {
       await this.updateUserCredits(
         referredUserId,
-        referredCredits.balance + 5,
-        referredCredits.totalEarned + 5,
+        referredCredits.balance + 30,
+        referredCredits.totalEarned + 30,
         referredCredits.totalSpent
       );
       
       await this.addCreditTransaction({
         userId: referredUserId,
         type: "earn",
-        amount: 5,
+        amount: 30,
         source: "referral",
         referralUserId: referrerId,
-        description: "Referral bonus - being referred",
+        description: "推薦獎勵 - 被推薦獎勵",
       });
     }
     
