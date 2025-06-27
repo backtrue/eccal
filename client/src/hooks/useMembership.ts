@@ -22,7 +22,7 @@ export function useUpgradeToPro() {
   
   return useMutation({
     mutationFn: async (durationDays: number = 30) => {
-      return await apiRequest('/api/membership/upgrade-to-pro', 'POST', { durationDays });
+      return await apiRequest('POST', '/api/membership/upgrade-to-pro', { durationDays });
     },
     onSuccess: () => {
       // Invalidate relevant queries
