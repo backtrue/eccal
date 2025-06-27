@@ -81,7 +81,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User metrics route
   app.get('/api/user/metrics', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims?.sub || req.user.id;
       const metrics = await storage.getLatestUserMetrics(userId);
       res.json(metrics);
     } catch (error) {
@@ -93,7 +93,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User statistics route
   app.get('/api/user/stats', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims?.sub || req.user.id;
       
       // Get total calculations (from user_metrics table)
       const allMetrics = await db
@@ -116,7 +116,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User referrals route
   app.get('/api/user/referrals', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims?.sub || req.user.id;
       const referrals = await storage.getReferralsByUser(userId);
       res.json(referrals);
     } catch (error) {
@@ -220,7 +220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/credits/spend', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims?.sub || req.user.id;
       const { amount, description } = req.body;
       
       const credits = await storage.getUserCredits(userId);
@@ -255,7 +255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Referral system routes
   app.get('/api/referral/code', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims?.sub || req.user.id;
       const referralCode = await storage.createReferralCode(userId);
       res.json({ referralCode });
     } catch (error) {
@@ -266,7 +266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/referrals', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims?.sub || req.user.id;
       const referrals = await storage.getReferralsByUser(userId);
       
       // Get referred user details
@@ -420,7 +420,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/campaign-planner/record-usage', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims?.sub || req.user.id;
       console.log('Recording usage for user:', userId);
       
       const membershipStatus = await storage.checkMembershipStatus(userId);
