@@ -66,7 +66,7 @@ export function setupGoogleAuth(app: Express) {
         profileImageUrl: profile.photos?.[0]?.value || null,
         googleAccessToken: accessToken,
         googleRefreshToken: refreshToken,
-        tokenExpiresAt: new Date(Date.now() + 3600000), // 1 hour from now
+        tokenExpiresAt: new Date(Math.min(Date.now() + 3600000, 2147483647)), // 32-bit safe max
       });
       
       return done(null, user || false);

@@ -25,9 +25,16 @@ export class GoogleAnalyticsService {
 
       // Set up OAuth2 client with user's access token
       const oauth2Client = new google.auth.OAuth2();
+      
+      // Ensure safe expiry date to prevent TimeoutOverflowWarning
+      const safeExpiryDate = user.tokenExpiresAt ? 
+        Math.min(user.tokenExpiresAt.getTime(), 2147483647) : 
+        Math.min(Date.now() + 3600000, 2147483647);
+      
       oauth2Client.setCredentials({
         access_token: user.googleAccessToken,
         refresh_token: user.googleRefreshToken,
+        expiry_date: safeExpiryDate,
       });
 
       // Use Google Analytics Data API (GA4)
@@ -197,8 +204,14 @@ export class GoogleAnalyticsService {
         process.env.GOOGLE_CLIENT_SECRET
       );
 
+      // Set safe credentials to prevent TimeoutOverflowWarning
+      const safeRefreshExpiryDate = user.tokenExpiresAt ? 
+        Math.min(user.tokenExpiresAt.getTime(), 2147483647) : 
+        Math.min(Date.now() + 3600000, 2147483647);
+        
       oauth2Client.setCredentials({
         refresh_token: user.googleRefreshToken,
+        expiry_date: safeRefreshExpiryDate,
       });
 
       const { credentials } = await oauth2Client.refreshAccessToken();
