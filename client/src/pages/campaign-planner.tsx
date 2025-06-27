@@ -839,8 +839,9 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                     活動期間規劃
                   </h3>
                   
-                  <div className="overflow-x-auto">
-                    <div className={`flex gap-4 min-w-max ${Object.keys(results.campaignPeriods).length === 3 ? 'justify-center' : ''}`}>
+                  <div className="overflow-x-auto w-full">
+                    <div className="flex flex-row gap-4 w-full justify-start items-stretch"
+                         style={{ display: 'flex', flexDirection: 'row', minWidth: 'max-content' }}>
                       {Object.entries(results.campaignPeriods).map(([key, period]) => {
                         const typedPeriod = period as { budget: number; traffic: number; startDate: string; endDate: string };
                         const periodNames: {[key: string]: string} = {
@@ -859,7 +860,9 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                         const dailyTraffic = Math.ceil(typedPeriod.traffic / Math.max(1, daysDiff));
                         
                         return (
-                          <div key={key} className="text-center space-y-3 p-4 bg-gray-50 rounded-lg min-w-[160px] flex-shrink-0">
+                          <div key={key} 
+                               className="text-center space-y-3 p-4 bg-gray-50 rounded-lg flex-shrink-0" 
+                               style={{ minWidth: '180px', flex: '0 0 auto' }}>
                             <div className="text-sm font-bold text-gray-900 border-b border-gray-200 pb-2">
                               {periodNames[key] || key}
                             </div>
