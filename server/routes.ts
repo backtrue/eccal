@@ -463,6 +463,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test referral system endpoint
+  app.post('/api/admin/test-referral', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      const { testEmail } = req.body;
+      
+      if (!testEmail) {
+        return res.status(400).json({ message: "Test email required" });
+      }
+
+      // Create referral code for current user
+      const referralCode = await storage.createReferralCode(userId);
+      
+      // Create a test user
+      const testUserId = `test_${Date.now()}`;
+      const testUser = await storage.upsertUser({
+        id: testUserId,
+        email: testEmail,
+        firstName: "Test",
+        lastName: "User",
+      });
+
+      // Initialize credits for test user
+      await storage.createUserCredits(testUserId);
+
+      // Process the referral
+      const referral = await storage.processReferral(referralCode, testUserId);
+      
+      res.json({
+        success: true,
+        referralCode,
+        testUser: testUser.email,
+        referral,
+        message: "Test referral processed successfully"
+      });
+    } catch (error) {
+      console.error("Error testing referral:", error);
+      res.status(500).json({ message: "Failed to test referral" });
+    }
+  });
+
   // Health check endpoint
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
