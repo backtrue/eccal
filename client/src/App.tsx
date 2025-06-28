@@ -78,17 +78,32 @@ function Router() {
   
   // Handle route-based language switching
   useEffect(() => {
-    if (location.startsWith('/en')) {
-      if (locale !== 'en') changeLocale('en');
-    } else if (location.startsWith('/jp')) {
-      if (locale !== 'ja') changeLocale('ja');
-    } else if (location === '/' && locale === 'zh-TW') {
-      // Default route for Traditional Chinese
-    } else if (location === '/' && locale !== 'zh-TW') {
-      // Force Traditional Chinese as default for homepage
-      changeLocale('zh-TW');
+    try {
+      if (location.startsWith('/en')) {
+        if (locale !== 'en') changeLocale('en');
+      } else if (location.startsWith('/jp')) {
+        if (locale !== 'ja') changeLocale('ja');
+      } else if (location === '/' && locale === 'zh-TW') {
+        // Default route for Traditional Chinese
+      } else if (location === '/' && locale !== 'zh-TW') {
+        // Force Traditional Chinese as default for homepage
+        changeLocale('zh-TW');
+      }
+    } catch (error) {
+      console.error('Language switching error:', error);
     }
   }, [location, locale, changeLocale]);
+
+  // Handle auth_success parameter immediately in Router
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('auth_success')) {
+      console.log('Router detected auth_success, cleaning URL...');
+      // Clean URL immediately to prevent issues
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, '', cleanUrl);
+    }
+  }, [location]);
 
   return (
     <Switch>
@@ -138,23 +153,32 @@ function App() {
 
   // Handle authentication state refresh after OAuth login
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    if (urlParams.has('auth_success')) {
-      // Clear the auth_success parameter from URL
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, '', newUrl);
+    // Wait for DOM to be ready before processing auth success
+    const handleAuthSuccess = () => {
+      const urlParams = new URLSearchParams(window.location.search);
       
-      // Force immediate auth state refresh
-      queryClient.removeQueries({ queryKey: ["/api/auth/user"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      
-      // Force a page reload to ensure clean state
-      setTimeout(() => {
-        const returnTo = sessionStorage.getItem('returnTo');
-        sessionStorage.removeItem('returnTo');
-        window.location.href = returnTo || '/';
-      }, 100);
+      if (urlParams.has('auth_success')) {
+        console.log('Processing auth success...');
+        
+        // Clear the auth_success parameter from URL
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+        
+        // Refresh auth state after a brief delay to ensure page is stable
+        setTimeout(() => {
+          queryClient.removeQueries({ queryKey: ["/api/auth/user"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+          console.log('Auth state refreshed');
+        }, 500);
+      }
+    };
+
+    // Ensure DOM is ready
+    if (document.readyState === 'complete') {
+      handleAuthSuccess();
+    } else {
+      window.addEventListener('load', handleAuthSuccess);
+      return () => window.removeEventListener('load', handleAuthSuccess);
     }
   }, []);
 
