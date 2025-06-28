@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Users, TrendingUp, CreditCard, Settings, Monitor, FileText } from "lucide-react";
+import { AlertCircle, Users, TrendingUp, CreditCard, Settings, Monitor, FileText, Download, Bell, Activity, BarChart3, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface UserStats {
@@ -98,6 +98,36 @@ export default function AdminDashboard() {
   }>({
     queryKey: ['/api/bdmin/system'],
     staleTime: 30 * 1000, // 30 seconds
+  });
+
+  // Fetch behavior analytics
+  const { data: behaviorStats } = useQuery({
+    queryKey: ['/api/bdmin/behavior/stats'],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Fetch announcements
+  const { data: announcements } = useQuery({
+    queryKey: ['/api/bdmin/announcements'],
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+
+  // Fetch API usage stats
+  const { data: apiUsageStats } = useQuery({
+    queryKey: ['/api/bdmin/api-usage'],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Fetch export jobs
+  const { data: exportJobs } = useQuery({
+    queryKey: ['/api/bdmin/exports'],
+    staleTime: 1 * 60 * 1000, // 1 minute
+  });
+
+  // Fetch maintenance mode
+  const { data: maintenanceMode } = useQuery({
+    queryKey: ['/api/bdmin/maintenance'],
+    staleTime: 10 * 60 * 1000, // 10 minutes
   });
 
   // Batch update membership mutation
@@ -225,7 +255,7 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4" />
               BI 分析
@@ -233,6 +263,18 @@ export default function AdminDashboard() {
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
               用戶管理
+            </TabsTrigger>
+            <TabsTrigger value="behavior" className="flex items-center gap-2">
+              <Activity className="w-4 h-4" />
+              行為分析
+            </TabsTrigger>
+            <TabsTrigger value="announcements" className="flex items-center gap-2">
+              <Bell className="w-4 h-4" />
+              公告系統
+            </TabsTrigger>
+            <TabsTrigger value="exports" className="flex items-center gap-2">
+              <Download className="w-4 h-4" />
+              數據導出
             </TabsTrigger>
             <TabsTrigger value="system" className="flex items-center gap-2">
               <Monitor className="w-4 h-4" />
@@ -557,6 +599,359 @@ export default function AdminDashboard() {
                 </Card>
               ))}
             </div>
+          </TabsContent>
+
+          {/* User Behavior Analytics */}
+          <TabsContent value="behavior" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>最常用功能</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {behaviorStats?.mostUsedFeatures?.map((feature: any, index: number) => (
+                      <div key={index} className="flex justify-between items-center">
+                        <span className="capitalize">{feature.feature}</span>
+                        <Badge variant="secondary">{feature.count} 次</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>轉換漏斗</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {behaviorStats?.conversionFunnel?.map((step: any, index: number) => (
+                      <div key={index} className="space-y-1">
+                        <div className="flex justify-between">
+                          <span>{step.step}</span>
+                          <span className="text-sm text-gray-600">{step.rate.toFixed(1)}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full" 
+                            style={{width: `${step.rate}%`}}
+                          ></div>
+                        </div>
+                        <div className="text-sm text-gray-600">{step.users} 用戶</div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="md:col-span-2">
+                <CardHeader>
+                  <CardTitle>每日活躍用戶 (過去30天)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {behaviorStats?.dailyActiveUsers?.map((day: any, index: number) => (
+                      <div key={index} className="flex justify-between items-center p-2 border rounded">
+                        <span>{new Date(day.date).toLocaleDateString()}</span>
+                        <Badge>{day.users} 用戶</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Announcements Management */}
+          <TabsContent value="announcements" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>公告管理</CardTitle>
+                <CardDescription>
+                  管理系統公告和用戶通知
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <Button
+                    onClick={() => {
+                      // Create new announcement
+                      const title = prompt('公告標題:');
+                      const content = prompt('公告內容:');
+                      if (title && content) {
+                        // Implementation would call API to create announcement
+                        toast({
+                          title: "功能開發中",
+                          description: "公告創建功能即將推出",
+                        });
+                      }
+                    }}
+                  >
+                    創建新公告
+                  </Button>
+
+                  <div className="space-y-4">
+                    {announcements?.map((announcement: any) => (
+                      <Card key={announcement.id}>
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <h4 className="font-medium">{announcement.title}</h4>
+                              <p className="text-sm text-gray-600 mt-1">{announcement.content}</p>
+                              <div className="flex gap-2 mt-2">
+                                <Badge 
+                                  variant={announcement.type === 'info' ? 'default' : 
+                                          announcement.type === 'warning' ? 'destructive' : 'secondary'}
+                                >
+                                  {announcement.type}
+                                </Badge>
+                                <Badge variant="outline">
+                                  {announcement.targetAudience}
+                                </Badge>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button variant="outline" size="sm">編輯</Button>
+                              <Button variant="destructive" size="sm">刪除</Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Data Export */}
+          <TabsContent value="exports" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>數據導出</CardTitle>
+                  <CardDescription>
+                    導出系統數據為 CSV 格式
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <Button
+                      onClick={async () => {
+                        try {
+                          const response = await fetch('/api/bdmin/export', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ type: 'users' })
+                          });
+                          
+                          if (response.ok) {
+                            const blob = await response.blob();
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'users_export.csv';
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                          }
+                        } catch (error) {
+                          toast({
+                            title: "導出失敗",
+                            description: "無法導出用戶數據",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                      className="w-full"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      導出用戶數據
+                    </Button>
+
+                    <Button
+                      onClick={async () => {
+                        try {
+                          const response = await fetch('/api/bdmin/export', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ type: 'behavior' })
+                          });
+                          
+                          if (response.ok) {
+                            const blob = await response.blob();
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'behavior_export.csv';
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                          }
+                        } catch (error) {
+                          toast({
+                            title: "導出失敗",
+                            description: "無法導出行為數據",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                      className="w-full"
+                      variant="outline"
+                    >
+                      <Activity className="w-4 h-4 mr-2" />
+                      導出行為數據
+                    </Button>
+
+                    <Button
+                      onClick={async () => {
+                        try {
+                          const response = await fetch('/api/bdmin/export', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ type: 'api_usage' })
+                          });
+                          
+                          if (response.ok) {
+                            const blob = await response.blob();
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'api_usage_export.csv';
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                          }
+                        } catch (error) {
+                          toast({
+                            title: "導出失敗",
+                            description: "無法導出 API 使用數據",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                      className="w-full"
+                      variant="outline"
+                    >
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      導出 API 使用數據
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>API 使用統計</CardTitle>
+                  <CardDescription>
+                    API 調用監控和限流控制
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center p-3 bg-blue-50 rounded">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {apiUsageStats?.totalRequests || 0}
+                        </div>
+                        <div className="text-sm text-gray-600">總請求數</div>
+                      </div>
+                      <div className="text-center p-3 bg-green-50 rounded">
+                        <div className="text-2xl font-bold text-green-600">
+                          {apiUsageStats?.requestsToday || 0}
+                        </div>
+                        <div className="text-sm text-gray-600">今日請求</div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>平均響應時間:</span>
+                        <span className="font-mono">
+                          {apiUsageStats?.avgResponseTime?.toFixed(2) || 0}ms
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>錯誤率:</span>
+                        <span className="font-mono text-red-600">
+                          {apiUsageStats?.errorRate?.toFixed(2) || 0}%
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h4 className="font-medium">服務配額使用情況</h4>
+                      {apiUsageStats?.quotaUsage?.map((quota: any, index: number) => (
+                        <div key={index} className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span>{quota.service}</span>
+                            <span>{quota.used}/{quota.limit}</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className={`h-2 rounded-full ${
+                                (quota.used / quota.limit) > 0.8 ? 'bg-red-600' :
+                                (quota.used / quota.limit) > 0.6 ? 'bg-yellow-600' : 'bg-green-600'
+                              }`}
+                              style={{width: `${Math.min((quota.used / quota.limit) * 100, 100)}%`}}
+                            ></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>維護模式控制</CardTitle>
+                <CardDescription>
+                  系統維護模式開關
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant={maintenanceMode?.enabled ? "destructive" : "outline"}
+                    onClick={async () => {
+                      try {
+                        const newState = !maintenanceMode?.enabled;
+                        const message = newState ? prompt('維護訊息:') || '系統維修中' : '';
+                        
+                        const response = await fetch('/api/bdmin/maintenance', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ enabled: newState, message })
+                        });
+                        
+                        if (response.ok) {
+                          queryClient.invalidateQueries({ queryKey: ['/api/bdmin/maintenance'] });
+                          toast({
+                            title: "成功",
+                            description: `維護模式已${newState ? '開啟' : '關閉'}`,
+                          });
+                        }
+                      } catch (error) {
+                        toast({
+                          title: "錯誤",
+                          description: "無法更新維護模式",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                  >
+                    <AlertTriangle className="w-4 h-4 mr-2" />
+                    {maintenanceMode?.enabled ? '關閉維護模式' : '開啟維護模式'}
+                  </Button>
+                  
+                  {maintenanceMode?.enabled && (
+                    <div className="text-sm text-gray-600">
+                      當前訊息: {maintenanceMode.message}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* System Logs */}
