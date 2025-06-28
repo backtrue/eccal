@@ -134,7 +134,13 @@ export default function ProjectDetail() {
             </div>
             <div>
               <span className="text-sm text-gray-600">活動天數</span>
-              <p className="font-medium">{result.totalDays || 0} 天</p>
+              <p className="font-medium">{(() => {
+                if (!data.startDate || !data.endDate) return '0';
+                const start = new Date(data.startDate);
+                const end = new Date(data.endDate);
+                const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                return days;
+              })()} 天</p>
             </div>
           </CardContent>
         </Card>

@@ -28,7 +28,7 @@ const campaignPlannerSchema = z.object({
   targetRevenue: z.number().min(1, "目標營業額必須大於 0"),
   targetAov: z.number().min(1, "目標客單價必須大於 0"),
   targetConversionRate: z.number().min(0.01).max(100, "轉換率必須在 0.01% 到 100% 之間"),
-  cpc: z.number().min(0.1, "CPC 必須大於 0.1"),
+  cpc: z.number().min(0.01, "CPC 必須大於 0.01"),
 });
 
 type CampaignPlannerFormData = z.infer<typeof campaignPlannerSchema>;
@@ -218,7 +218,7 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
     
     // 計算總預算（先從目標營收推算）
     const requiredTrafficForRevenue = Math.ceil((data.targetRevenue / data.targetAov) / (data.targetConversionRate / 100));
-    const estimatedTotalBudget = Math.ceil(requiredTrafficForRevenue * data.cpc * 1.15); // 增加15%緩衝
+    const estimatedTotalBudget = Math.ceil(requiredTrafficForRevenue * (data.cpc || 5) * 1.15); // 增加15%緩衝
     
     // 根據活動類型分配預算
     let budgetBreakdown: any = {};
@@ -255,25 +255,27 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
     // 根據活動類型計算各期間流量
     let trafficBreakdown: any = {};
     
+    const cpcValue = data.cpc || 5; // 預設 CPC 為 5
+    
     if (campaignDays === 3) {
       trafficBreakdown = {
-        day1: Math.ceil(budgetBreakdown.day1 / data.cpc),
-        day2: Math.ceil(budgetBreakdown.day2 / data.cpc),
-        day3: Math.ceil(budgetBreakdown.day3 / data.cpc)
+        day1: Math.ceil(budgetBreakdown.day1 / cpcValue),
+        day2: Math.ceil(budgetBreakdown.day2 / cpcValue),
+        day3: Math.ceil(budgetBreakdown.day3 / cpcValue)
       };
     } else if (campaignDays >= 4 && campaignDays <= 9) {
       trafficBreakdown = {
-        launch: Math.ceil(budgetBreakdown.launch / data.cpc),
-        main: Math.ceil(budgetBreakdown.main / data.cpc),
-        final: Math.ceil(budgetBreakdown.final / data.cpc)
+        launch: Math.ceil(budgetBreakdown.launch / cpcValue),
+        main: Math.ceil(budgetBreakdown.main / cpcValue),
+        final: Math.ceil(budgetBreakdown.final / cpcValue)
       };
     } else {
       trafficBreakdown = {
-        preheat: Math.ceil(budgetBreakdown.preheat / data.cpc),
-        launch: Math.ceil(budgetBreakdown.launch / data.cpc),
-        main: Math.ceil(budgetBreakdown.main / data.cpc),
-        final: Math.ceil(budgetBreakdown.final / data.cpc),
-        repurchase: Math.ceil(budgetBreakdown.repurchase / data.cpc)
+        preheat: Math.ceil(budgetBreakdown.preheat / cpcValue),
+        launch: Math.ceil(budgetBreakdown.launch / cpcValue),
+        main: Math.ceil(budgetBreakdown.main / cpcValue),
+        final: Math.ceil(budgetBreakdown.final / cpcValue),
+        repurchase: Math.ceil(budgetBreakdown.repurchase / cpcValue)
       };
     }
     
