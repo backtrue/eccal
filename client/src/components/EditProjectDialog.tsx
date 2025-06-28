@@ -16,7 +16,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { useUpdateProject, type SavedProject } from "@/hooks/useSavedProjects";
 import { Edit, Loader2, Calculator } from "lucide-react";
-import { calculateCampaignBudget } from "@/lib/campaignCalculations";
+import { format, addDays, subDays } from 'date-fns';
 
 const campaignPlannerSchema = z.object({
   projectName: z.string().min(1, "專案名稱不能為空"),
@@ -149,19 +149,164 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
         throw new Error("結束日期必須晚於開始日期");
       }
 
-      // Use the same calculation logic as CampaignPlanner
-      const calculationResult = calculateCampaignBudget({
-        startDate: data.startDate,
-        endDate: data.endDate,
-        targetRevenue: Number(data.targetRevenue),
-        targetAov: Number(data.targetAov),
-        targetConversionRate: Number(data.targetConversionRate),
-        cpc: Number(data.cpc),
+      // Use the same calculation logic as CampaignPlanner to match the original format
+      const campaignStartDate = new Date(data.startDate);
+      const campaignEndDate = new Date(data.endDate);
+      const campaignDays = Math.ceil((campaignEndDate.getTime() - campaignStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      
+      // Calculate required metrics
+      const requiredOrders = Math.ceil(Number(data.targetRevenue) / Number(data.targetAov));
+      const totalTraffic = Math.ceil(requiredOrders / (Number(data.targetConversionRate) / 100));
+      const estimatedTotalBudget = Math.ceil(totalTraffic * Number(data.cpc) * 1.15);
+      
+      // Dynamic budget ratios based on campaign duration
+      let budgetRatios: any = {};
+      let periodDays: any = {};
+      
+      if (campaignDays === 3) {
+        budgetRatios = { day1: 0.50, day2: 0.25, day3: 0.25 };
+      } else if (campaignDays >= 4 && campaignDays <= 9) {
+        budgetRatios = { launch: 0.45, main: 0.30, final: 0.25 };
+        periodDays = { launch: 2, main: campaignDays - 4, final: 2 };
+      } else {
+        budgetRatios = { preheat: 0.04, launch: 0.32, main: 0.38, final: 0.24, repurchase: 0.02 };
+        
+        // Dynamic main period adjustment for long campaigns
+        if (campaignDays > 20) {
+          const extraDays = campaignDays - 20;
+          const extraBudgetRatio = Math.min(0.20, extraDays * 0.008);
+          budgetRatios.main += extraBudgetRatio;
+          budgetRatios.launch -= extraBudgetRatio * 0.6;
+          budgetRatios.final -= extraBudgetRatio * 0.4;
+        }
+        
+        periodDays = {
+          preheat: 4, launch: 3,
+          main: Math.max(3, campaignDays - 9),
+          final: 3, repurchase: 7
+        };
+      }
+      
+      // Calculate budget breakdown
+      let budgetBreakdown: any = {};
+      let totalBudget = 0;
+      
+      if (campaignDays === 3) {
+        budgetBreakdown = {
+          day1: Math.ceil(estimatedTotalBudget * budgetRatios.day1),
+          day2: Math.ceil(estimatedTotalBudget * budgetRatios.day2),
+          day3: Math.ceil(estimatedTotalBudget * budgetRatios.day3)
+        };
+        totalBudget = budgetBreakdown.day1 + budgetBreakdown.day2 + budgetBreakdown.day3;
+      } else if (campaignDays >= 4 && campaignDays <= 9) {
+        budgetBreakdown = {
+          launch: Math.ceil(estimatedTotalBudget * budgetRatios.launch),
+          main: Math.ceil(estimatedTotalBudget * budgetRatios.main),
+          final: Math.ceil(estimatedTotalBudget * budgetRatios.final)
+        };
+        totalBudget = budgetBreakdown.launch + budgetBreakdown.main + budgetBreakdown.final;
+      } else {
+        budgetBreakdown = {
+          preheat: Math.ceil(estimatedTotalBudget * budgetRatios.preheat),
+          launch: Math.ceil(estimatedTotalBudget * budgetRatios.launch),
+          main: Math.ceil(estimatedTotalBudget * budgetRatios.main),
+          final: Math.ceil(estimatedTotalBudget * budgetRatios.final),
+          repurchase: Math.ceil(estimatedTotalBudget * budgetRatios.repurchase)
+        };
+        totalBudget = budgetBreakdown.preheat + budgetBreakdown.launch + budgetBreakdown.main + budgetBreakdown.final + budgetBreakdown.repurchase;
+      }
+      
+      // Calculate traffic breakdown
+      const trafficBreakdown: any = {};
+      Object.keys(budgetBreakdown).forEach(key => {
+        trafficBreakdown[key] = Math.ceil(budgetBreakdown[key] / Number(data.cpc));
       });
-
-      // Create complete calculation result
+      
+      // Build campaign periods object with proper format
+      let campaignPeriods: any = {};
+      
+      if (campaignDays === 3) {
+        campaignPeriods = {
+          day1: {
+            startDate: format(campaignStartDate, 'yyyy-MM-dd'),
+            endDate: format(campaignStartDate, 'yyyy-MM-dd'),
+            budget: budgetBreakdown.day1,
+            traffic: trafficBreakdown.day1,
+          },
+          day2: {
+            startDate: format(addDays(campaignStartDate, 1), 'yyyy-MM-dd'),
+            endDate: format(addDays(campaignStartDate, 1), 'yyyy-MM-dd'),
+            budget: budgetBreakdown.day2,
+            traffic: trafficBreakdown.day2,
+          },
+          day3: {
+            startDate: format(addDays(campaignStartDate, 2), 'yyyy-MM-dd'),
+            endDate: format(addDays(campaignStartDate, 2), 'yyyy-MM-dd'),
+            budget: budgetBreakdown.day3,
+            traffic: trafficBreakdown.day3,
+          },
+        };
+      } else if (campaignDays >= 4 && campaignDays <= 9) {
+        campaignPeriods = {
+          launch: {
+            startDate: format(startDate, 'yyyy-MM-dd'),
+            endDate: format(addDays(startDate, periodDays.launch - 1), 'yyyy-MM-dd'),
+            budget: budgetBreakdown.launch,
+            traffic: trafficBreakdown.launch,
+          },
+          main: {
+            startDate: format(addDays(startDate, periodDays.launch), 'yyyy-MM-dd'),
+            endDate: format(addDays(startDate, periodDays.launch + periodDays.main - 1), 'yyyy-MM-dd'),
+            budget: budgetBreakdown.main,
+            traffic: trafficBreakdown.main,
+          },
+          final: {
+            startDate: format(addDays(startDate, periodDays.launch + periodDays.main), 'yyyy-MM-dd'),
+            endDate: format(endDate, 'yyyy-MM-dd'),
+            budget: budgetBreakdown.final,
+            traffic: trafficBreakdown.final,
+          },
+        };
+      } else {
+        campaignPeriods = {
+          preheat: {
+            startDate: format(subDays(startDate, 4), 'yyyy-MM-dd'),
+            endDate: format(subDays(startDate, 1), 'yyyy-MM-dd'),
+            budget: budgetBreakdown.preheat,
+            traffic: trafficBreakdown.preheat,
+          },
+          launch: {
+            startDate: format(startDate, 'yyyy-MM-dd'),
+            endDate: format(addDays(startDate, 2), 'yyyy-MM-dd'),
+            budget: budgetBreakdown.launch,
+            traffic: trafficBreakdown.launch,
+          },
+          main: {
+            startDate: format(addDays(startDate, 3), 'yyyy-MM-dd'),
+            endDate: format(subDays(endDate, 3), 'yyyy-MM-dd'),
+            budget: budgetBreakdown.main,
+            traffic: trafficBreakdown.main,
+          },
+          final: {
+            startDate: format(subDays(endDate, 2), 'yyyy-MM-dd'),
+            endDate: format(endDate, 'yyyy-MM-dd'),
+            budget: budgetBreakdown.final,
+            traffic: trafficBreakdown.final,
+          },
+          repurchase: {
+            startDate: format(addDays(endDate, 1), 'yyyy-MM-dd'),
+            endDate: format(addDays(endDate, 7), 'yyyy-MM-dd'),
+            budget: budgetBreakdown.repurchase,
+            traffic: trafficBreakdown.repurchase,
+          },
+        };
+      }
+      
+      // Create complete calculation result in the correct format
       const newCalculationResult = {
-        ...calculationResult,
+        totalTraffic,
+        campaignPeriods,
+        totalBudget,
         calculatedAt: new Date().toISOString(),
       };
 
