@@ -103,8 +103,8 @@ export default function ProjectDetail() {
   const renderCampaignPlannerDetails = () => {
     if (!project) return null;
     
-    const data = project.projectData;
-    const result = project.lastCalculationResult;
+    const data = project.projectData || {};
+    const result = project.lastCalculationResult || {};
 
     return (
       <div className="space-y-6">
@@ -120,16 +120,16 @@ export default function ProjectDetail() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <span className="text-sm text-gray-600">活動開始日期</span>
-                <p className="font-medium">{data.startDate}</p>
+                <p className="font-medium">{data.startDate || '未設定'}</p>
               </div>
               <div>
                 <span className="text-sm text-gray-600">活動結束日期</span>
-                <p className="font-medium">{data.endDate}</p>
+                <p className="font-medium">{data.endDate || '未設定'}</p>
               </div>
             </div>
             <div>
               <span className="text-sm text-gray-600">活動天數</span>
-              <p className="font-medium">{result?.totalDays || 0} 天</p>
+              <p className="font-medium">{result.totalDays || 0} 天</p>
             </div>
           </CardContent>
         </Card>
@@ -145,25 +145,25 @@ export default function ProjectDetail() {
           <CardContent className="grid grid-cols-2 gap-4">
             <div>
               <span className="text-sm text-gray-600">目標營業額</span>
-              <p className="font-semibold text-lg">{formatCurrency(data.targetRevenue)}</p>
+              <p className="font-semibold text-lg">{data.targetRevenue ? formatCurrency(data.targetRevenue) : '未設定'}</p>
             </div>
             <div>
               <span className="text-sm text-gray-600">目標客單價</span>
-              <p className="font-semibold text-lg">{formatCurrency(data.targetAov)}</p>
+              <p className="font-semibold text-lg">{data.targetAov ? formatCurrency(data.targetAov) : '未設定'}</p>
             </div>
             <div>
               <span className="text-sm text-gray-600">目標轉換率</span>
-              <p className="font-semibold text-lg">{formatPercentage(data.targetConversionRate)}</p>
+              <p className="font-semibold text-lg">{data.targetConversionRate ? formatPercentage(data.targetConversionRate) : '未設定'}</p>
             </div>
             <div>
               <span className="text-sm text-gray-600">每次點擊成本</span>
-              <p className="font-semibold text-lg">{formatCurrency(data.cpc)}</p>
+              <p className="font-semibold text-lg">{data.cpc ? formatCurrency(data.cpc) : '未設定'}</p>
             </div>
           </CardContent>
         </Card>
 
         {/* 計算結果 */}
-        {result && (
+        {result && Object.keys(result).length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -175,36 +175,36 @@ export default function ProjectDetail() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <span className="text-sm text-gray-600">所需訂單數</span>
-                  <p className="font-semibold text-lg">{result.requiredOrders?.toLocaleString() || 0} 筆</p>
+                  <p className="font-semibold text-lg">{result.requiredOrders?.toLocaleString() || '0'} 筆</p>
                 </div>
                 <div>
                   <span className="text-sm text-gray-600">所需流量</span>
-                  <p className="font-semibold text-lg">{result.requiredTraffic?.toLocaleString() || 0} 人</p>
+                  <p className="font-semibold text-lg">{result.requiredTraffic?.toLocaleString() || result.totalTraffic?.toLocaleString() || '0'} 人</p>
                 </div>
                 <div>
                   <span className="text-sm text-gray-600">總廣告預算</span>
-                  <p className="font-semibold text-lg text-blue-600">{formatCurrency(result.totalBudget || 0)}</p>
+                  <p className="font-semibold text-lg text-blue-600">{result.totalBudget ? formatCurrency(result.totalBudget) : '未計算'}</p>
                 </div>
                 <div>
                   <span className="text-sm text-gray-600">平均日預算</span>
-                  <p className="font-semibold text-lg text-green-600">{formatCurrency(result.averageDailyBudget || 0)}</p>
+                  <p className="font-semibold text-lg text-green-600">{result.averageDailyBudget ? formatCurrency(result.averageDailyBudget) : '未計算'}</p>
                 </div>
               </div>
 
               {/* 各期間預算分配 */}
-              {result.periods && (
+              {result.periods && Array.isArray(result.periods) && result.periods.length > 0 && (
                 <div>
                   <h4 className="font-medium mb-3">各期間預算分配</h4>
                   <div className="grid gap-3">
                     {result.periods.map((period: any, index: number) => (
                       <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                         <div>
-                          <span className="font-medium">{period.name}</span>
-                          <span className="text-sm text-gray-600 ml-2">({period.days} 天)</span>
+                          <span className="font-medium">{period.name || `期間 ${index + 1}`}</span>
+                          <span className="text-sm text-gray-600 ml-2">({period.days || 0} 天)</span>
                         </div>
                         <div className="text-right">
-                          <div className="font-semibold">{formatCurrency(period.budget)}</div>
-                          <div className="text-sm text-gray-600">{formatCurrency(period.dailyBudget)}/日</div>
+                          <div className="font-semibold">{period.budget ? formatCurrency(period.budget) : '未設定'}</div>
+                          <div className="text-sm text-gray-600">{period.dailyBudget ? formatCurrency(period.dailyBudget) : '未設定'}/日</div>
                         </div>
                       </div>
                     ))}
@@ -269,7 +269,7 @@ export default function ProjectDetail() {
                 {getProjectTypeLabel(project.projectType)}
               </Badge>
               <span className="text-sm text-gray-500">
-                更新於 {format(new Date(project.updatedAt), 'yyyy/MM/dd HH:mm', { locale: zhTW })}
+                更新於 {project.updatedAt ? format(new Date(project.updatedAt), 'yyyy/MM/dd HH:mm', { locale: zhTW }) : '未知'}
               </span>
             </div>
           </div>
