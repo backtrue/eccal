@@ -524,6 +524,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all users for Brevo sync (public endpoint for easy access)
+  app.get('/api/users/all', async (req, res) => {
+    try {
+      const allUsers = await db.select().from(usersTable);
+      const userData = allUsers.map(user => ({
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        createdAt: user.createdAt
+      }));
+      
+      res.json(userData);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      res.status(500).json({ message: 'Failed to fetch users' });
+    }
+  });
+
+  // Simple Brevo sync data endpoint (returns JSON instead of files to avoid routing issues)
+  app.get('/api/brevo-export', async (req, res) => {
+    try {
+      const allUsers = await db.select().from(usersTable);
+      const usersWithEmail = allUsers.filter(user => user.email);
+
+      const brevoData = usersWithEmail.map(user => ({
+        email: user.email,
+        attributes: {
+          FIRSTNAME: user.firstName || '',
+          LASTNAME: user.lastName || '',
+          GA_RESOURCE: user.gaResourceName || user.firstName || ''
+        },
+        listIds: [15],
+        signupDate: user.createdAt ? new Date(user.createdAt).toISOString().split('T')[0] : ''
+      }));
+
+      const csvData = [
+        'EMAIL,FIRSTNAME,LASTNAME,GA_RESOURCE_NAME,SIGNUP_DATE',
+        ...brevoData.map(user => 
+          `"${user.email}","${user.attributes.FIRSTNAME}","${user.attributes.LASTNAME}","${user.attributes.GA_RESOURCE}","${user.signupDate}"`
+        )
+      ].join('\n');
+
+      const bashScript = `#!/bin/bash
+# Brevo 批量同步腳本 - 生成時間: ${new Date().toISOString()}
+# 總用戶數: ${usersWithEmail.length}
+
+echo "開始同步 ${usersWithEmail.length} 個用戶到 Brevo 名單 #15..."
+
+${brevoData.map((user, index) => `
+# 用戶 ${index + 1}: ${user.email}
+curl -X POST "https://api.brevo.com/v3/contacts" \\
+  -H "accept: application/json" \\
+  -H "api-key: YOUR_BREVO_API_KEY" \\
+  -H "content-type: application/json" \\
+  -d '${JSON.stringify({ email: user.email, attributes: user.attributes, listIds: user.listIds })}'
+echo "已添加: ${user.email}"
+sleep 0.5
+`).join('')}
+
+echo "同步完成！"`;
+
+      res.json({
+        summary: {
+          totalUsers: allUsers.length,
+          usersWithEmail: usersWithEmail.length,
+          generatedAt: new Date().toISOString()
+        },
+        csvData,
+        bashScript,
+        webhookData: brevoData,
+        instructions: {
+          csv: '複製 csvData 內容到 .csv 檔案，手動上傳到 Brevo',
+          bash: '複製 bashScript 內容到 .sh 檔案，替換 YOUR_BREVO_API_KEY 後執行',
+          webhook: '使用 webhookData 配置 Zapier/Make.com 自動化'
+        }
+      });
+    } catch (error) {
+      console.error('Brevo export error:', error);
+      res.status(500).json({ 
+        message: 'Failed to generate Brevo export data',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Alternative Brevo sync methods (public access for easier use)
   app.get('/api/public/export-users-csv', async (req: any, res) => {
     try {
