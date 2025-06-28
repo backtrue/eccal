@@ -33,7 +33,7 @@ export default function BrevoSync() {
       const email = user.email || '';
       const firstName = user.firstName || '';
       const lastName = user.lastName || '';
-      const gaResourceName = user.gaResourceName || user.firstName || '';
+      const gaResourceName = user.firstName || '';
       const signupDate = user.createdAt ? new Date(user.createdAt).toISOString().split('T')[0] : '';
       
       return `"${email}","${firstName}","${lastName}","${gaResourceName}","${signupDate}"`;
@@ -82,7 +82,7 @@ echo "同步完成！"`;
       email: user.email,
       firstName: user.firstName || '',
       lastName: user.lastName || '',
-      gaResourceName: user.gaResourceName || user.firstName || '',
+      gaResourceName: user.firstName || '',
       signupDate: user.createdAt ? new Date(user.createdAt).toISOString().split('T')[0] : '',
       listId: 15,
       attributes: {
