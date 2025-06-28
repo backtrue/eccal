@@ -481,7 +481,7 @@ export class DatabaseStorage implements IStorage {
     const [project] = await db
       .select()
       .from(savedProjects)
-      .where(eq(savedProjects.id, projectId) && eq(savedProjects.userId, userId));
+      .where(and(eq(savedProjects.id, projectId), eq(savedProjects.userId, userId)));
     return project;
   }
 
@@ -492,8 +492,7 @@ export class DatabaseStorage implements IStorage {
         ...updates,
         updatedAt: new Date(),
       })
-      .where(eq(savedProjects.id, projectId))
-      .where(eq(savedProjects.userId, userId))
+      .where(and(eq(savedProjects.id, projectId), eq(savedProjects.userId, userId)))
       .returning();
     return project;
   }
@@ -501,8 +500,7 @@ export class DatabaseStorage implements IStorage {
   async deleteProject(projectId: string, userId: string): Promise<boolean> {
     const result = await db
       .delete(savedProjects)
-      .where(eq(savedProjects.id, projectId))
-      .where(eq(savedProjects.userId, userId));
+      .where(and(eq(savedProjects.id, projectId), eq(savedProjects.userId, userId)));
     return result.rowCount > 0;
   }
 }

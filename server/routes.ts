@@ -717,6 +717,93 @@ echo "Bulk import completed!"`;
     }
   });
 
+  // ===== Saved Projects API =====
+  
+  // Save a new project
+  app.post('/api/projects', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub;
+      const { projectName, projectType, projectData, calculationResult } = req.body;
+      
+      if (!projectName || !projectType || !projectData) {
+        return res.status(400).json({ message: 'Missing required fields' });
+      }
+      
+      const project = await storage.saveProject(userId, projectName, projectType, projectData, calculationResult);
+      res.json(project);
+    } catch (error) {
+      console.error('Error saving project:', error);
+      res.status(500).json({ message: 'Failed to save project' });
+    }
+  });
+
+  // Get user's projects
+  app.get('/api/projects', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub;
+      const projects = await storage.getUserProjects(userId);
+      res.json(projects);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      res.status(500).json({ message: 'Failed to fetch projects' });
+    }
+  });
+
+  // Get a specific project
+  app.get('/api/projects/:id', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub;
+      const projectId = req.params.id;
+      const project = await storage.getProject(projectId, userId);
+      
+      if (!project) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+      
+      res.json(project);
+    } catch (error) {
+      console.error('Error fetching project:', error);
+      res.status(500).json({ message: 'Failed to fetch project' });
+    }
+  });
+
+  // Update a project
+  app.put('/api/projects/:id', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub;
+      const projectId = req.params.id;
+      const updates = req.body;
+      
+      const project = await storage.updateProject(projectId, userId, updates);
+      if (!project) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+      
+      res.json(project);
+    } catch (error) {
+      console.error('Error updating project:', error);
+      res.status(500).json({ message: 'Failed to update project' });
+    }
+  });
+
+  // Delete a project
+  app.delete('/api/projects/:id', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub;
+      const projectId = req.params.id;
+      
+      const success = await storage.deleteProject(projectId, userId);
+      if (!success) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      res.status(500).json({ message: 'Failed to delete project' });
+    }
+  });
+
   // Health check endpoint
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
