@@ -64,6 +64,39 @@ export interface IStorage {
   getProject(projectId: string, userId: string): Promise<SavedProject | undefined>;
   updateProject(projectId: string, userId: string, updates: Partial<{ projectName: string; projectData: any; lastCalculationResult: any }>): Promise<SavedProject>;
   deleteProject(projectId: string, userId: string): Promise<boolean>;
+
+  // Admin operations for management dashboard
+  getAllUsers(limit?: number, offset?: number): Promise<{ users: User[], total: number }>;
+  getUserStats(): Promise<{
+    totalUsers: number;
+    newUsersToday: number;
+    newUsersThisWeek: number;
+    newUsersThisMonth: number;
+    activeUsersToday: number;
+    activeUsersThisWeek: number;
+    retention7Days: number;
+    retention30Days: number;
+    totalCreditsDistributed: number;
+    totalProMembers: number;
+    arpu: number;
+  }>;
+  updateUserMembership(userId: string, membershipLevel: string, expiresAt?: Date): Promise<User>;
+  batchUpdateUserMembership(userIds: string[], membershipLevel: string, expiresAt?: Date): Promise<number>;
+  batchAddCredits(userIds: string[], amount: number, description: string): Promise<number>;
+
+  // SEO management operations
+  getSeoSettings(): Promise<SeoSetting[]>;
+  updateSeoSetting(page: string, updates: Partial<SeoSetting>): Promise<SeoSetting>;
+
+  // System monitoring operations
+  addSystemLog(log: InsertSystemLog): Promise<SystemLog>;
+  getSystemLogs(level?: string, limit?: number): Promise<SystemLog[]>;
+  getSystemStats(): Promise<{
+    totalErrors: number;
+    errorsToday: number;
+    avgResponseTime: number;
+    topErrorEndpoints: { endpoint: string; count: number }[];
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {

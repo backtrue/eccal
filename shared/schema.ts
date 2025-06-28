@@ -111,3 +111,46 @@ export type UserReferral = typeof userReferrals.$inferSelect;
 export type InsertUserReferral = typeof userReferrals.$inferInsert;
 export type SavedProject = typeof savedProjects.$inferSelect;
 export type InsertSavedProject = typeof savedProjects.$inferInsert;
+
+// SEO settings table for admin management
+export const seoSettings = pgTable("seo_settings", {
+  id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
+  page: varchar("page", { length: 100 }).notNull().unique(), // e.g., "home", "calculator", "campaign-planner"
+  title: varchar("title", { length: 200 }),
+  description: varchar("description", { length: 500 }),
+  keywords: varchar("keywords", { length: 300 }),
+  ogTitle: varchar("og_title", { length: 200 }),
+  ogDescription: varchar("og_description", { length: 500 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// System logs table for monitoring
+export const systemLogs = pgTable("system_logs", {
+  id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
+  level: varchar("level", { length: 20 }).notNull(), // "info", "warn", "error"
+  message: text("message").notNull(),
+  userId: varchar("user_id").references(() => users.id),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  userAgent: varchar("user_agent", { length: 500 }),
+  endpoint: varchar("endpoint", { length: 200 }),
+  responseTime: integer("response_time"), // milliseconds
+  statusCode: integer("status_code"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Admin settings table
+export const adminSettings = pgTable("admin_settings", {
+  id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  value: text("value"),
+  description: varchar("description", { length: 300 }),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type SeoSetting = typeof seoSettings.$inferSelect;
+export type InsertSeoSetting = typeof seoSettings.$inferInsert;
+export type SystemLog = typeof systemLogs.$inferSelect;
+export type InsertSystemLog = typeof systemLogs.$inferInsert;
+export type AdminSetting = typeof adminSettings.$inferSelect;
+export type InsertAdminSetting = typeof adminSettings.$inferInsert;
