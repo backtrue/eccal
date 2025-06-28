@@ -722,8 +722,14 @@ echo "Bulk import completed!"`;
   // Save a new project
   app.post('/api/projects', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const { projectName, projectType, projectData, calculationResult } = req.body;
+      
+      console.log('Saving project for user:', userId, 'Project name:', projectName);
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User ID not found' });
+      }
       
       if (!projectName || !projectType || !projectData) {
         return res.status(400).json({ message: 'Missing required fields' });
@@ -740,7 +746,7 @@ echo "Bulk import completed!"`;
   // Get user's projects
   app.get('/api/projects', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const projects = await storage.getUserProjects(userId);
       res.json(projects);
     } catch (error) {
