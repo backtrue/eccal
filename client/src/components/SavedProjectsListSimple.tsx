@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,7 @@ export default function SavedProjectsListSimple() {
   const { data: projects, isLoading } = useSavedProjects();
   const deleteProject = useDeleteProject();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [projectToDelete, setProjectToDelete] = useState<SavedProject | null>(null);
   const [projectToEdit, setProjectToEdit] = useState<SavedProject | null>(null);
 
@@ -148,9 +150,7 @@ export default function SavedProjectsListSimple() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem 
-                          onClick={() => {
-                            alert(`專案詳情：\n名稱：${project.projectName}\n類型：${getProjectTypeLabel(project.projectType)}\n建立時間：${format(new Date(project.createdAt), "yyyy年MM月dd日", { locale: zhTW })}`);
-                          }}
+                          onClick={() => setLocation(`/project/${project.id}`)}
                         >
                           <Eye className="h-4 w-4 mr-2" />
                           檢視詳情

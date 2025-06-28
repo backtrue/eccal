@@ -17,6 +17,7 @@ import NotFound from "./pages/not-found";
 import CampaignPlanner from "./pages/campaign-planner";
 import Dashboard from "./pages/dashboard";
 import BrevoSync from "./pages/brevo-sync";
+import ProjectDetail from "./pages/project-detail";
 
 function Router() {
   const { locale, changeLocale } = useLocale();
@@ -45,6 +46,7 @@ function Router() {
       <Route path="/calculator" component={() => <Calculator locale={locale} />} />
       <Route path="/campaign-planner" component={() => <CampaignPlanner locale={locale} />} />
       <Route path="/dashboard" component={() => <Dashboard locale={locale} />} />
+      <Route path="/project/:id" component={ProjectDetail} />
       <Route path="/brevo-sync" component={() => <BrevoSync />} />
       <Route path="/privacy" component={() => <Privacy locale={locale} />} />
       <Route path="/terms" component={() => <Terms locale={locale} />} />
