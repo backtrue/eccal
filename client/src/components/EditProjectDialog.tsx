@@ -22,10 +22,10 @@ const campaignPlannerSchema = z.object({
   projectName: z.string().min(1, "專案名稱不能為空"),
   startDate: z.string().min(1, "請選擇活動開始日期"),
   endDate: z.string().min(1, "請選擇活動結束日期"),
-  targetRevenue: z.number().min(1, "目標營業額必須大於 0"),
-  targetAov: z.number().min(1, "目標客單價必須大於 0"),
-  targetConversionRate: z.number().min(0.01).max(100, "轉換率必須在 0.01% 到 100% 之間"),
-  cpc: z.number().min(0.01, "CPC 必須大於 0.01"),
+  targetRevenue: z.number().min(0, "目標營業額不能為負數"),
+  targetAov: z.number().min(0, "目標客單價不能為負數"),
+  targetConversionRate: z.number().min(0).max(100, "轉換率必須在 0% 到 100% 之間"),
+  cpc: z.number().min(0, "CPC 不能為負數"),
 });
 
 type EditProjectFormData = z.infer<typeof campaignPlannerSchema>;
@@ -48,10 +48,10 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
         projectName: "",
         startDate: "",
         endDate: "",
-        targetRevenue: 100000,
-        targetAov: 1000,
-        targetConversionRate: 2.5,
-        cpc: 5,
+        targetRevenue: 0,
+        targetAov: 0,
+        targetConversionRate: 0,
+        cpc: 0,
       };
     }
 
@@ -60,10 +60,10 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
       projectName: proj.projectName || "",
       startDate: projectData.startDate || "",
       endDate: projectData.endDate || "",
-      targetRevenue: Number(projectData.targetRevenue) || 100000,
-      targetAov: Number(projectData.targetAov) || 1000,
-      targetConversionRate: Number(projectData.targetConversionRate) || 2.5,
-      cpc: Number(projectData.cpc) || 5,
+      targetRevenue: Number(projectData.targetRevenue) || 0,
+      targetAov: Number(projectData.targetAov) || 0,
+      targetConversionRate: Number(projectData.targetConversionRate) || 0,
+      cpc: Number(projectData.cpc) || 0,
     };
   };
 
@@ -154,10 +154,15 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
       const campaignEndDate = new Date(data.endDate);
       const campaignDays = Math.ceil((campaignEndDate.getTime() - campaignStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
       
-      // Calculate required metrics
-      const requiredOrders = Math.ceil(Number(data.targetRevenue) / Number(data.targetAov));
-      const totalTraffic = Math.ceil(requiredOrders / (Number(data.targetConversionRate) / 100));
-      const estimatedTotalBudget = Math.ceil(totalTraffic * Number(data.cpc) * 1.15);
+      // Calculate required metrics with fallback values for zero inputs
+      const targetRevenue = Number(data.targetRevenue) || 100000;
+      const targetAov = Number(data.targetAov) || 1000;
+      const targetConversionRate = Number(data.targetConversionRate) || 2.5;
+      const cpc = Number(data.cpc) || 5;
+      
+      const requiredOrders = Math.ceil(targetRevenue / targetAov);
+      const totalTraffic = Math.ceil(requiredOrders / (targetConversionRate / 100));
+      const estimatedTotalBudget = Math.ceil(totalTraffic * cpc * 1.15);
       
       // Dynamic budget ratios based on campaign duration
       let budgetRatios: any = {};
@@ -219,7 +224,7 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
       // Calculate traffic breakdown
       const trafficBreakdown: any = {};
       Object.keys(budgetBreakdown).forEach(key => {
-        trafficBreakdown[key] = Math.ceil(budgetBreakdown[key] / Number(data.cpc));
+        trafficBreakdown[key] = Math.ceil(budgetBreakdown[key] / cpc);
       });
       
       // Build campaign periods object with proper format
