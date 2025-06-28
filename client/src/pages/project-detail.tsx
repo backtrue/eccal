@@ -195,7 +195,12 @@ export default function ProjectDetail() {
                   </div>
                   <div className="text-center p-4 bg-purple-50 rounded-lg">
                     <div className="text-2xl font-bold text-purple-600">
-                      {result.campaignPeriods ? Object.keys(result.campaignPeriods).length : 0}
+                      {(() => {
+                        if (!result.campaignPeriods || !result.totalBudget) return '0%';
+                        const mainPeriod = result.campaignPeriods.main || result.campaignPeriods.day2;
+                        if (!mainPeriod) return '0%';
+                        return Math.round((mainPeriod.budget / result.totalBudget) * 100) + '%';
+                      })()}
                     </div>
                     <div className="text-sm text-gray-600 mt-1">活動期預算比例</div>
                   </div>
@@ -223,11 +228,11 @@ export default function ProjectDetail() {
                         repurchase: '回購期'
                       };
                       const colors = {
-                        preheat: 'bg-gray-100',
-                        launch: 'bg-red-100',
-                        main: 'bg-blue-100', 
-                        final: 'bg-yellow-100',
-                        repurchase: 'bg-green-100'
+                        preheat: 'bg-gray-200',
+                        launch: 'bg-red-200',
+                        main: 'bg-blue-200', 
+                        final: 'bg-yellow-200',
+                        repurchase: 'bg-green-200'
                       };
                       const percentage = result.totalBudget ? ((period.budget / result.totalBudget) * 100).toFixed(1) : '0';
                       
@@ -240,8 +245,9 @@ export default function ProjectDetail() {
                     })}
                   </div>
                   
-                  <div className="text-sm text-gray-600 p-3 bg-blue-50 rounded-lg">
-                    <strong>智能分配邏輯：</strong>活動期預算會根據活動總天數自動調整，長期活動會加強活動期比例以避免中段失血，短期活動則重點投放起跑期與倒數期保持爆發效果。
+                  <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
+                    <strong>智能分配邏輯：</strong>
+                    活動期預算會根據活動總天數自動調整，長期活動會增加活動期比例以避免中段失血，短期活動則重點投放起跑期與倒數期確保瞬間爆發效果。
                   </div>
                 </CardContent>
               </Card>
@@ -252,60 +258,74 @@ export default function ProjectDetail() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
+                    <Clock className="h-5 w-5" />
                     活動期間規劃
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-5 gap-4">
-                    {Object.entries(result.campaignPeriods).map(([key, period]: [string, any]) => {
-                      const periodNames = {
-                        preheat: '預熱期',
-                        launch: '起跑期',
-                        main: '活動期', 
-                        final: '倒數期',
-                        repurchase: '回購期'
-                      };
-                      
-                      const startDate = period.startDate ? new Date(period.startDate) : null;
-                      const endDate = period.endDate ? new Date(period.endDate) : null;
-                      const days = startDate && endDate ? Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1 : 0;
-                      
-                      return (
-                        <div key={key} className="space-y-3">
-                          <h4 className="font-medium text-center">{periodNames[key as keyof typeof periodNames] || key}</h4>
-                          <div className="text-center space-y-2">
-                            <div>
-                              <div className="text-xs text-gray-500">日期</div>
-                              <div className="text-sm">
+                  <div className="overflow-x-auto w-full">
+                    <div className="flex flex-row gap-4 w-full justify-start items-stretch"
+                         style={{ display: 'flex', flexDirection: 'row', minWidth: 'max-content' }}>
+                      {Object.entries(result.campaignPeriods).map(([key, period]: [string, any]) => {
+                        const periodNames = {
+                          preheat: '預熱期',
+                          launch: '起跑期',
+                          main: '活動期', 
+                          final: '倒數期',
+                          repurchase: '回購期',
+                          day1: '第一天',
+                          day2: '第二天',
+                          day3: '第三天'
+                        };
+                        
+                        const startDate = period.startDate ? new Date(period.startDate) : null;
+                        const endDate = period.endDate ? new Date(period.endDate) : null;
+                        const daysDiff = startDate && endDate ? Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1 : 0;
+                        const dailyBudget = period.budget && daysDiff > 0 ? Math.ceil(period.budget / daysDiff) : 0;
+                        const dailyTraffic = period.traffic && daysDiff > 0 ? Math.ceil(period.traffic / daysDiff) : 0;
+                        
+                        return (
+                          <div key={key} 
+                               className="text-center space-y-3 p-4 bg-gray-50 rounded-lg flex-shrink-0" 
+                               style={{ minWidth: '180px', flex: '0 0 auto' }}>
+                            <div className="text-sm font-bold text-gray-900 border-b border-gray-200 pb-2">
+                              {periodNames[key as keyof typeof periodNames] || key}
+                            </div>
+                            
+                            <div className="space-y-1">
+                              <div className="text-xs text-gray-500 font-medium">日期</div>
+                              <div className="text-xs text-gray-700">
                                 {startDate && endDate 
                                   ? `${startDate.getMonth() + 1}/${startDate.getDate()} - ${endDate.getMonth() + 1}/${endDate.getDate()}`
                                   : '未設定'
                                 }
                               </div>
                             </div>
-                            <div>
-                              <div className="text-xs text-gray-500">總預算</div>
-                              <div className="font-semibold text-blue-600">
-                                {period.budget ? formatCurrency(period.budget) : '未設定'}
+                            
+                            <div className="space-y-1">
+                              <div className="text-xs text-gray-500 font-medium">總預算</div>
+                              <div className="text-lg font-bold text-gray-900">
+                                ${period.budget?.toLocaleString() || '0'}
                               </div>
                             </div>
-                            <div>
-                              <div className="text-xs text-gray-500">日預算</div>
-                              <div className="text-green-600">
-                                {period.budget && days > 0 ? formatCurrency(Math.round(period.budget / days)) : '未設定'}
+                            
+                            <div className="space-y-1">
+                              <div className="text-xs text-gray-500 font-medium">日預算</div>
+                              <div className="text-sm font-semibold text-green-600">
+                                ${dailyBudget.toLocaleString()}
                               </div>
                             </div>
-                            <div>
-                              <div className="text-xs text-gray-500">日流量</div>
-                              <div className="text-blue-500">
-                                {period.traffic && days > 0 ? Math.round(period.traffic / days).toLocaleString() : '0'}
+                            
+                            <div className="space-y-1">
+                              <div className="text-xs text-gray-500 font-medium">日流量</div>
+                              <div className="text-sm font-semibold text-blue-600">
+                                {dailyTraffic.toLocaleString()}
                               </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
