@@ -689,13 +689,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getSystemLogs(level?: string, limit: number = 100): Promise<SystemLog[]> {
-    let query = db.select().from(systemLogs);
-    
     if (level) {
-      query = query.where(eq(systemLogs.level, level));
+      return await db.select().from(systemLogs)
+        .where(eq(systemLogs.level, level))
+        .orderBy(desc(systemLogs.createdAt))
+        .limit(limit);
     }
     
-    return await query
+    return await db.select().from(systemLogs)
       .orderBy(desc(systemLogs.createdAt))
       .limit(limit);
   }
