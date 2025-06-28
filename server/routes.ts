@@ -525,7 +525,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Alternative Brevo sync methods (public access for easier use)
-  app.get('/api/admin/export-users-csv', async (req: any, res) => {
+  app.get('/api/public/export-users-csv', async (req: any, res) => {
     try {
       const allUsers = await db.select().from(usersTable);
 
@@ -551,7 +551,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/brevo-sync-script', async (req: any, res) => {
+  app.get('/api/public/brevo-sync-script', async (req: any, res) => {
     try {
       const allUsers = await db.select().from(usersTable);
       const usersWithEmail = allUsers.filter(user => user.email);
@@ -599,7 +599,7 @@ echo "Bulk import completed!"`;
     }
   });
 
-  app.get('/api/admin/brevo-webhook-data', async (req: any, res) => {
+  app.get('/api/public/brevo-webhook-data', async (req: any, res) => {
     try {
       const allUsers = await db.select().from(usersTable);
       const usersWithEmail = allUsers.filter(user => user.email);
