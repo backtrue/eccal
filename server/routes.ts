@@ -810,6 +810,197 @@ echo "Bulk import completed!"`;
     }
   });
 
+  // ===== Admin Dashboard API Routes =====
+  
+  // Admin authentication middleware (simplified - just checking if user is admin)
+  const requireAdmin = async (req: any, res: any, next: any) => {
+    try {
+      const userId = req.user?.claims?.sub || req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      
+      // Check if user is admin (you can customize this logic)
+      const adminEmails = ['backtrue@gmail.com', 'backtrue@seo-tw.org']; // Add your admin emails
+      const user = await storage.getUser(userId);
+      
+      if (!user || !adminEmails.includes(user.email || '')) {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+      
+      next();
+    } catch (error) {
+      res.status(500).json({ message: 'Admin auth check failed' });
+    }
+  };
+
+  // Get user statistics for BI dashboard
+  app.get('/api/bdmin/stats', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const stats = await storage.getUserStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+      res.status(500).json({ message: 'Failed to fetch statistics' });
+    }
+  });
+
+  // Get all users with pagination
+  app.get('/api/bdmin/users', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const limit = parseInt(req.query.limit) || 50;
+      const offset = parseInt(req.query.offset) || 0;
+      
+      const result = await storage.getAllUsers(limit, offset);
+      res.json(result);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      res.status(500).json({ message: 'Failed to fetch users' });
+    }
+  });
+
+  // Update user membership manually
+  app.put('/api/bdmin/users/:userId/membership', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { membershipLevel, durationDays } = req.body;
+      
+      let expiresAt: Date | undefined;
+      if (membershipLevel === 'pro' && durationDays) {
+        expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + durationDays);
+      }
+      
+      const user = await storage.updateUserMembership(userId, membershipLevel, expiresAt);
+      res.json(user);
+    } catch (error) {
+      console.error('Error updating user membership:', error);
+      res.status(500).json({ message: 'Failed to update membership' });
+    }
+  });
+
+  // Batch update user memberships
+  app.put('/api/bdmin/users/batch/membership', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const { userIds, membershipLevel, durationDays } = req.body;
+      
+      if (!Array.isArray(userIds) || userIds.length === 0) {
+        return res.status(400).json({ message: 'Invalid user IDs array' });
+      }
+      
+      let expiresAt: Date | undefined;
+      if (membershipLevel === 'pro' && durationDays) {
+        expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + durationDays);
+      }
+      
+      const updatedCount = await storage.batchUpdateUserMembership(userIds, membershipLevel, expiresAt);
+      res.json({ 
+        success: true, 
+        updatedCount,
+        message: `Updated ${updatedCount} users` 
+      });
+    } catch (error) {
+      console.error('Error batch updating memberships:', error);
+      res.status(500).json({ message: 'Failed to batch update memberships' });
+    }
+  });
+
+  // Batch add credits to users
+  app.post('/api/bdmin/users/batch/credits', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const { userIds, amount, description } = req.body;
+      
+      if (!Array.isArray(userIds) || userIds.length === 0) {
+        return res.status(400).json({ message: 'Invalid user IDs array' });
+      }
+      
+      if (!amount || !description) {
+        return res.status(400).json({ message: 'Amount and description required' });
+      }
+      
+      const updatedCount = await storage.batchAddCredits(userIds, amount, description);
+      res.json({ 
+        success: true, 
+        updatedCount,
+        message: `Added ${amount} credits to ${updatedCount} users` 
+      });
+    } catch (error) {
+      console.error('Error batch adding credits:', error);
+      res.status(500).json({ message: 'Failed to batch add credits' });
+    }
+  });
+
+  // Get SEO settings
+  app.get('/api/bdmin/seo', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const settings = await storage.getSeoSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error('Error fetching SEO settings:', error);
+      res.status(500).json({ message: 'Failed to fetch SEO settings' });
+    }
+  });
+
+  // Update SEO settings
+  app.put('/api/bdmin/seo/:page', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const { page } = req.params;
+      const { title, description, keywords, ogTitle, ogDescription } = req.body;
+      
+      const setting = await storage.updateSeoSetting(page, {
+        title,
+        description,
+        keywords,
+        ogTitle,
+        ogDescription
+      });
+      
+      res.json(setting);
+    } catch (error) {
+      console.error('Error updating SEO setting:', error);
+      res.status(500).json({ message: 'Failed to update SEO setting' });
+    }
+  });
+
+  // Get system logs
+  app.get('/api/bdmin/logs', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const level = req.query.level as string;
+      const limit = parseInt(req.query.limit) || 100;
+      
+      const logs = await storage.getSystemLogs(level, limit);
+      res.json(logs);
+    } catch (error) {
+      console.error('Error fetching system logs:', error);
+      res.status(500).json({ message: 'Failed to fetch system logs' });
+    }
+  });
+
+  // Get system monitoring stats
+  app.get('/api/bdmin/system', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const systemStats = await storage.getSystemStats();
+      
+      // Add system resource info
+      const systemInfo = {
+        memoryUsage: process.memoryUsage(),
+        uptime: process.uptime(),
+        nodeVersion: process.version,
+        platform: process.platform,
+        cpuUsage: process.cpuUsage()
+      };
+      
+      res.json({
+        ...systemStats,
+        systemInfo
+      });
+    } catch (error) {
+      console.error('Error fetching system stats:', error);
+      res.status(500).json({ message: 'Failed to fetch system stats' });
+    }
+  });
+
   // Health check endpoint
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });

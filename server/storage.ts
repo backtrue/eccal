@@ -17,9 +17,18 @@ import {
   savedProjects,
   type SavedProject,
   type InsertSavedProject,
+  seoSettings,
+  type SeoSetting,
+  type InsertSeoSetting,
+  systemLogs,
+  type SystemLog,
+  type InsertSystemLog,
+  adminSettings,
+  type AdminSetting,
+  type InsertAdminSetting,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, sql, and } from "drizzle-orm";
+import { eq, desc, sql, and, count, avg, sum, inArray, gte, lt } from "drizzle-orm";
 
 // modify the interface with any CRUD methods
 // you might need
@@ -534,7 +543,203 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(savedProjects)
       .where(and(eq(savedProjects.id, projectId), eq(savedProjects.userId, userId)));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
+  }
+
+  // Admin operations for management dashboard
+  async getAllUsers(limit: number = 50, offset: number = 0): Promise<{ users: User[], total: number }> {
+    const [users_result, total_result] = await Promise.all([
+      db.select().from(users)
+        .orderBy(desc(users.createdAt))
+        .limit(limit)
+        .offset(offset),
+      db.select({ count: count() }).from(users)
+    ]);
+    
+    return {
+      users: users_result,
+      total: total_result[0].count as number
+    };
+  }
+
+  async getUserStats(): Promise<{
+    totalUsers: number;
+    newUsersToday: number;
+    newUsersThisWeek: number;
+    newUsersThisMonth: number;
+    activeUsersToday: number;
+    activeUsersThisWeek: number;
+    retention7Days: number;
+    retention30Days: number;
+    totalCreditsDistributed: number;
+    totalProMembers: number;
+    arpu: number;
+  }> {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    const [
+      totalUsers,
+      newUsersToday,
+      newUsersWeek,
+      newUsersMonth,
+      totalCredits,
+      proMembers
+    ] = await Promise.all([
+      db.select({ count: count() }).from(users),
+      db.select({ count: count() }).from(users).where(gte(users.createdAt, today)),
+      db.select({ count: count() }).from(users).where(gte(users.createdAt, weekAgo)),
+      db.select({ count: count() }).from(users).where(gte(users.createdAt, monthAgo)),
+      db.select({ total: sum(creditTransactions.amount) }).from(creditTransactions),
+      db.select({ count: count() }).from(users).where(eq(users.membershipLevel, 'pro'))
+    ]);
+
+    // Calculate retention rates (simplified)
+    const retention7Days = totalUsers[0].count > 0 ? (newUsersWeek[0].count / totalUsers[0].count) * 100 : 0;
+    const retention30Days = totalUsers[0].count > 0 ? (newUsersMonth[0].count / totalUsers[0].count) * 100 : 0;
+
+    return {
+      totalUsers: totalUsers[0].count as number,
+      newUsersToday: newUsersToday[0].count as number,
+      newUsersThisWeek: newUsersWeek[0].count as number,
+      newUsersThisMonth: newUsersMonth[0].count as number,
+      activeUsersToday: newUsersToday[0].count as number,
+      activeUsersThisWeek: newUsersWeek[0].count as number,
+      retention7Days: retention7Days as number,
+      retention30Days: retention30Days as number,
+      totalCreditsDistributed: Number(totalCredits[0].total) || 0,
+      totalProMembers: proMembers[0].count as number,
+      arpu: 0
+    };
+  }
+
+  async updateUserMembership(userId: string, membershipLevel: string, expiresAt?: Date): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        membershipLevel,
+        membershipExpires: expiresAt,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async batchUpdateUserMembership(userIds: string[], membershipLevel: string, expiresAt?: Date): Promise<number> {
+    const result = await db
+      .update(users)
+      .set({
+        membershipLevel,
+        membershipExpires: expiresAt,
+        updatedAt: new Date()
+      })
+      .where(inArray(users.id, userIds));
+    return result.rowCount || 0;
+  }
+
+  async batchAddCredits(userIds: string[], amount: number, description: string): Promise<number> {
+    let totalUpdated = 0;
+    
+    for (const userId of userIds) {
+      const userCredits = await this.getUserCredits(userId);
+      if (userCredits) {
+        await this.updateUserCredits(userId, userCredits.balance + amount, userCredits.totalEarned + amount);
+        await this.addCreditTransaction({
+          userId,
+          amount,
+          type: 'admin_grant',
+          source: 'admin_panel',
+          description,
+          createdAt: new Date()
+        });
+        totalUpdated++;
+      }
+    }
+    
+    return totalUpdated;
+  }
+
+  // SEO management operations
+  async getSeoSettings(): Promise<SeoSetting[]> {
+    return await db.select().from(seoSettings).orderBy(seoSettings.page);
+  }
+
+  async updateSeoSetting(page: string, updates: Partial<SeoSetting>): Promise<SeoSetting> {
+    const [setting] = await db
+      .update(seoSettings)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(seoSettings.page, page))
+      .returning();
+    return setting;
+  }
+
+  // System monitoring operations
+  async addSystemLog(log: InsertSystemLog): Promise<SystemLog> {
+    const [systemLog] = await db
+      .insert(systemLogs)
+      .values(log)
+      .returning();
+    return systemLog;
+  }
+
+  async getSystemLogs(level?: string, limit: number = 100): Promise<SystemLog[]> {
+    let query = db.select().from(systemLogs);
+    
+    if (level) {
+      query = query.where(eq(systemLogs.level, level));
+    }
+    
+    return await query
+      .orderBy(desc(systemLogs.createdAt))
+      .limit(limit);
+  }
+
+  async getSystemStats(): Promise<{
+    totalErrors: number;
+    errorsToday: number;
+    avgResponseTime: number;
+    topErrorEndpoints: { endpoint: string; count: number }[];
+  }> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const [
+      totalErrors,
+      errorsToday,
+      avgResponse
+    ] = await Promise.all([
+      db.select({ count: count() }).from(systemLogs).where(eq(systemLogs.level, 'error')),
+      db.select({ count: count() }).from(systemLogs)
+        .where(and(eq(systemLogs.level, 'error'), gte(systemLogs.createdAt, today))),
+      db.select({ avg: avg(systemLogs.responseTime) }).from(systemLogs)
+        .where(sql`${systemLogs.responseTime} IS NOT NULL`)
+    ]);
+
+    const topErrors = await db.select({
+      endpoint: systemLogs.endpoint,
+      count: count()
+    })
+    .from(systemLogs)
+    .where(eq(systemLogs.level, 'error'))
+    .groupBy(systemLogs.endpoint)
+    .orderBy(desc(count()))
+    .limit(5);
+
+    return {
+      totalErrors: totalErrors[0].count as number,
+      errorsToday: errorsToday[0].count as number,
+      avgResponseTime: Number(avgResponse[0].avg) || 0,
+      topErrorEndpoints: topErrors.map(e => ({
+        endpoint: e.endpoint || 'Unknown',
+        count: e.count as number
+      }))
+    };
   }
 }
 
