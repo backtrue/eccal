@@ -77,21 +77,22 @@ function Router() {
   // Track page views when routes change
   useAnalytics();
   
-  // Handle route-based language switching
+  // Simplified route-based language switching
   useEffect(() => {
     try {
-      if (location.startsWith('/en')) {
-        if (locale !== 'en') changeLocale('en');
-      } else if (location.startsWith('/jp')) {
-        if (locale !== 'ja') changeLocale('ja');
-      } else if (location === '/' && locale === 'zh-TW') {
-        // Default route for Traditional Chinese
+      if (location.startsWith('/en') && locale !== 'en') {
+        changeLocale('en');
+      } else if (location.startsWith('/jp') && locale !== 'ja') {
+        changeLocale('ja');
       } else if (location === '/' && locale !== 'zh-TW') {
-        // Force Traditional Chinese as default for homepage
         changeLocale('zh-TW');
       }
     } catch (error) {
       console.error('Language switching error:', error);
+      // Fallback to default language on error
+      if (locale !== 'zh-TW') {
+        changeLocale('zh-TW');
+      }
     }
   }, [location, locale, changeLocale]);
 
@@ -153,34 +154,13 @@ function App() {
     }
   }, []);
 
-  // Handle authentication state refresh after OAuth login
+  // Minimal auth success handling to reduce complexity
   useEffect(() => {
-    // Wait for DOM to be ready before processing auth success
-    const handleAuthSuccess = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      
-      if (urlParams.has('auth_success')) {
-        console.log('Processing auth success...');
-        
-        // Clear the auth_success parameter from URL
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, '', newUrl);
-        
-        // Refresh auth state after a brief delay to ensure page is stable
-        setTimeout(() => {
-          queryClient.removeQueries({ queryKey: ["/api/auth/user"] });
-          queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-          console.log('Auth state refreshed');
-        }, 500);
-      }
-    };
-
-    // Ensure DOM is ready
-    if (document.readyState === 'complete') {
-      handleAuthSuccess();
-    } else {
-      window.addEventListener('load', handleAuthSuccess);
-      return () => window.removeEventListener('load', handleAuthSuccess);
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('auth_success')) {
+      // Clean URL immediately
+      window.history.replaceState({}, '', window.location.pathname);
+      // No need to refresh auth state - hooks will handle it automatically
     }
   }, []);
 

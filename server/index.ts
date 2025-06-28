@@ -73,19 +73,21 @@ const logMemoryUsage = () => {
   const usage = process.memoryUsage();
   const mb = (bytes: number) => Math.round(bytes / 1024 / 1024 * 100) / 100;
   
-  // Only log if memory usage is concerning (>120MB heap)
-  if (usage.heapUsed > 120 * 1024 * 1024) {
-    console.log(`記憶體使用: RSS ${mb(usage.rss)}MB, Heap ${mb(usage.heapUsed)}/${mb(usage.heapTotal)}MB`);
-    
-    // Force garbage collection if available
-    if (global.gc) {
-      global.gc();
-    }
+  // Force garbage collection every time to maintain lower memory
+  if (global.gc) {
+    global.gc();
+  }
+  
+  const newUsage = process.memoryUsage();
+  
+  // Only log if memory usage is still concerning after GC (>150MB RSS)
+  if (newUsage.rss > 150 * 1024 * 1024) {
+    console.log(`記憶體使用 (GC後): RSS ${mb(newUsage.rss)}MB, Heap ${mb(newUsage.heapUsed)}/${mb(newUsage.heapTotal)}MB`);
   }
 };
 
-// Check memory usage every 60 minutes to reduce overhead
-setInterval(logMemoryUsage, 60 * 60 * 1000);
+// Check memory usage every 2 hours to reduce overhead
+setInterval(logMemoryUsage, 2 * 60 * 60 * 1000);
 
 // Trust proxy for production deployment
 if (process.env.NODE_ENV === 'production') {
