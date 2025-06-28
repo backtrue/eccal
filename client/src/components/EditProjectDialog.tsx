@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -69,14 +70,17 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
   const form = useForm<EditProjectFormData>({
     resolver: zodResolver(campaignPlannerSchema),
     defaultValues: getDefaultValues(project),
+    mode: "onChange",
   });
 
-  // Reset form when project or dialog state changes
+  // Reset form when dialog opens
   useEffect(() => {
     if (open && project) {
-      form.reset(getDefaultValues(project));
+      const defaultValues = getDefaultValues(project);
+      console.log("Resetting form with values:", defaultValues);
+      form.reset(defaultValues);
     }
-  }, [project, open, form]);
+  }, [open, project]);
 
   const handleSave = async (data: EditProjectFormData) => {
     if (!project?.id) {
@@ -169,10 +173,10 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
           projectData: {
             startDate: data.startDate,
             endDate: data.endDate,
-            targetRevenue: data.targetRevenue,
-            targetAov: data.targetAov,
-            targetConversionRate: data.targetConversionRate,
-            cpc: data.cpc,
+            targetRevenue: Number(data.targetRevenue),
+            targetAov: Number(data.targetAov),
+            targetConversionRate: Number(data.targetConversionRate),
+            cpc: Number(data.cpc),
           },
           lastCalculationResult: newCalculationResult,
         },
@@ -210,6 +214,9 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
             <Edit className="h-5 w-5" />
             編輯專案參數
           </DialogTitle>
+          <DialogDescription>
+            修改專案設定並重新計算預算分配
+          </DialogDescription>
         </DialogHeader>
         
         <Form {...form}>

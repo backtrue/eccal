@@ -167,57 +167,150 @@ export default function ProjectDetail() {
           </CardContent>
         </Card>
 
-        {/* 計算結果 */}
+        {/* 活動規劃結果 */}
         {result && Object.keys(result).length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                計算結果
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-sm text-gray-600">所需訂單數</span>
-                  <p className="font-semibold text-lg">{result.requiredOrders?.toLocaleString() || '0'} 筆</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">所需流量</span>
-                  <p className="font-semibold text-lg">{result.requiredTraffic?.toLocaleString() || result.totalTraffic?.toLocaleString() || '0'} 人</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">總廣告預算</span>
-                  <p className="font-semibold text-lg text-blue-600">{result.totalBudget ? formatCurrency(result.totalBudget) : '未計算'}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">平均日預算</span>
-                  <p className="font-semibold text-lg text-green-600">{result.averageDailyBudget ? formatCurrency(result.averageDailyBudget) : '未計算'}</p>
-                </div>
-              </div>
-
-              {/* 各期間預算分配 */}
-              {result.periods && Array.isArray(result.periods) && result.periods.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-3">各期間預算分配</h4>
-                  <div className="grid gap-3">
-                    {result.periods.map((period: any, index: number) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <div>
-                          <span className="font-medium">{period.name || `期間 ${index + 1}`}</span>
-                          <span className="text-sm text-gray-600 ml-2">({period.days || 0} 天)</span>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-semibold">{period.budget ? formatCurrency(period.budget) : '未設定'}</div>
-                          <div className="text-sm text-gray-600">{period.dailyBudget ? formatCurrency(period.dailyBudget) : '未設定'}/日</div>
-                        </div>
-                      </div>
-                    ))}
+          <>
+            {/* 活動規劃結果概覽 */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  活動規劃結果
+                </CardTitle>
+                <CardDescription>完整的活動預算與流量分配建議</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-6 mb-6">
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {result.totalBudget ? formatCurrency(result.totalBudget) : '0'}
+                    </div>
+                    <div className="text-sm text-gray-600 mt-1">總預算</div>
+                  </div>
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">
+                      {result.totalTraffic?.toLocaleString() || '0'}
+                    </div>
+                    <div className="text-sm text-gray-600 mt-1">總流量需求</div>
+                  </div>
+                  <div className="text-center p-4 bg-purple-50 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-600">
+                      {result.campaignPeriods ? Object.keys(result.campaignPeriods).length : 0}
+                    </div>
+                    <div className="text-sm text-gray-600 mt-1">活動期預算比例</div>
                   </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            {/* 動態預算分配分析 */}
+            {result.campaignPeriods && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calculator className="h-5 w-5" />
+                    動態預算分配分析
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-5 gap-2 mb-4">
+                    {Object.entries(result.campaignPeriods).map(([key, period]: [string, any]) => {
+                      const periodNames = {
+                        preheat: '預熱期',
+                        launch: '起跑期', 
+                        main: '活動期',
+                        final: '倒數期',
+                        repurchase: '回購期'
+                      };
+                      const colors = {
+                        preheat: 'bg-gray-100',
+                        launch: 'bg-red-100',
+                        main: 'bg-blue-100', 
+                        final: 'bg-yellow-100',
+                        repurchase: 'bg-green-100'
+                      };
+                      const percentage = result.totalBudget ? ((period.budget / result.totalBudget) * 100).toFixed(1) : '0';
+                      
+                      return (
+                        <div key={key} className={`p-3 rounded-lg text-center ${colors[key as keyof typeof colors] || 'bg-gray-100'}`}>
+                          <div className="font-medium text-sm">{periodNames[key as keyof typeof periodNames] || key}</div>
+                          <div className="text-lg font-bold">{percentage}%</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  <div className="text-sm text-gray-600 p-3 bg-blue-50 rounded-lg">
+                    <strong>智能分配邏輯：</strong>活動期預算會根據活動總天數自動調整，長期活動會加強活動期比例以避免中段失血，短期活動則重點投放起跑期與倒數期保持爆發效果。
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 活動期間規劃 */}
+            {result.campaignPeriods && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    活動期間規劃
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-5 gap-4">
+                    {Object.entries(result.campaignPeriods).map(([key, period]: [string, any]) => {
+                      const periodNames = {
+                        preheat: '預熱期',
+                        launch: '起跑期',
+                        main: '活動期', 
+                        final: '倒數期',
+                        repurchase: '回購期'
+                      };
+                      
+                      const startDate = period.startDate ? new Date(period.startDate) : null;
+                      const endDate = period.endDate ? new Date(period.endDate) : null;
+                      const days = startDate && endDate ? Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1 : 0;
+                      
+                      return (
+                        <div key={key} className="space-y-3">
+                          <h4 className="font-medium text-center">{periodNames[key as keyof typeof periodNames] || key}</h4>
+                          <div className="text-center space-y-2">
+                            <div>
+                              <div className="text-xs text-gray-500">日期</div>
+                              <div className="text-sm">
+                                {startDate && endDate 
+                                  ? `${startDate.getMonth() + 1}/${startDate.getDate()} - ${endDate.getMonth() + 1}/${endDate.getDate()}`
+                                  : '未設定'
+                                }
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs text-gray-500">總預算</div>
+                              <div className="font-semibold text-blue-600">
+                                {period.budget ? formatCurrency(period.budget) : '未設定'}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs text-gray-500">日預算</div>
+                              <div className="text-green-600">
+                                {period.budget && days > 0 ? formatCurrency(Math.round(period.budget / days)) : '未設定'}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs text-gray-500">日流量</div>
+                              <div className="text-blue-500">
+                                {period.traffic && days > 0 ? Math.round(period.traffic / days).toLocaleString() : '0'}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
       </div>
     );

@@ -52,8 +52,9 @@ export function useUpdateProject() {
     }) => {
       return await apiRequest("PUT", `/api/projects/${data.projectId}`, data.updates);
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}`] });
     },
   });
 }
