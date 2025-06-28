@@ -53,8 +53,11 @@ export function useUpdateProject() {
       return await apiRequest("PUT", `/api/projects/${data.projectId}`, data.updates);
     },
     onSuccess: (_, variables) => {
+      // Force invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}`] });
+      // Also remove from cache to force refetch
+      queryClient.removeQueries({ queryKey: [`/api/projects/${variables.projectId}`] });
     },
   });
 }
