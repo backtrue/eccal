@@ -249,20 +249,20 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
       } else if (campaignDays >= 4 && campaignDays <= 9) {
         campaignPeriods = {
           launch: {
-            startDate: format(startDate, 'yyyy-MM-dd'),
-            endDate: format(addDays(startDate, periodDays.launch - 1), 'yyyy-MM-dd'),
+            startDate: format(campaignStartDate, 'yyyy-MM-dd'),
+            endDate: format(addDays(campaignStartDate, periodDays.launch - 1), 'yyyy-MM-dd'),
             budget: budgetBreakdown.launch,
             traffic: trafficBreakdown.launch,
           },
           main: {
-            startDate: format(addDays(startDate, periodDays.launch), 'yyyy-MM-dd'),
-            endDate: format(addDays(startDate, periodDays.launch + periodDays.main - 1), 'yyyy-MM-dd'),
+            startDate: format(addDays(campaignStartDate, periodDays.launch), 'yyyy-MM-dd'),
+            endDate: format(addDays(campaignStartDate, periodDays.launch + periodDays.main - 1), 'yyyy-MM-dd'),
             budget: budgetBreakdown.main,
             traffic: trafficBreakdown.main,
           },
           final: {
-            startDate: format(addDays(startDate, periodDays.launch + periodDays.main), 'yyyy-MM-dd'),
-            endDate: format(endDate, 'yyyy-MM-dd'),
+            startDate: format(addDays(campaignStartDate, periodDays.launch + periodDays.main), 'yyyy-MM-dd'),
+            endDate: format(campaignEndDate, 'yyyy-MM-dd'),
             budget: budgetBreakdown.final,
             traffic: trafficBreakdown.final,
           },
@@ -270,32 +270,32 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
       } else {
         campaignPeriods = {
           preheat: {
-            startDate: format(subDays(startDate, 4), 'yyyy-MM-dd'),
-            endDate: format(subDays(startDate, 1), 'yyyy-MM-dd'),
+            startDate: format(subDays(campaignStartDate, 4), 'yyyy-MM-dd'),
+            endDate: format(subDays(campaignStartDate, 1), 'yyyy-MM-dd'),
             budget: budgetBreakdown.preheat,
             traffic: trafficBreakdown.preheat,
           },
           launch: {
-            startDate: format(startDate, 'yyyy-MM-dd'),
-            endDate: format(addDays(startDate, 2), 'yyyy-MM-dd'),
+            startDate: format(campaignStartDate, 'yyyy-MM-dd'),
+            endDate: format(addDays(campaignStartDate, 2), 'yyyy-MM-dd'),
             budget: budgetBreakdown.launch,
             traffic: trafficBreakdown.launch,
           },
           main: {
-            startDate: format(addDays(startDate, 3), 'yyyy-MM-dd'),
-            endDate: format(subDays(endDate, 3), 'yyyy-MM-dd'),
+            startDate: format(addDays(campaignStartDate, 3), 'yyyy-MM-dd'),
+            endDate: format(subDays(campaignEndDate, 3), 'yyyy-MM-dd'),
             budget: budgetBreakdown.main,
             traffic: trafficBreakdown.main,
           },
           final: {
-            startDate: format(subDays(endDate, 2), 'yyyy-MM-dd'),
-            endDate: format(endDate, 'yyyy-MM-dd'),
+            startDate: format(subDays(campaignEndDate, 2), 'yyyy-MM-dd'),
+            endDate: format(campaignEndDate, 'yyyy-MM-dd'),
             budget: budgetBreakdown.final,
             traffic: trafficBreakdown.final,
           },
           repurchase: {
-            startDate: format(addDays(endDate, 1), 'yyyy-MM-dd'),
-            endDate: format(addDays(endDate, 7), 'yyyy-MM-dd'),
+            startDate: format(addDays(campaignEndDate, 1), 'yyyy-MM-dd'),
+            endDate: format(addDays(campaignEndDate, 7), 'yyyy-MM-dd'),
             budget: budgetBreakdown.repurchase,
             traffic: trafficBreakdown.repurchase,
           },
