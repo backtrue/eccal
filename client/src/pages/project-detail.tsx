@@ -40,10 +40,15 @@ export default function ProjectDetail() {
     };
   }, []);
 
-  const { data: project, isLoading } = useQuery<SavedProject>({
-    queryKey: ['/api/projects', id],
+  const { data: project, isLoading, error } = useQuery<SavedProject>({
+    queryKey: [`/api/projects/${id}`],
     enabled: !!id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes
   });
+
+  // Debug logging
+  console.log("Project Detail Debug:", { id, isLoading, error, project });
 
   const handleDelete = async () => {
     if (!project) return;
