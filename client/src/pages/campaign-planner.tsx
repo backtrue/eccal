@@ -713,7 +713,8 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                             step="0.1"
                             placeholder={`例如：${locale === 'zh-TW' ? '5' : locale === 'ja' ? '120' : '1'}`}
                             {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
+                            value={field.value || ""}
+                            onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
                           />
                         </FormControl>
                         <FormDescription>
