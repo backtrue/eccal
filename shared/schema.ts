@@ -87,6 +87,18 @@ export const userReferrals = pgTable("user_referrals", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Saved projects for reusable calculations
+export const savedProjects = pgTable("saved_projects", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  projectName: varchar("project_name").notNull(),
+  projectType: varchar("project_type").notNull(), // e.g., "campaign_planner", "budget_calculator", etc.
+  projectData: jsonb("project_data").notNull(), // flexible JSON storage for project-specific data
+  lastCalculationResult: jsonb("last_calculation_result"), // store last calculation results
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type InsertUserMetrics = typeof userMetrics.$inferInsert;
@@ -97,3 +109,5 @@ export type CreditTransaction = typeof creditTransactions.$inferSelect;
 export type InsertCreditTransaction = typeof creditTransactions.$inferInsert;
 export type UserReferral = typeof userReferrals.$inferSelect;
 export type InsertUserReferral = typeof userReferrals.$inferInsert;
+export type SavedProject = typeof savedProjects.$inferSelect;
+export type InsertSavedProject = typeof savedProjects.$inferInsert;

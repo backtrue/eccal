@@ -14,9 +14,12 @@ import {
   userReferrals,
   type UserReferral,
   type InsertUserReferral,
+  savedProjects,
+  type SavedProject,
+  type InsertSavedProject,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 
 // modify the interface with any CRUD methods
 // you might need
@@ -54,6 +57,13 @@ export interface IStorage {
   
   // Admin operations
   addCreditsToAllUsers(amount: number, description: string): Promise<number>;
+  
+  // Saved projects operations
+  saveProject(userId: string, projectName: string, projectType: string, projectData: any, calculationResult?: any): Promise<SavedProject>;
+  getUserProjects(userId: string): Promise<SavedProject[]>;
+  getProject(projectId: string, userId: string): Promise<SavedProject | undefined>;
+  updateProject(projectId: string, userId: string, updates: Partial<{ projectName: string; projectData: any; lastCalculationResult: any }>): Promise<SavedProject>;
+  deleteProject(projectId: string, userId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -442,6 +452,58 @@ export class DatabaseStorage implements IStorage {
     }
     
     return updatedCount;
+  }
+
+  // Saved projects operations
+  async saveProject(userId: string, projectName: string, projectType: string, projectData: any, calculationResult?: any): Promise<SavedProject> {
+    const [project] = await db
+      .insert(savedProjects)
+      .values({
+        userId,
+        projectName,
+        projectType,
+        projectData,
+        lastCalculationResult: calculationResult || null,
+      })
+      .returning();
+    return project;
+  }
+
+  async getUserProjects(userId: string): Promise<SavedProject[]> {
+    return await db
+      .select()
+      .from(savedProjects)
+      .where(eq(savedProjects.userId, userId))
+      .orderBy(desc(savedProjects.updatedAt));
+  }
+
+  async getProject(projectId: string, userId: string): Promise<SavedProject | undefined> {
+    const [project] = await db
+      .select()
+      .from(savedProjects)
+      .where(eq(savedProjects.id, projectId) && eq(savedProjects.userId, userId));
+    return project;
+  }
+
+  async updateProject(projectId: string, userId: string, updates: Partial<{ projectName: string; projectData: any; lastCalculationResult: any }>): Promise<SavedProject> {
+    const [project] = await db
+      .update(savedProjects)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(savedProjects.id, projectId))
+      .where(eq(savedProjects.userId, userId))
+      .returning();
+    return project;
+  }
+
+  async deleteProject(projectId: string, userId: string): Promise<boolean> {
+    const result = await db
+      .delete(savedProjects)
+      .where(eq(savedProjects.id, projectId))
+      .where(eq(savedProjects.userId, userId));
+    return result.rowCount > 0;
   }
 }
 
