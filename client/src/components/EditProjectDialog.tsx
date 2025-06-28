@@ -40,43 +40,54 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
   const { toast } = useToast();
   const updateProject = useUpdateProject();
 
-  // Add null safety checks
-  if (!project) {
-    return null;
-  }
+  // Prepare default values with null safety
+  const getDefaultValues = (proj: SavedProject | null): EditProjectFormData => {
+    if (!proj) {
+      return {
+        projectName: "",
+        startDate: "",
+        endDate: "",
+        targetRevenue: 0,
+        targetAov: 0,
+        targetConversionRate: 0,
+        cpc: 0,
+      };
+    }
 
-  const projectData = project.projectData || {};
+    const projectData = proj.projectData || {};
+    return {
+      projectName: proj.projectName || "",
+      startDate: projectData.startDate || "",
+      endDate: projectData.endDate || "",
+      targetRevenue: Number(projectData.targetRevenue) || 0,
+      targetAov: Number(projectData.targetAov) || 0,
+      targetConversionRate: Number(projectData.targetConversionRate) || 0,
+      cpc: Number(projectData.cpc) || 0,
+    };
+  };
 
   const form = useForm<EditProjectFormData>({
     resolver: zodResolver(campaignPlannerSchema),
-    defaultValues: {
-      projectName: project.projectName || "",
-      startDate: projectData.startDate || "",
-      endDate: projectData.endDate || "",
-      targetRevenue: projectData.targetRevenue || 0,
-      targetAov: projectData.targetAov || 0,
-      targetConversionRate: projectData.targetConversionRate || 0,
-      cpc: projectData.cpc || 0,
-    },
+    defaultValues: getDefaultValues(project),
   });
 
-  // Reset form when project changes
+  // Reset form when project or dialog state changes
   useEffect(() => {
-    if (project && project.projectName) {
-      const projectData = project.projectData || {};
-      form.reset({
-        projectName: project.projectName || "",
-        startDate: projectData.startDate || "",
-        endDate: projectData.endDate || "",
-        targetRevenue: projectData.targetRevenue || 0,
-        targetAov: projectData.targetAov || 0,
-        targetConversionRate: projectData.targetConversionRate || 0,
-        cpc: projectData.cpc || 0,
-      });
+    if (open && project) {
+      form.reset(getDefaultValues(project));
     }
-  }, [project, form]);
+  }, [project, open, form]);
 
   const handleSave = async (data: EditProjectFormData) => {
+    if (!project?.id) {
+      toast({
+        title: "錯誤",
+        description: "專案資料無效",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await updateProject.mutateAsync({
         projectId: project.id,
@@ -85,10 +96,10 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
           projectData: {
             startDate: data.startDate,
             endDate: data.endDate,
-            targetRevenue: data.targetRevenue,
-            targetAov: data.targetAov,
-            targetConversionRate: data.targetConversionRate,
-            cpc: data.cpc,
+            targetRevenue: Number(data.targetRevenue),
+            targetAov: Number(data.targetAov),
+            targetConversionRate: Number(data.targetConversionRate),
+            cpc: Number(data.cpc),
           },
         },
       });
@@ -100,6 +111,7 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
 
       onOpenChange(false);
     } catch (error) {
+      console.error("Update project error:", error);
       toast({
         title: "更新失敗",
         description: "無法更新專案，請稍後再試",
@@ -109,17 +121,38 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
   };
 
   const handleRecalculate = async (data: EditProjectFormData) => {
+    if (!project?.id) {
+      toast({
+        title: "錯誤",
+        description: "專案資料無效",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsRecalculating(true);
     
     try {
+      // Validate dates
+      const startDate = new Date(data.startDate);
+      const endDate = new Date(data.endDate);
+      
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        throw new Error("無效的日期格式");
+      }
+      
+      if (startDate >= endDate) {
+        throw new Error("結束日期必須晚於開始日期");
+      }
+
       // Use the same calculation logic as CampaignPlanner
       const calculationResult = calculateCampaignBudget({
         startDate: data.startDate,
         endDate: data.endDate,
-        targetRevenue: data.targetRevenue,
-        targetAov: data.targetAov,
-        targetConversionRate: data.targetConversionRate,
-        cpc: data.cpc,
+        targetRevenue: Number(data.targetRevenue),
+        targetAov: Number(data.targetAov),
+        targetConversionRate: Number(data.targetConversionRate),
+        cpc: Number(data.cpc),
       });
 
       // Create complete calculation result
@@ -152,15 +185,22 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
 
       onOpenChange(false);
     } catch (error) {
+      console.error("Recalculate project error:", error);
+      const errorMessage = error instanceof Error ? error.message : "無法重新計算，請稍後再試";
       toast({
         title: "計算失敗",
-        description: "無法重新計算，請稍後再試",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
       setIsRecalculating(false);
     }
   };
+
+  // Add early return for invalid project
+  if (!project) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
