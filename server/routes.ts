@@ -1001,6 +1001,218 @@ echo "Bulk import completed!"`;
     }
   });
 
+  // ===== Advanced Admin Features =====
+  
+  // User behavior analytics
+  app.get('/api/bdmin/behavior/stats', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const stats = await storage.getUserBehaviorStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching behavior stats:', error);
+      res.status(500).json({ message: 'Failed to fetch behavior stats' });
+    }
+  });
+
+  // Track user behavior (called by frontend)
+  app.post('/api/behavior/track', async (req: any, res) => {
+    try {
+      const { action, page, feature, duration, metadata } = req.body;
+      const userId = req.user?.claims?.sub || req.user?.id;
+      
+      await storage.trackUserBehavior({
+        userId,
+        sessionId: req.sessionID,
+        action,
+        page,
+        feature,
+        duration,
+        metadata,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        createdAt: new Date()
+      });
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error tracking behavior:', error);
+      res.status(500).json({ message: 'Failed to track behavior' });
+    }
+  });
+
+  // Announcements management
+  app.get('/api/bdmin/announcements', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const announcements = await storage.getAllAnnouncements();
+      res.json(announcements);
+    } catch (error) {
+      console.error('Error fetching announcements:', error);
+      res.status(500).json({ message: 'Failed to fetch announcements' });
+    }
+  });
+
+  app.post('/api/bdmin/announcements', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      const { title, content, type, targetAudience, priority, startDate, endDate } = req.body;
+      
+      const announcement = await storage.createAnnouncement({
+        title,
+        content,
+        type,
+        targetAudience,
+        priority,
+        startDate: startDate ? new Date(startDate) : null,
+        endDate: endDate ? new Date(endDate) : null,
+        createdBy: userId,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      
+      res.json(announcement);
+    } catch (error) {
+      console.error('Error creating announcement:', error);
+      res.status(500).json({ message: 'Failed to create announcement' });
+    }
+  });
+
+  app.put('/api/bdmin/announcements/:id', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      const announcement = await storage.updateAnnouncement(parseInt(id), updates);
+      res.json(announcement);
+    } catch (error) {
+      console.error('Error updating announcement:', error);
+      res.status(500).json({ message: 'Failed to update announcement' });
+    }
+  });
+
+  app.delete('/api/bdmin/announcements/:id', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const success = await storage.deleteAnnouncement(parseInt(id));
+      res.json({ success });
+    } catch (error) {
+      console.error('Error deleting announcement:', error);
+      res.status(500).json({ message: 'Failed to delete announcement' });
+    }
+  });
+
+  // Get active announcements for users
+  app.get('/api/announcements', async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.user?.id;
+      let userMembershipLevel = 'free';
+      
+      if (userId) {
+        const user = await storage.getUser(userId);
+        userMembershipLevel = user?.membershipLevel || 'free';
+      }
+      
+      const announcements = await storage.getActiveAnnouncements(userMembershipLevel);
+      res.json(announcements);
+    } catch (error) {
+      console.error('Error fetching active announcements:', error);
+      res.status(500).json({ message: 'Failed to fetch announcements' });
+    }
+  });
+
+  // API usage tracking and stats
+  app.get('/api/bdmin/api-usage', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const { service } = req.query;
+      const stats = await storage.getApiUsageStats(service as string);
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching API usage stats:', error);
+      res.status(500).json({ message: 'Failed to fetch API usage stats' });
+    }
+  });
+
+  // Data export operations
+  app.post('/api/bdmin/export', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      const { type, filters } = req.body;
+      
+      // Create export job
+      const job = await storage.createExportJob({
+        userId,
+        type,
+        filters,
+        status: 'pending',
+        progress: 0,
+        createdAt: new Date()
+      });
+      
+      // Generate CSV data immediately for simplicity
+      try {
+        const csvData = await storage.generateCsvExport(type, filters);
+        const fileName = `${type}_export_${Date.now()}.csv`;
+        
+        // Update job as completed
+        await storage.updateExportJob(job.id, {
+          status: 'completed',
+          fileName,
+          fileSize: csvData.length,
+          progress: 100,
+          completedAt: new Date()
+        });
+        
+        // Return CSV data directly
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        res.send(csvData);
+        
+      } catch (exportError) {
+        await storage.updateExportJob(job.id, {
+          status: 'failed',
+          errorMessage: exportError instanceof Error ? exportError.message : 'Export failed'
+        });
+        throw exportError;
+      }
+      
+    } catch (error) {
+      console.error('Error creating export:', error);
+      res.status(500).json({ message: 'Failed to create export' });
+    }
+  });
+
+  app.get('/api/bdmin/exports', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const exports = await storage.getExportJobs();
+      res.json(exports);
+    } catch (error) {
+      console.error('Error fetching exports:', error);
+      res.status(500).json({ message: 'Failed to fetch exports' });
+    }
+  });
+
+  // Maintenance mode controls
+  app.get('/api/bdmin/maintenance', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const mode = await storage.getMaintenanceMode();
+      res.json(mode);
+    } catch (error) {
+      console.error('Error fetching maintenance mode:', error);
+      res.status(500).json({ message: 'Failed to fetch maintenance mode' });
+    }
+  });
+
+  app.post('/api/bdmin/maintenance', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const { enabled, message } = req.body;
+      await storage.setMaintenanceMode(enabled, message);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error setting maintenance mode:', error);
+      res.status(500).json({ message: 'Failed to set maintenance mode' });
+    }
+  });
+
   // Health check endpoint
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
