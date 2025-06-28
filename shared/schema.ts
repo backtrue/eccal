@@ -154,3 +154,75 @@ export type SystemLog = typeof systemLogs.$inferSelect;
 export type InsertSystemLog = typeof systemLogs.$inferInsert;
 export type AdminSetting = typeof adminSettings.$inferSelect;
 export type InsertAdminSetting = typeof adminSettings.$inferInsert;
+
+// User behavior tracking table
+export const userBehavior = pgTable("user_behavior", {
+  id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
+  userId: varchar("user_id").references(() => users.id),
+  sessionId: varchar("session_id"),
+  action: varchar("action", { length: 100 }).notNull(), // "page_view", "calculation", "login", "logout"
+  page: varchar("page", { length: 100 }),
+  feature: varchar("feature", { length: 100 }), // "calculator", "campaign_planner", etc.
+  duration: integer("duration"), // seconds spent on page/feature
+  metadata: jsonb("metadata"), // additional data like calculation inputs
+  ipAddress: varchar("ip_address", { length: 45 }),
+  userAgent: varchar("user_agent", { length: 500 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Announcements system table
+export const announcements = pgTable("announcements", {
+  id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
+  title: varchar("title", { length: 200 }).notNull(),
+  content: text("content").notNull(),
+  type: varchar("type", { length: 20 }).default("info").notNull(), // "info", "warning", "success", "error"
+  isActive: boolean("is_active").default(true).notNull(),
+  targetAudience: varchar("target_audience", { length: 20 }).default("all").notNull(), // "all", "free", "pro"
+  priority: integer("priority").default(0).notNull(), // higher number = higher priority
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// API usage tracking table
+export const apiUsage = pgTable("api_usage", {
+  id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
+  userId: varchar("user_id").references(() => users.id),
+  service: varchar("service", { length: 50 }).notNull(), // "google_analytics", "google_oauth", etc.
+  endpoint: varchar("endpoint", { length: 200 }),
+  method: varchar("method", { length: 10 }),
+  statusCode: integer("status_code"),
+  responseTime: integer("response_time"),
+  quotaUsed: integer("quota_used").default(1).notNull(),
+  errorMessage: text("error_message"),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Data export jobs table
+export const exportJobs = pgTable("export_jobs", {
+  id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  type: varchar("type", { length: 50 }).notNull(), // "users", "calculations", "behavior", "full"
+  status: varchar("status", { length: 20 }).default("pending").notNull(), // "pending", "processing", "completed", "failed"
+  fileName: varchar("file_name", { length: 200 }),
+  fileSize: integer("file_size"),
+  downloadUrl: varchar("download_url", { length: 500 }),
+  filters: jsonb("filters"), // export criteria
+  progress: integer("progress").default(0).notNull(), // 0-100
+  errorMessage: text("error_message"),
+  expiresAt: timestamp("expires_at"), // when download link expires
+  createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
+export type UserBehavior = typeof userBehavior.$inferSelect;
+export type InsertUserBehavior = typeof userBehavior.$inferInsert;
+export type Announcement = typeof announcements.$inferSelect;
+export type InsertAnnouncement = typeof announcements.$inferInsert;
+export type ApiUsage = typeof apiUsage.$inferSelect;
+export type InsertApiUsage = typeof apiUsage.$inferInsert;
+export type ExportJob = typeof exportJobs.$inferSelect;
+export type InsertExportJob = typeof exportJobs.$inferInsert;

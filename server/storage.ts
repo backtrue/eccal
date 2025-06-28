@@ -26,6 +26,18 @@ import {
   adminSettings,
   type AdminSetting,
   type InsertAdminSetting,
+  userBehavior,
+  type UserBehavior,
+  type InsertUserBehavior,
+  announcements,
+  type Announcement,
+  type InsertAnnouncement,
+  apiUsage,
+  type ApiUsage,
+  type InsertApiUsage,
+  exportJobs,
+  type ExportJob,
+  type InsertExportJob,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, count, avg, sum, inArray, gte, lt } from "drizzle-orm";
@@ -106,6 +118,45 @@ export interface IStorage {
     avgResponseTime: number;
     topErrorEndpoints: { endpoint: string; count: number }[];
   }>;
+
+  // User behavior tracking operations
+  trackUserBehavior(behavior: InsertUserBehavior): Promise<UserBehavior>;
+  getUserBehaviorStats(): Promise<{
+    mostUsedFeatures: { feature: string; count: number }[];
+    averagePageDuration: number;
+    conversionFunnel: { step: string; users: number; rate: number }[];
+    dailyActiveUsers: { date: string; users: number }[];
+  }>;
+
+  // Announcements management
+  createAnnouncement(announcement: InsertAnnouncement): Promise<Announcement>;
+  getActiveAnnouncements(userMembershipLevel?: string): Promise<Announcement[]>;
+  getAllAnnouncements(): Promise<Announcement[]>;
+  updateAnnouncement(id: number, updates: Partial<Announcement>): Promise<Announcement>;
+  deleteAnnouncement(id: number): Promise<boolean>;
+
+  // API usage tracking and rate limiting
+  trackApiUsage(usage: InsertApiUsage): Promise<ApiUsage>;
+  getApiUsageStats(service?: string): Promise<{
+    totalRequests: number;
+    requestsToday: number;
+    avgResponseTime: number;
+    errorRate: number;
+    quotaUsage: { service: string; used: number; limit: number }[];
+    topUsers: { userId: string; requests: number }[];
+  }>;
+  checkRateLimit(userId: string, service: string, timeWindow: number, maxRequests: number): Promise<boolean>;
+
+  // Data export operations
+  createExportJob(job: InsertExportJob): Promise<ExportJob>;
+  getExportJobs(userId?: string): Promise<ExportJob[]>;
+  updateExportJob(id: number, updates: Partial<ExportJob>): Promise<ExportJob>;
+  generateCsvExport(type: string, filters?: any): Promise<string>;
+
+  // Maintenance mode and system settings
+  setMaintenanceMode(enabled: boolean, message?: string): Promise<void>;
+  getMaintenanceMode(): Promise<{ enabled: boolean; message?: string }>;
+  getSystemSettings(): Promise<Record<string, any>>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -741,6 +792,330 @@ export class DatabaseStorage implements IStorage {
         count: e.count as number
       }))
     };
+  }
+
+  // User behavior tracking operations
+  async trackUserBehavior(behavior: InsertUserBehavior): Promise<UserBehavior> {
+    const [userBehaviorRecord] = await db
+      .insert(userBehavior)
+      .values(behavior)
+      .returning();
+    return userBehaviorRecord;
+  }
+
+  async getUserBehaviorStats(): Promise<{
+    mostUsedFeatures: { feature: string; count: number }[];
+    averagePageDuration: number;
+    conversionFunnel: { step: string; users: number; rate: number }[];
+    dailyActiveUsers: { date: string; users: number }[];
+  }> {
+    const [
+      featureStats,
+      avgDuration,
+      dailyUsers
+    ] = await Promise.all([
+      // Most used features
+      db.select({
+        feature: userBehavior.feature,
+        count: count()
+      })
+      .from(userBehavior)
+      .where(sql`${userBehavior.feature} IS NOT NULL`)
+      .groupBy(userBehavior.feature)
+      .orderBy(desc(count()))
+      .limit(10),
+      
+      // Average page duration
+      db.select({ avg: avg(userBehavior.duration) })
+      .from(userBehavior)
+      .where(sql`${userBehavior.duration} IS NOT NULL`),
+      
+      // Daily active users (last 30 days)
+      db.select({
+        date: sql`DATE(${userBehavior.createdAt})`.as('date'),
+        users: count(sql`DISTINCT ${userBehavior.userId}`)
+      })
+      .from(userBehavior)
+      .where(gte(userBehavior.createdAt, new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)))
+      .groupBy(sql`DATE(${userBehavior.createdAt})`)
+      .orderBy(sql`DATE(${userBehavior.createdAt})`)
+    ]);
+
+    // Simple conversion funnel
+    const totalUsers = await db.select({ count: count(sql`DISTINCT ${userBehavior.userId}`) }).from(userBehavior);
+    const calculatorUsers = await db.select({ count: count(sql`DISTINCT ${userBehavior.userId}`) })
+      .from(userBehavior)
+      .where(eq(userBehavior.feature, 'calculator'));
+    const plannerUsers = await db.select({ count: count(sql`DISTINCT ${userBehavior.userId}`) })
+      .from(userBehavior)
+      .where(eq(userBehavior.feature, 'campaign_planner'));
+
+    const total = totalUsers[0].count as number;
+    const calculator = calculatorUsers[0].count as number;
+    const planner = plannerUsers[0].count as number;
+
+    return {
+      mostUsedFeatures: featureStats.map(f => ({
+        feature: f.feature || 'Unknown',
+        count: f.count as number
+      })),
+      averagePageDuration: Number(avgDuration[0].avg) || 0,
+      conversionFunnel: [
+        { step: 'Visit', users: total, rate: 100 },
+        { step: 'Calculator', users: calculator, rate: total > 0 ? (calculator / total) * 100 : 0 },
+        { step: 'Campaign Planner', users: planner, rate: total > 0 ? (planner / total) * 100 : 0 }
+      ],
+      dailyActiveUsers: dailyUsers.map(d => ({
+        date: d.date as string,
+        users: d.users as number
+      }))
+    };
+  }
+
+  // Announcements management
+  async createAnnouncement(announcement: InsertAnnouncement): Promise<Announcement> {
+    const [newAnnouncement] = await db
+      .insert(announcements)
+      .values(announcement)
+      .returning();
+    return newAnnouncement;
+  }
+
+  async getActiveAnnouncements(userMembershipLevel?: string): Promise<Announcement[]> {
+    const now = new Date();
+    return await db.select().from(announcements)
+      .where(and(
+        eq(announcements.isActive, true),
+        sql`(${announcements.startDate} IS NULL OR ${announcements.startDate} <= ${now})`,
+        sql`(${announcements.endDate} IS NULL OR ${announcements.endDate} >= ${now})`,
+        userMembershipLevel 
+          ? sql`(${announcements.targetAudience} = 'all' OR ${announcements.targetAudience} = ${userMembershipLevel})`
+          : sql`${announcements.targetAudience} = 'all'`
+      ))
+      .orderBy(desc(announcements.priority), desc(announcements.createdAt));
+  }
+
+  async getAllAnnouncements(): Promise<Announcement[]> {
+    return await db.select().from(announcements)
+      .orderBy(desc(announcements.createdAt));
+  }
+
+  async updateAnnouncement(id: number, updates: Partial<Announcement>): Promise<Announcement> {
+    const [announcement] = await db
+      .update(announcements)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(announcements.id, id))
+      .returning();
+    return announcement;
+  }
+
+  async deleteAnnouncement(id: number): Promise<boolean> {
+    const result = await db
+      .delete(announcements)
+      .where(eq(announcements.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  // API usage tracking and rate limiting
+  async trackApiUsage(usage: InsertApiUsage): Promise<ApiUsage> {
+    const [apiUsageRecord] = await db
+      .insert(apiUsage)
+      .values(usage)
+      .returning();
+    return apiUsageRecord;
+  }
+
+  async getApiUsageStats(service?: string): Promise<{
+    totalRequests: number;
+    requestsToday: number;
+    avgResponseTime: number;
+    errorRate: number;
+    quotaUsage: { service: string; used: number; limit: number }[];
+    topUsers: { userId: string; requests: number }[];
+  }> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const baseQuery = service 
+      ? db.select().from(apiUsage).where(eq(apiUsage.service, service))
+      : db.select().from(apiUsage);
+
+    const [
+      totalRequests,
+      requestsToday,
+      avgResponse,
+      errorRate,
+      serviceQuotas,
+      topUsers
+    ] = await Promise.all([
+      db.select({ count: count() }).from(apiUsage),
+      db.select({ count: count() }).from(apiUsage).where(gte(apiUsage.createdAt, today)),
+      db.select({ avg: avg(apiUsage.responseTime) }).from(apiUsage)
+        .where(sql`${apiUsage.responseTime} IS NOT NULL`),
+      db.select({ 
+        total: count(),
+        errors: count(sql`CASE WHEN ${apiUsage.statusCode} >= 400 THEN 1 END`)
+      }).from(apiUsage),
+      db.select({
+        service: apiUsage.service,
+        used: sum(apiUsage.quotaUsed)
+      })
+      .from(apiUsage)
+      .groupBy(apiUsage.service)
+      .orderBy(desc(sum(apiUsage.quotaUsed))),
+      db.select({
+        userId: apiUsage.userId,
+        requests: count()
+      })
+      .from(apiUsage)
+      .where(sql`${apiUsage.userId} IS NOT NULL`)
+      .groupBy(apiUsage.userId)
+      .orderBy(desc(count()))
+      .limit(10)
+    ]);
+
+    const totalReq = totalRequests[0].count as number;
+    const errorReq = errorRate[0].errors as number;
+
+    return {
+      totalRequests: totalReq,
+      requestsToday: requestsToday[0].count as number,
+      avgResponseTime: Number(avgResponse[0].avg) || 0,
+      errorRate: totalReq > 0 ? (errorReq / totalReq) * 100 : 0,
+      quotaUsage: serviceQuotas.map(q => ({
+        service: q.service,
+        used: Number(q.used),
+        limit: 1000 // Default limit, can be made configurable
+      })),
+      topUsers: topUsers.map(u => ({
+        userId: u.userId || 'Unknown',
+        requests: u.requests as number
+      }))
+    };
+  }
+
+  async checkRateLimit(userId: string, service: string, timeWindow: number, maxRequests: number): Promise<boolean> {
+    const since = new Date(Date.now() - timeWindow * 1000);
+    const [result] = await db.select({ count: count() })
+      .from(apiUsage)
+      .where(and(
+        eq(apiUsage.userId, userId),
+        eq(apiUsage.service, service),
+        gte(apiUsage.createdAt, since)
+      ));
+    
+    return (result.count as number) < maxRequests;
+  }
+
+  // Data export operations
+  async createExportJob(job: InsertExportJob): Promise<ExportJob> {
+    const [exportJob] = await db
+      .insert(exportJobs)
+      .values(job)
+      .returning();
+    return exportJob;
+  }
+
+  async getExportJobs(userId?: string): Promise<ExportJob[]> {
+    if (userId) {
+      return await db.select().from(exportJobs)
+        .where(eq(exportJobs.userId, userId))
+        .orderBy(desc(exportJobs.createdAt));
+    }
+    return await db.select().from(exportJobs)
+      .orderBy(desc(exportJobs.createdAt));
+  }
+
+  async updateExportJob(id: number, updates: Partial<ExportJob>): Promise<ExportJob> {
+    const [job] = await db
+      .update(exportJobs)
+      .set(updates)
+      .where(eq(exportJobs.id, id))
+      .returning();
+    return job;
+  }
+
+  async generateCsvExport(type: string, filters?: any): Promise<string> {
+    let csvContent = '';
+    
+    switch (type) {
+      case 'users':
+        const allUsers = await db.select().from(users);
+        csvContent = 'ID,Email,First Name,Last Name,Membership Level,Created At\n';
+        csvContent += allUsers.map(user => 
+          `"${user.id}","${user.email || ''}","${user.firstName || ''}","${user.lastName || ''}","${user.membershipLevel}","${user.createdAt}"`
+        ).join('\n');
+        break;
+        
+      case 'behavior':
+        const behaviors = await db.select().from(userBehavior).limit(10000);
+        csvContent = 'ID,User ID,Action,Page,Feature,Duration,Created At\n';
+        csvContent += behaviors.map(b => 
+          `"${b.id}","${b.userId || ''}","${b.action}","${b.page || ''}","${b.feature || ''}","${b.duration || ''}","${b.createdAt}"`
+        ).join('\n');
+        break;
+        
+      case 'api_usage':
+        const apiUsages = await db.select().from(apiUsage).limit(10000);
+        csvContent = 'ID,User ID,Service,Endpoint,Status Code,Response Time,Created At\n';
+        csvContent += apiUsages.map(a => 
+          `"${a.id}","${a.userId || ''}","${a.service}","${a.endpoint || ''}","${a.statusCode || ''}","${a.responseTime || ''}","${a.createdAt}"`
+        ).join('\n');
+        break;
+        
+      default:
+        csvContent = 'Type,Data\n"error","Invalid export type"';
+    }
+    
+    return csvContent;
+  }
+
+  // Maintenance mode and system settings
+  async setMaintenanceMode(enabled: boolean, message?: string): Promise<void> {
+    await db.insert(adminSettings)
+      .values({
+        key: 'maintenance_mode',
+        value: JSON.stringify({ enabled, message }),
+        description: 'System maintenance mode setting'
+      })
+      .onConflictDoUpdate({
+        target: adminSettings.key,
+        set: {
+          value: JSON.stringify({ enabled, message }),
+          updatedAt: new Date()
+        }
+      });
+  }
+
+  async getMaintenanceMode(): Promise<{ enabled: boolean; message?: string }> {
+    const [setting] = await db.select()
+      .from(adminSettings)
+      .where(eq(adminSettings.key, 'maintenance_mode'));
+    
+    if (!setting) {
+      return { enabled: false };
+    }
+    
+    try {
+      return JSON.parse(setting.value || '{"enabled": false}');
+    } catch {
+      return { enabled: false };
+    }
+  }
+
+  async getSystemSettings(): Promise<Record<string, any>> {
+    const settings = await db.select().from(adminSettings);
+    const result: Record<string, any> = {};
+    
+    settings.forEach(setting => {
+      try {
+        result[setting.key] = JSON.parse(setting.value || 'null');
+      } catch {
+        result[setting.key] = setting.value;
+      }
+    });
+    
+    return result;
   }
 }
 
