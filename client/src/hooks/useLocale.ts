@@ -9,15 +9,14 @@ import {
 
 export const useLocale = () => {
   const [locale, setLocale] = useState<Locale>(() => {
-    // Try to get from localStorage first
+    // Only use stored locale if it exists, otherwise default to zh-TW
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem(LOCALE_STORAGE_KEY) as Locale;
       if (stored && ['zh-TW', 'en', 'ja'].includes(stored)) {
         return stored;
       }
-      // Fallback to browser locale
-      return getBrowserLocale();
     }
+    // Always default to Traditional Chinese
     return DEFAULT_LOCALE;
   });
 

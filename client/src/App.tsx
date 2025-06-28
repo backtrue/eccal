@@ -33,14 +33,9 @@ function Router() {
       if (locale !== 'ja') changeLocale('ja');
     } else if (location === '/' && locale === 'zh-TW') {
       // Default route for Traditional Chinese
-    } else if (location === '/') {
-      // Auto-detect and redirect based on browser language
-      const browserLang = navigator.language || navigator.languages?.[0] || 'zh-TW';
-      if (browserLang.startsWith('en') && locale !== 'en') {
-        changeLocale('en');
-      } else if (browserLang.startsWith('ja') && locale !== 'ja') {
-        changeLocale('ja');
-      }
+    } else if (location === '/' && locale !== 'zh-TW') {
+      // Force Traditional Chinese as default for homepage
+      changeLocale('zh-TW');
     }
   }, [location, locale, changeLocale]);
 
