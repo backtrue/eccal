@@ -20,15 +20,19 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useSavedProjects, useDeleteProject, type SavedProject } from "@/hooks/useSavedProjects";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, MoreVertical, Trash2, FolderOpen, Calculator } from "lucide-react";
+import { Calendar, MoreVertical, Trash2, FolderOpen, Calculator, Eye, Edit } from "lucide-react";
 import { format } from "date-fns";
 import { zhTW } from "date-fns/locale";
+import EditProjectDialog from "@/components/EditProjectDialog";
+import ProjectDetailDialog from "@/components/ProjectDetailDialog";
 
 export default function SavedProjectsListSimple() {
   const { data: projects, isLoading } = useSavedProjects();
   const deleteProject = useDeleteProject();
   const { toast } = useToast();
   const [projectToDelete, setProjectToDelete] = useState<SavedProject | null>(null);
+  const [projectToEdit, setProjectToEdit] = useState<SavedProject | null>(null);
+  const [projectToView, setProjectToView] = useState<SavedProject | null>(null);
 
   const handleDelete = async () => {
     if (!projectToDelete) return;
@@ -145,6 +149,18 @@ export default function SavedProjectsListSimple() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem 
+                          onClick={() => setProjectToView(project)}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          檢視詳情
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => setProjectToEdit(project)}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          編輯專案
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
                           onClick={() => setProjectToDelete(project)}
                           className="text-red-600"
                         >
@@ -160,6 +176,22 @@ export default function SavedProjectsListSimple() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Project Detail Dialog */}
+      <ProjectDetailDialog
+        project={projectToView}
+        open={!!projectToView}
+        onOpenChange={() => setProjectToView(null)}
+      />
+
+      {/* Edit Project Dialog */}
+      <EditProjectDialog
+        project={projectToEdit!}
+        open={!!projectToEdit}
+        onOpenChange={(open) => {
+          if (!open) setProjectToEdit(null);
+        }}
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!projectToDelete} onOpenChange={() => setProjectToDelete(null)}>
