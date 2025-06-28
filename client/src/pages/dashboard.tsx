@@ -246,7 +246,7 @@ export default function Dashboard({ locale }: DashboardProps) {
 
         {/* Saved Projects Section */}
         <div className="mt-8">
-          <SavedProjectsList />
+          <SavedProjectsListSimple />
         </div>
       </div>
     </div>
