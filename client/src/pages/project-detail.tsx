@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Calculator, Target, TrendingUp, ArrowLeft, Edit, Trash2 } from "lucide-react";
+import { Calendar, Calculator, Target, TrendingUp, ArrowLeft, Edit, Trash2, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { zhTW } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
