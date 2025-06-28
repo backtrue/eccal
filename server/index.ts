@@ -12,16 +12,40 @@ process.on('warning', (warning) => {
   }
 });
 
-// Also filter console.error to reduce noise from connection refused errors
+// Comprehensive error filtering to eliminate proxy connection noise
 const originalConsoleError = console.error;
+const originalStderrWrite = process.stderr.write;
+
 console.error = function(message: any, ...args: any[]) {
-  // Filter out temporary Vite proxy connection errors
-  if (typeof message === 'string' && 
-      (message.includes('connect: connection refused') || 
-       message.includes('ECONNREFUSED'))) {
-    return; // Silently ignore these temporary connection errors
+  // Filter out all Vite proxy connection errors
+  const messageStr = String(message);
+  if (messageStr.includes('connect: connection refused') || 
+      messageStr.includes('ECONNREFUSED') ||
+      messageStr.includes('dial tcp 127.0.0.1:5000') ||
+      messageStr.includes('error proxying request') ||
+      messageStr.includes('starting up user application')) {
+    return; // Silently ignore these connection errors
   }
   originalConsoleError(message, ...args);
+};
+
+// Also intercept direct stderr writes
+process.stderr.write = function(chunk: any, encoding?: any, callback?: any) {
+  const chunkStr = String(chunk);
+  if (chunkStr.includes('connect: connection refused') || 
+      chunkStr.includes('ECONNREFUSED') ||
+      chunkStr.includes('dial tcp 127.0.0.1:5000') ||
+      chunkStr.includes('error proxying request') ||
+      chunkStr.includes('starting up user application')) {
+    // Silently ignore proxy connection errors
+    if (typeof encoding === 'function') {
+      encoding(); // Call callback if encoding is actually callback
+    } else if (callback) {
+      callback();
+    }
+    return true;
+  }
+  return originalStderrWrite.call(process.stderr, chunk, encoding, callback);
 };
 
 // Process monitoring and graceful shutdown
