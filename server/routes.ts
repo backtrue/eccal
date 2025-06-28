@@ -722,7 +722,7 @@ echo "Bulk import completed!"`;
   // Save a new project
   app.post('/api/projects', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims?.sub || req.user.id;
       const { projectName, projectType, projectData, calculationResult } = req.body;
       
       console.log('Saving project for user:', userId, 'Project name:', projectName);
@@ -746,7 +746,7 @@ echo "Bulk import completed!"`;
   // Get user's projects
   app.get('/api/projects', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims?.sub || req.user.id;
       const projects = await storage.getUserProjects(userId);
       res.json(projects);
     } catch (error) {
@@ -758,7 +758,7 @@ echo "Bulk import completed!"`;
   // Get a specific project
   app.get('/api/projects/:id', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims?.sub || req.user.id;
       const projectId = req.params.id;
       const project = await storage.getProject(projectId, userId);
       
@@ -776,7 +776,7 @@ echo "Bulk import completed!"`;
   // Update a project
   app.put('/api/projects/:id', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims?.sub || req.user.id;
       const projectId = req.params.id;
       const updates = req.body;
       
@@ -795,7 +795,7 @@ echo "Bulk import completed!"`;
   // Delete a project
   app.delete('/api/projects/:id', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims?.sub || req.user.id;
       const projectId = req.params.id;
       
       const success = await storage.deleteProject(projectId, userId);
