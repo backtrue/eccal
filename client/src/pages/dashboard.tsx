@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
 import MembershipUpgrade from "@/components/MembershipUpgrade";
-import SavedProjectsList from "@/components/SavedProjectsList";
+import SavedProjectsListSimple from "@/components/SavedProjectsListSimple";
 
 interface DashboardProps {
   locale: Locale;
@@ -242,6 +242,11 @@ export default function Dashboard({ locale }: DashboardProps) {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Saved Projects Section */}
+        <div className="mt-8">
+          <SavedProjectsList />
         </div>
       </div>
     </div>

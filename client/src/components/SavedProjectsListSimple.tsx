@@ -20,17 +20,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useSavedProjects, useDeleteProject, type SavedProject } from "@/hooks/useSavedProjects";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, MoreVertical, Edit, Trash2, FolderOpen, Calculator } from "lucide-react";
+import { Calendar, MoreVertical, Trash2, FolderOpen, Calculator } from "lucide-react";
 import { format } from "date-fns";
 import { zhTW } from "date-fns/locale";
-// import EditProjectDialog from "./EditProjectDialog"; // Temporarily commented out
 
-export default function SavedProjectsList() {
+export default function SavedProjectsListSimple() {
   const { data: projects, isLoading } = useSavedProjects();
   const deleteProject = useDeleteProject();
   const { toast } = useToast();
   const [projectToDelete, setProjectToDelete] = useState<SavedProject | null>(null);
-  // const [projectToEdit, setProjectToEdit] = useState<SavedProject | null>(null);
 
   const handleDelete = async () => {
     if (!projectToDelete) return;
@@ -118,7 +116,7 @@ export default function SavedProjectsList() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
-            {projects.map((project) => (
+            {projects.map((project: SavedProject) => (
               <Card key={project.id} className="border border-gray-200">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
@@ -184,8 +182,6 @@ export default function SavedProjectsList() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Edit Project Dialog - TODO: Implement in future version */}
     </>
   );
 }
