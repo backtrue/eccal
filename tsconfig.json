@@ -1,6 +1,6 @@
 {
   "include": ["client/src/**/*", "shared/**/*", "server/**/*"],
-  "exclude": ["node_modules", "build", "dist", "**/*.test.ts", "attached_assets"],
+  "exclude": ["node_modules", "build", "dist", "**/*.test.ts", "attached_assets", "**/*.d.ts"],
   "compilerOptions": {
     "incremental": false,
     "noEmit": true,
