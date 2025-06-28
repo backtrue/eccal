@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
 import MembershipUpgrade from "@/components/MembershipUpgrade";
+import SavedProjectsList from "@/components/SavedProjectsList";
 
 interface DashboardProps {
   locale: Locale;

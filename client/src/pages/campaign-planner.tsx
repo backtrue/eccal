@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useCampaignPlannerUsage, useRecordCampaignPlannerUsage } from "@/hooks/useCampaignPlannerUsage";
+import SaveProjectDialog from "@/components/SaveProjectDialog";
 
 const campaignPlannerSchema = z.object({
   startDate: z.string().min(1, "請選擇活動開始日期"),
@@ -764,13 +765,22 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
           {results && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5" />
-                  活動規劃結果
-                </CardTitle>
-                <CardDescription>
-                  完整的活動預算與流量分配建議
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Target className="h-5 w-5" />
+                      活動規劃結果
+                    </CardTitle>
+                    <CardDescription>
+                      完整的活動預算與流量分配建議
+                    </CardDescription>
+                  </div>
+                  <SaveProjectDialog
+                    projectData={form.getValues()}
+                    calculationResult={results}
+                    projectType="campaign_planner"
+                  />
+                </div>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-3 gap-4">
