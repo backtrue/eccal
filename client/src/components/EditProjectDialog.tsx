@@ -39,30 +39,40 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
   const { toast } = useToast();
   const updateProject = useUpdateProject();
 
+  // Add null safety checks
+  if (!project) {
+    return null;
+  }
+
+  const projectData = project.projectData || {};
+
   const form = useForm<EditProjectFormData>({
     resolver: zodResolver(campaignPlannerSchema),
     defaultValues: {
-      projectName: project.projectName,
-      startDate: project.projectData.startDate || "",
-      endDate: project.projectData.endDate || "",
-      targetRevenue: project.projectData.targetRevenue || 0,
-      targetAov: project.projectData.targetAov || 0,
-      targetConversionRate: project.projectData.targetConversionRate || 0,
-      cpc: project.projectData.cpc || 0,
+      projectName: project.projectName || "",
+      startDate: projectData.startDate || "",
+      endDate: projectData.endDate || "",
+      targetRevenue: projectData.targetRevenue || 0,
+      targetAov: projectData.targetAov || 0,
+      targetConversionRate: projectData.targetConversionRate || 0,
+      cpc: projectData.cpc || 0,
     },
   });
 
   // Reset form when project changes
   useEffect(() => {
-    form.reset({
-      projectName: project.projectName,
-      startDate: project.projectData.startDate || "",
-      endDate: project.projectData.endDate || "",
-      targetRevenue: project.projectData.targetRevenue || 0,
-      targetAov: project.projectData.targetAov || 0,
-      targetConversionRate: project.projectData.targetConversionRate || 0,
-      cpc: project.projectData.cpc || 0,
-    });
+    if (project && project.projectName) {
+      const projectData = project.projectData || {};
+      form.reset({
+        projectName: project.projectName || "",
+        startDate: projectData.startDate || "",
+        endDate: projectData.endDate || "",
+        targetRevenue: projectData.targetRevenue || 0,
+        targetAov: projectData.targetAov || 0,
+        targetConversionRate: projectData.targetConversionRate || 0,
+        cpc: projectData.cpc || 0,
+      });
+    }
   }, [project, form]);
 
   const handleSave = async (data: EditProjectFormData) => {

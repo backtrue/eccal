@@ -24,7 +24,6 @@ import { Calendar, MoreVertical, Trash2, FolderOpen, Calculator, Eye, Edit } fro
 import { format } from "date-fns";
 import { zhTW } from "date-fns/locale";
 import EditProjectDialog from "@/components/EditProjectDialog";
-import ProjectDetailDialog from "@/components/ProjectDetailDialog";
 
 export default function SavedProjectsListSimple() {
   const { data: projects, isLoading } = useSavedProjects();
@@ -32,7 +31,7 @@ export default function SavedProjectsListSimple() {
   const { toast } = useToast();
   const [projectToDelete, setProjectToDelete] = useState<SavedProject | null>(null);
   const [projectToEdit, setProjectToEdit] = useState<SavedProject | null>(null);
-  const [projectToView, setProjectToView] = useState<SavedProject | null>(null);
+
 
   const handleDelete = async () => {
     if (!projectToDelete) return;
@@ -120,24 +119,24 @@ export default function SavedProjectsListSimple() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
-            {projects.map((project: SavedProject) => (
+            {projects.filter(project => project && project.projectName).map((project: SavedProject) => (
               <Card key={project.id} className="border border-gray-200">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        {getProjectTypeIcon(project.projectType)}
-                        <h3 className="font-semibold text-gray-900">{project.projectName}</h3>
+                        {getProjectTypeIcon(project.projectType || 'default')}
+                        <h3 className="font-semibold text-gray-900">{project.projectName || '未命名專案'}</h3>
                         <Badge variant="secondary">
-                          {getProjectTypeLabel(project.projectType)}
+                          {getProjectTypeLabel(project.projectType || 'default')}
                         </Badge>
                       </div>
                       <div className="text-sm text-gray-500 space-y-1">
                         <div>
-                          建立時間：{format(new Date(project.createdAt), "yyyy年MM月dd日 HH:mm", { locale: zhTW })}
+                          建立時間：{project.createdAt ? format(new Date(project.createdAt), "yyyy年MM月dd日 HH:mm", { locale: zhTW }) : '未知'}
                         </div>
                         <div>
-                          最後更新：{format(new Date(project.updatedAt), "yyyy年MM月dd日 HH:mm", { locale: zhTW })}
+                          最後更新：{project.updatedAt ? format(new Date(project.updatedAt), "yyyy年MM月dd日 HH:mm", { locale: zhTW }) : '未知'}
                         </div>
                       </div>
                     </div>
@@ -149,7 +148,9 @@ export default function SavedProjectsListSimple() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem 
-                          onClick={() => setProjectToView(project)}
+                          onClick={() => {
+                            alert(`專案詳情：\n名稱：${project.projectName}\n類型：${getProjectTypeLabel(project.projectType)}\n建立時間：${format(new Date(project.createdAt), "yyyy年MM月dd日", { locale: zhTW })}`);
+                          }}
                         >
                           <Eye className="h-4 w-4 mr-2" />
                           檢視詳情
@@ -176,13 +177,6 @@ export default function SavedProjectsListSimple() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Project Detail Dialog */}
-      <ProjectDetailDialog
-        project={projectToView}
-        open={!!projectToView}
-        onOpenChange={() => setProjectToView(null)}
-      />
 
       {/* Edit Project Dialog */}
       <EditProjectDialog
