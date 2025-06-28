@@ -22,9 +22,9 @@ const campaignPlannerSchema = z.object({
   projectName: z.string().min(1, "專案名稱不能為空"),
   startDate: z.string().min(1, "請選擇活動開始日期"),
   endDate: z.string().min(1, "請選擇活動結束日期"),
-  targetRevenue: z.union([z.number().min(1, "目標營業額必須大於 0"), z.string().transform(val => val === "" ? 0 : Number(val))]).refine(val => Number(val) > 0, "目標營業額必須大於 0"),
-  targetAov: z.union([z.number().min(1, "目標客單價必須大於 0"), z.string().transform(val => val === "" ? 0 : Number(val))]).refine(val => Number(val) > 0, "目標客單價必須大於 0"),
-  targetConversionRate: z.union([z.number().min(0.01).max(100, "轉換率必須在 0.01% 到 100% 之間"), z.string().transform(val => val === "" ? 0 : Number(val))]).refine(val => Number(val) >= 0.01 && Number(val) <= 100, "轉換率必須在 0.01% 到 100% 之間"),
+  targetRevenue: z.number().min(1, "目標營業額必須大於 0"),
+  targetAov: z.number().min(1, "目標客單價必須大於 0"),
+  targetConversionRate: z.number().min(0.01).max(100, "轉換率必須在 0.01% 到 100% 之間"),
   cpc: z.number().min(0.01, "CPC 必須大於 0.01"),
 });
 
@@ -48,9 +48,9 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
         projectName: "",
         startDate: "",
         endDate: "",
-        targetRevenue: 0,
-        targetAov: 0,
-        targetConversionRate: 0,
+        targetRevenue: 100000,
+        targetAov: 1000,
+        targetConversionRate: 2.5,
         cpc: 5,
       };
     }
@@ -60,9 +60,9 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
       projectName: proj.projectName || "",
       startDate: projectData.startDate || "",
       endDate: projectData.endDate || "",
-      targetRevenue: Number(projectData.targetRevenue) || 0,
-      targetAov: Number(projectData.targetAov) || 0,
-      targetConversionRate: Number(projectData.targetConversionRate) || 0,
+      targetRevenue: Number(projectData.targetRevenue) || 100000,
+      targetAov: Number(projectData.targetAov) || 1000,
+      targetConversionRate: Number(projectData.targetConversionRate) || 2.5,
       cpc: Number(projectData.cpc) || 5,
     };
   };
