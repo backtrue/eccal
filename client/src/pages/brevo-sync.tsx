@@ -11,7 +11,6 @@ interface User {
   email: string;
   firstName?: string;
   lastName?: string;
-  gaResourceName?: string;
   createdAt?: string;
 }
 

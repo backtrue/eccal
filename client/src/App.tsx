@@ -16,6 +16,7 @@ import Terms from "./pages/terms-of-service";
 import NotFound from "./pages/not-found";
 import CampaignPlanner from "./pages/campaign-planner";
 import Dashboard from "./pages/dashboard";
+import BrevoSync from "./pages/brevo-sync";
 
 function Router() {
   const { locale, changeLocale } = useLocale();
@@ -49,6 +50,7 @@ function Router() {
       <Route path="/calculator" component={() => <Calculator locale={locale} />} />
       <Route path="/campaign-planner" component={() => <CampaignPlanner locale={locale} />} />
       <Route path="/dashboard" component={() => <Dashboard locale={locale} />} />
+      <Route path="/brevo-sync" component={() => <BrevoSync />} />
       <Route path="/privacy" component={() => <Privacy locale={locale} />} />
       <Route path="/terms" component={() => <Terms locale={locale} />} />
       
@@ -57,6 +59,7 @@ function Router() {
       <Route path="/en/calculator" component={() => <Calculator locale="en" />} />
       <Route path="/en/campaign-planner" component={() => <CampaignPlanner locale="en" />} />
       <Route path="/en/dashboard" component={() => <Dashboard locale="en" />} />
+      <Route path="/en/brevo-sync" component={() => <BrevoSync />} />
       <Route path="/en/privacy" component={() => <Privacy locale="en" />} />
       <Route path="/en/terms" component={() => <Terms locale="en" />} />
       
@@ -65,6 +68,7 @@ function Router() {
       <Route path="/jp/calculator" component={() => <Calculator locale="ja" />} />
       <Route path="/jp/campaign-planner" component={() => <CampaignPlanner locale="ja" />} />
       <Route path="/jp/dashboard" component={() => <Dashboard locale="ja" />} />
+      <Route path="/jp/brevo-sync" component={() => <BrevoSync />} />
       <Route path="/jp/privacy" component={() => <Privacy locale="ja" />} />
       <Route path="/jp/terms" component={() => <Terms locale="ja" />} />
       
