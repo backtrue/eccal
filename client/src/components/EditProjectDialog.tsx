@@ -15,6 +15,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { useUpdateProject, type SavedProject } from "@/hooks/useSavedProjects";
 import { Edit, Loader2, Calculator } from "lucide-react";
+import { calculateCampaignBudget } from "@/lib/campaignCalculations";
 
 const campaignPlannerSchema = z.object({
   projectName: z.string().min(1, "專案名稱不能為空"),
@@ -111,20 +112,19 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
     setIsRecalculating(true);
     
     try {
-      // Perform the same calculation logic as in CampaignPlanner
-      const startDate = new Date(data.startDate);
-      const endDate = new Date(data.endDate);
-      const campaignDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-      
-      const requiredOrders = Math.ceil(data.targetRevenue / data.targetAov);
-      const totalTraffic = Math.ceil(requiredOrders / (data.targetConversionRate / 100));
-      const totalBudget = Math.ceil(totalTraffic * data.cpc);
+      // Use the same calculation logic as CampaignPlanner
+      const calculationResult = calculateCampaignBudget({
+        startDate: data.startDate,
+        endDate: data.endDate,
+        targetRevenue: data.targetRevenue,
+        targetAov: data.targetAov,
+        targetConversionRate: data.targetConversionRate,
+        cpc: data.cpc,
+      });
 
-      // Create calculation result (simplified version)
+      // Create complete calculation result
       const newCalculationResult = {
-        totalTraffic,
-        totalBudget,
-        campaignDays,
+        ...calculationResult,
         calculatedAt: new Date().toISOString(),
       };
 
