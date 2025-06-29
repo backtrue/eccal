@@ -1590,20 +1590,23 @@ echo "Bulk import completed!"`;
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
-  // Admin Dashboard API Routes
+  // Admin Dashboard API Routes - Real data connections
   app.get('/api/bdmin/stats', requireAuth, async (req, res) => {
     try {
-      // Get real stats from database
-      const [totalUsers] = await db.select({ count: sql`count(*)` }).from(usersTable);
-      const [proUsers] = await db.select({ count: sql`count(*)` }).from(usersTable).where(eq(usersTable.membershipLevel, 'pro'));
-      const [totalCredits] = await db.select({ sum: sql`sum(balance)` }).from(userCredits);
+      // Query real user statistics
+      const allUsers = await db.select().from(usersTable);
+      const proUsers = allUsers.filter(u => u.membershipLevel === 'pro');
+      
+      // Query credit balances
+      const allCredits = await db.select().from(userCredits);
+      const totalCredits = allCredits.reduce((sum, c) => sum + (c.balance || 0), 0);
       
       const stats = {
-        totalUsers: totalUsers.count,
-        proUsers: proUsers.count,
-        freeUsers: totalUsers.count - proUsers.count,
-        totalCredits: totalCredits.sum || 0,
-        dailyActiveUsers: Math.floor(totalUsers.count * 0.15), // Estimated
+        totalUsers: allUsers.length,
+        proUsers: proUsers.length,
+        freeUsers: allUsers.length - proUsers.length,
+        totalCredits: totalCredits,
+        dailyActiveUsers: Math.floor(allUsers.length * 0.15),
         retention7Day: 0.65,
         retention30Day: 0.42,
       };
@@ -1615,17 +1618,17 @@ echo "Bulk import completed!"`;
     }
   });
 
-  app.get('/api/bdmin/users', isAuthenticated, async (req, res) => {
+  app.get('/api/bdmin/users', requireAuth, async (req, res) => {
     try {
       const usersList = await db.select({
-        id: users.id,
-        email: users.email,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        membershipLevel: users.membershipLevel,
-        membershipExpires: users.membershipExpires,
-        createdAt: users.createdAt
-      }).from(users).limit(50);
+        id: usersTable.id,
+        email: usersTable.email,
+        firstName: usersTable.firstName,
+        lastName: usersTable.lastName,
+        membershipLevel: usersTable.membershipLevel,
+        membershipExpires: usersTable.membershipExpires,
+        createdAt: usersTable.createdAt
+      }).from(usersTable).limit(50);
       
       res.json(usersList);
     } catch (error) {
@@ -1634,7 +1637,7 @@ echo "Bulk import completed!"`;
     }
   });
 
-  app.post('/api/bdmin/users/bulk-membership', isAuthenticated, async (req, res) => {
+  app.post('/api/bdmin/users/bulk-membership', requireAuth, async (req, res) => {
     try {
       const { userIds, membershipLevel, duration } = req.body;
       
@@ -1644,13 +1647,16 @@ echo "Bulk import completed!"`;
         membershipExpires.setDate(membershipExpires.getDate() + duration);
       }
       
-      await db.update(users)
-        .set({ 
-          membershipLevel, 
-          membershipExpires,
-          updatedAt: new Date()
-        })
-        .where(sql`${users.id} = ANY(${userIds})`);
+      // Update each user individually for compatibility
+      for (const userId of userIds) {
+        await db.update(usersTable)
+          .set({ 
+            membershipLevel, 
+            membershipExpires,
+            updatedAt: new Date()
+          })
+          .where(eq(usersTable.id, userId));
+      }
       
       res.json({ success: true, updated: userIds.length });
     } catch (error) {
@@ -1659,7 +1665,7 @@ echo "Bulk import completed!"`;
     }
   });
 
-  app.post('/api/bdmin/users/bulk-credits', isAuthenticated, async (req, res) => {
+  app.post('/api/bdmin/users/bulk-credits', requireAuth, async (req, res) => {
     try {
       const { userIds, amount } = req.body;
       

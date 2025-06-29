@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useAdminStats, useAdminUsers, useBulkMembershipUpdate, useBulkCreditsUpdate } from "@/hooks/useAdminStats";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,12 @@ interface PlanAnalysisItem {
 export default function AdminDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Real data from API
+  const { data: stats, isLoading: statsLoading } = useAdminStats();
+  const { data: users, isLoading: usersLoading } = useAdminUsers();
+  const bulkMembershipMutation = useBulkMembershipUpdate();
+  const bulkCreditsMutation = useBulkCreditsUpdate();
   
   // Marketing Plans AI Database state
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
