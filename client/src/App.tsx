@@ -20,6 +20,7 @@ import Dashboard from "./pages/dashboard";
 import BrevoSync from "./pages/brevo-sync";
 import ProjectDetail from "./pages/project-detail";
 import AdminDashboard from "./pages/admin-dashboard-simple";
+import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 
 // Error Boundary Component
 class ErrorBoundary extends Component<
@@ -115,7 +116,11 @@ function Router() {
       <Route path="/campaign-planner" component={() => <CampaignPlanner locale={locale} />} />
       <Route path="/dashboard" component={() => <Dashboard locale={locale} />} />
       <Route path="/project/:id" component={ProjectDetail} />
-      <Route path="/bdmin" component={AdminDashboard} />
+      <Route path="/bdmin" component={() => (
+        <ProtectedAdminRoute>
+          <AdminDashboard />
+        </ProtectedAdminRoute>
+      )} />
       <Route path="/brevo-sync" component={() => <BrevoSync />} />
       <Route path="/privacy" component={() => <Privacy locale={locale} />} />
       <Route path="/terms" component={() => <Terms locale={locale} />} />
