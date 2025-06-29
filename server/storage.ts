@@ -370,12 +370,15 @@ export class DatabaseStorage implements IStorage {
     // Award credits to referrer
     const referrerCredits = await this.getUserCredits(referrerId);
     if (referrerCredits) {
-      await this.updateUserCredits(
-        referrerId,
-        referrerCredits.balance + referrerReward,
-        referrerCredits.totalEarned + referrerReward,
-        referrerCredits.totalSpent
-      );
+      // 使用原子操作更新推薦者積分
+      await db
+        .update(userCredits)
+        .set({
+          balance: sql`${userCredits.balance} + ${referrerReward}`,
+          totalEarned: sql`${userCredits.totalEarned} + ${referrerReward}`,
+          updatedAt: new Date()
+        })
+        .where(eq(userCredits.userId, referrerId));
       
       const bonusText = referralCount <= 3 ? " (含前3人加碼獎勵)" : "";
       await this.addCreditTransaction({
@@ -391,12 +394,15 @@ export class DatabaseStorage implements IStorage {
     // Award 30 credits to referred user (welcome bonus)
     const referredCredits = await this.getUserCredits(referredUserId);
     if (referredCredits) {
-      await this.updateUserCredits(
-        referredUserId,
-        referredCredits.balance + 30,
-        referredCredits.totalEarned + 30,
-        referredCredits.totalSpent
-      );
+      // 使用原子操作更新被推薦者積分
+      await db
+        .update(userCredits)
+        .set({
+          balance: sql`${userCredits.balance} + 30`,
+          totalEarned: sql`${userCredits.totalEarned} + 30`,
+          updatedAt: new Date()
+        })
+        .where(eq(userCredits.userId, referredUserId));
       
       await this.addCreditTransaction({
         userId: referredUserId,
@@ -486,20 +492,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async incrementCampaignPlannerUsage(userId: string): Promise<User> {
-    // Get current usage count
-    const [currentUser] = await db.select().from(users).where(eq(users.id, userId));
-    const currentUsage = currentUser?.campaignPlannerUsage || 0;
-    
-    // Update with incremented value
+    // 使用 SQL 的原子操作，直接在資料庫層級增加數值
     const [user] = await db
       .update(users)
       .set({
-        campaignPlannerUsage: currentUsage + 1,
+        campaignPlannerUsage: sql`${users.campaignPlannerUsage} + 1`, // 使用 SQL 表達式
         updatedAt: new Date()
       })
       .where(eq(users.id, userId))
       .returning();
-    
+
     return user;
   }
 
@@ -521,13 +523,15 @@ export class DatabaseStorage implements IStorage {
           userCredit = await this.createUserCredits(user.id);
         }
         
-        // Update credits
-        await this.updateUserCredits(
-          user.id,
-          userCredit.balance + amount,
-          userCredit.totalEarned + amount,
-          userCredit.totalSpent
-        );
+        // 使用原子操作更新所有用戶積分
+        await db
+          .update(userCredits)
+          .set({
+            balance: sql`${userCredits.balance} + ${amount}`,
+            totalEarned: sql`${userCredits.totalEarned} + ${amount}`,
+            updatedAt: new Date()
+          })
+          .where(eq(userCredits.userId, user.id));
         
         // Add transaction
         await this.addCreditTransaction({
@@ -697,7 +701,15 @@ export class DatabaseStorage implements IStorage {
     for (const userId of userIds) {
       const userCredits = await this.getUserCredits(userId);
       if (userCredits) {
-        await this.updateUserCredits(userId, userCredits.balance + amount, userCredits.totalEarned + amount);
+        // 使用原子操作更新管理員發放積分
+        await db
+          .update(userCredits)
+          .set({
+            balance: sql`${userCredits.balance} + ${amount}`,
+            totalEarned: sql`${userCredits.totalEarned} + ${amount}`,
+            updatedAt: new Date()
+          })
+          .where(eq(userCredits.userId, userId));
         await this.addCreditTransaction({
           userId,
           amount,
