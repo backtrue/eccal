@@ -418,6 +418,152 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Secure Campaign Planner calculation endpoint with server-side validation
+  app.post('/api/campaign-planner/calculate', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      const { startDate, endDate, targetRevenue, targetAov, targetConversionRate, cpc } = req.body;
+
+      // 1. 後端檢查會員狀態和使用次數
+      const user = await storage.getUser(userId);
+      const membershipStatus = await storage.checkMembershipStatus(userId);
+      const currentUsage = user?.campaignPlannerUsage || 0;
+
+      // Validate permissions before calculation
+      if (membershipStatus.level === 'free' && currentUsage >= 3) {
+        return res.status(403).json({ 
+          error: 'usage_limit_exceeded',
+          message: '使用次數已達上限，請升級會員',
+          usage: currentUsage,
+          limit: 3
+        });
+      }
+
+      // 2. 執行後端計算邏輯
+      const startDateObj = new Date(startDate);
+      const endDateObj = new Date(endDate);
+      
+      // 計算活動總需要流量 
+      const totalTraffic = Math.ceil((targetRevenue / targetAov) / (targetConversionRate / 100));
+      
+      // 計算活動期間天數
+      const campaignDays = Math.ceil((endDateObj.getTime() - startDateObj.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      
+      // 根據活動天數決定分配策略
+      let budgetRatios: any = {};
+      let periodDays: any = {};
+      
+      if (campaignDays === 3) {
+        budgetRatios = {
+          day1: 0.50,    // 第一天：50%
+          day2: 0.25,    // 第二天：25%
+          day3: 0.25     // 第三天：25%
+        };
+        periodDays = { total: 3 };
+      } else if (campaignDays >= 4 && campaignDays <= 9) {
+        const launchDays = Math.max(1, Math.floor(campaignDays * 0.3));
+        const finalDays = Math.max(1, Math.floor(campaignDays * 0.3));
+        const mainDays = campaignDays - launchDays - finalDays;
+        
+        budgetRatios = {
+          launch: 0.45,      // 起跑期：45%
+          main: 0.30,        // 活動期：30%
+          final: 0.25        // 倒數期：25%
+        };
+        
+        periodDays = {
+          launch: launchDays,
+          main: Math.max(1, mainDays),
+          final: finalDays
+        };
+      } else {
+        const fixedDays = {
+          preheat: 4,    // 預熱期
+          launch: 3,     // 起跑期  
+          final: 3,      // 倒數期
+          repurchase: 7  // 回購期
+        };
+        
+        const calculatedMainDays = Math.max(1, campaignDays - (fixedDays.launch + fixedDays.final));
+        
+        budgetRatios = {
+          preheat: 0.04,     // 預熱期：4%
+          launch: 0.32,      // 起跑期：32%
+          final: 0.24,       // 倒數期：24%
+          repurchase: 0.02,  // 回購期：2%
+          main: 0.38         // 活動期：38%（基礎比例，會隨天數調整）
+        };
+        
+        // 如果活動天數超過20天，增加活動期預算比例
+        if (campaignDays > 20) {
+          const extraDays = campaignDays - 20;
+          const extraBudgetRatio = Math.min(0.20, extraDays * 0.008);
+          
+          budgetRatios.main += extraBudgetRatio;
+          budgetRatios.launch -= extraBudgetRatio * 0.6;
+          budgetRatios.final -= extraBudgetRatio * 0.4;
+        }
+        
+        periodDays = {
+          preheat: fixedDays.preheat,
+          launch: fixedDays.launch,
+          main: calculatedMainDays,
+          final: fixedDays.final,
+          repurchase: fixedDays.repurchase
+        };
+      }
+
+      // 計算總預算
+      const totalBudget = totalTraffic * cpc;
+
+      // 計算各期預算和流量分配
+      const budgetBreakdown: any = {};
+      const trafficBreakdown: any = {};
+
+      Object.keys(budgetRatios).forEach(period => {
+        budgetBreakdown[period] = Math.ceil(totalBudget * budgetRatios[period]);
+        trafficBreakdown[period] = Math.ceil(totalTraffic * budgetRatios[period]);
+      });
+
+      // 建構完整結果
+      const result = {
+        totalTraffic,
+        totalBudget,
+        campaignDays,
+        budgetBreakdown,
+        trafficBreakdown,
+        periodDays,
+        calculations: {
+          targetRevenue,
+          targetAov,
+          targetConversionRate,
+          cpc,
+          startDate,
+          endDate
+        }
+      };
+
+      // 3. 如果計算成功，且是免費會員，才記錄用量
+      if (membershipStatus.level === 'free') {
+        await storage.incrementCampaignPlannerUsage(userId);
+      }
+
+      res.json({ 
+        success: true, 
+        result,
+        usage: {
+          current: membershipStatus.level === 'free' ? currentUsage + 1 : -1,
+          limit: membershipStatus.level === 'free' ? 3 : -1,
+          membershipLevel: membershipStatus.level
+        }
+      });
+
+    } catch (error) {
+      console.error("Campaign planner calculation error:", error);
+      res.status(500).json({ message: "計算失敗，請稍後再試" });
+    }
+  });
+
   app.post('/api/campaign-planner/record-usage', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims?.sub || req.user.id;

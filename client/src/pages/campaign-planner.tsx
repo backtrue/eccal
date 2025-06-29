@@ -134,37 +134,60 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
       return;
     }
 
-    // Check usage permissions - free users have 3 total uses
-    const usageInfo = usageData as any;
-    if (usageInfo) {
-      const isPro = usageInfo.membershipStatus?.level === 'pro' && usageInfo.membershipStatus?.isActive;
-      const currentUsage = usageInfo.usage || 0;
-      const remainingUses = Math.max(0, 3 - currentUsage);
+    // Call secure backend calculation API (removes client-side permission bypass vulnerability)
+    try {
+      const response = await apiRequest('POST', '/api/campaign-planner/calculate', {
+        startDate: data.startDate,
+        endDate: data.endDate,
+        targetRevenue: data.targetRevenue,
+        targetAov: data.targetAov,
+        targetConversionRate: data.targetConversionRate,
+        cpc: data.cpc
+      });
+
+      if (response.success) {
+        // Transform backend result to frontend format
+        const backendResult = response.result;
+        const frontendResult = transformBackendToFrontendResult(backendResult, data);
+        setResults(frontendResult);
+        
+        // Update usage info from backend response
+        refetchUsage();
+        
+        toast({
+          title: "計算完成",
+          description: "活動預算規劃已完成，請查看結果",
+          variant: "default",
+        });
+      }
+    } catch (error: any) {
+      console.error('Calculation failed:', error);
       
-      // For free users, check if they have remaining uses
-      if (!isPro && remainingUses <= 0) {
+      if (error.message.includes('403') || error.message.includes('usage_limit_exceeded')) {
         toast({
           title: "使用次數已達上限",
-          description: `免費會員可使用 3 次活動預算規劃器，您已使用完畢 (3/3)。請升級至 Pro 會員享受無限使用。`,
+          description: "免費會員可使用 3 次活動預算規劃器，您已使用完畢。請升級至 Pro 會員享受無限使用。",
           variant: "destructive",
         });
-        return;
+      } else {
+        toast({
+          title: "計算失敗",
+          description: "活動預算計算發生錯誤，請稍後再試",
+          variant: "destructive",
+        });
       }
+      return;
     }
+  };
 
-    // Perform calculation first
-    const startDate = new Date(data.startDate);
-    const endDate = new Date(data.endDate);
-    
-    // 計算活動總需要流量 
-    const totalTraffic = Math.ceil((data.targetRevenue / data.targetAov) / (data.targetConversionRate / 100));
-    
-    // 計算活動期間天數
-    const campaignDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    
-    // 根據活動天數決定分配策略
-    let budgetRatios: any = {};
-    let periodDays: any = {};
+  // Transform backend calculation result to frontend PlanningResult format
+  const transformBackendToFrontendResult = (backendResult: any, inputData: CampaignPlannerFormData): PlanningResult => {
+    const { totalTraffic, totalBudget, campaignDays, budgetBreakdown, trafficBreakdown, periodDays } = backendResult;
+    const startDate = new Date(inputData.startDate);
+    const endDate = new Date(inputData.endDate);
+
+    // Generate daily budget breakdown (replicating the client logic for UI display)
+    const dailyBudgets: DailyBudget[] = [];
     
     if (campaignDays === 3) {
       // 3天活動：前中後三天，首日最重、末日次重、中間最輕
