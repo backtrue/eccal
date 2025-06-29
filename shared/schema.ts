@@ -111,6 +111,22 @@ export type UserReferral = typeof userReferrals.$inferSelect;
 export type InsertUserReferral = typeof userReferrals.$inferInsert;
 export type SavedProject = typeof savedProjects.$inferSelect;
 export type InsertSavedProject = typeof savedProjects.$inferInsert;
+export type UserBehavior = typeof userBehavior.$inferSelect;
+export type InsertUserBehavior = typeof userBehavior.$inferInsert;
+export type Announcement = typeof announcements.$inferSelect;
+export type InsertAnnouncement = typeof announcements.$inferInsert;
+export type ApiUsage = typeof apiUsage.$inferSelect;
+export type InsertApiUsage = typeof apiUsage.$inferInsert;
+export type ExportJob = typeof exportJobs.$inferSelect;
+export type InsertExportJob = typeof exportJobs.$inferInsert;
+export type SeoSettings = typeof seoSettings.$inferSelect;
+export type InsertSeoSettings = typeof seoSettings.$inferInsert;
+export type SystemLog = typeof systemLogs.$inferSelect;
+export type InsertSystemLog = typeof systemLogs.$inferInsert;
+export type AdminSettings = typeof adminSettings.$inferSelect;
+export type InsertAdminSettings = typeof adminSettings.$inferInsert;
+
+
 
 // SEO settings table for admin management
 export const seoSettings = pgTable("seo_settings", {
