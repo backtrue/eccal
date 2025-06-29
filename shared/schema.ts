@@ -121,6 +121,8 @@ export type ExportJob = typeof exportJobs.$inferSelect;
 export type InsertExportJob = typeof exportJobs.$inferInsert;
 export type SeoSettings = typeof seoSettings.$inferSelect;
 export type InsertSeoSettings = typeof seoSettings.$inferInsert;
+export type SystemLog = typeof systemLogs.$inferSelect;
+export type InsertSystemLog = typeof systemLogs.$inferInsert;
 export type AdminSettings = typeof adminSettings.$inferSelect;
 export type InsertAdminSettings = typeof adminSettings.$inferInsert;
 
@@ -164,6 +166,8 @@ export const adminSettings = pgTable("admin_settings", {
 
 export type SeoSetting = typeof seoSettings.$inferSelect;
 export type InsertSeoSetting = typeof seoSettings.$inferInsert;
+export type SystemLogType = typeof systemLogs.$inferSelect;
+export type InsertSystemLogType = typeof systemLogs.$inferInsert;
 export type AdminSetting = typeof adminSettings.$inferSelect;
 export type InsertAdminSetting = typeof adminSettings.$inferInsert;
 

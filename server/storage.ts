@@ -21,8 +21,8 @@ import {
   type SeoSetting,
   type InsertSeoSetting,
   systemLogs,
-  type SystemLog,
-  type InsertSystemLog,
+  type SystemLogType,
+  type InsertSystemLogType,
   adminSettings,
   type AdminSetting,
   type InsertAdminSetting,
@@ -116,8 +116,8 @@ export interface IStorage {
   updateSeoSetting(page: string, updates: Partial<SeoSetting>): Promise<SeoSetting>;
 
   // System monitoring operations
-  addSystemLog(log: InsertSystemLog): Promise<SystemLog>;
-  getSystemLogs(level?: string, limit?: number): Promise<SystemLog[]>;
+  addSystemLog(log: InsertSystemLogType): Promise<SystemLogType>;
+  getSystemLogs(level?: string, limit?: number): Promise<SystemLogType[]>;
   getSystemStats(): Promise<{
     totalErrors: number;
     errorsToday: number;
@@ -758,7 +758,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // System monitoring operations
-  async addSystemLog(log: InsertSystemLog): Promise<SystemLog> {
+  async addSystemLog(log: InsertSystemLogType): Promise<SystemLogType> {
     const [systemLog] = await db
       .insert(systemLogs)
       .values(log)
@@ -766,7 +766,7 @@ export class DatabaseStorage implements IStorage {
     return systemLog;
   }
 
-  async getSystemLogs(level?: string, limit: number = 100): Promise<SystemLog[]> {
+  async getSystemLogs(level?: string, limit: number = 100): Promise<SystemLogType[]> {
     if (level) {
       return await db.select().from(systemLogs)
         .where(eq(systemLogs.level, level))
