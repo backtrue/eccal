@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Download, Copy, Users, Mail, Database, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
+import Footer from "@/components/Footer";
 
 interface User {
   email: string;

@@ -22,6 +22,7 @@ import {
 import GoogleLoginButton from "@/components/GoogleLoginButton";
 import MembershipUpgrade from "@/components/MembershipUpgrade";
 import SavedProjectsListSimple from "@/components/SavedProjectsListSimple";
+import Footer from "@/components/Footer";
 
 interface DashboardProps {
   locale: Locale;
@@ -249,6 +250,8 @@ export default function Dashboard({ locale }: DashboardProps) {
           <SavedProjectsListSimple />
         </div>
       </div>
+      
+      <Footer />
     </div>
   );
 }

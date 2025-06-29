@@ -16,6 +16,7 @@ import { useAnalyticsData } from "@/hooks/useAnalyticsData";
 import { apiRequest } from "@/lib/queryClient";
 import NavigationBar from "@/components/NavigationBar";
 import SaveProjectDialog from "@/components/SaveProjectDialog";
+import Footer from "@/components/Footer";
 
 // Form validation schema
 const campaignPlannerSchema = z.object({
@@ -518,6 +519,8 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
           )}
         </div>
       </div>
+      
+      <Footer />
     </div>
   );
 }
