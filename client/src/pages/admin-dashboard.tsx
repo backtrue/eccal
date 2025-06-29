@@ -121,31 +121,31 @@ export default function AdminDashboard() {
   });
 
   // Fetch behavior analytics
-  const { data: behaviorStats } = useQuery({
+  const { data: behaviorStats } = useQuery<any>({
     queryKey: ['/api/bdmin/behavior/stats'],
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Fetch announcements
-  const { data: announcements } = useQuery({
+  const { data: announcements } = useQuery<any>({
     queryKey: ['/api/bdmin/announcements'],
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   // Fetch API usage stats
-  const { data: apiUsageStats } = useQuery({
+  const { data: apiUsageStats } = useQuery<any>({
     queryKey: ['/api/bdmin/api-usage'],
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Fetch export jobs
-  const { data: exportJobs } = useQuery({
+  const { data: exportJobs } = useQuery<any>({
     queryKey: ['/api/bdmin/exports'],
     staleTime: 1 * 60 * 1000, // 1 minute
   });
 
   // Fetch maintenance mode
-  const { data: maintenanceMode } = useQuery({
+  const { data: maintenanceMode } = useQuery<any>({
     queryKey: ['/api/bdmin/maintenance'],
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
@@ -163,7 +163,7 @@ export default function AdminDashboard() {
 
   // Fetch analysis items for selected plan
   const { data: analysisItems, refetch: refetchAnalysis } = useQuery<PlanAnalysisItem[]>({
-    queryKey: ['/api/bdmin/marketing-plans', selectedPlan],
+    queryKey: ['/api/bdmin/analysis-items', selectedPlan],
     enabled: !!selectedPlan,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
@@ -701,7 +701,7 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {behaviorStats?.mostUsedFeatures?.map((feature: any, index: number) => (
+                    {(behaviorStats as any)?.mostUsedFeatures?.map((feature: any, index: number) => (
                       <div key={index} className="flex justify-between items-center">
                         <span className="capitalize">{feature.feature}</span>
                         <Badge variant="secondary">{feature.count} 次</Badge>
