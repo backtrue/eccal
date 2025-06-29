@@ -54,10 +54,11 @@ export default function Calculator({ locale }: CalculatorProps) {
 
   const form = useForm<CalculatorFormData>({
     resolver: zodResolver(createCalculatorSchema(t)),
+    // 將數字欄位的預設值改為 undefined，這樣 placeholder 才會顯示
     defaultValues: {
-      targetRevenue: 0,
-      averageOrderValue: 0,
-      conversionRate: 0,
+      targetRevenue: undefined,
+      averageOrderValue: undefined,
+      conversionRate: undefined,
     },
   });
 
@@ -204,7 +205,7 @@ export default function Calculator({ locale }: CalculatorProps) {
                               className="pr-12"
                               {...field}
                               value={field.value ?? ""}
-                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
+                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                             />
                             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                               <span className="text-gray-500 text-sm">{t.currency}</span>

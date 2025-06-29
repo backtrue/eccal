@@ -54,16 +54,17 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
   const updateProject = useUpdateProject();
 
   // Prepare default values with null safety
-  const getDefaultValues = (proj: SavedProject | null): EditProjectFormData => {
+  const getDefaultValues = (proj: SavedProject | null): Partial<EditProjectFormData> => {
     if (!proj) {
+      // 確保全新專案的預設值為 undefined，這樣 placeholder 才會顯示
       return {
         projectName: "",
         startDate: "",
         endDate: "",
-        targetRevenue: 0,
-        targetAov: 0,
-        targetConversionRate: 0,
-        cpc: 0,
+        targetRevenue: undefined,
+        targetAov: undefined,
+        targetConversionRate: undefined,
+        cpc: undefined,
       };
     }
 
@@ -72,10 +73,11 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
       projectName: proj.projectName || "",
       startDate: projectData.startDate || "",
       endDate: projectData.endDate || "",
-      targetRevenue: Number(projectData.targetRevenue) || 0,
-      targetAov: Number(projectData.targetAov) || 0,
-      targetConversionRate: Number(projectData.targetConversionRate) || 0,
-      cpc: Number(projectData.cpc) || 0,
+      // 如果資料庫值為 0，保留 0；若為 null/undefined，則設為 undefined
+      targetRevenue: projectData.targetRevenue ?? undefined,
+      targetAov: projectData.targetAov ?? undefined,
+      targetConversionRate: projectData.targetConversionRate ?? undefined,
+      cpc: projectData.cpc ?? undefined,
     };
   };
 
