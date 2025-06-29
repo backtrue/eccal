@@ -121,8 +121,6 @@ export type ExportJob = typeof exportJobs.$inferSelect;
 export type InsertExportJob = typeof exportJobs.$inferInsert;
 export type SeoSettings = typeof seoSettings.$inferSelect;
 export type InsertSeoSettings = typeof seoSettings.$inferInsert;
-export type SystemLog = typeof systemLogs.$inferSelect;
-export type InsertSystemLog = typeof systemLogs.$inferInsert;
 export type AdminSettings = typeof adminSettings.$inferSelect;
 export type InsertAdminSettings = typeof adminSettings.$inferInsert;
 
@@ -166,8 +164,6 @@ export const adminSettings = pgTable("admin_settings", {
 
 export type SeoSetting = typeof seoSettings.$inferSelect;
 export type InsertSeoSetting = typeof seoSettings.$inferInsert;
-export type SystemLog = typeof systemLogs.$inferSelect;
-export type InsertSystemLog = typeof systemLogs.$inferInsert;
 export type AdminSetting = typeof adminSettings.$inferSelect;
 export type InsertAdminSetting = typeof adminSettings.$inferInsert;
 
@@ -233,15 +229,6 @@ export const exportJobs = pgTable("export_jobs", {
   createdAt: timestamp("created_at").defaultNow(),
   completedAt: timestamp("completed_at"),
 });
-
-export type UserBehavior = typeof userBehavior.$inferSelect;
-export type InsertUserBehavior = typeof userBehavior.$inferInsert;
-export type Announcement = typeof announcements.$inferSelect;
-export type InsertAnnouncement = typeof announcements.$inferInsert;
-export type ApiUsage = typeof apiUsage.$inferSelect;
-export type InsertApiUsage = typeof apiUsage.$inferInsert;
-export type ExportJob = typeof exportJobs.$inferSelect;
-export type InsertExportJob = typeof exportJobs.$inferInsert;
 
 // Marketing plans database tables
 export const marketingPlans = pgTable("marketing_plans", {
