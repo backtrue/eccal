@@ -94,15 +94,37 @@ if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
 
-// Minimal monitoring request filtering - only block very specific patterns
+// Enhanced monitoring request filtering with detailed IP analysis
 app.use((req: Request, res: Response, next: NextFunction) => {
-  // Only filter very specific monitoring requests that don't look like browsers
+  const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+  const userAgent = req.headers['user-agent'] || 'unknown';
+  
+  // Block requests to /api/auth/user from known monitoring sources
   if (req.path === '/api/auth/user') {
-    const userAgent = req.headers['user-agent'] || 'unknown';
+    // Block Replit internal monitoring IPs
+    if (clientIP.startsWith('34.60.') || 
+        clientIP.startsWith('35.') || 
+        clientIP === '127.0.0.1' || 
+        clientIP === '::1' ||
+        clientIP.includes('replit') ||
+        clientIP.includes('internal')) {
+      console.log(`[BLOCKED-MONITORING] IP: ${clientIP}, UA: ${userAgent}`);
+      return res.status(503).json({ message: 'Service temporarily unavailable' });
+    }
     
-    // Block only clear monitoring tools, not browsers
-    if (userAgent.includes('GoogleHC') || userAgent.includes('kube-probe') || userAgent.includes('monitoring')) {
-      return res.status(503).json({ message: 'Monitoring blocked' });
+    // Block known monitoring user agents
+    if (userAgent.includes('GoogleHC') || 
+        userAgent.includes('kube-probe') || 
+        userAgent.includes('monitoring') ||
+        userAgent.includes('curl') ||
+        userAgent.includes('wget') ||
+        userAgent.includes('python-requests') ||
+        userAgent.includes('Go-http-client') ||
+        userAgent.includes('health-check') ||
+        userAgent === 'unknown' ||
+        userAgent.length < 10) {
+      console.log(`[BLOCKED-BOT] IP: ${clientIP}, UA: ${userAgent}`);
+      return res.status(503).json({ message: 'Service temporarily unavailable' });
     }
   }
   

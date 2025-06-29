@@ -15,19 +15,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Google OAuth authentication
   setupGoogleAuth(app);
 
-  // Protected route - Get user info with caching
+  // Protected route - Get user info with enhanced logging and caching
   app.get('/api/auth/user', requireAuth, async (req: any, res) => {
     try {
       const user = req.user;
+      const userAgent = req.headers['user-agent'] || 'unknown';
+      const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+      
+      // Log request details to identify source of high frequency calls
+      console.log(`[AUTH-USER-REQUEST] IP: ${clientIP}, UA: ${userAgent.substring(0, 100)}...`);
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
       
-      // Set cache headers to reduce frequent requests
+      // Set stronger cache headers to reduce frequent requests
       res.set({
-        'Cache-Control': 'private, max-age=300', // 5分鐘快取
-        'ETag': `"user-${user.id}-${Date.now()}"`,
+        'Cache-Control': 'private, max-age=900', // 15分鐘快取
+        'ETag': `"user-${user.id}-${Math.floor(Date.now() / 900000)}"`, // 15分鐘內相同 ETag
       });
       
       res.json(user);

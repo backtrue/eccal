@@ -21,13 +21,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const { data: user, isLoading } = useQuery({
     queryKey: ["/api/auth/user"],
     retry: false,
-    staleTime: 15 * 60 * 1000, // 15分鐘不重新請求
-    gcTime: 30 * 60 * 1000, // 30分鐘快取
+    staleTime: 30 * 60 * 1000, // 30分鐘不重新請求
+    gcTime: 60 * 60 * 1000, // 60分鐘快取
     refetchOnWindowFocus: false,
     refetchInterval: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
-    enabled: true,
+    enabled: typeof window !== 'undefined', // 只在瀏覽器環境啟用
   });
 
   return (
