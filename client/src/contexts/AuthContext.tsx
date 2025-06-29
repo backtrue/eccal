@@ -1,18 +1,16 @@
-import { createContext, useContext, ReactNode, useEffect, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { createContext, useContext, ReactNode, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 interface AuthContextType {
   user: any;
   isLoading: boolean;
   isAuthenticated: boolean;
-  checkAuth: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: false,
   isAuthenticated: false,
-  checkAuth: () => {},
 });
 
 interface AuthProviderProps {
@@ -20,45 +18,42 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [shouldCheckAuth, setShouldCheckAuth] = useState(false);
-  const queryClient = useQueryClient();
-
-  // Only query when explicitly triggered
+  // Smart auth checking: enable only when needed
   const { data: user, isLoading } = useQuery({
     queryKey: ["/api/auth/user"],
-    retry: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    retry: (failureCount, error) => {
+      // Don't retry if it's an auth error (401)
+      if (error?.message?.includes('401')) return false;
+      return failureCount < 2;
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes
     refetchOnWindowFocus: false,
     refetchInterval: false,
-    refetchOnMount: false,
+    refetchOnMount: true, // Check on mount
     refetchOnReconnect: false,
-    enabled: shouldCheckAuth, // Only when manually triggered
+    // Only enable if:
+    // 1. User just logged in (auth_success param)
+    // 2. We're on a protected page
+    // 3. There's a stored session indication
+    enabled: (() => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const hasAuthSuccess = urlParams.has('auth_success');
+      const isProtectedPage = window.location.pathname.includes('/dashboard') || 
+                             window.location.pathname.includes('/campaign-planner');
+      const hasStoredAuth = document.cookie.includes('connect.sid');
+      
+      return hasAuthSuccess || isProtectedPage || hasStoredAuth;
+    })(),
   });
 
-  // Check for auth_success parameter on mount
+  // Clean up auth_success parameter
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('auth_success') === '1') {
-      // User just logged in, automatically check auth status
-      setShouldCheckAuth(true);
-      // Clean up URL
+    if (urlParams.has('auth_success')) {
       window.history.replaceState({}, '', window.location.pathname);
-      
-      // Show success message
-      setTimeout(() => {
-        const event = new CustomEvent('auth-success', { 
-          detail: { message: '登入成功！正在更新狀態...' } 
-        });
-        window.dispatchEvent(event);
-      }, 100);
     }
   }, []);
-
-  const checkAuth = () => {
-    setShouldCheckAuth(true);
-    queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-  };
 
   return (
     <AuthContext.Provider 
@@ -66,7 +61,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         user,
         isLoading,
         isAuthenticated: !!user,
-        checkAuth,
       }}
     >
       {children}
