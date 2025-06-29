@@ -18,7 +18,7 @@ import CampaignPlanner from "./pages/campaign-planner";
 import Dashboard from "./pages/dashboard";
 import BrevoSync from "./pages/brevo-sync";
 import ProjectDetail from "./pages/project-detail";
-import AdminDashboard from "./pages/admin-dashboard";
+import AdminDashboard from "./pages/admin-dashboard-simple";
 
 // Error Boundary Component
 class ErrorBoundary extends Component<
