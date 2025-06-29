@@ -653,7 +653,7 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                             placeholder="例如：1200"
                             {...field}
                             value={field.value ?? ""}
-                            onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
+                            onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                           />
                         </FormControl>
                         <FormDescription>
@@ -695,7 +695,7 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                             placeholder="例如：2.5"
                             {...field}
                             value={field.value ?? ""}
-                            onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
+                            onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                           />
                         </FormControl>
                         <FormDescription>
@@ -727,7 +727,7 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                             placeholder={`例如：${locale === 'zh-TW' ? '5' : locale === 'ja' ? '120' : '1'}`}
                             {...field}
                             value={field.value ?? ""}
-                            onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
+                            onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                           />
                         </FormControl>
                         <FormDescription>
