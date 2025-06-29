@@ -1001,7 +1001,8 @@ echo "Bulk import completed!"`;
       const offset = parseInt(req.query.offset) || 0;
       
       const result = await storage.getAllUsers(limit, offset);
-      res.json(result);
+      // Return users array directly to match frontend expectations
+      res.json(result.users);
     } catch (error) {
       console.error('Error fetching users:', error);
       res.status(500).json({ message: 'Failed to fetch users' });
@@ -1618,24 +1619,7 @@ echo "Bulk import completed!"`;
     }
   });
 
-  app.get('/api/bdmin/users', requireAuth, async (req, res) => {
-    try {
-      const usersList = await db.select({
-        id: usersTable.id,
-        email: usersTable.email,
-        firstName: usersTable.firstName,
-        lastName: usersTable.lastName,
-        membershipLevel: usersTable.membershipLevel,
-        membershipExpires: usersTable.membershipExpires,
-        createdAt: usersTable.createdAt
-      }).from(usersTable).limit(50);
-      
-      res.json(usersList);
-    } catch (error) {
-      console.error('Admin users error:', error);
-      res.status(500).json({ error: 'Failed to fetch users' });
-    }
-  });
+
 
   app.post('/api/bdmin/users/bulk-membership', requireAuth, async (req, res) => {
     try {
