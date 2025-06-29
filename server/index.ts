@@ -94,13 +94,17 @@ if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
 
-// Request monitoring for debugging (no blocking)
+// Debug monitoring - track what's triggering continuous requests
 app.use((req: Request, res: Response, next: NextFunction) => {
-  // Only log auth endpoint requests for monitoring
   if (req.path === '/api/auth/user') {
     const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
     const userAgent = req.headers['user-agent'] || 'unknown';
-    console.log(`[DEBUG] Auth request: IP=${clientIP}, UA=${userAgent.substring(0, 50)}...`);
+    console.log(`[DEBUG] Auth request: IP=${clientIP}, UA=${userAgent.substring(0, 50)}..., Headers:`, {
+      'x-forwarded-for': req.headers['x-forwarded-for'],
+      'x-replit-user-id': req.headers['x-replit-user-id'],
+      'connection': req.headers['connection'],
+      'accept': req.headers['accept']
+    });
   }
   
   next();
@@ -172,11 +176,24 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
+  server.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
+  });
+
+  // Proper process signal handling to prevent Replit from thinking service is unstable
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM received, shutting down gracefully');
+    server.close(() => {
+      console.log('Server closed');
+      process.exit(0);
+    });
+  });
+
+  process.on('SIGINT', () => {
+    console.log('SIGINT received, shutting down gracefully');
+    server.close(() => {
+      console.log('Server closed');
+      process.exit(0);
+    });
   });
 })();

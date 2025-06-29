@@ -29,45 +29,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Protected route - Get user info (now with proper monitoring detection)
-  app.get('/api/auth/user', (req: any, res) => {
-    const userAgent = req.headers['user-agent'] || 'unknown';
-    const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
-    
-    // Detect Replit monitoring requests and respond appropriately
-    if (userAgent.includes('GoogleHC') || 
-        userAgent.includes('kube-probe') || 
-        userAgent.includes('monitoring') ||
-        clientIP.startsWith('34.60.') ||
-        clientIP.startsWith('35.') ||
-        userAgent.length < 10) {
-      return res.status(200).json({ 
-        status: 'auth-service-available',
-        message: 'Authentication service is running'
-      });
-    }
-    
-    // Apply normal authentication for real users
-    requireAuth(req, res, async () => {
-      try {
-        const user = req.user;
-        
-        if (!user) {
-          return res.status(404).json({ message: "User not found" });
-        }
-        
-        // Set cache headers
-        res.set({
-          'Cache-Control': 'private, max-age=900',
-          'ETag': `"user-${user.id}-${Math.floor(Date.now() / 900000)}"`,
-        });
-        
-        res.json(user);
-      } catch (error) {
-        console.error("Error fetching user:", error);
-        res.status(500).json({ message: "Failed to fetch user" });
+  // Protected route - Get user info (simplified without monitoring detection)
+  app.get('/api/auth/user', requireAuth, async (req: any, res) => {
+    try {
+      const user = req.user;
+      
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
       }
-    });
+      
+      // Set appropriate cache headers
+      res.set({
+        'Cache-Control': 'private, max-age=300', // 5 minutes cache
+        'ETag': `"user-${user.id || 'anonymous'}-${Math.floor(Date.now() / 300000)}"`,
+      });
+      
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
   });
   // Analytics routes
   app.get('/api/analytics/properties', requireAuth, async (req: any, res) => {

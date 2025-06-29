@@ -203,22 +203,10 @@ export function setupGoogleAuth(app: Express) {
 
 // Middleware to check if user is authenticated
 export function requireAuth(req: any, res: any, next: any) {
-  // For monitoring/health check requests, return 200 OK to stop the retry loop
-  const userAgent = req.headers['user-agent'] || '';
-  const clientIP = req.ip || req.connection.remoteAddress || '';
-  
-  if (userAgent.includes('GoogleHC') || 
-      userAgent.includes('kube-probe') || 
-      userAgent.includes('monitoring') ||
-      clientIP.startsWith('34.60.') ||
-      clientIP.startsWith('35.')) {
-    return res.status(200).json({ status: 'healthy', service: 'auth' });
-  }
-  
   if (req.isAuthenticated()) {
     return next();
   }
   
-  // Return 403 instead of 401 to avoid triggering health check retries
-  res.status(403).json({ error: 'Authentication required' });
+  // Return 401 for unauthenticated requests - this is the standard HTTP status
+  res.status(401).json({ error: 'Authentication required' });
 }
