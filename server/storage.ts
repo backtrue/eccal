@@ -44,6 +44,15 @@ import {
   planAnalysisItems,
   type PlanAnalysisItem,
   type InsertPlanAnalysisItem,
+  knowledgeCategories,
+  type KnowledgeCategory,
+  type InsertKnowledgeCategory,
+  knowledgeDocuments,
+  type KnowledgeDocument,
+  type InsertKnowledgeDocument,
+  knowledgeSearchIndex,
+  type KnowledgeSearchIndex,
+  type InsertKnowledgeSearchIndex,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, count, avg, sum, inArray, gte, lt } from "drizzle-orm";
@@ -172,6 +181,16 @@ export interface IStorage {
   getAnalysisItemsForPlan(planId: string): Promise<PlanAnalysisItem[]>;
   updateAnalysisItemPhase(itemId: string, newPhase: 'pre_heat' | 'campaign' | 'repurchase'): Promise<void>;
   approveAnalysisItem(itemId: string, isApproved: boolean): Promise<void>;
+
+  // Knowledge base operations
+  createKnowledgeCategory(category: Omit<InsertKnowledgeCategory, 'id' | 'createdAt' | 'updatedAt'>): Promise<KnowledgeCategory>;
+  getAllKnowledgeCategories(): Promise<KnowledgeCategory[]>;
+  createKnowledgeDocument(document: Omit<InsertKnowledgeDocument, 'id' | 'createdAt' | 'updatedAt'>): Promise<KnowledgeDocument>;
+  getAllKnowledgeDocuments(): Promise<KnowledgeDocument[]>;
+  getKnowledgeDocumentsByCategory(categoryId: string): Promise<KnowledgeDocument[]>;
+  searchKnowledgeDocuments(query: string, tags?: string[]): Promise<KnowledgeDocument[]>;
+  updateKnowledgeDocument(documentId: string, updates: Partial<InsertKnowledgeDocument>): Promise<KnowledgeDocument>;
+  createSearchIndex(index: Omit<InsertKnowledgeSearchIndex, 'id' | 'createdAt'>): Promise<KnowledgeSearchIndex>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1215,6 +1234,76 @@ export class DatabaseStorage implements IStorage {
       .update(planAnalysisItems)
       .set({ isApproved })
       .where(eq(planAnalysisItems.id, itemId));
+  }
+
+  // Knowledge base operations implementation
+  async createKnowledgeCategory(category: Omit<InsertKnowledgeCategory, 'id' | 'createdAt' | 'updatedAt'>): Promise<KnowledgeCategory> {
+    const [newCategory] = await db
+      .insert(knowledgeCategories)
+      .values(category)
+      .returning();
+    return newCategory;
+  }
+
+  async getAllKnowledgeCategories(): Promise<KnowledgeCategory[]> {
+    return await db
+      .select()
+      .from(knowledgeCategories)
+      .orderBy(knowledgeCategories.sortOrder, knowledgeCategories.name);
+  }
+
+  async createKnowledgeDocument(document: Omit<InsertKnowledgeDocument, 'id' | 'createdAt' | 'updatedAt'>): Promise<KnowledgeDocument> {
+    const [newDocument] = await db
+      .insert(knowledgeDocuments)
+      .values(document)
+      .returning();
+    return newDocument;
+  }
+
+  async getAllKnowledgeDocuments(): Promise<KnowledgeDocument[]> {
+    return await db
+      .select()
+      .from(knowledgeDocuments)
+      .orderBy(desc(knowledgeDocuments.createdAt));
+  }
+
+  async getKnowledgeDocumentsByCategory(categoryId: string): Promise<KnowledgeDocument[]> {
+    return await db
+      .select()
+      .from(knowledgeDocuments)
+      .where(eq(knowledgeDocuments.categoryId, categoryId))
+      .orderBy(desc(knowledgeDocuments.createdAt));
+  }
+
+  async searchKnowledgeDocuments(query: string, tags?: string[]): Promise<KnowledgeDocument[]> {
+    let searchConditions = sql`${knowledgeDocuments.title} ILIKE ${`%${query}%`} OR ${knowledgeDocuments.content} ILIKE ${`%${query}%`}`;
+    
+    if (tags && tags.length > 0) {
+      searchConditions = sql`${searchConditions} OR ${knowledgeDocuments.tags} && ${tags}`;
+    }
+
+    return await db
+      .select()
+      .from(knowledgeDocuments)
+      .where(searchConditions)
+      .orderBy(desc(knowledgeDocuments.createdAt));
+  }
+
+  async updateKnowledgeDocument(documentId: string, updates: Partial<InsertKnowledgeDocument>): Promise<KnowledgeDocument> {
+    const [updatedDocument] = await db
+      .update(knowledgeDocuments)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(knowledgeDocuments.id, documentId))
+      .returning();
+    return updatedDocument;
+  }
+
+  async createSearchIndex(index: Omit<InsertKnowledgeSearchIndex, 'id' | 'createdAt'>): Promise<KnowledgeSearchIndex> {
+    const [newIndex] = await db
+      .insert(knowledgeSearchIndex)
+      .values(index)
+      .returning();
+    return newIndex;
   }
 }
 

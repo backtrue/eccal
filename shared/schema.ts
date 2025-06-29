@@ -259,3 +259,48 @@ export type MarketingPlan = typeof marketingPlans.$inferSelect;
 export type InsertMarketingPlan = typeof marketingPlans.$inferInsert;
 export type PlanAnalysisItem = typeof planAnalysisItems.$inferSelect;
 export type InsertPlanAnalysisItem = typeof planAnalysisItems.$inferInsert;
+
+// Knowledge base tables for storing educational content
+export const knowledgeCategories = pgTable("knowledge_categories", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  parentId: text("parent_id"),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const knowledgeDocuments = pgTable("knowledge_documents", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  title: varchar("title").notNull(),
+  content: text("content").notNull(),
+  summary: text("summary"),
+  categoryId: text("category_id").notNull().references(() => knowledgeCategories.id),
+  tags: text("tags").array(), // Array of tags for easy searching
+  source: varchar("source"), // Original file name or source
+  documentType: varchar("document_type", { enum: ["lecture", "guide", "reference", "case_study"] }).notNull(),
+  wordCount: integer("word_count"),
+  language: varchar("language", { length: 10 }).default("zh-TW"),
+  isPublished: boolean("is_published").default(true),
+  viewCount: integer("view_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const knowledgeSearchIndex = pgTable("knowledge_search_index", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  documentId: text("document_id").notNull().references(() => knowledgeDocuments.id, { onDelete: 'cascade' }),
+  keywords: text("keywords").array(), // Extracted keywords for search
+  concepts: text("concepts").array(), // Main concepts covered
+  difficulty: varchar("difficulty", { enum: ["beginner", "intermediate", "advanced"] }),
+  estimatedReadTime: integer("estimated_read_time"), // in minutes
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type KnowledgeCategory = typeof knowledgeCategories.$inferSelect;
+export type InsertKnowledgeCategory = typeof knowledgeCategories.$inferInsert;
+export type KnowledgeDocument = typeof knowledgeDocuments.$inferSelect;
+export type InsertKnowledgeDocument = typeof knowledgeDocuments.$inferInsert;
+export type KnowledgeSearchIndex = typeof knowledgeSearchIndex.$inferSelect;
+export type InsertKnowledgeSearchIndex = typeof knowledgeSearchIndex.$inferInsert;
