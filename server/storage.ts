@@ -699,8 +699,8 @@ export class DatabaseStorage implements IStorage {
     let totalUpdated = 0;
     
     for (const userId of userIds) {
-      const userCredits = await this.getUserCredits(userId);
-      if (userCredits) {
+      const existingCredit = await this.getUserCredits(userId);
+      if (existingCredit) {
         // 使用原子操作更新管理員發放積分
         await db
           .update(userCredits)
