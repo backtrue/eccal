@@ -226,3 +226,29 @@ export type ApiUsage = typeof apiUsage.$inferSelect;
 export type InsertApiUsage = typeof apiUsage.$inferInsert;
 export type ExportJob = typeof exportJobs.$inferSelect;
 export type InsertExportJob = typeof exportJobs.$inferInsert;
+
+// Marketing plans database tables
+export const marketingPlans = pgTable("marketing_plans", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  fileName: varchar("file_name").notNull(),
+  fileSize: integer("file_size"),
+  fileType: varchar("file_type"),
+  status: varchar("status", { enum: ["processing", "completed", "failed"] }).default("processing"),
+  errorMessage: text("error_message"),
+  uploadedBy: varchar("uploaded_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
+export const planAnalysisItems = pgTable("plan_analysis_items", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  planId: text("plan_id").notNull().references(() => marketingPlans.id, { onDelete: 'cascade' }),
+  phase: varchar("phase", { enum: ["pre_heat", "campaign", "repurchase"] }).notNull(),
+  strategySummary: text("strategy_summary").notNull(),
+  isApproved: boolean("is_approved").default(false),
+});
+
+export type MarketingPlan = typeof marketingPlans.$inferSelect;
+export type InsertMarketingPlan = typeof marketingPlans.$inferInsert;
+export type PlanAnalysisItem = typeof planAnalysisItems.$inferSelect;
+export type InsertPlanAnalysisItem = typeof planAnalysisItems.$inferInsert;
