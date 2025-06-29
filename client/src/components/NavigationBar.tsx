@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getTranslations, type Locale } from "@/lib/i18n";
@@ -15,7 +15,7 @@ interface NavigationBarProps {
 
 export default function NavigationBar({ locale }: NavigationBarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, checkAuth, isLoading } = useAuth();
   const t = getTranslations(locale);
 
   return (
@@ -50,6 +50,18 @@ export default function NavigationBar({ locale }: NavigationBarProps) {
             {/* Language switcher and Auth buttons */}
             <div className="flex items-center space-x-2">
               <LanguageSwitcher />
+              
+              {/* Auth status refresh button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={checkAuth}
+                disabled={isLoading}
+                className="text-xs"
+              >
+                <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
+              </Button>
+              
               {isAuthenticated ? (
                 <LogoutButton />
               ) : (
@@ -91,6 +103,19 @@ export default function NavigationBar({ locale }: NavigationBarProps) {
 
               <div className="pt-2 border-t flex flex-col space-y-2">
                 <LanguageSwitcher />
+                
+                {/* Mobile auth refresh button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={checkAuth}
+                  disabled={isLoading}
+                  className="flex items-center gap-2 text-xs"
+                >
+                  <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
+                  刷新登入狀態
+                </Button>
+                
                 {isAuthenticated ? (
                   <LogoutButton />
                 ) : (
