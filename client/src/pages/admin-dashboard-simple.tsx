@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -113,7 +115,7 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="overview" className="flex items-center gap-1 text-xs">
               <TrendingUp className="w-3 h-3" />
               概覽
@@ -133,6 +135,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="export" className="flex items-center gap-1 text-xs">
               <FileText className="w-3 h-3" />
               導出
+            </TabsTrigger>
+            <TabsTrigger value="seo" className="flex items-center gap-1 text-xs">
+              <Search className="w-3 h-3" />
+              SEO
             </TabsTrigger>
             <TabsTrigger value="marketing" className="flex items-center gap-1 text-xs">
               <BarChart3 className="w-3 h-3" />
@@ -584,6 +590,111 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* SEO Settings */}
+          <TabsContent value="seo" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Search className="w-4 h-4" />
+                    頁面 SEO 設定
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">首頁標題</label>
+                      <Input 
+                        placeholder="報數據-電商廣告預算計算機"
+                        defaultValue="報數據-電商廣告預算計算機"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">首頁描述</label>
+                      <Textarea 
+                        placeholder="專業的電商廣告預算計算工具..."
+                        defaultValue="專業的電商廣告預算計算工具，整合 Google Analytics 數據，智能分析轉換率與客單價，精確計算廣告預算需求。"
+                        rows={3}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">關鍵字</label>
+                      <Input 
+                        placeholder="廣告預算計算,電商廣告,預算規劃"
+                        defaultValue="廣告預算計算,電商廣告,預算規劃,Google Analytics,轉換率分析"
+                      />
+                    </div>
+                    <Button className="w-full">更新首頁 SEO</Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>計算機頁面 SEO</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">頁面標題</label>
+                      <Input 
+                        placeholder="廣告預算計算機 - 報數據"
+                        defaultValue="廣告預算計算機 - 報數據"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">頁面描述</label>
+                      <Textarea 
+                        placeholder="免費使用專業廣告預算計算機..."
+                        defaultValue="免費使用專業廣告預算計算機，輸入目標營收、客單價、轉換率，立即獲得精準的廣告預算建議。"
+                        rows={3}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">關鍵字</label>
+                      <Input 
+                        placeholder="廣告預算怎麼抓,預算計算機"
+                        defaultValue="廣告預算怎麼抓,預算計算機,廣告投放預算,電商預算規劃"
+                      />
+                    </div>
+                    <Button className="w-full">更新計算機頁面 SEO</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>其他頁面 SEO 管理</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {[
+                    { page: "活動預算規劃器", url: "/campaign-planner", status: "已優化" },
+                    { page: "用戶儀表板", url: "/dashboard", status: "待優化" },
+                    { page: "隱私政策", url: "/privacy", status: "已優化" },
+                    { page: "服務條款", url: "/terms", status: "已優化" },
+                  ].map((page, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <div className="font-medium">{page.page}</div>
+                        <div className="text-sm text-gray-600">{page.url}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={page.status === "已優化" ? "default" : "secondary"}>
+                          {page.status}
+                        </Badge>
+                        <Button size="sm" variant="outline">
+                          <Edit className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Marketing Plans AI Database */}
