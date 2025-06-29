@@ -7,6 +7,7 @@ import { initGA } from "./lib/analytics";
 import { initMetaPixel } from "./lib/meta-pixel";
 import { useAnalytics } from "./hooks/use-analytics";
 import { useLocale } from "./hooks/useLocale";
+import { AuthProvider } from "./contexts/AuthContext";
 
 // Import pages
 import Home from "./pages/home";
@@ -167,8 +168,10 @@ function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <Router />
-        <Toaster />
+        <AuthProvider>
+          <Router />
+          <Toaster />
+        </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );
