@@ -141,12 +141,22 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
+    // Log error for debugging but don't throw - this was causing service instability
+    console.error(`[ERROR] ${req.method} ${req.path}:`, {
+      status,
+      message,
+      userAgent: req.headers['user-agent']?.substring(0, 50),
+      ip: req.ip
+    });
+
+    // Send error response without throwing - prevents service crashes
+    if (!res.headersSent) {
+      res.status(status).json({ message });
+    }
   });
 
   // importantly only setup vite in development and after

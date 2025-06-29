@@ -15,22 +15,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Google OAuth authentication
   setupGoogleAuth(app);
 
-  // Health check endpoint for Replit monitoring - this is what they're actually looking for
-  app.get('/health', (req, res) => {
+  // Critical: Handle root path for Replit port monitoring
+  app.get('/api/ping', (req, res) => {
+    res.status(200).send('pong');
+  });
+
+  // Health check endpoints
+  app.get('/api/health', (req, res) => {
     res.status(200).json({ 
       status: 'healthy', 
       timestamp: new Date().toISOString(),
       service: 'eccal-platform' 
     });
-  });
-
-  // Alternative health check routes that Replit might be using
-  app.get('/api/health', (req, res) => {
-    res.status(200).json({ status: 'healthy' });
-  });
-
-  app.get('/api/status', (req, res) => {
-    res.status(200).json({ status: 'online' });
   });
 
   // Protected route - Get user info (now with proper monitoring detection)
