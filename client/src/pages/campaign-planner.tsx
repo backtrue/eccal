@@ -43,10 +43,11 @@ interface DailyBudget {
   traffic: number;
 }
 
-export default function CampaignPlanner() {
+export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string }) {
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
   const { data: usageData, refetch: refetchUsage } = useCampaignPlannerUsage();
+  const { data: analyticsData } = useAnalyticsData();
   const [results, setResults] = useState<PlanningResult | null>(null);
 
   const form = useForm<CampaignPlannerFormData>({
@@ -60,6 +61,36 @@ export default function CampaignPlanner() {
       cpc: 5,
     },
   });
+
+  const fillFromAnalytics = () => {
+    if (analyticsData?.averageOrderValue) {
+      form.setValue('targetAov', analyticsData.averageOrderValue);
+    }
+    
+    if (analyticsData?.conversionRate) {
+      // Calculate suggested conversion rate based on AOV difference
+      const suggestedConversionRate = calculateSuggestedConversionRate(
+        analyticsData.conversionRate,
+        analyticsData.averageOrderValue,
+        form.getValues('targetAov')
+      );
+      
+      form.setValue('targetConversionRate', suggestedConversionRate);
+    }
+  };
+
+  const calculateSuggestedConversionRate = (
+    avgConversionRate: number,
+    avgAov: number,
+    targetAov: number
+  ): number => {
+    if (avgAov === 0) return avgConversionRate;
+    
+    const aovAdjustment = (avgAov - targetAov) / avgAov;
+    const suggestedRate = avgConversionRate * (1 + aovAdjustment);
+    
+    return Math.max(0.01, Math.min(100, suggestedRate));
+  };
 
   // Secure backend calculation API call
   const onSubmit = async (data: CampaignPlannerFormData) => {
@@ -86,9 +117,9 @@ export default function CampaignPlanner() {
         cpc: data.cpc
       });
 
-      if (response.success) {
+      if ((response as any).success) {
         // Transform backend result to frontend format
-        const backendResult = response.result;
+        const backendResult = (response as any).result;
         const frontendResult = transformBackendToFrontendResult(backendResult, data);
         setResults(frontendResult);
         
@@ -438,7 +469,18 @@ export default function CampaignPlanner() {
                 </div>
 
                 <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-800">活動期間預算分配</h4>
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-semibold text-gray-800">活動期間預算分配</h4>
+                    {isAuthenticated && (
+                      <SaveProjectDialog 
+                        projectType="campaign_planner"
+                        projectData={{
+                          ...form.getValues(),
+                          results: results
+                        }}
+                      />
+                    )}
+                  </div>
                   
                   {/* Display campaign periods based on structure */}
                   <div className="grid gap-3">
