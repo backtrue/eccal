@@ -234,8 +234,8 @@ export default function Calculator({ locale }: CalculatorProps) {
                               placeholder="1000"
                               className="pr-12"
                               {...field}
-                              value={field.value || ''}
-                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : 0)}
+                              value={field.value ?? ""}
+                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
                             />
                             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                               <span className="text-gray-500 text-sm">{t.currency}</span>
@@ -268,8 +268,8 @@ export default function Calculator({ locale }: CalculatorProps) {
                               max="100"
                               className="pr-8"
                               {...field}
-                              value={field.value || ''}
-                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : 0)}
+                              value={field.value ?? ""}
+                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
                             />
                             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                               <span className="text-gray-500 text-sm">%</span>

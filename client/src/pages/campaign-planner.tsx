@@ -25,10 +25,22 @@ import SaveProjectDialog from "@/components/SaveProjectDialog";
 const campaignPlannerSchema = z.object({
   startDate: z.string().min(1, "請選擇活動開始日期"),
   endDate: z.string().min(1, "請選擇活動結束日期"),
-  targetRevenue: z.number().min(1, "目標營業額必須大於 0"),
-  targetAov: z.number().min(1, "目標客單價必須大於 0"),
-  targetConversionRate: z.number().min(0.01).max(100, "轉換率必須在 0.01% 到 100% 之間"),
-  cpc: z.number().min(0.01, "CPC 必須大於 0.01"),
+  targetRevenue: z.preprocess(
+    (a) => (a === '' ? undefined : a),
+    z.number({ invalid_type_error: '目標營業額必須是數字' }).min(1, "目標營業額必須大於 0")
+  ),
+  targetAov: z.preprocess(
+    (a) => (a === '' ? undefined : a),
+    z.number({ invalid_type_error: '目標客單價必須是數字' }).min(1, "目標客單價必須大於 0")
+  ),
+  targetConversionRate: z.preprocess(
+    (a) => (a === '' ? undefined : a),
+    z.number({ invalid_type_error: '轉換率必須是數字' }).min(0.01).max(100, "轉換率必須在 0.01% 到 100% 之間")
+  ),
+  cpc: z.preprocess(
+    (a) => (a === '' ? undefined : a),
+    z.number({ invalid_type_error: 'CPC 必須是數字' }).min(0.01, "CPC 必須大於 0.01")
+  ),
 });
 
 type CampaignPlannerFormData = z.infer<typeof campaignPlannerSchema>;
@@ -613,8 +625,8 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                             pattern="[0-9]*"
                             placeholder="例如：500000"
                             {...field}
-                            value={field.value || ""}
-                            onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                            value={field.value ?? ""}
+                            onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
                           />
                         </FormControl>
                         <FormDescription>
@@ -639,8 +651,8 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                             step="0.01"
                             placeholder="例如：1200"
                             {...field}
-                            value={field.value || ""}
-                            onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                            value={field.value ?? ""}
+                            onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
                           />
                         </FormControl>
                         <FormDescription>
@@ -681,8 +693,8 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                             max="100"
                             placeholder="例如：2.5"
                             {...field}
-                            value={field.value || ""}
-                            onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                            value={field.value ?? ""}
+                            onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
                           />
                         </FormControl>
                         <FormDescription>
@@ -713,8 +725,8 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                             step="0.1"
                             placeholder={`例如：${locale === 'zh-TW' ? '5' : locale === 'ja' ? '120' : '1'}`}
                             {...field}
-                            value={field.value || ""}
-                            onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                            value={field.value ?? ""}
+                            onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
                           />
                         </FormControl>
                         <FormDescription>
