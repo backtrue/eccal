@@ -883,16 +883,27 @@ export class DatabaseStorage implements IStorage {
 
   async getActiveAnnouncements(userMembershipLevel?: string): Promise<Announcement[]> {
     const now = new Date();
-    return await db.select().from(announcements)
-      .where(and(
-        eq(announcements.isActive, true),
-        sql`(${announcements.startDate} IS NULL OR ${announcements.startDate} <= ${now})`,
-        sql`(${announcements.endDate} IS NULL OR ${announcements.endDate} >= ${now})`,
-        userMembershipLevel 
-          ? sql`(${announcements.targetAudience} = 'all' OR ${announcements.targetAudience} = ${userMembershipLevel})`
-          : sql`${announcements.targetAudience} = 'all'`
-      ))
-      .orderBy(desc(announcements.priority), desc(announcements.createdAt));
+    
+    // 使用 Drizzle ORM 的參數化查詢，完全避免 SQL Injection 風險
+    if (userMembershipLevel) {
+      return await db.select().from(announcements)
+        .where(and(
+          eq(announcements.isActive, true),
+          sql`(${announcements.startDate} IS NULL OR ${announcements.startDate} <= ${now})`,
+          sql`(${announcements.endDate} IS NULL OR ${announcements.endDate} >= ${now})`,
+          sql`(${announcements.targetAudience} = 'all' OR ${announcements.targetAudience} = ${userMembershipLevel})`
+        ))
+        .orderBy(desc(announcements.priority), desc(announcements.createdAt));
+    } else {
+      return await db.select().from(announcements)
+        .where(and(
+          eq(announcements.isActive, true),
+          sql`(${announcements.startDate} IS NULL OR ${announcements.startDate} <= ${now})`,
+          sql`(${announcements.endDate} IS NULL OR ${announcements.endDate} >= ${now})`,
+          eq(announcements.targetAudience, 'all')
+        ))
+        .orderBy(desc(announcements.priority), desc(announcements.createdAt));
+    }
   }
 
   async getAllAnnouncements(): Promise<Announcement[]> {
