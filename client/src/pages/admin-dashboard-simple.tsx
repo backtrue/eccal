@@ -162,8 +162,12 @@ export default function AdminDashboard() {
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">42</div>
-                  <p className="text-xs text-muted-foreground">本週新增: 3</p>
+                  <div className="text-2xl font-bold">
+                    {statsLoading ? "載入中..." : stats?.totalUsers || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Pro會員: {statsLoading ? "-" : stats?.proUsers || 0}
+                  </p>
                 </CardContent>
               </Card>
 
@@ -173,8 +177,12 @@ export default function AdminDashboard() {
                   <CreditCard className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">8</div>
-                  <p className="text-xs text-muted-foreground">轉換率: 19.0%</p>
+                  <div className="text-2xl font-bold">
+                    {statsLoading ? "載入中..." : stats?.proUsers || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    總點數: {statsLoading ? "-" : stats?.totalCredits || 0}
+                  </p>
                 </CardContent>
               </Card>
 
@@ -184,8 +192,12 @@ export default function AdminDashboard() {
                   <Activity className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">65%</div>
-                  <p className="text-xs text-muted-foreground">較上週 +5%</p>
+                  <div className="text-2xl font-bold">
+                    {statsLoading ? "載入中..." : `${Math.round((stats?.retention7Day || 0) * 100)}%`}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    30日: {statsLoading ? "-" : `${Math.round((stats?.retention30Day || 0) * 100)}%`}
+                  </p>
                 </CardContent>
               </Card>
 
@@ -298,32 +310,38 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {[
-                    { email: "backtrue@gmail.com", level: "Pro", credits: 355, lastActive: "2 小時前" },
-                    { email: "user@example.com", level: "免費", credits: 15, lastActive: "1 天前" },
-                    { email: "test@test.com", level: "免費", credits: 30, lastActive: "3 天前" },
-                  ].map((user, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex-1">
-                        <div className="font-medium">{user.email}</div>
-                        <div className="text-sm text-gray-600">最後活躍: {user.lastActive}</div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Badge variant={user.level === "Pro" ? "default" : "secondary"}>
-                          {user.level}
-                        </Badge>
-                        <span className="text-sm font-medium">{user.credits} 點</span>
-                        <div className="flex gap-1">
-                          <Button size="sm" variant="outline">
-                            <Edit className="w-3 h-3" />
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            <Settings className="w-3 h-3" />
-                          </Button>
+                  {usersLoading ? (
+                    <div className="text-center py-4">載入用戶數據中...</div>
+                  ) : users && users.length > 0 ? (
+                    users.map((user, index) => (
+                      <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex-1">
+                          <div className="font-medium">{user.email}</div>
+                          <div className="text-sm text-gray-600">
+                            註冊時間: {new Date(user.createdAt).toLocaleDateString('zh-TW')}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Badge variant={user.membershipLevel === "pro" ? "default" : "secondary"}>
+                            {user.membershipLevel === "pro" ? "Pro" : "免費"}
+                          </Badge>
+                          <span className="text-sm font-medium">
+                            {user.firstName || user.lastName ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '未設定姓名'}
+                          </span>
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="outline">
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                            <Button size="sm" variant="outline">
+                              <Settings className="w-3 h-3" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-gray-500">暫無用戶數據</div>
+                  )}
                 </div>
               </CardContent>
             </Card>
