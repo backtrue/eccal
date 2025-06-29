@@ -76,13 +76,14 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
 
   const form = useForm<CampaignPlannerFormData>({
     resolver: zodResolver(campaignPlannerSchema),
+    // 將數字欄位的預設值改為 undefined，這樣 placeholder 才會顯示
     defaultValues: {
       startDate: "",
       endDate: "",
-      targetRevenue: 0,
-      targetAov: 0,
-      targetConversionRate: 0,
-      cpc: 0,
+      targetRevenue: undefined,
+      targetAov: undefined,
+      targetConversionRate: undefined,
+      cpc: undefined,
     },
   });
 
@@ -626,7 +627,7 @@ export default function CampaignPlanner({ locale }: CampaignPlannerProps) {
                             placeholder="例如：500000"
                             {...field}
                             value={field.value ?? ""}
-                            onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
+                            onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                           />
                         </FormControl>
                         <FormDescription>

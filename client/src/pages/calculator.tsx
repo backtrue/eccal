@@ -236,7 +236,7 @@ export default function Calculator({ locale }: CalculatorProps) {
                               className="pr-12"
                               {...field}
                               value={field.value ?? ""}
-                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
+                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                             />
                             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                               <span className="text-gray-500 text-sm">{t.currency}</span>
@@ -270,7 +270,7 @@ export default function Calculator({ locale }: CalculatorProps) {
                               className="pr-8"
                               {...field}
                               value={field.value ?? ""}
-                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
+                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                             />
                             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                               <span className="text-gray-500 text-sm">%</span>

@@ -441,7 +441,7 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
                       placeholder="例如：500000"
                       {...field}
                       value={field.value ?? ""}
-                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
+                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                     />
                   </FormControl>
                   <FormMessage />
@@ -461,7 +461,7 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
                       placeholder="例如：1200"
                       {...field}
                       value={field.value ?? ""}
-                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
+                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                     />
                   </FormControl>
                   <FormMessage />
@@ -482,7 +482,7 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
                       placeholder="例如：2.5"
                       {...field}
                       value={field.value ?? ""}
-                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
+                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                     />
                   </FormControl>
                   <FormMessage />
@@ -503,7 +503,7 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
                       placeholder="例如：5.0"
                       {...field}
                       value={field.value ?? ""}
-                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
+                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                     />
                   </FormControl>
                   <FormMessage />
