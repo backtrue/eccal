@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Users, TrendingUp, CreditCard, FileText, BarChart3, Settings, Download, Monitor, Server, Activity, Search, Edit, Trash2, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import Footer from "@/components/Footer";
 
 interface MarketingPlan {
   id: string;
@@ -1010,6 +1011,8 @@ export default function AdminDashboard() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      <Footer />
     </div>
   );
 }

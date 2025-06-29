@@ -335,6 +335,8 @@ echo "同步完成！"`;
           </CardContent>
         </Card>
       </div>
+      
+      <Footer />
     </div>
   );
 }

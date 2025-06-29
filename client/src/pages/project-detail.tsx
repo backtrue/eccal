@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useDeleteProject, type SavedProject } from "@/hooks/useSavedProjects";
 import EditProjectDialog from "@/components/EditProjectDialog";
 import { useState } from "react";
+import Footer from "@/components/Footer";
 
 export default function ProjectDetail() {
   const { id } = useParams();
@@ -429,6 +430,8 @@ export default function ProjectDetail() {
           onOpenChange={setEditDialogOpen}
         />
       )}
+      
+      <Footer />
     </div>
   );
 }
