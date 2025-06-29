@@ -441,7 +441,12 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
                       placeholder="例如：500000"
                       {...field}
                       value={field.value ?? ""}
-                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // 只有當 value 不是空字串時，才嘗試轉換為數字
+                        // 如果是空字串，直接傳遞 undefined 來清空欄位
+                        field.onChange(value === '' ? undefined : parseFloat(value));
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -461,7 +466,12 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
                       placeholder="例如：1200"
                       {...field}
                       value={field.value ?? ""}
-                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // 只有當 value 不是空字串時，才嘗試轉換為數字
+                        // 如果是空字串，直接傳遞 undefined 來清空欄位
+                        field.onChange(value === '' ? undefined : parseFloat(value));
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -482,7 +492,12 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
                       placeholder="例如：2.5"
                       {...field}
                       value={field.value ?? ""}
-                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // 只有當 value 不是空字串時，才嘗試轉換為數字
+                        // 如果是空字串，直接傳遞 undefined 來清空欄位
+                        field.onChange(value === '' ? undefined : parseFloat(value));
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -503,7 +518,12 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
                       placeholder="例如：5.0"
                       {...field}
                       value={field.value ?? ""}
-                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // 只有當 value 不是空字串時，才嘗試轉換為數字
+                        // 如果是空字串，直接傳遞 undefined 來清空欄位
+                        field.onChange(value === '' ? undefined : parseFloat(value));
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
