@@ -19,9 +19,18 @@ import { trackEvent } from "@/lib/analytics";
 import { trackCalculatorUsage, trackMetaEvent } from "@/lib/meta-pixel";
 
 const createCalculatorSchema = (t: any) => z.object({
-  targetRevenue: z.number().positive(t.locale === 'zh-TW' ? "目標營業額必須大於 0" : t.locale === 'en' ? "Target revenue must be greater than 0" : "目標売上は0より大きくなければなりません"),
-  averageOrderValue: z.number().positive(t.locale === 'zh-TW' ? "客單價必須大於 0" : t.locale === 'en' ? "Average order value must be greater than 0" : "平均注文額は0より大きくなければなりません"),
-  conversionRate: z.number().positive(t.locale === 'zh-TW' ? "轉換率必須大於 0" : t.locale === 'en' ? "Conversion rate must be greater than 0" : "コンバージョン率は0より大きくなければなりません").max(100, t.locale === 'zh-TW' ? "轉換率不能超過 100%" : t.locale === 'en' ? "Conversion rate cannot exceed 100%" : "コンバージョン率は100%を超えることはできません"),
+  targetRevenue: z.preprocess(
+    (a) => (a === '' ? undefined : a),
+    z.number({ invalid_type_error: t.locale === 'zh-TW' ? "目標營業額必須是數字" : t.locale === 'en' ? "Target revenue must be a number" : "目標売上は数字でなければなりません" }).positive(t.locale === 'zh-TW' ? "目標營業額必須大於 0" : t.locale === 'en' ? "Target revenue must be greater than 0" : "目標売上は0より大きくなければなりません")
+  ),
+  averageOrderValue: z.preprocess(
+    (a) => (a === '' ? undefined : a),
+    z.number({ invalid_type_error: t.locale === 'zh-TW' ? "客單價必須是數字" : t.locale === 'en' ? "Average order value must be a number" : "平均注文額は数字でなければなりません" }).positive(t.locale === 'zh-TW' ? "客單價必須大於 0" : t.locale === 'en' ? "Average order value must be greater than 0" : "平均注文額は0より大きくなければなりません")
+  ),
+  conversionRate: z.preprocess(
+    (a) => (a === '' ? undefined : a),
+    z.number({ invalid_type_error: t.locale === 'zh-TW' ? "轉換率必須是數字" : t.locale === 'en' ? "Conversion rate must be a number" : "コンバージョン率は数字でなければなりません" }).positive(t.locale === 'zh-TW' ? "轉換率必須大於 0" : t.locale === 'en' ? "Conversion rate must be greater than 0" : "コンバージョン率は0より大きくなければなりません").max(100, t.locale === 'zh-TW' ? "轉換率不能超過 100%" : t.locale === 'en' ? "Conversion rate cannot exceed 100%" : "コンバージョン率は100%を超えることはできません")
+  ),
 });
 
 type CalculatorFormData = z.infer<ReturnType<typeof createCalculatorSchema>>;
@@ -194,8 +203,8 @@ export default function Calculator({ locale }: CalculatorProps) {
                               placeholder="1000000"
                               className="pr-12"
                               {...field}
-                              value={field.value || ''}
-                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : 0)}
+                              value={field.value ?? ""}
+                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
                             />
                             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                               <span className="text-gray-500 text-sm">{t.currency}</span>

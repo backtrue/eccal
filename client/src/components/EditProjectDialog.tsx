@@ -22,10 +22,22 @@ const campaignPlannerSchema = z.object({
   projectName: z.string().min(1, "專案名稱不能為空"),
   startDate: z.string().min(1, "請選擇活動開始日期"),
   endDate: z.string().min(1, "請選擇活動結束日期"),
-  targetRevenue: z.number().min(0, "目標營業額不能為負數"),
-  targetAov: z.number().min(0, "目標客單價不能為負數"),
-  targetConversionRate: z.number().min(0).max(100, "轉換率必須在 0% 到 100% 之間"),
-  cpc: z.number().min(0, "CPC 不能為負數"),
+  targetRevenue: z.preprocess(
+    (a) => (a === '' ? undefined : a),
+    z.number({ invalid_type_error: '目標營業額必須是數字' }).min(0, "目標營業額不能為負數")
+  ),
+  targetAov: z.preprocess(
+    (a) => (a === '' ? undefined : a),
+    z.number({ invalid_type_error: '目標客單價必須是數字' }).min(0, "目標客單價不能為負數")
+  ),
+  targetConversionRate: z.preprocess(
+    (a) => (a === '' ? undefined : a),
+    z.number({ invalid_type_error: '轉換率必須是數字' }).min(0).max(100, "轉換率必須在 0% 到 100% 之間")
+  ),
+  cpc: z.preprocess(
+    (a) => (a === '' ? undefined : a),
+    z.number({ invalid_type_error: 'CPC 必須是數字' }).min(0, "CPC 不能為負數")
+  ),
 });
 
 type EditProjectFormData = z.infer<typeof campaignPlannerSchema>;
@@ -426,8 +438,8 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
                       type="number"
                       placeholder="例如：500000"
                       {...field}
-                      value={field.value || ""}
-                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -446,8 +458,8 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
                       type="number"
                       placeholder="例如：1200"
                       {...field}
-                      value={field.value || ""}
-                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -467,8 +479,8 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
                       step="0.01"
                       placeholder="例如：2.5"
                       {...field}
-                      value={field.value || ""}
-                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -488,8 +500,8 @@ export default function EditProjectDialog({ project, open, onOpenChange }: EditP
                       step="0.01"
                       placeholder="例如：5.0"
                       {...field}
-                      value={field.value || ""}
-                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)}
                     />
                   </FormControl>
                   <FormMessage />
