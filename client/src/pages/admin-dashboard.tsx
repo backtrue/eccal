@@ -158,11 +158,7 @@ export default function AdminDashboard() {
   const { data: marketingPlans, refetch: refetchPlans } = useQuery<MarketingPlan[]>({
     queryKey: ['/api/bdmin/marketing-plans'],
     staleTime: 5 * 1000, // 5 seconds for real-time updates
-    refetchInterval: (data) => {
-      // Poll every 5 seconds if any plan is processing
-      const hasProcessing = data?.some((plan: MarketingPlan) => plan.status === 'processing');
-      return hasProcessing ? 5000 : false;
-    },
+    refetchInterval: 5000, // Poll every 5 seconds for processing updates
   });
 
   // Fetch analysis items for selected plan
