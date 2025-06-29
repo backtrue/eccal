@@ -94,74 +94,16 @@ if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
 
-// Block Replit internal monitoring IP that causes high-frequency auth requests
+// Minimal monitoring request filtering - only block very specific patterns
 app.use((req: Request, res: Response, next: NextFunction) => {
-  const clientIP = req.ip || req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-  
-  // Log and block auth requests from suspicious sources
+  // Only filter very specific monitoring requests that don't look like browsers
   if (req.path === '/api/auth/user') {
     const userAgent = req.headers['user-agent'] || 'unknown';
-    const referer = req.headers['referer'] || 'no-referer';
     
-    // Log high-frequency auth requests for analysis
-    console.log(`Auth request: IP=${clientIP}, UA=${userAgent.substring(0, 50)}, Referer=${referer}`);
-    
-    // Block known monitoring systems
-    if (typeof clientIP === 'string' && (
-      clientIP.startsWith('34.60.') ||    // Google LLC/AS396982 - Replit monitoring  
-      clientIP.startsWith('35.') ||       // Google Cloud monitoring
-      clientIP === '127.0.0.1' ||         // Local monitoring
-      userAgent.includes('GoogleHC') ||   // Google Health Check
-      userAgent.includes('kube-probe') || // Kubernetes probes
-      userAgent.includes('monitoring') || // General monitoring tools
-      userAgent.includes('curl') ||       // Command line tools
-      userAgent.includes('python') ||     // Python scripts
-      userAgent === 'unknown'             // Missing user agent
-    )) {
-      console.log(`Blocked monitoring request from ${clientIP}`);
-      return res.status(503).json({ message: 'Service temporarily unavailable' });
+    // Block only clear monitoring tools, not browsers
+    if (userAgent.includes('GoogleHC') || userAgent.includes('kube-probe') || userAgent.includes('monitoring')) {
+      return res.status(503).json({ message: 'Monitoring blocked' });
     }
-  }
-  
-  // Block other API requests from monitoring systems
-  if (req.path.startsWith('/api/') && typeof clientIP === 'string' && (
-    clientIP.startsWith('34.60.') ||
-    clientIP.startsWith('35.') ||
-    clientIP === '127.0.0.1'
-  )) {
-    return res.status(200).json({ status: 'ok' });
-  }
-  
-  // Handle the specific problematic IP with minimal processing
-  if (typeof clientIP === 'string' && clientIP === '34.60.247.238') {
-    res.status(200).end();
-    return;
-  }
-  
-  // Sanitize all incoming request headers and query parameters to prevent large integer parsing
-  try {
-    // Clean headers that might contain large values
-    if (req.headers) {
-      Object.keys(req.headers).forEach(key => {
-        const value = req.headers[key];
-        if (typeof value === 'string' && /^\d{10,}$/.test(value)) {
-          // Cap large numeric header values
-          req.headers[key] = Math.min(parseInt(value), 2147483647).toString();
-        }
-      });
-    }
-    
-    // Clean query parameters
-    if (req.query) {
-      Object.keys(req.query).forEach(key => {
-        const value = req.query[key];
-        if (typeof value === 'string' && /^\d{10,}$/.test(value)) {
-          req.query[key] = Math.min(parseInt(value), 2147483647).toString();
-        }
-      });
-    }
-  } catch (error) {
-    // If sanitization fails, proceed with original request
   }
   
   next();
