@@ -38,6 +38,12 @@ import {
   exportJobs,
   type ExportJob,
   type InsertExportJob,
+  marketingPlans,
+  type MarketingPlan,
+  type InsertMarketingPlan,
+  planAnalysisItems,
+  type PlanAnalysisItem,
+  type InsertPlanAnalysisItem,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, count, avg, sum, inArray, gte, lt } from "drizzle-orm";
@@ -157,6 +163,15 @@ export interface IStorage {
   setMaintenanceMode(enabled: boolean, message?: string): Promise<void>;
   getMaintenanceMode(): Promise<{ enabled: boolean; message?: string }>;
   getSystemSettings(): Promise<Record<string, any>>;
+
+  // Marketing plans operations
+  createMarketingPlan(plan: Omit<InsertMarketingPlan, 'id' | 'createdAt'>): Promise<MarketingPlan>;
+  updateMarketingPlanStatus(planId: string, status: 'completed' | 'failed', errorMessage?: string): Promise<void>;
+  saveAnalysisItems(planId: string, items: Array<Omit<InsertPlanAnalysisItem, 'id' | 'planId'>>): Promise<void>;
+  getMarketingPlans(): Promise<MarketingPlan[]>;
+  getAnalysisItemsForPlan(planId: string): Promise<PlanAnalysisItem[]>;
+  updateAnalysisItemPhase(itemId: string, newPhase: 'pre_heat' | 'campaign' | 'repurchase'): Promise<void>;
+  approveAnalysisItem(itemId: string, isApproved: boolean): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1139,6 +1154,67 @@ export class DatabaseStorage implements IStorage {
     });
     
     return result;
+  }
+
+  // Marketing plans operations
+  async createMarketingPlan(plan: Omit<InsertMarketingPlan, 'id' | 'createdAt'>): Promise<MarketingPlan> {
+    const [marketingPlan] = await db
+      .insert(marketingPlans)
+      .values(plan)
+      .returning();
+    return marketingPlan;
+  }
+
+  async updateMarketingPlanStatus(planId: string, status: 'completed' | 'failed', errorMessage?: string): Promise<void> {
+    await db
+      .update(marketingPlans)
+      .set({
+        status,
+        errorMessage,
+        completedAt: new Date(),
+      })
+      .where(eq(marketingPlans.id, planId));
+  }
+
+  async saveAnalysisItems(planId: string, items: Array<Omit<InsertPlanAnalysisItem, 'id' | 'planId'>>): Promise<void> {
+    if (items.length === 0) return;
+
+    const itemsWithPlanId = items.map(item => ({
+      ...item,
+      planId,
+    }));
+
+    await db
+      .insert(planAnalysisItems)
+      .values(itemsWithPlanId);
+  }
+
+  async getMarketingPlans(): Promise<MarketingPlan[]> {
+    return await db
+      .select()
+      .from(marketingPlans)
+      .orderBy(desc(marketingPlans.createdAt));
+  }
+
+  async getAnalysisItemsForPlan(planId: string): Promise<PlanAnalysisItem[]> {
+    return await db
+      .select()
+      .from(planAnalysisItems)
+      .where(eq(planAnalysisItems.planId, planId));
+  }
+
+  async updateAnalysisItemPhase(itemId: string, newPhase: 'pre_heat' | 'campaign' | 'repurchase'): Promise<void> {
+    await db
+      .update(planAnalysisItems)
+      .set({ phase: newPhase })
+      .where(eq(planAnalysisItems.id, itemId));
+  }
+
+  async approveAnalysisItem(itemId: string, isApproved: boolean): Promise<void> {
+    await db
+      .update(planAnalysisItems)
+      .set({ isApproved })
+      .where(eq(planAnalysisItems.id, itemId));
   }
 }
 

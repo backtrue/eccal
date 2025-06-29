@@ -7,6 +7,9 @@ import { db } from "./db";
 import { users as usersTable, userMetrics } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { brevoService } from "./brevoService";
+import multer from "multer";
+import fs from "fs";
+import path from "path";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Google OAuth authentication
@@ -1356,6 +1359,228 @@ echo "Bulk import completed!"`;
     } catch (error) {
       console.error('Error setting maintenance mode:', error);
       res.status(500).json({ message: 'Failed to set maintenance mode' });
+    }
+  });
+
+  // ===== Marketing Plans AI Database API =====
+  
+  // Configure multer for file uploads
+  const storage_multer = multer.diskStorage({
+    destination: function (req, file, cb) {
+      const uploadDir = 'tmp/uploads';
+      // Create directory if it doesn't exist
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+      // Generate unique filename with timestamp
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+  });
+
+  const upload = multer({ 
+    storage: storage_multer,
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype === 'application/pdf') {
+        cb(null, true);
+      } else {
+        cb(null, false);
+      }
+    },
+    limits: {
+      fileSize: 10 * 1024 * 1024 // 10MB limit
+    }
+  });
+
+  // Upload PDF and start AI analysis
+  app.post('/api/bdmin/marketing-plans', requireAuth, requireAdmin, upload.single('file'), async (req: any, res) => {
+    let tempFilePath = '';
+    
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      
+      if (!req.file) {
+        return res.status(400).json({ message: 'No PDF file uploaded' });
+      }
+
+      tempFilePath = req.file.path;
+      
+      // Create marketing plan record
+      const marketingPlan = await storage.createMarketingPlan({
+        fileName: req.file.originalname,
+        fileSize: req.file.size,
+        fileType: req.file.mimetype,
+        uploadedBy: userId,
+        status: 'processing'
+      });
+
+      // Return immediate response
+      res.status(202).json({
+        id: marketingPlan.id,
+        status: 'processing',
+        message: 'File uploaded successfully, processing in background'
+      });
+
+      // Start background processing
+      processMarketingPlan(marketingPlan.id, tempFilePath).catch(error => {
+        console.error('Background processing error:', error);
+      });
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      
+      // Clean up temp file on error
+      if (tempFilePath && fs.existsSync(tempFilePath)) {
+        fs.unlinkSync(tempFilePath);
+      }
+      
+      res.status(500).json({ 
+        message: 'File upload failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Background processing function
+  async function processMarketingPlan(planId: string, filePath: string) {
+    try {
+      // 1. Parse PDF content
+      const pdfBuffer = fs.readFileSync(filePath);
+      const pdfData = await pdfParse(pdfBuffer);
+      const textContent = pdfData.text;
+
+      // 2. AI Analysis (mock for now - replace with actual AI service)
+      const analysisResult = await analyzeMarketingContent(textContent);
+
+      // 3. Save analysis items to database
+      const analysisItems = [];
+      
+      // Convert analysis result to database format
+      for (const [phase, strategies] of Object.entries(analysisResult)) {
+        for (const strategy of strategies as string[]) {
+          analysisItems.push({
+            phase: phase as 'pre_heat' | 'campaign' | 'repurchase',
+            strategySummary: strategy,
+            isApproved: false
+          });
+        }
+      }
+
+      await storage.saveAnalysisItems(planId, analysisItems);
+
+      // 4. Update plan status to completed
+      await storage.updateMarketingPlanStatus(planId, 'completed');
+
+    } catch (error) {
+      console.error('Processing error for plan:', planId, error);
+      
+      // Update plan status to failed
+      await storage.updateMarketingPlanStatus(
+        planId, 
+        'failed', 
+        error instanceof Error ? error.message : 'Processing failed'
+      );
+      
+    } finally {
+      // Always clean up temp file
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+  }
+
+  // Mock AI analysis function (replace with actual AI service)
+  async function analyzeMarketingContent(content: string): Promise<{
+    pre_heat: string[];
+    campaign: string[];
+    repurchase: string[];
+  }> {
+    // Simulate AI processing time
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Mock analysis based on content keywords
+    const result = {
+      pre_heat: [] as string[],
+      campaign: [] as string[],
+      repurchase: [] as string[]
+    };
+
+    // Simple keyword-based categorization (replace with actual AI)
+    const lines = content.split('\n').filter(line => line.trim().length > 10);
+    
+    for (const line of lines.slice(0, 20)) { // Limit to first 20 meaningful lines
+      const lowerLine = line.toLowerCase();
+      
+      if (lowerLine.includes('預熱') || lowerLine.includes('準備') || lowerLine.includes('暖身')) {
+        result.pre_heat.push(line.trim());
+      } else if (lowerLine.includes('活動') || lowerLine.includes('促銷') || lowerLine.includes('主推')) {
+        result.campaign.push(line.trim());
+      } else if (lowerLine.includes('回購') || lowerLine.includes('復購') || lowerLine.includes('再次購買')) {
+        result.repurchase.push(line.trim());
+      } else {
+        // Default to campaign phase
+        result.campaign.push(line.trim());
+      }
+    }
+
+    // Ensure each phase has at least one item
+    if (result.pre_heat.length === 0) {
+      result.pre_heat.push('建立品牌認知度，提升目標受眾對產品的興趣');
+    }
+    if (result.campaign.length === 0) {
+      result.campaign.push('推廣核心產品，最大化轉換率和銷售業績');
+    }
+    if (result.repurchase.length === 0) {
+      result.repurchase.push('維護客戶關係，促進重複購買和品牌忠誠度');
+    }
+
+    return result;
+  }
+
+  // Get all marketing plans
+  app.get('/api/bdmin/marketing-plans', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const plans = await storage.getMarketingPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error('Error fetching marketing plans:', error);
+      res.status(500).json({ message: 'Failed to fetch marketing plans' });
+    }
+  });
+
+  // Get analysis items for a specific plan
+  app.get('/api/bdmin/marketing-plans/:id', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const items = await storage.getAnalysisItemsForPlan(id);
+      res.json(items);
+    } catch (error) {
+      console.error('Error fetching analysis items:', error);
+      res.status(500).json({ message: 'Failed to fetch analysis items' });
+    }
+  });
+
+  // Update analysis item phase or approval status
+  app.put('/api/bdmin/analysis-items/:id', requireAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { phase, isApproved } = req.body;
+
+      if (phase !== undefined) {
+        await storage.updateAnalysisItemPhase(id, phase);
+      }
+
+      if (isApproved !== undefined) {
+        await storage.approveAnalysisItem(id, isApproved);
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error updating analysis item:', error);
+      res.status(500).json({ message: 'Failed to update analysis item' });
     }
   });
 
