@@ -18,16 +18,17 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
+  // Completely disable automatic auth requests to prevent Replit monitoring triggers
   const { data: user, isLoading } = useQuery({
     queryKey: ["/api/auth/user"],
     retry: false,
-    staleTime: 30 * 60 * 1000, // 30分鐘不重新請求
-    gcTime: 60 * 60 * 1000, // 60分鐘快取
+    staleTime: Infinity, // Never consider stale
+    gcTime: Infinity, // Never garbage collect
     refetchOnWindowFocus: false,
     refetchInterval: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
-    enabled: typeof window !== 'undefined', // 只在瀏覽器環境啟用
+    enabled: false, // DISABLED - no automatic requests
   });
 
   return (
