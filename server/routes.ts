@@ -587,7 +587,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       console.error('Error recording campaign planner usage:', error);
-      res.status(500).json({ message: 'Failed to record usage', error: error.message });
+      res.status(500).json({ message: 'Failed to record usage', error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
@@ -702,7 +702,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         attributes: {
           FIRSTNAME: user.firstName || '',
           LASTNAME: user.lastName || '',
-          GA_RESOURCE: user.gaResourceName || user.firstName || ''
+          GA_RESOURCE: user.firstName || ''
         },
         listIds: [15],
         signupDate: user.createdAt ? new Date(user.createdAt).toISOString().split('T')[0] : ''
@@ -1448,6 +1448,7 @@ echo "Bulk import completed!"`;
   async function processMarketingPlan(planId: string, filePath: string) {
     try {
       // 1. Parse PDF content
+      const pdfParse = (await import('pdf-parse')).default;
       const pdfBuffer = fs.readFileSync(filePath);
       const pdfData = await pdfParse(pdfBuffer);
       const textContent = pdfData.text;
