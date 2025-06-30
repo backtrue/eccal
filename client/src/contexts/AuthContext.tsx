@@ -40,8 +40,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const urlParams = new URLSearchParams(window.location.search);
       const hasAuthSuccess = urlParams.has('auth_success');
       const isProtectedPage = window.location.pathname.includes('/dashboard') || 
-                             window.location.pathname.includes('/campaign-planner');
+                             window.location.pathname.includes('/campaign-planner') ||
+                             window.location.pathname.includes('/bdmin');
       const hasStoredAuth = document.cookie.includes('connect.sid');
+      
+      console.log('Auth Query Debug:', {
+        hasAuthSuccess,
+        isProtectedPage,
+        hasStoredAuth,
+        pathname: window.location.pathname,
+        enabled: hasAuthSuccess || isProtectedPage || hasStoredAuth
+      });
       
       return hasAuthSuccess || isProtectedPage || hasStoredAuth;
     })(),

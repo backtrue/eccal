@@ -13,15 +13,24 @@ export default function ProtectedAdminRoute({ children }: ProtectedAdminRoutePro
   const [, setLocation] = useLocation();
 
   useEffect(() => {
+    // Debug information
+    console.log('Admin Route Debug:', {
+      isLoading,
+      isAuthenticated,
+      user,
+      userEmail: user?.email,
+      isAdmin: user ? ADMIN_EMAILS.includes(user.email || '') : false
+    });
+
     if (!isLoading) {
       if (!isAuthenticated) {
-        // 未登入，重定向到登入頁面
+        console.log('Redirecting to login - not authenticated');
         window.location.href = '/api/login';
         return;
       }
 
       if (user && !ADMIN_EMAILS.includes(user.email || '')) {
-        // 已登入但非管理員，重定向到首頁
+        console.log('Redirecting to home - not admin:', user.email);
         setLocation('/');
         return;
       }
