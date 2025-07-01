@@ -1377,6 +1377,90 @@ echo "Bulk import completed!"`;
     }
   });
 
+  // ===== Test Endpoints for Admin Functions =====
+  
+  // Test batch membership update (no auth required for testing)
+  app.post('/api/test/batch-membership', async (req: any, res) => {
+    try {
+      const { userIds, membershipLevel, durationDays } = req.body;
+      
+      if (!Array.isArray(userIds) || userIds.length === 0) {
+        return res.status(400).json({ message: 'Invalid user IDs array' });
+      }
+      
+      let expiresAt: Date | undefined;
+      if (membershipLevel === 'pro' && durationDays) {
+        expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + durationDays);
+      }
+      
+      const updatedCount = await storage.batchUpdateUserMembership(userIds, membershipLevel, expiresAt);
+      res.json({ 
+        success: true, 
+        updatedCount,
+        message: `Updated ${updatedCount} users to ${membershipLevel}` 
+      });
+    } catch (error) {
+      console.error('Error in test batch membership update:', error);
+      res.status(500).json({ message: 'Failed to batch update memberships', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+  
+  // Test batch credits add (no auth required for testing)
+  app.post('/api/test/batch-credits', async (req: any, res) => {
+    try {
+      const { userIds, amount, description } = req.body;
+      
+      if (!Array.isArray(userIds) || userIds.length === 0) {
+        return res.status(400).json({ message: 'Invalid user IDs array' });
+      }
+      
+      if (!amount || !description) {
+        return res.status(400).json({ message: 'Amount and description required' });
+      }
+      
+      const updatedCount = await storage.batchAddCredits(userIds, amount, description);
+      res.json({ 
+        success: true, 
+        updatedCount,
+        message: `Added ${amount} credits to ${updatedCount} users` 
+      });
+    } catch (error) {
+      console.error('Error in test batch credits add:', error);
+      res.status(500).json({ message: 'Failed to batch add credits', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+  
+  // Test announcement creation (no auth required for testing)
+  app.post('/api/test/announcement', async (req: any, res) => {
+    try {
+      const { title, content, type, targetAudience } = req.body;
+      
+      const announcement = await storage.createAnnouncement({
+        title,
+        content,
+        type: type || 'info',
+        targetAudience: targetAudience || 'all',
+        priority: 0,
+        startDate: null,
+        endDate: null,
+        createdBy: 'test-user',
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      
+      res.json({ 
+        success: true, 
+        announcement,
+        message: 'Test announcement created successfully' 
+      });
+    } catch (error) {
+      console.error('Error in test announcement creation:', error);
+      res.status(500).json({ message: 'Failed to create test announcement', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
   // ===== Marketing Plans AI Database API =====
   
   // Configure multer for file uploads
