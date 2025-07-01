@@ -1401,7 +1401,7 @@ echo "Bulk import completed!"`;
         cookie: req.get('Cookie') ? 'present' : 'absent',
       },
       database: {
-        connected: !!pool,
+        connected: !!db,
         url: process.env.DATABASE_URL ? 'configured' : 'missing',
       },
       oauth: {
