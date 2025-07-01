@@ -4,9 +4,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 
+interface TestResult {
+  success: boolean;
+  data?: any;
+  error?: string;
+}
+
+interface TestResults {
+  membership?: TestResult;
+  credits?: TestResult;
+  announcement?: TestResult;
+}
+
 export default function AdminDebugger() {
   const [debugInfo, setDebugInfo] = useState<any>(null);
-  const [testResults, setTestResults] = useState<any>({});
+  const [testResults, setTestResults] = useState<TestResults>({});
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -37,13 +49,13 @@ export default function AdminDebugger() {
         membershipLevel: 'pro',
         durationDays: 30
       });
-      setTestResults(prev => ({ ...prev, membership: { success: true, data: response } }));
+      setTestResults((prev: TestResults) => ({ ...prev, membership: { success: true, data: response } }));
       toast({
         title: "成功",
         description: "批次會員測試成功",
       });
     } catch (error) {
-      setTestResults(prev => ({ 
+      setTestResults((prev: TestResults) => ({ 
         ...prev, 
         membership: { 
           success: false, 
@@ -68,13 +80,13 @@ export default function AdminDebugger() {
         amount: 50,
         description: '測試積分'
       });
-      setTestResults(prev => ({ ...prev, credits: { success: true, data: response } }));
+      setTestResults((prev: TestResults) => ({ ...prev, credits: { success: true, data: response } }));
       toast({
         title: "成功",
         description: "批次積分測試成功",
       });
     } catch (error) {
-      setTestResults(prev => ({ 
+      setTestResults((prev: TestResults) => ({ 
         ...prev, 
         credits: { 
           success: false, 
@@ -100,13 +112,13 @@ export default function AdminDebugger() {
         type: 'info',
         targetAudience: 'all'
       });
-      setTestResults(prev => ({ ...prev, announcement: { success: true, data: response } }));
+      setTestResults((prev: TestResults) => ({ ...prev, announcement: { success: true, data: response } }));
       toast({
         title: "成功",
         description: "公告創建測試成功",
       });
     } catch (error) {
-      setTestResults(prev => ({ 
+      setTestResults((prev: TestResults) => ({ 
         ...prev, 
         announcement: { 
           success: false, 

@@ -375,7 +375,7 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8">
+          <TabsList className="grid w-full grid-cols-9">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4" />
               BI 分析
@@ -411,6 +411,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="marketing" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               行銷資料庫
+            </TabsTrigger>
+            <TabsTrigger value="debug" className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              診斷工具
             </TabsTrigger>
           </TabsList>
 
@@ -1405,6 +1409,11 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          {/* Debug Tools */}
+          <TabsContent value="debug" className="space-y-6">
+            <AdminDebugger />
           </TabsContent>
         </Tabs>
       </div>
