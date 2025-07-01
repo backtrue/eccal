@@ -449,8 +449,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { startDate, endDate, targetRevenue, targetAov, targetConversionRate, cpc } = req.body;
       
       // 驗證必要參數
+      console.log('[CAMPAIGN] Parameters received:', { startDate, endDate, targetRevenue, targetAov, targetConversionRate, cpc });
+      
       if (!startDate || !endDate || !targetRevenue || !targetAov || !targetConversionRate || !cpc) {
+        console.error('[CAMPAIGN] Missing parameters:', { startDate, endDate, targetRevenue, targetAov, targetConversionRate, cpc });
         throw new Error('Missing required parameters');
+      }
+      
+      // 驗證數值參數
+      if (isNaN(targetRevenue) || isNaN(targetAov) || isNaN(targetConversionRate) || isNaN(cpc)) {
+        console.error('[CAMPAIGN] Invalid numeric parameters:', { targetRevenue, targetAov, targetConversionRate, cpc });
+        throw new Error('Invalid numeric parameters');
       }
 
       // 2. 執行後端計算邏輯

@@ -247,7 +247,7 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
   if (!isAuthenticated || !user) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <NavigationBar locale={locale} />
+        <NavigationBar locale={locale as "zh-TW" | "en" | "ja"} />
         <div className="container mx-auto p-6 max-w-4xl">
           <div className="text-center py-16">
             <h1 className="text-3xl font-bold mb-4">{t.title}</h1>
@@ -279,10 +279,9 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
 
       if (response && (response as any).success) {
         const result = (response as any).result;
-        const usage = (response as any).usage;
         
         setResults(result);
-        setUsageInfo(usage);
+        setUsageInfo(null); // Usage info removed for now
         
         toast({
           title: t.calculationComplete,
@@ -290,7 +289,8 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
           variant: "default",
         });
       } else {
-        throw new Error('計算失敗');
+        console.error('API Response indicated failure:', response);
+        throw new Error((response as any)?.error || (response as any)?.message || '計算失敗');
       }
     } catch (error: any) {
       console.error('Campaign calculation error:', error);
@@ -368,7 +368,7 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <NavigationBar locale={locale} />
+      <NavigationBar locale={locale as "zh-TW" | "en" | "ja"} />
       <div className="container mx-auto p-6 max-w-6xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">{t.title}</h1>
