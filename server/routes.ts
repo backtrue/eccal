@@ -440,8 +440,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('[CAMPAIGN] Starting calculation for user:', req.user.email || req.user.id);
       console.log('[CAMPAIGN] Request body:', req.body);
+      console.log('[CAMPAIGN] Full req.user object:', req.user);
       
       const userId = req.user.claims?.sub || req.user.id;
+      console.log('[CAMPAIGN] Extracted userId:', userId);
       const { startDate, endDate, targetRevenue, targetAov, targetConversionRate, cpc } = req.body;
 
       // 1. 後端檢查會員狀態和使用次數

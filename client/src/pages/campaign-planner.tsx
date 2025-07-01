@@ -109,10 +109,6 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
     }
 
     try {
-      console.log('[CAMPAIGN] Submitting calculation request...');
-      console.log('[CAMPAIGN] Request data:', data);
-      console.log('[CAMPAIGN] Auth status:', { isAuthenticated, user: !!user });
-      
       const response = await apiRequest('POST', '/api/campaign-planner/calculate', {
         startDate: data.startDate,
         endDate: data.endDate,
@@ -122,16 +118,10 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
         cpc: data.cpc
       });
 
-      console.log('[CAMPAIGN] API response received:', response);
-
       if ((response as any).success) {
         // Transform backend result to frontend format
         const backendResult = (response as any).result;
-        console.log('[CAMPAIGN] Backend result:', backendResult);
-        
         const frontendResult = transformBackendToFrontendResult(backendResult, data);
-        console.log('[CAMPAIGN] Frontend result:', frontendResult);
-        
         setResults(frontendResult);
         
         // Update usage info from backend response
@@ -143,11 +133,9 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
           variant: "default",
         });
       } else {
-        console.error('[CAMPAIGN] Backend returned unsuccessful response:', response);
         throw new Error('Backend calculation failed');
       }
     } catch (error: any) {
-      console.error('[CAMPAIGN] Calculation error:', error);
       if (error.message.includes('403') || error.message.includes('usage_limit_exceeded')) {
         toast({
           title: "使用次數已達上限",
@@ -310,6 +298,35 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">檢查登入狀態中...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Show login prompt if not authenticated
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <NavigationBar locale="zh-TW" />
+        <div className="container mx-auto p-6 max-w-4xl">
+          <div className="text-center py-16">
+            <h1 className="text-3xl font-bold mb-4">活動預算規劃器</h1>
+            <p className="text-gray-600 mb-8">請先登入 Google 帳號以使用活動預算規劃功能</p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+              <h3 className="text-lg font-semibold text-blue-800 mb-2">需要 Google 登入</h3>
+              <p className="text-blue-700 mb-4">
+                活動預算規劃器是 Pro 功能，需要 Google 帳號登入才能使用。
+                登入後可以享受 Google Analytics 數據整合和個人化設定。
+              </p>
+              <Button 
+                onClick={() => window.location.href = '/api/auth/google'}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                使用 Google 帳號登入
+              </Button>
+            </div>
+          </div>
+        </div>
+        <Footer />
       </div>
     );
   }
