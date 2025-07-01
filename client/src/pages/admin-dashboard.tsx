@@ -798,41 +798,17 @@ export default function AdminDashboard() {
               <CardContent>
                 <div className="space-y-4">
                   <Button
-                    onClick={async () => {
-                      // Create new announcement
-                      const title = prompt('公告標題:');
-                      const content = prompt('公告內容:');
-                      const type = prompt('公告類型 (info/warning/success/error):', 'info');
-                      const targetAudience = prompt('目標受眾 (all/free/pro):', 'all');
-                      
-                      if (title && content) {
-                        try {
-                          await apiRequest('POST', '/api/bdmin/announcements', {
-                            title,
-                            content,
-                            type: type || 'info',
-                            targetAudience: targetAudience || 'all',
-                            priority: 0
-                          });
-                          
-                          // Refetch announcements
-                          queryClient.invalidateQueries({ queryKey: ['/api/bdmin/announcements'] });
-                          
-                          toast({
-                            title: "成功",
-                            description: "公告已創建",
-                          });
-                        } catch (error) {
-                          toast({
-                            title: "錯誤",
-                            description: "創建公告失敗",
-                            variant: "destructive"
-                          });
-                        }
-                      }
+                    onClick={() => {
+                      // Create a test announcement for testing purposes
+                      createAnnouncementMutation.mutate({
+                        title: "系統測試公告",
+                        content: "這是一個測試公告，用於驗證管理後台的公告創建功能。",
+                        type: "info",
+                        targetAudience: "all"
+                      });
                     }}
                   >
-                    創建新公告
+                    創建測試公告
                   </Button>
 
                   <div className="space-y-4">
