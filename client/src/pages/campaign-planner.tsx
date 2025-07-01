@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Calculator, TrendingUp, Calendar, DollarSign } from "lucide-react";
+import { format, addDays, subDays } from "date-fns";
+import { Calculator, TrendingUp, Calendar, DollarSign, Users, Target } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -10,21 +11,143 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useCampaignPlannerUsage } from "@/hooks/useCampaignPlannerUsage";
+import { useAnalyticsData } from "@/hooks/useAnalyticsData";
 import { apiRequest } from "@/lib/queryClient";
 import NavigationBar from "@/components/NavigationBar";
+import SaveProjectDialog from "@/components/SaveProjectDialog";
 import Footer from "@/components/Footer";
 
-// 表單驗證架構
+// Translation constants
+const translations = {
+  "zh-TW": {
+    title: "活動預算規劃器",
+    subtitle: "專業的活動預算規劃工具，幫助您精確計算廣告預算配置",
+    proBadge: "Pro 會員專屬",
+    needAuth: "需要登入",
+    authDescription: "請先登入 Google 帳號以使用活動預算規劃功能",
+    loginButton: "使用 Google 帳號登入",
+    campaignSettings: "活動設定",
+    campaignDescription: "設定您的活動目標和預算參數",
+    startDate: "活動開始日期",
+    endDate: "活動結束日期",
+    targetRevenue: "目標營收 (NT$)",
+    targetAov: "目標客單價 (NT$)",
+    targetConversionRate: "目標轉換率 (%)",
+    cpc: "每次點擊成本 (NT$)",
+    calculate: "開始計算預算",
+    calculating: "計算中...",
+    results: "計算結果",
+    fillFormFirst: "請先填寫左側表單並計算",
+    totalBudget: "總預算需求",
+    totalTraffic: "總流量需求",
+    budgetAllocation: "預算分配",
+    period: "期間",
+    budget: "預算",
+    traffic: "流量",
+    dailyBudget: "每日預算",
+    dailyTraffic: "每日流量",
+    calculationComplete: "計算完成",
+    planningComplete: "活動預算規劃已完成",
+    calculationFailed: "計算失敗",
+    authRequired: "需要重新登入",
+    loginAgain: "請重新登入後再試",
+    tryAgain: "請稍後再試",
+    usageInfo: "使用次數"
+  },
+  "en": {
+    title: "Campaign Budget Planner",
+    subtitle: "Professional campaign budget planning tool to help you accurately calculate ad budget allocation",
+    proBadge: "Pro Member Exclusive",
+    needAuth: "Login Required",
+    authDescription: "Please login with your Google account to use the campaign budget planner",
+    loginButton: "Login with Google Account",
+    campaignSettings: "Campaign Settings",
+    campaignDescription: "Set your campaign goals and budget parameters",
+    startDate: "Campaign Start Date",
+    endDate: "Campaign End Date",
+    targetRevenue: "Target Revenue ($)",
+    targetAov: "Target AOV ($)",
+    targetConversionRate: "Target Conversion Rate (%)",
+    cpc: "Cost Per Click ($)",
+    calculate: "Calculate Budget",
+    calculating: "Calculating...",
+    results: "Results",
+    fillFormFirst: "Please fill out the form on the left and calculate",
+    totalBudget: "Total Budget Required",
+    totalTraffic: "Total Traffic Required",
+    budgetAllocation: "Budget Allocation",
+    period: "Period",
+    budget: "Budget",
+    traffic: "Traffic",
+    dailyBudget: "Daily Budget",
+    dailyTraffic: "Daily Traffic",
+    calculationComplete: "Calculation Complete",
+    planningComplete: "Campaign budget planning completed",
+    calculationFailed: "Calculation Failed",
+    authRequired: "Re-authentication Required",
+    loginAgain: "Please login again and try",
+    tryAgain: "Please try again later",
+    usageInfo: "Usage Count"
+  },
+  "ja": {
+    title: "キャンペーン予算プランナー",
+    subtitle: "プロフェッショナルなキャンペーン予算計画ツールで、広告予算配分を正確に計算します",
+    proBadge: "Pro会員限定",
+    needAuth: "ログインが必要",
+    authDescription: "キャンペーン予算プランナーを使用するには、Googleアカウントでログインしてください",
+    loginButton: "Googleアカウントでログイン",
+    campaignSettings: "キャンペーン設定",
+    campaignDescription: "キャンペーンの目標と予算パラメータを設定してください",
+    startDate: "キャンペーン開始日",
+    endDate: "キャンペーン終了日",
+    targetRevenue: "目標売上 (¥)",
+    targetAov: "目標客単価 (¥)",
+    targetConversionRate: "目標コンバージョン率 (%)",
+    cpc: "クリック単価 (¥)",
+    calculate: "予算を計算",
+    calculating: "計算中...",
+    results: "結果",
+    fillFormFirst: "左側のフォームに入力して計算してください",
+    totalBudget: "総予算必要額",
+    totalTraffic: "総トラフィック必要数",
+    budgetAllocation: "予算配分",
+    period: "期間",
+    budget: "予算",
+    traffic: "トラフィック",
+    dailyBudget: "日予算",
+    dailyTraffic: "日トラフィック",
+    calculationComplete: "計算完了",
+    planningComplete: "キャンペーン予算計画が完了しました",
+    calculationFailed: "計算失敗",
+    authRequired: "再認証が必要",
+    loginAgain: "再ログインして再試行してください",
+    tryAgain: "後でもう一度お試しください",
+    usageInfo: "使用回数"
+  }
+};
+
+// Form validation schema
 const campaignSchema = z.object({
-  startDate: z.string().min(1, "請選擇活動開始日期"),
-  endDate: z.string().min(1, "請選擇活動結束日期"),
-  targetRevenue: z.number().min(1, "目標營收必須大於0"),
-  targetAov: z.number().min(1, "目標客單價必須大於0"),
-  targetConversionRate: z.number().min(0.01).max(100, "轉換率必須介於0.01%到100%之間"),
-  cpc: z.number().min(0.1, "CPC必須大於0.1"),
+  startDate: z.string().min(1, "Please select campaign start date"),
+  endDate: z.string().min(1, "Please select campaign end date"),
+  targetRevenue: z.number().min(1, "Target revenue must be greater than 0"),
+  targetAov: z.number().min(1, "Target AOV must be greater than 0"),
+  targetConversionRate: z.number().min(0.01).max(100, "Conversion rate must be between 0.01% and 100%"),
+  cpc: z.number().min(0.1, "CPC must be greater than 0.1"),
 });
 
 type CampaignFormData = z.infer<typeof campaignSchema>;
+
+interface PeriodAllocation {
+  period: string;
+  budget: number;
+  traffic: number;
+  dailyBudget: number;
+  dailyTraffic: number;
+  days: number;
+  percentage: number;
+}
 
 interface CalculationResult {
   totalTraffic: number;
@@ -32,27 +155,84 @@ interface CalculationResult {
   campaignDays: number;
   budgetBreakdown: Record<string, number>;
   trafficBreakdown: Record<string, number>;
+  periodDays: Record<string, number>;
+  calculations: {
+    targetRevenue: number;
+    targetAov: number;
+    targetConversionRate: number;
+    cpc: number;
+    startDate: string;
+    endDate: string;
+  };
 }
 
-export default function CampaignPlannerNew({ locale = "zh-TW" }: { locale?: string }) {
+interface UsageInfo {
+  current: number;
+  limit: number;
+  membershipLevel: string;
+}
+
+export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string }) {
+  const t = translations[locale as keyof typeof translations] || translations["zh-TW"];
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { data: usageData } = useCampaignPlannerUsage();
+  const { data: analyticsData } = useAnalyticsData();
+  
   const [results, setResults] = useState<CalculationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [usageInfo, setUsageInfo] = useState<UsageInfo | null>(null);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+
+  // Get default currency values based on locale
+  const getDefaultValues = () => {
+    const defaults = {
+      startDate: format(addDays(new Date(), 7), "yyyy-MM-dd"),
+      endDate: format(addDays(new Date(), 14), "yyyy-MM-dd"),
+    };
+
+    switch (locale) {
+      case "en":
+        return {
+          ...defaults,
+          targetRevenue: 10000,
+          targetAov: 50,
+          targetConversionRate: 2.5,
+          cpc: 1,
+        };
+      case "ja":
+        return {
+          ...defaults,
+          targetRevenue: 1000000,
+          targetAov: 6000,
+          targetConversionRate: 2.0,
+          cpc: 120,
+        };
+      default: // zh-TW
+        return {
+          ...defaults,
+          targetRevenue: 300000,
+          targetAov: 1500,
+          targetConversionRate: 2.0,
+          cpc: 5,
+        };
+    }
+  };
 
   const form = useForm<CampaignFormData>({
     resolver: zodResolver(campaignSchema),
-    defaultValues: {
-      startDate: "2025-07-10",
-      endDate: "2025-07-17",
-      targetRevenue: 500000,
-      targetAov: 3000,
-      targetConversionRate: 1.5,
-      cpc: 5,
-    },
+    defaultValues: getDefaultValues(),
   });
 
-  // 認證檢查
+  // Auto-fill from analytics data
+  const fillFromAnalytics = () => {
+    if (analyticsData) {
+      form.setValue("targetAov", analyticsData.averageOrderValue || form.getValues("targetAov"));
+      form.setValue("targetConversionRate", analyticsData.conversionRate || form.getValues("targetConversionRate"));
+    }
+  };
+
+  // Handle authentication redirect
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -67,21 +247,19 @@ export default function CampaignPlannerNew({ locale = "zh-TW" }: { locale?: stri
   if (!isAuthenticated || !user) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <NavigationBar locale="zh-TW" />
+        <NavigationBar locale={locale} />
         <div className="container mx-auto p-6 max-w-4xl">
           <div className="text-center py-16">
-            <h1 className="text-3xl font-bold mb-4">活動預算規劃器</h1>
-            <p className="text-gray-600 mb-8">請先登入 Google 帳號以使用活動預算規劃功能</p>
+            <h1 className="text-3xl font-bold mb-4">{t.title}</h1>
+            <p className="text-gray-600 mb-8">{t.authDescription}</p>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-              <h3 className="text-lg font-semibold text-blue-800 mb-2">需要 Google 登入</h3>
-              <p className="text-blue-700 mb-4">
-                活動預算規劃器是 Pro 功能，需要 Google 帳號登入才能使用。
-              </p>
+              <h3 className="text-lg font-semibold text-blue-800 mb-2">{t.needAuth}</h3>
+              <p className="text-blue-700 mb-4">{t.authDescription}</p>
               <Button 
                 onClick={() => window.location.href = '/api/auth/google'}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
-                使用 Google 帳號登入
+                {t.loginButton}
               </Button>
             </div>
           </div>
@@ -94,34 +272,40 @@ export default function CampaignPlannerNew({ locale = "zh-TW" }: { locale?: stri
   const onSubmit = async (data: CampaignFormData) => {
     setIsCalculating(true);
     try {
+      console.log('Submitting campaign calculation:', data);
+      
       const response = await apiRequest('POST', '/api/campaign-planner/calculate', data);
+      console.log('API Response:', response);
 
       if (response && (response as any).success) {
         const result = (response as any).result;
+        const usage = (response as any).usage;
+        
         setResults(result);
+        setUsageInfo(usage);
         
         toast({
-          title: "計算完成",
-          description: "活動預算規劃已完成",
+          title: t.calculationComplete,
+          description: t.planningComplete,
           variant: "default",
         });
       } else {
         throw new Error('計算失敗');
       }
     } catch (error: any) {
-      console.error('計算錯誤:', error);
+      console.error('Campaign calculation error:', error);
       
       if (error.message.includes('401') || error.message.includes('Authentication')) {
         toast({
-          title: "需要重新登入",
-          description: "請重新登入後再試",
+          title: t.authRequired,
+          description: t.loginAgain,
           variant: "destructive",
         });
         setTimeout(() => window.location.href = '/api/auth/google', 1000);
       } else {
         toast({
-          title: "計算失敗",
-          description: error.message || "請稍後再試",
+          title: t.calculationFailed,
+          description: error.message || t.tryAgain,
           variant: "destructive",
         });
       }
@@ -131,29 +315,84 @@ export default function CampaignPlannerNew({ locale = "zh-TW" }: { locale?: stri
   };
 
   const formatCurrency = (amount: number) => {
-    return `NT$ ${amount.toLocaleString()}`;
+    switch (locale) {
+      case "en":
+        return `$${amount.toLocaleString()}`;
+      case "ja":
+        return `¥${amount.toLocaleString()}`;
+      default:
+        return `NT$ ${amount.toLocaleString()}`;
+    }
   };
+
+  const formatNumber = (num: number) => {
+    return num.toLocaleString();
+  };
+
+  const calculatePeriodAllocations = (): PeriodAllocation[] => {
+    if (!results) return [];
+
+    const allocations: PeriodAllocation[] = [];
+    const periodNames: Record<string, string> = {
+      preheat: "預熱期",
+      launch: "起跑期", 
+      main: "活動期",
+      final: "倒數期",
+      repurchase: "回購期",
+      day1: "第1天",
+      day2: "第2天", 
+      day3: "第3天",
+      total: "總計"
+    };
+
+    Object.entries(results.budgetBreakdown).forEach(([period, budget]) => {
+      const traffic = results.trafficBreakdown[period] || 0;
+      const days = results.periodDays?.[period] || 1;
+      const percentage = ((budget / results.totalBudget) * 100);
+
+      allocations.push({
+        period: periodNames[period] || period,
+        budget,
+        traffic,
+        dailyBudget: Math.ceil(budget / days),
+        dailyTraffic: Math.ceil(traffic / days),
+        days,
+        percentage
+      });
+    });
+
+    return allocations;
+  };
+
+  const periodAllocations = calculatePeriodAllocations();
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <NavigationBar locale="zh-TW" />
+      <NavigationBar locale={locale} />
       <div className="container mx-auto p-6 max-w-6xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">活動預算規劃器</h1>
-          <p className="text-gray-600">專業的活動預算規劃工具</p>
-          <Badge variant="outline" className="mt-2">Pro 會員專屬</Badge>
+          <h1 className="text-3xl font-bold mb-2">{t.title}</h1>
+          <p className="text-gray-600">{t.subtitle}</p>
+          <div className="flex items-center gap-4 mt-2">
+            <Badge variant="outline">{t.proBadge}</Badge>
+            {usageInfo && usageInfo.membershipLevel === 'free' && (
+              <Badge variant="secondary">
+                {t.usageInfo}: {usageInfo.current}/{usageInfo.limit}
+              </Badge>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* 輸入表單 */}
+          {/* Input Form */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calculator className="h-5 w-5" />
-                活動設定
+                {t.campaignSettings}
               </CardTitle>
               <CardDescription>
-                設定您的活動目標和預算參數
+                {t.campaignDescription}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -165,7 +404,7 @@ export default function CampaignPlannerNew({ locale = "zh-TW" }: { locale?: stri
                       name="startDate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>活動開始日期</FormLabel>
+                          <FormLabel>{t.startDate}</FormLabel>
                           <FormControl>
                             <Input type="date" {...field} />
                           </FormControl>
@@ -179,7 +418,7 @@ export default function CampaignPlannerNew({ locale = "zh-TW" }: { locale?: stri
                       name="endDate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>活動結束日期</FormLabel>
+                          <FormLabel>{t.endDate}</FormLabel>
                           <FormControl>
                             <Input type="date" {...field} />
                           </FormControl>
@@ -194,11 +433,10 @@ export default function CampaignPlannerNew({ locale = "zh-TW" }: { locale?: stri
                     name="targetRevenue"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>目標營收 (NT$)</FormLabel>
+                        <FormLabel>{t.targetRevenue}</FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
-                            placeholder="500000"
                             {...field}
                             onChange={(e) => {
                               const value = e.target.value;
@@ -216,11 +454,10 @@ export default function CampaignPlannerNew({ locale = "zh-TW" }: { locale?: stri
                     name="targetAov"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>目標客單價 (NT$)</FormLabel>
+                        <FormLabel>{t.targetAov}</FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
-                            placeholder="3000"
                             {...field}
                             onChange={(e) => {
                               const value = e.target.value;
@@ -238,12 +475,11 @@ export default function CampaignPlannerNew({ locale = "zh-TW" }: { locale?: stri
                     name="targetConversionRate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>目標轉換率 (%)</FormLabel>
+                        <FormLabel>{t.targetConversionRate}</FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
                             step="0.01"
-                            placeholder="1.5"
                             {...field}
                             onChange={(e) => {
                               const value = e.target.value;
@@ -261,12 +497,11 @@ export default function CampaignPlannerNew({ locale = "zh-TW" }: { locale?: stri
                     name="cpc"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>平均點擊成本 (NT$)</FormLabel>
+                        <FormLabel>{t.cpc}</FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
                             step="0.1"
-                            placeholder="5"
                             {...field}
                             onChange={(e) => {
                               const value = e.target.value;
@@ -279,6 +514,17 @@ export default function CampaignPlannerNew({ locale = "zh-TW" }: { locale?: stri
                     )}
                   />
 
+                  {analyticsData && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={fillFromAnalytics}
+                      className="w-full"
+                    >
+                      從 GA 數據自動填入
+                    </Button>
+                  )}
+
                   <Button 
                     type="submit" 
                     className="w-full" 
@@ -287,10 +533,10 @@ export default function CampaignPlannerNew({ locale = "zh-TW" }: { locale?: stri
                     {isCalculating ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        計算中...
+                        {t.calculating}
                       </>
                     ) : (
-                      "開始計算預算"
+                      t.calculate
                     )}
                   </Button>
                 </form>
@@ -298,80 +544,116 @@ export default function CampaignPlannerNew({ locale = "zh-TW" }: { locale?: stri
             </CardContent>
           </Card>
 
-          {/* 計算結果 */}
+          {/* Results */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
-                計算結果
+                {t.results}
               </CardTitle>
               <CardDescription>
-                {results ? "根據您的設定計算出的預算配置" : "請先填寫左側表單並計算"}
+                {results ? "根據您的設定計算出的預算配置" : t.fillFormFirst}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {results ? (
                 <div className="space-y-6">
-                  {/* 總覽數據 */}
+                  {/* Summary */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-4 bg-blue-50 rounded-lg">
                       <DollarSign className="h-8 w-8 text-blue-600 mx-auto mb-2" />
                       <div className="text-2xl font-bold text-blue-600">
                         {formatCurrency(results.totalBudget)}
                       </div>
-                      <div className="text-sm text-gray-600">總預算需求</div>
+                      <div className="text-sm text-gray-600">{t.totalBudget}</div>
                     </div>
                     <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <Calendar className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                      <Users className="h-8 w-8 text-green-600 mx-auto mb-2" />
                       <div className="text-2xl font-bold text-green-600">
-                        {results.totalTraffic.toLocaleString()}
+                        {formatNumber(results.totalTraffic)}
                       </div>
-                      <div className="text-sm text-gray-600">總流量需求</div>
+                      <div className="text-sm text-gray-600">{t.totalTraffic}</div>
                     </div>
                   </div>
 
-                  {/* 活動期間分配 */}
-                  {results.budgetBreakdown && Object.keys(results.budgetBreakdown).length > 0 && (
+                  {/* Period Breakdown */}
+                  {periodAllocations.length > 0 && (
                     <div>
-                      <h3 className="text-lg font-semibold mb-4">預算分配 ({results.campaignDays} 天活動)</h3>
-                      <div className="space-y-3">
-                        {Object.entries(results.budgetBreakdown).map(([period, budget]) => {
-                          const traffic = results.trafficBreakdown?.[period] || 0;
-                          const percentage = ((budget / results.totalBudget) * 100).toFixed(1);
-                          
-                          return (
-                            <div key={period} className="p-3 border rounded-lg">
-                              <div className="flex justify-between items-center mb-2">
-                                <span className="font-medium capitalize">{period}</span>
-                                <span className="text-sm text-gray-600">{percentage}%</span>
-                              </div>
-                              <div className="grid grid-cols-2 gap-4 text-sm">
-                                <div>
-                                  <span className="text-gray-600">預算: </span>
-                                  <span className="font-medium">{formatCurrency(budget)}</span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-600">流量: </span>
-                                  <span className="font-medium">{traffic.toLocaleString()}</span>
-                                </div>
-                              </div>
+                      <h3 className="text-lg font-semibold mb-4">
+                        {t.budgetAllocation} ({results.campaignDays} 天活動)
+                      </h3>
+                      <div className="flex flex-wrap gap-3">
+                        {periodAllocations.map((allocation, index) => (
+                          <div key={index} className="flex-1 min-w-36 p-3 border rounded-lg">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="font-medium text-sm">{allocation.period}</span>
+                              <span className="text-xs text-gray-600">
+                                {allocation.percentage.toFixed(1)}%
+                              </span>
                             </div>
-                          );
-                        })}
+                            <div className="space-y-1 text-xs">
+                              <div>
+                                <span className="text-gray-600">{t.budget}: </span>
+                                <span className="font-medium">{formatCurrency(allocation.budget)}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-600">{t.traffic}: </span>
+                                <span className="font-medium">{formatNumber(allocation.traffic)}</span>
+                              </div>
+                              {allocation.days > 1 && (
+                                <>
+                                  <div>
+                                    <span className="text-gray-600">{t.dailyBudget}: </span>
+                                    <span className="font-medium">{formatCurrency(allocation.dailyBudget)}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-600">{t.dailyTraffic}: </span>
+                                    <span className="font-medium">{formatNumber(allocation.dailyTraffic)}</span>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
+
+                  {/* Save Project Button */}
+                  <Button 
+                    onClick={() => setShowSaveDialog(true)}
+                    className="w-full"
+                    variant="outline"
+                  >
+                    儲存計算結果
+                  </Button>
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-500">
                   <Calculator className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>填寫活動參數後，點擊「開始計算預算」查看結果</p>
+                  <p>{t.fillFormFirst}</p>
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Save Project Dialog */}
+      {showSaveDialog && results && (
+        <SaveProjectDialog
+          isOpen={showSaveDialog}
+          onClose={() => setShowSaveDialog(false)}
+          projectData={{
+            type: 'campaign_planner',
+            data: {
+              ...results.calculations,
+              results
+            }
+          }}
+        />
+      )}
+
       <Footer />
     </div>
   );

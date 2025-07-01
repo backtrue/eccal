@@ -561,31 +561,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       };
 
-      // 3. 如果計算成功，且是免費會員，才記錄用量
-      try {
-        if (membershipStatus.level === 'free') {
-          await storage.incrementCampaignPlannerUsage(userId);
-        }
-      } catch (usageError) {
-        console.error('[CAMPAIGN] Usage update failed (non-critical):', usageError);
-        // 不阻擋計算結果，用量更新失敗不影響計算
-      }
-
-      console.log('[CAMPAIGN] Calculation successful, sending response');
-      console.log('[CAMPAIGN] Result summary:', { 
-        totalBudget: result.totalBudget, 
-        totalTraffic: result.totalTraffic, 
-        campaignDays: result.campaignDays 
-      });
+      console.log('Calculation successful, sending response');
       
       const response = { 
         success: true, 
-        result,
-        usage: {
-          current: membershipStatus.level === 'free' ? currentUsage + 1 : -1,
-          limit: membershipStatus.level === 'free' ? 3 : -1,
-          membershipLevel: membershipStatus.level
-        }
+        result
       };
       
       console.log('[CAMPAIGN] Sending response with success:', response.success);
