@@ -71,8 +71,9 @@ export class CampaignPlannerService {
     // 4. 儲存預算期間
     const campaignPeriods = await storage.createCampaignPeriods(periods);
 
-    // 5. 儲存每日預算
-    const dailyBudgets = await storage.createDailyBudgets(dailyBreakdown);
+    // 5. 更新每日預算的 period_id 並儲存
+    const dailyBudgetsWithPeriodIds = this.assignPeriodIds(dailyBreakdown, campaignPeriods);
+    const dailyBudgets = await storage.createDailyBudgets(dailyBudgetsWithPeriodIds);
 
     return {
       campaign: campaignPlan,
@@ -149,7 +150,7 @@ export class CampaignPlannerService {
         // 建立每日預算
         const dailyBudget: InsertDailyBudget = {
           campaignId,
-          periodId: '', // 會在儲存 period 後更新
+          periodId: `temp_${allocation.name}_${i}`, // 臨時 ID，稍後會替換
           date,
           dayOfCampaign: i + 1,
           budget: periodBudget.toString(),
@@ -341,7 +342,7 @@ export class CampaignPlannerService {
 
         const dailyBudget: InsertDailyBudget = {
           campaignId,
-          periodId: '', // 會在儲存 period 後更新
+          periodId: `temp_${allocation.name}_${i}`, // 臨時 ID，稍後會替換
           date,
           dayOfCampaign,
           budget: dailyBudgetAmount.toString(),
@@ -381,6 +382,38 @@ export class CampaignPlannerService {
   // 刪除活動計畫
   async deleteCampaignPlan(campaignId: string, userId: string) {
     return await storage.deleteCampaignPlan(campaignId, userId);
+  }
+
+  // 為每日預算分配正確的 period_id
+  private assignPeriodIds(dailyBudgets: InsertDailyBudget[], periods: any[]): InsertDailyBudget[] {
+    return dailyBudgets.map((budget) => {
+      // 從臨時 ID 中提取 period 名稱
+      const tempId = budget.periodId;
+      if (tempId.startsWith('temp_')) {
+        const periodName = tempId.split('_')[1]; // 例如：從 "temp_launch_0" 取得 "launch"
+        
+        // 找到匹配的 period
+        const matchingPeriod = periods.find(period => period.name === periodName);
+        
+        return {
+          ...budget,
+          periodId: matchingPeriod ? matchingPeriod.id : '',
+        };
+      }
+      
+      // 如果沒有臨時 ID，按日期匹配
+      const budgetDate = new Date(budget.date);
+      const matchingPeriod = periods.find(period => {
+        const periodStart = new Date(period.startDate);
+        const periodEnd = new Date(period.endDate);
+        return budgetDate >= periodStart && budgetDate <= periodEnd;
+      });
+
+      return {
+        ...budget,
+        periodId: matchingPeriod ? matchingPeriod.id : '',
+      };
+    });
   }
 }
 
