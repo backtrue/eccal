@@ -94,11 +94,15 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
 
     try {
       const response = await apiRequest('POST', '/api/v2/campaign-planner/create', data);
-      console.log("API Response:", response);
+      console.log("API Response (raw):", response);
+      
+      // 解析 JSON 回應
+      const jsonResponse = await response.json();
+      console.log("API Response (parsed):", jsonResponse);
 
-      if ((response as any).success) {
-        console.log("Setting results with data:", (response as any).data);
-        setResults((response as any).data);
+      if (jsonResponse.success) {
+        console.log("Setting results with data:", jsonResponse.data);
+        setResults(jsonResponse.data);
         refetchUsage();
         
         toast({
@@ -107,7 +111,12 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
           variant: "default",
         });
       } else {
-        console.error("API response indicates failure:", response);
+        console.error("API response indicates failure:", jsonResponse);
+        toast({
+          title: "建立失敗",
+          description: jsonResponse.message || "活動計畫建立發生錯誤",
+          variant: "destructive",
+        });
       }
     } catch (error: any) {
       console.error('Campaign creation failed:', error);
