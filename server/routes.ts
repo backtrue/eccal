@@ -1387,8 +1387,8 @@ echo "Bulk import completed!"`;
       authentication: {
         isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : false,
         hasUser: !!req.user,
-        userId: req.user?.id || null,
-        userEmail: req.user?.email || null,
+        userId: (req.user as any)?.id || null,
+        userEmail: (req.user as any)?.email || null,
         sessionId: req.sessionID || null,
       },
       session: {
