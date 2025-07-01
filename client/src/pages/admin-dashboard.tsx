@@ -889,6 +889,7 @@ export default function AdminDashboard() {
                           const response = await fetch('/api/bdmin/export', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
                             body: JSON.stringify({ type: 'behavior' })
                           });
                           
@@ -922,6 +923,7 @@ export default function AdminDashboard() {
                           const response = await fetch('/api/bdmin/export', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
                             body: JSON.stringify({ type: 'api_usage' })
                           });
                           

@@ -13,24 +13,13 @@ export default function ProtectedAdminRoute({ children }: ProtectedAdminRoutePro
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    // Debug information
-    console.log('Admin Route Debug:', {
-      isLoading,
-      isAuthenticated,
-      user,
-      userEmail: user?.email,
-      isAdmin: user ? ADMIN_EMAILS.includes(user.email || '') : false
-    });
-
     if (!isLoading) {
       if (!isAuthenticated) {
-        console.log('Redirecting to login - not authenticated');
         window.location.href = '/api/login';
         return;
       }
 
       if (user && !ADMIN_EMAILS.includes(user.email || '')) {
-        console.log('Redirecting to home - not admin:', user.email);
         setLocation('/');
         return;
       }
