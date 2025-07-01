@@ -438,34 +438,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Secure Campaign Planner calculation endpoint with server-side validation
   app.post('/api/campaign-planner/calculate', requireAuth, async (req: any, res) => {
     try {
-      console.log('[CAMPAIGN] Starting calculation for user:', req.user.email || req.user.id);
-      console.log('[CAMPAIGN] Request body:', req.body);
-      console.log('[CAMPAIGN] Full req.user object:', req.user);
+      console.log('=== CAMPAIGN CALCULATION START ===');
+      console.log('User:', req.user?.email || req.user?.id || 'unknown');
+      console.log('Request data:', req.body);
       
       const userId = req.user.claims?.sub || req.user.id;
-      console.log('[CAMPAIGN] Extracted userId:', userId);
+      if (!userId) {
+        throw new Error('User ID not found');
+      }
       const { startDate, endDate, targetRevenue, targetAov, targetConversionRate, cpc } = req.body;
-
-      // 1. 後端檢查會員狀態和使用次數
-      console.log('[CAMPAIGN] Getting user data for userId:', userId);
-      const user = await storage.getUser(userId);
-      console.log('[CAMPAIGN] User data retrieved:', user ? `${user.email} (usage: ${user.campaignPlannerUsage})` : 'User not found');
       
-      console.log('[CAMPAIGN] Checking membership status');
-      const membershipStatus = await storage.checkMembershipStatus(userId);
-      console.log('[CAMPAIGN] Membership status:', membershipStatus);
-      
-      const currentUsage = user?.campaignPlannerUsage || 0;
-      console.log('[CAMPAIGN] Current usage:', currentUsage);
-
-      // Validate permissions before calculation
-      if (membershipStatus.level === 'free' && currentUsage >= 3) {
-        return res.status(403).json({ 
-          error: 'usage_limit_exceeded',
-          message: '使用次數已達上限，請升級會員',
-          usage: currentUsage,
-          limit: 3
-        });
+      // 驗證必要參數
+      if (!startDate || !endDate || !targetRevenue || !targetAov || !targetConversionRate || !cpc) {
+        throw new Error('Missing required parameters');
       }
 
       // 2. 執行後端計算邏輯
