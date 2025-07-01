@@ -32,20 +32,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     refetchInterval: false,
     refetchOnMount: true, // Check on mount
     refetchOnReconnect: false,
-    // Only enable if:
-    // 1. User just logged in (auth_success param)
-    // 2. We're on a protected page
-    // 3. There's a stored session indication
-    enabled: (() => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const hasAuthSuccess = urlParams.has('auth_success');
-      const isProtectedPage = window.location.pathname.includes('/dashboard') || 
-                             window.location.pathname.includes('/campaign-planner') ||
-                             window.location.pathname.includes('/bdmin');
-      const hasStoredAuth = document.cookie.includes('connect.sid');
-      
-      return hasAuthSuccess || isProtectedPage || hasStoredAuth;
-    })(),
+    // Enable authentication check for campaign planner and other protected pages
+    enabled: true,
   });
 
   // Clean up auth_success parameter

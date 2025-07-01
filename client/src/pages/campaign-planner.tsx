@@ -95,39 +95,28 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
 
   // Secure backend calculation API call
   const onSubmit = async (data: CampaignPlannerFormData) => {
-    console.log('Form submission started:', data);
-    console.log('User authentication status:', { isAuthenticated, user: user?.email });
-    
     // Check authentication first
     if (!isAuthenticated || !user) {
-      console.log('Authentication failed, redirecting to login');
       toast({
         title: "需要登入",
         description: "請先使用 Google 帳號登入才能使用活動預算規劃器。",
         variant: "destructive",
       });
       setTimeout(() => {
-        window.location.href = "/api/login";
+        window.location.href = "/api/auth/google";
       }, 1000);
       return;
     }
 
-    console.log('Authentication passed, making API request');
     try {
-      const requestData = {
+      const response = await apiRequest('POST', '/api/campaign-planner/calculate', {
         startDate: data.startDate,
         endDate: data.endDate,
         targetRevenue: data.targetRevenue,
         targetAov: data.targetAov,
         targetConversionRate: data.targetConversionRate,
         cpc: data.cpc
-      };
-      
-      console.log('API request data:', requestData);
-      
-      const response = await apiRequest('POST', '/api/campaign-planner/calculate', requestData);
-      
-      console.log('API response received:', response);
+      });
 
       if ((response as any).success) {
         // Transform backend result to frontend format
@@ -145,21 +134,25 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
         });
       }
     } catch (error: any) {
-      console.error('Calculation failed:', error);
-      console.error('Full error object:', error);
-      console.error('Error message:', error?.message);
-      console.error('Error status:', error?.status);
-      
       if (error.message.includes('403') || error.message.includes('usage_limit_exceeded')) {
         toast({
           title: "使用次數已達上限",
           description: "免費會員可使用 3 次活動預算規劃器，您已使用完畢。請升級至 Pro 會員享受無限使用。",
           variant: "destructive",
         });
+      } else if (error.message.includes('401') || error.message.includes('Authentication required')) {
+        toast({
+          title: "需要重新登入",
+          description: "您的登入狀態已過期，正在重新導向登入頁面...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/auth/google";
+        }, 1000);
       } else {
         toast({
           title: "計算失敗",
-          description: `活動預算計算發生錯誤：${error?.message || 'Unknown error'}`,
+          description: "活動預算計算發生錯誤，請稍後再試",
           variant: "destructive",
         });
       }
@@ -450,12 +443,7 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
                     />
                   </div>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    size="lg"
-                    onClick={() => console.log('Submit button clicked')}
-                  >
+                  <Button type="submit" className="w-full" size="lg">
                     開始計算活動預算
                   </Button>
                 </form>
