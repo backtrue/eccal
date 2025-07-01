@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format, addDays } from "date-fns";
+import { zhTW } from "date-fns/locale";
 import { Calculator, Calendar, DollarSign, Users, Target, Zap, TrendingUp, BarChart3 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -66,13 +67,19 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
 
   // 自動產生活動名稱
   const generateCampaignName = () => {
+    console.log("Generate Campaign Name clicked!");
     const today = new Date();
     const defaultName = `行銷活動 ${format(today, 'yyyy-MM-dd')}`;
     form.setValue('name', defaultName);
+    console.log("Set campaign name to:", defaultName);
   };
 
   // 提交表單
   const onSubmit = async (data: CampaignFormData) => {
+    console.log("Form submitted with data:", data);
+    console.log("User authenticated:", isAuthenticated);
+    console.log("User object:", user);
+    
     if (!isAuthenticated || !user) {
       toast({
         title: "需要登入",
@@ -83,9 +90,11 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
     }
 
     setIsLoading(true);
+    console.log("Making API request to:", '/api/v2/campaign-planner/create');
 
     try {
       const response = await apiRequest('POST', '/api/v2/campaign-planner/create', data);
+      console.log("API Response:", response);
 
       if ((response as any).success) {
         setResults((response as any).data);
