@@ -577,8 +577,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       // 3. 如果計算成功，且是免費會員，才記錄用量
-      if (membershipStatus.level === 'free') {
-        await storage.incrementCampaignPlannerUsage(userId);
+      try {
+        if (membershipStatus.level === 'free') {
+          await storage.incrementCampaignPlannerUsage(userId);
+        }
+      } catch (usageError) {
+        console.error('[CAMPAIGN] Usage update failed (non-critical):', usageError);
+        // 不阻擋計算結果，用量更新失敗不影響計算
       }
 
       console.log('[CAMPAIGN] Calculation successful, sending response');
