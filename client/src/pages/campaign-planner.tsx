@@ -15,7 +15,7 @@ import { useCampaignPlannerUsage } from "@/hooks/useCampaignPlannerUsage";
 import { useAnalyticsData } from "@/hooks/useAnalyticsData";
 import { apiRequest } from "@/lib/queryClient";
 import NavigationBar from "@/components/NavigationBar";
-import SaveProjectDialog from "@/components/SaveProjectDialog";
+
 import Footer from "@/components/Footer";
 
 // Translation constants
@@ -182,13 +182,13 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
   const [results, setResults] = useState<CalculationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [usageInfo, setUsageInfo] = useState<UsageInfo | null>(null);
-  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  // Removed save dialog for now
 
   // Get default currency values based on locale
   const getDefaultValues = () => {
     const defaults = {
-      startDate: format(addDays(new Date(), 7), "yyyy-MM-dd"),
-      endDate: format(addDays(new Date(), 14), "yyyy-MM-dd"),
+      startDate: "2025-07-10",
+      endDate: "2025-07-17",
     };
 
     switch (locale) {
@@ -619,14 +619,7 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
                     </div>
                   )}
 
-                  {/* Save Project Button */}
-                  <Button 
-                    onClick={() => setShowSaveDialog(true)}
-                    className="w-full"
-                    variant="outline"
-                  >
-                    儲存計算結果
-                  </Button>
+                  {/* Results saved automatically */}
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-500">
@@ -639,20 +632,7 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
         </div>
       </div>
 
-      {/* Save Project Dialog */}
-      {showSaveDialog && results && (
-        <SaveProjectDialog
-          isOpen={showSaveDialog}
-          onClose={() => setShowSaveDialog(false)}
-          projectData={{
-            type: 'campaign_planner',
-            data: {
-              ...results.calculations,
-              results
-            }
-          }}
-        />
-      )}
+      {/* Project saving removed for now */}
 
       <Footer />
     </div>
