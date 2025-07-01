@@ -46,10 +46,22 @@ interface DailyBudget {
 
 export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string }) {
   const { toast } = useToast();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { data: usageData, refetch: refetchUsage } = useCampaignPlannerUsage();
   const { data: analyticsData } = useAnalyticsData();
   const [results, setResults] = useState<PlanningResult | null>(null);
+  
+  // Show loading state while authentication is being checked
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">檢查登入狀態中...</p>
+        </div>
+      </div>
+    );
+  }
 
   const form = useForm<CampaignPlannerFormData>({
     resolver: zodResolver(campaignPlannerSchema),
@@ -109,6 +121,10 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
     }
 
     try {
+      console.log('[CAMPAIGN] Submitting calculation request...');
+      console.log('[CAMPAIGN] Request data:', data);
+      console.log('[CAMPAIGN] Auth status:', { isAuthenticated, user: !!user });
+      
       const response = await apiRequest('POST', '/api/campaign-planner/calculate', {
         startDate: data.startDate,
         endDate: data.endDate,
@@ -118,10 +134,16 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
         cpc: data.cpc
       });
 
+      console.log('[CAMPAIGN] API response received:', response);
+
       if ((response as any).success) {
         // Transform backend result to frontend format
         const backendResult = (response as any).result;
+        console.log('[CAMPAIGN] Backend result:', backendResult);
+        
         const frontendResult = transformBackendToFrontendResult(backendResult, data);
+        console.log('[CAMPAIGN] Frontend result:', frontendResult);
+        
         setResults(frontendResult);
         
         // Update usage info from backend response
@@ -132,8 +154,12 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
           description: "活動預算規劃已完成，請查看結果",
           variant: "default",
         });
+      } else {
+        console.error('[CAMPAIGN] Backend returned unsuccessful response:', response);
+        throw new Error('Backend calculation failed');
       }
     } catch (error: any) {
+      console.error('[CAMPAIGN] Calculation error:', error);
       if (error.message.includes('403') || error.message.includes('usage_limit_exceeded')) {
         toast({
           title: "使用次數已達上限",
