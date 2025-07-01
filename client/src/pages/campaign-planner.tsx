@@ -121,7 +121,13 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
       if ((response as any).success) {
         // Transform backend result to frontend format
         const backendResult = (response as any).result;
+        console.log('[FRONTEND] Backend result received:', backendResult);
+        console.log('[FRONTEND] Campaign days:', backendResult.campaignDays);
+        console.log('[FRONTEND] Budget breakdown:', backendResult.budgetBreakdown);
+        console.log('[FRONTEND] Period days:', backendResult.periodDays);
+        
         const frontendResult = transformBackendToFrontendResult(backendResult, data);
+        console.log('[FRONTEND] Frontend result created:', frontendResult);
         setResults(frontendResult);
         
         // Update usage info from backend response
