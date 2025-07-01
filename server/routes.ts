@@ -1377,6 +1377,38 @@ echo "Bulk import completed!"`;
     }
   });
 
+  // ===== Debug Endpoint for Production Testing =====
+  
+  // Debug endpoint for admin authentication and functionality
+  app.get('/api/debug/admin-status', async (req: any, res) => {
+    try {
+      const user = req.user;
+      const debugInfo = {
+        timestamp: new Date().toISOString(),
+        authenticated: !!user,
+        userInfo: user ? {
+          id: user.claims?.sub || 'no-sub',
+          email: user.claims?.email || 'no-email',
+          sessionExists: !!req.session
+        } : null,
+        adminStatus: user?.claims?.email === 'backtrue@gmail.com' ? 'admin' : 'not-admin',
+        sessionId: req.sessionID || 'no-session',
+        headers: {
+          userAgent: req.headers['user-agent'],
+          origin: req.headers.origin,
+          referer: req.headers.referer
+        }
+      };
+      res.json(debugInfo);
+    } catch (error) {
+      res.json({
+        error: 'Debug endpoint error',
+        message: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   // ===== Test Endpoints for Admin Functions =====
   
   // Test batch membership update (no auth required for testing)
