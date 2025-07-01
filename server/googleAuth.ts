@@ -15,7 +15,7 @@ export function setupGoogleAuth(app: Express) {
     ttl: sessionTtl,
     tableName: "sessions",
     pruneSessionInterval: 2 * 60 * 60 * 1000, // 每2小時清理過期 session
-    disableTouch: true, // 停用 touch 操作減少資料庫負擔
+    disableTouch: false, // 啟用 touch 操作以支持 rolling session
   });
 
   app.use(session({
@@ -23,8 +23,8 @@ export function setupGoogleAuth(app: Express) {
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
-    rolling: false, // 停用滾動過期以減少資料庫更新
-    unset: 'destroy', // 刪除 session 時立即清理
+    rolling: true, // 啟用滾動過期 - 在用戶活動時續期session
+    unset: 'keep', // 保持session數據，不會意外清理
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
