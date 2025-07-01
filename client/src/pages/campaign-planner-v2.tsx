@@ -97,6 +97,7 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
       console.log("API Response:", response);
 
       if ((response as any).success) {
+        console.log("Setting results with data:", (response as any).data);
         setResults((response as any).data);
         refetchUsage();
         
@@ -105,6 +106,8 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
           description: `「${data.name}」活動預算規劃已完成`,
           variant: "default",
         });
+      } else {
+        console.error("API response indicates failure:", response);
       }
     } catch (error: any) {
       console.error('Campaign creation failed:', error);
@@ -142,6 +145,10 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
   const formatPercentage = (value: number) => {
     return `${value.toFixed(1)}%`;
   };
+
+  // 除錯用
+  console.log("Current results state:", results);
+  console.log("Results exists:", !!results);
 
   return (
     <div className="min-h-screen bg-gray-50">
