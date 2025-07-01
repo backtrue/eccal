@@ -16,6 +16,7 @@ import Privacy from "./pages/privacy-policy";
 import Terms from "./pages/terms-of-service";
 import NotFound from "./pages/not-found";
 import CampaignPlanner from "./pages/campaign-planner";
+import CampaignPlannerV2 from "./pages/campaign-planner-v2";
 import Dashboard from "./pages/dashboard";
 import BrevoSync from "./pages/brevo-sync";
 import ProjectDetail from "./pages/project-detail";
@@ -113,7 +114,7 @@ function Router() {
     <Switch>
       <Route path="/" component={() => <Home locale={locale} />} />
       <Route path="/calculator" component={() => <Calculator locale={locale} />} />
-      <Route path="/campaign-planner" component={() => <CampaignPlanner locale={locale} />} />
+      <Route path="/campaign-planner" component={() => <CampaignPlannerV2 locale={locale} />} />
       <Route path="/dashboard" component={() => <Dashboard locale={locale} />} />
       <Route path="/project/:id" component={ProjectDetail} />
       <Route path="/bdmin" component={() => (
@@ -128,7 +129,7 @@ function Router() {
       {/* English routes */}
       <Route path="/en" component={() => <Home locale="en" />} />
       <Route path="/en/calculator" component={() => <Calculator locale="en" />} />
-      <Route path="/en/campaign-planner" component={() => <CampaignPlanner locale="en" />} />
+      <Route path="/en/campaign-planner" component={() => <CampaignPlannerV2 locale="en" />} />
       <Route path="/en/dashboard" component={() => <Dashboard locale="en" />} />
       <Route path="/en/brevo-sync" component={() => <BrevoSync />} />
       <Route path="/en/privacy" component={() => <Privacy locale="en" />} />
@@ -137,7 +138,7 @@ function Router() {
       {/* Japanese routes */}
       <Route path="/jp" component={() => <Home locale="ja" />} />
       <Route path="/jp/calculator" component={() => <Calculator locale="ja" />} />
-      <Route path="/jp/campaign-planner" component={() => <CampaignPlanner locale="ja" />} />
+      <Route path="/jp/campaign-planner" component={() => <CampaignPlannerV2 locale="ja" />} />
       <Route path="/jp/dashboard" component={() => <Dashboard locale="ja" />} />
       <Route path="/jp/brevo-sync" component={() => <BrevoSync />} />
       <Route path="/jp/privacy" component={() => <Privacy locale="ja" />} />

@@ -7,6 +7,7 @@ import { db } from "./db";
 import { users as usersTable, userMetrics, userCredits } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { brevoService } from "./brevoService";
+import { setupCampaignPlannerRoutes } from "./campaignPlannerRoutes";
 import multer from "multer";
 import fs from "fs";
 import path from "path";
@@ -14,6 +15,9 @@ import path from "path";
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Google OAuth authentication
   setupGoogleAuth(app);
+  
+  // Setup new Campaign Planner v2 routes
+  setupCampaignPlannerRoutes(app);
 
   // Critical: Handle root path for Replit port monitoring
   app.get('/api/ping', (req, res) => {
