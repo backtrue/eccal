@@ -107,23 +107,32 @@ export function setupGoogleAuth(app: Express) {
 
   passport.deserializeUser(async (id: string, done) => {
     try {
+      console.log(`[AUTH] Deserializing user: ${id}`);
+      
       // Check cache first
       const cached = userCache.get(id);
       if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        console.log(`[AUTH] User found in cache: ${id}`);
         return done(null, cached.user);
       }
 
       // Fetch from database
       const user = await storage.getUser(id);
+      console.log(`[AUTH] User from DB:`, user ? `Found ${user.email}` : 'Not found');
       
-      // Cache the result
-      if (user) {
-        userCache.set(id, { user, timestamp: Date.now() });
+      if (!user) {
+        console.log(`[AUTH] User not found in database: ${id}`);
+        return done(null, false);
       }
       
-      done(null, user || false);
+      // Cache the result
+      userCache.set(id, { user, timestamp: Date.now() });
+      console.log(`[AUTH] User successfully deserialized: ${user.email}`);
+      
+      done(null, user);
     } catch (error) {
-      done(error, false);
+      console.error(`[AUTH] Error deserializing user ${id}:`, error);
+      done(null, false); // Don't propagate error, just fail silently
     }
   });
 
@@ -203,10 +212,18 @@ export function setupGoogleAuth(app: Express) {
 
 // Middleware to check if user is authenticated
 export function requireAuth(req: any, res: any, next: any) {
-  if (req.isAuthenticated()) {
+  console.log(`[AUTH] requireAuth called for ${req.method} ${req.path}`);
+  console.log(`[AUTH] isAuthenticated():`, req.isAuthenticated ? req.isAuthenticated() : 'method not available');
+  console.log(`[AUTH] User exists:`, !!req.user);
+  console.log(`[AUTH] Session ID:`, req.sessionID || 'no session');
+  console.log(`[AUTH] Session keys:`, req.session ? Object.keys(req.session) : 'no session');
+  
+  if (req.isAuthenticated && req.isAuthenticated() && req.user) {
+    console.log(`[AUTH] Authentication successful for user:`, req.user.email || req.user.id || 'unknown');
     return next();
   }
   
+  console.log(`[AUTH] Authentication failed - returning 401`);
   // Return 401 for unauthenticated requests - this is the standard HTTP status
   res.status(401).json({ error: 'Authentication required' });
 }
