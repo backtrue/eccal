@@ -87,12 +87,118 @@ export const userReferrals = pgTable("user_referrals", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Saved projects for reusable calculations
+// Campaign Plans - Core table for campaign planning
+export const campaignPlans = pgTable("campaign_plans", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  
+  // Campaign Timeline
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  totalDays: integer("total_days").notNull(),
+  
+  // Target Metrics
+  targetRevenue: decimal("target_revenue", { precision: 15, scale: 2 }).notNull(),
+  targetAov: decimal("target_aov", { precision: 10, scale: 2 }).notNull(),
+  targetConversionRate: decimal("target_conversion_rate", { precision: 8, scale: 4 }).notNull(), // e.g., 2.5000 for 2.5%
+  costPerClick: decimal("cost_per_click", { precision: 8, scale: 2 }).notNull(),
+  
+  // Calculated Results
+  totalBudget: decimal("total_budget", { precision: 15, scale: 2 }),
+  totalTraffic: integer("total_traffic"),
+  totalOrders: integer("total_orders"),
+  
+  // Campaign Status
+  status: varchar("status", { length: 20 }).default("draft").notNull(), // draft, active, completed, paused
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Campaign Periods - Budget allocation by period
+export const campaignPeriods = pgTable("campaign_periods", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  campaignId: text("campaign_id").notNull().references(() => campaignPlans.id, { onDelete: "cascade" }),
+  
+  // Period Info
+  name: varchar("name").notNull(), // "preheat", "launch", "main", "final", "repurchase"
+  displayName: varchar("display_name").notNull(), // "預熱期", "啟動期", etc.
+  orderIndex: integer("order_index").notNull(), // for sorting
+  
+  // Period Timeline
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  durationDays: integer("duration_days").notNull(),
+  
+  // Budget Allocation
+  budgetAmount: decimal("budget_amount", { precision: 15, scale: 2 }).notNull(),
+  budgetPercentage: decimal("budget_percentage", { precision: 5, scale: 2 }).notNull(), // e.g., 25.50 for 25.5%
+  dailyBudget: decimal("daily_budget", { precision: 10, scale: 2 }).notNull(),
+  
+  // Traffic Allocation
+  trafficAmount: integer("traffic_amount").notNull(),
+  trafficPercentage: decimal("traffic_percentage", { precision: 5, scale: 2 }).notNull(),
+  dailyTraffic: integer("daily_traffic").notNull(),
+  
+  // Expected Results
+  expectedOrders: integer("expected_orders").notNull(),
+  expectedRevenue: decimal("expected_revenue", { precision: 15, scale: 2 }).notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Daily Budget Breakdown - Day-by-day allocation
+export const dailyBudgets = pgTable("daily_budgets", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  campaignId: text("campaign_id").notNull().references(() => campaignPlans.id, { onDelete: "cascade" }),
+  periodId: text("period_id").notNull().references(() => campaignPeriods.id, { onDelete: "cascade" }),
+  
+  // Daily Info
+  date: timestamp("date").notNull(),
+  dayOfCampaign: integer("day_of_campaign").notNull(), // 1, 2, 3, etc.
+  
+  // Budget & Traffic
+  budget: decimal("budget", { precision: 10, scale: 2 }).notNull(),
+  traffic: integer("traffic").notNull(),
+  expectedOrders: integer("expected_orders").notNull(),
+  expectedRevenue: decimal("expected_revenue", { precision: 12, scale: 2 }).notNull(),
+  
+  // Status tracking (for live campaigns)
+  actualSpend: decimal("actual_spend", { precision: 10, scale: 2 }),
+  actualTraffic: integer("actual_traffic"),
+  actualOrders: integer("actual_orders"),
+  actualRevenue: decimal("actual_revenue", { precision: 12, scale: 2 }),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Campaign Templates - Reusable campaign structures
+export const campaignTemplates = pgTable("campaign_templates", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id").references(() => users.id), // null for system templates
+  name: varchar("name").notNull(),
+  description: text("description"),
+  isPublic: boolean("is_public").default(false).notNull(),
+  
+  // Template Structure (JSON)
+  periodStructure: jsonb("period_structure").notNull(), // predefined period allocations
+  defaultSettings: jsonb("default_settings"), // default CPC, conversion rates, etc.
+  
+  // Usage Stats
+  useCount: integer("use_count").default(0).notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Saved projects for other tools (keeping for backward compatibility)
 export const savedProjects = pgTable("saved_projects", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId: varchar("user_id").notNull().references(() => users.id),
   projectName: varchar("project_name").notNull(),
-  projectType: varchar("project_type").notNull(), // e.g., "campaign_planner", "budget_calculator", etc.
+  projectType: varchar("project_type").notNull(), // e.g., "budget_calculator", etc.
   projectData: jsonb("project_data").notNull(), // flexible JSON storage for project-specific data
   lastCalculationResult: jsonb("last_calculation_result"), // store last calculation results
   createdAt: timestamp("created_at").defaultNow(),
@@ -111,6 +217,33 @@ export type UserReferral = typeof userReferrals.$inferSelect;
 export type InsertUserReferral = typeof userReferrals.$inferInsert;
 export type SavedProject = typeof savedProjects.$inferSelect;
 export type InsertSavedProject = typeof savedProjects.$inferInsert;
+
+// Campaign Planner Types
+export type CampaignPlan = typeof campaignPlans.$inferSelect;
+export type InsertCampaignPlan = typeof campaignPlans.$inferInsert;
+export type CampaignPeriod = typeof campaignPeriods.$inferSelect;
+export type InsertCampaignPeriod = typeof campaignPeriods.$inferInsert;
+export type DailyBudget = typeof dailyBudgets.$inferSelect;
+export type InsertDailyBudget = typeof dailyBudgets.$inferInsert;
+export type CampaignTemplate = typeof campaignTemplates.$inferSelect;
+export type InsertCampaignTemplate = typeof campaignTemplates.$inferInsert;
+
+// Campaign Planner Zod Schemas
+export const insertCampaignPlanSchema = createInsertSchema(campaignPlans, {
+  targetRevenue: z.number().min(0.01, "目標營收必須大於0"),
+  targetAov: z.number().min(0.01, "目標客單價必須大於0"),
+  targetConversionRate: z.number().min(0.01).max(100, "轉換率必須介於0.01%到100%之間"),
+  costPerClick: z.number().min(0.01, "每次點擊成本必須大於0"),
+});
+
+export const insertCampaignPeriodSchema = createInsertSchema(campaignPeriods);
+export const insertDailyBudgetSchema = createInsertSchema(dailyBudgets);
+export const insertCampaignTemplateSchema = createInsertSchema(campaignTemplates);
+
+export type InsertCampaignPlanType = z.infer<typeof insertCampaignPlanSchema>;
+export type InsertCampaignPeriodType = z.infer<typeof insertCampaignPeriodSchema>;
+export type InsertDailyBudgetType = z.infer<typeof insertDailyBudgetSchema>;
+export type InsertCampaignTemplateType = z.infer<typeof insertCampaignTemplateSchema>;
 export type UserBehavior = typeof userBehavior.$inferSelect;
 export type InsertUserBehavior = typeof userBehavior.$inferInsert;
 export type Announcement = typeof announcements.$inferSelect;
