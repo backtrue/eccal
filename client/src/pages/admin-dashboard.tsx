@@ -12,7 +12,6 @@ import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Users, TrendingUp, CreditCard, Settings, Monitor, FileText, Download, Bell, Activity, BarChart3, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Footer from "@/components/Footer";
-import AdminDebugger from "@/components/AdminDebugger";
 
 interface UserStats {
   totalUsers: number;
@@ -246,8 +245,6 @@ export default function AdminDashboard() {
     }
   });
 
-
-
   // Batch add credits mutation
   const batchCreditsMutation = useMutation({
     mutationFn: async ({ userIds, amount, description }: any) => {
@@ -266,39 +263,10 @@ export default function AdminDashboard() {
         description: "批次發放點數完成",
       });
     },
-    onError: (error) => {
-      console.error('Batch credits update error:', error);
+    onError: () => {
       toast({
         title: "錯誤",
         description: "批次發放點數失敗",
-        variant: "destructive",
-      });
-    }
-  });
-
-  // Create announcement mutation
-  const createAnnouncementMutation = useMutation({
-    mutationFn: async ({ title, content, type, targetAudience }: any) => {
-      return apiRequest('POST', '/api/bdmin/announcements', {
-        title,
-        content,
-        type: type || 'info',
-        targetAudience: targetAudience || 'all',
-        priority: 0
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/bdmin/announcements'] });
-      toast({
-        title: "成功",
-        description: "公告創建成功",
-      });
-    },
-    onError: (error) => {
-      console.error('Create announcement error:', error);
-      toast({
-        title: "錯誤",
-        description: "創建公告失敗",
         variant: "destructive",
       });
     }
@@ -375,7 +343,7 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-9">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4" />
               BI 分析
@@ -411,10 +379,6 @@ export default function AdminDashboard() {
             <TabsTrigger value="marketing" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               行銷資料庫
-            </TabsTrigger>
-            <TabsTrigger value="debug" className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4" />
-              診斷工具
             </TabsTrigger>
           </TabsList>
 
@@ -804,16 +768,19 @@ export default function AdminDashboard() {
                 <div className="space-y-4">
                   <Button
                     onClick={() => {
-                      // Create a test announcement for testing purposes
-                      createAnnouncementMutation.mutate({
-                        title: "系統測試公告",
-                        content: "這是一個測試公告，用於驗證管理後台的公告創建功能。",
-                        type: "info",
-                        targetAudience: "all"
-                      });
+                      // Create new announcement
+                      const title = prompt('公告標題:');
+                      const content = prompt('公告內容:');
+                      if (title && content) {
+                        // Implementation would call API to create announcement
+                        toast({
+                          title: "功能開發中",
+                          description: "公告創建功能即將推出",
+                        });
+                      }
                     }}
                   >
-                    創建測試公告
+                    創建新公告
                   </Button>
 
                   <div className="space-y-4">
@@ -868,7 +835,6 @@ export default function AdminDashboard() {
                           const response = await fetch('/api/bdmin/export', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            credentials: 'include',
                             body: JSON.stringify({ type: 'users' })
                           });
                           
@@ -901,7 +867,6 @@ export default function AdminDashboard() {
                           const response = await fetch('/api/bdmin/export', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            credentials: 'include',
                             body: JSON.stringify({ type: 'behavior' })
                           });
                           
@@ -935,7 +900,6 @@ export default function AdminDashboard() {
                           const response = await fetch('/api/bdmin/export', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            credentials: 'include',
                             body: JSON.stringify({ type: 'api_usage' })
                           });
                           
@@ -1409,11 +1373,6 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             )}
-          </TabsContent>
-
-          {/* Debug Tools */}
-          <TabsContent value="debug" className="space-y-6">
-            <AdminDebugger />
           </TabsContent>
         </Tabs>
       </div>

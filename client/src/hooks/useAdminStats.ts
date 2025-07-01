@@ -44,10 +44,10 @@ export function useBulkMembershipUpdate() {
       membershipLevel: string;
       duration?: number;
     }) => {
-      return await apiRequest('POST', '/api/bdmin/users/batch/membership', {
+      return await apiRequest('POST', '/api/bdmin/users/bulk-membership', {
         userIds,
         membershipLevel,
-        durationDays: duration
+        duration
       });
     },
     onSuccess: () => {
@@ -65,10 +65,9 @@ export function useBulkCreditsUpdate() {
       userIds: string[];
       amount: number;
     }) => {
-      return await apiRequest('POST', '/api/bdmin/users/batch/credits', {
+      return await apiRequest('POST', '/api/bdmin/users/bulk-credits', {
         userIds,
-        amount,
-        description: 'Admin bulk credit distribution'
+        amount
       });
     },
     onSuccess: () => {

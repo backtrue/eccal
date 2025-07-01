@@ -15,396 +15,313 @@ import { useCampaignPlannerUsage } from "@/hooks/useCampaignPlannerUsage";
 import { useAnalyticsData } from "@/hooks/useAnalyticsData";
 import { apiRequest } from "@/lib/queryClient";
 import NavigationBar from "@/components/NavigationBar";
-
+import SaveProjectDialog from "@/components/SaveProjectDialog";
 import Footer from "@/components/Footer";
 
-// Translation constants
-const translations = {
-  "zh-TW": {
-    title: "活動預算規劃器",
-    subtitle: "專業的活動預算規劃工具，幫助您精確計算廣告預算配置",
-    proBadge: "Pro 會員專屬",
-    needAuth: "需要登入",
-    authDescription: "請先登入 Google 帳號以使用活動預算規劃功能",
-    loginButton: "使用 Google 帳號登入",
-    campaignSettings: "活動設定",
-    campaignDescription: "設定您的活動目標和預算參數",
-    startDate: "活動開始日期",
-    endDate: "活動結束日期",
-    targetRevenue: "目標營收 (NT$)",
-    targetAov: "目標客單價 (NT$)",
-    targetConversionRate: "目標轉換率 (%)",
-    cpc: "每次點擊成本 (NT$)",
-    calculate: "開始計算預算",
-    calculating: "計算中...",
-    results: "計算結果",
-    fillFormFirst: "請先填寫左側表單並計算",
-    totalBudget: "總預算需求",
-    totalTraffic: "總流量需求",
-    budgetAllocation: "預算分配",
-    period: "期間",
-    budget: "預算",
-    traffic: "流量",
-    dailyBudget: "每日預算",
-    dailyTraffic: "每日流量",
-    calculationComplete: "計算完成",
-    planningComplete: "活動預算規劃已完成",
-    calculationFailed: "計算失敗",
-    authRequired: "需要重新登入",
-    loginAgain: "請重新登入後再試",
-    tryAgain: "請稍後再試",
-    usageInfo: "使用次數"
-  },
-  "en": {
-    title: "Campaign Budget Planner",
-    subtitle: "Professional campaign budget planning tool to help you accurately calculate ad budget allocation",
-    proBadge: "Pro Member Exclusive",
-    needAuth: "Login Required",
-    authDescription: "Please login with your Google account to use the campaign budget planner",
-    loginButton: "Login with Google Account",
-    campaignSettings: "Campaign Settings",
-    campaignDescription: "Set your campaign goals and budget parameters",
-    startDate: "Campaign Start Date",
-    endDate: "Campaign End Date",
-    targetRevenue: "Target Revenue ($)",
-    targetAov: "Target AOV ($)",
-    targetConversionRate: "Target Conversion Rate (%)",
-    cpc: "Cost Per Click ($)",
-    calculate: "Calculate Budget",
-    calculating: "Calculating...",
-    results: "Results",
-    fillFormFirst: "Please fill out the form on the left and calculate",
-    totalBudget: "Total Budget Required",
-    totalTraffic: "Total Traffic Required",
-    budgetAllocation: "Budget Allocation",
-    period: "Period",
-    budget: "Budget",
-    traffic: "Traffic",
-    dailyBudget: "Daily Budget",
-    dailyTraffic: "Daily Traffic",
-    calculationComplete: "Calculation Complete",
-    planningComplete: "Campaign budget planning completed",
-    calculationFailed: "Calculation Failed",
-    authRequired: "Re-authentication Required",
-    loginAgain: "Please login again and try",
-    tryAgain: "Please try again later",
-    usageInfo: "Usage Count"
-  },
-  "ja": {
-    title: "キャンペーン予算プランナー",
-    subtitle: "プロフェッショナルなキャンペーン予算計画ツールで、広告予算配分を正確に計算します",
-    proBadge: "Pro会員限定",
-    needAuth: "ログインが必要",
-    authDescription: "キャンペーン予算プランナーを使用するには、Googleアカウントでログインしてください",
-    loginButton: "Googleアカウントでログイン",
-    campaignSettings: "キャンペーン設定",
-    campaignDescription: "キャンペーンの目標と予算パラメータを設定してください",
-    startDate: "キャンペーン開始日",
-    endDate: "キャンペーン終了日",
-    targetRevenue: "目標売上 (¥)",
-    targetAov: "目標客単価 (¥)",
-    targetConversionRate: "目標コンバージョン率 (%)",
-    cpc: "クリック単価 (¥)",
-    calculate: "予算を計算",
-    calculating: "計算中...",
-    results: "結果",
-    fillFormFirst: "左側のフォームに入力して計算してください",
-    totalBudget: "総予算必要額",
-    totalTraffic: "総トラフィック必要数",
-    budgetAllocation: "予算配分",
-    period: "期間",
-    budget: "予算",
-    traffic: "トラフィック",
-    dailyBudget: "日予算",
-    dailyTraffic: "日トラフィック",
-    calculationComplete: "計算完了",
-    planningComplete: "キャンペーン予算計画が完了しました",
-    calculationFailed: "計算失敗",
-    authRequired: "再認証が必要",
-    loginAgain: "再ログインして再試行してください",
-    tryAgain: "後でもう一度お試しください",
-    usageInfo: "使用回数"
-  }
-};
-
 // Form validation schema
-const campaignSchema = z.object({
-  startDate: z.string().min(1, "Please select campaign start date"),
-  endDate: z.string().min(1, "Please select campaign end date"),
-  targetRevenue: z.number().min(1, "Target revenue must be greater than 0"),
-  targetAov: z.number().min(1, "Target AOV must be greater than 0"),
-  targetConversionRate: z.number().min(0.01).max(100, "Conversion rate must be between 0.01% and 100%"),
-  cpc: z.number().min(0.1, "CPC must be greater than 0.1"),
+const campaignPlannerSchema = z.object({
+  startDate: z.string().min(1, "請選擇活動開始日期"),
+  endDate: z.string().min(1, "請選擇活動結束日期"),
+  targetRevenue: z.number().min(1, "目標營收必須大於0"),
+  targetAov: z.number().min(1, "目標客單價必須大於0"),
+  targetConversionRate: z.number().min(0.01).max(100, "轉換率必須介於0.01%到100%之間"),
+  cpc: z.number().min(0.1, "CPC必須大於0.1"),
 });
 
-type CampaignFormData = z.infer<typeof campaignSchema>;
+type CampaignPlannerFormData = z.infer<typeof campaignPlannerSchema>;
 
-interface PeriodAllocation {
+interface PlanningResult {
+  totalTraffic: number;
+  totalBudget: number;
+  campaignPeriods: any;
+  dailyBudgets?: any[];
+}
+
+interface DailyBudget {
+  date: string;
   period: string;
   budget: number;
   traffic: number;
-  dailyBudget: number;
-  dailyTraffic: number;
-  days: number;
-  percentage: number;
-}
-
-interface CalculationResult {
-  totalTraffic: number;
-  totalBudget: number;
-  campaignDays: number;
-  budgetBreakdown: Record<string, number>;
-  trafficBreakdown: Record<string, number>;
-  periodDays: Record<string, number>;
-  calculations: {
-    targetRevenue: number;
-    targetAov: number;
-    targetConversionRate: number;
-    cpc: number;
-    startDate: string;
-    endDate: string;
-  };
-}
-
-interface UsageInfo {
-  current: number;
-  limit: number;
-  membershipLevel: string;
 }
 
 export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string }) {
-  const t = translations[locale as keyof typeof translations] || translations["zh-TW"];
   const { toast } = useToast();
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const { data: usageData } = useCampaignPlannerUsage();
+  const { user, isAuthenticated } = useAuth();
+  const { data: usageData, refetch: refetchUsage } = useCampaignPlannerUsage();
   const { data: analyticsData } = useAnalyticsData();
-  
-  const [results, setResults] = useState<CalculationResult | null>(null);
-  const [isCalculating, setIsCalculating] = useState(false);
-  const [usageInfo, setUsageInfo] = useState<UsageInfo | null>(null);
-  // Removed save dialog for now
+  const [results, setResults] = useState<PlanningResult | null>(null);
 
-  // Get default currency values based on locale
-  const getDefaultValues = () => {
-    const defaults = {
-      startDate: "2025-07-10",
-      endDate: "2025-07-17",
-    };
-
-    switch (locale) {
-      case "en":
-        return {
-          ...defaults,
-          targetRevenue: 10000,
-          targetAov: 50,
-          targetConversionRate: 2.5,
-          cpc: 1,
-        };
-      case "ja":
-        return {
-          ...defaults,
-          targetRevenue: 1000000,
-          targetAov: 6000,
-          targetConversionRate: 2.0,
-          cpc: 120,
-        };
-      default: // zh-TW
-        return {
-          ...defaults,
-          targetRevenue: 300000,
-          targetAov: 1500,
-          targetConversionRate: 2.0,
-          cpc: 5,
-        };
-    }
-  };
-
-  const form = useForm<CampaignFormData>({
-    resolver: zodResolver(campaignSchema),
-    defaultValues: getDefaultValues(),
+  const form = useForm<CampaignPlannerFormData>({
+    resolver: zodResolver(campaignPlannerSchema),
+    defaultValues: {
+      startDate: undefined,
+      endDate: undefined,
+      targetRevenue: undefined,
+      targetAov: undefined,
+      targetConversionRate: undefined,
+      cpc: 5,
+    },
   });
 
-  // Auto-fill from analytics data
   const fillFromAnalytics = () => {
-    if (analyticsData) {
-      form.setValue("targetAov", analyticsData.averageOrderValue || form.getValues("targetAov"));
-      form.setValue("targetConversionRate", analyticsData.conversionRate || form.getValues("targetConversionRate"));
+    if (analyticsData?.averageOrderValue) {
+      form.setValue('targetAov', analyticsData.averageOrderValue);
+    }
+    
+    if (analyticsData?.conversionRate) {
+      // Calculate suggested conversion rate based on AOV difference
+      const suggestedConversionRate = calculateSuggestedConversionRate(
+        analyticsData.conversionRate,
+        analyticsData.averageOrderValue,
+        form.getValues('targetAov')
+      );
+      
+      form.setValue('targetConversionRate', suggestedConversionRate);
     }
   };
 
-  // Handle authentication redirect
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">檢查登入狀態中...</p>
-        </div>
-      </div>
-    );
-  }
+  const calculateSuggestedConversionRate = (
+    avgConversionRate: number,
+    avgAov: number,
+    targetAov: number
+  ): number => {
+    if (avgAov === 0) return avgConversionRate;
+    
+    const aovAdjustment = (avgAov - targetAov) / avgAov;
+    const suggestedRate = avgConversionRate * (1 + aovAdjustment);
+    
+    return Math.max(0.01, Math.min(100, suggestedRate));
+  };
 
-  if (!isAuthenticated || !user) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <NavigationBar locale={locale as "zh-TW" | "en" | "ja"} />
-        <div className="container mx-auto p-6 max-w-4xl">
-          <div className="text-center py-16">
-            <h1 className="text-3xl font-bold mb-4">{t.title}</h1>
-            <p className="text-gray-600 mb-8">{t.authDescription}</p>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-              <h3 className="text-lg font-semibold text-blue-800 mb-2">{t.needAuth}</h3>
-              <p className="text-blue-700 mb-4">{t.authDescription}</p>
-              <Button 
-                onClick={() => window.location.href = '/api/auth/google'}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                {t.loginButton}
-              </Button>
-            </div>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
+  // Secure backend calculation API call
+  const onSubmit = async (data: CampaignPlannerFormData) => {
+    // Check authentication first
+    if (!isAuthenticated || !user) {
+      toast({
+        title: "需要登入",
+        description: "請先使用 Google 帳號登入才能使用活動預算規劃器。",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 1000);
+      return;
+    }
 
-  const onSubmit = async (data: CampaignFormData) => {
-    setIsCalculating(true);
     try {
-      console.log('Submitting campaign calculation:', data);
-      
-      const response = await apiRequest('POST', '/api/campaign-planner/calculate', data);
-      console.log('API Response:', response);
+      const response = await apiRequest('POST', '/api/campaign-planner/calculate', {
+        startDate: data.startDate,
+        endDate: data.endDate,
+        targetRevenue: data.targetRevenue,
+        targetAov: data.targetAov,
+        targetConversionRate: data.targetConversionRate,
+        cpc: data.cpc
+      });
 
-      if (response && (response as any).success) {
-        const result = (response as any).result;
+      if ((response as any).success) {
+        // Transform backend result to frontend format
+        const backendResult = (response as any).result;
+        const frontendResult = transformBackendToFrontendResult(backendResult, data);
+        setResults(frontendResult);
         
-        setResults(result);
-        setUsageInfo(null); // Usage info removed for now
+        // Update usage info from backend response
+        refetchUsage();
         
         toast({
-          title: t.calculationComplete,
-          description: t.planningComplete,
+          title: "計算完成",
+          description: "活動預算規劃已完成，請查看結果",
           variant: "default",
         });
-      } else {
-        console.error('API Response indicated failure:', response);
-        throw new Error((response as any)?.error || (response as any)?.message || '計算失敗');
       }
     } catch (error: any) {
-      console.error('Campaign calculation error:', error);
+      console.error('Calculation failed:', error);
       
-      if (error.message.includes('401') || error.message.includes('Authentication')) {
+      if (error.message.includes('403') || error.message.includes('usage_limit_exceeded')) {
         toast({
-          title: t.authRequired,
-          description: t.loginAgain,
+          title: "使用次數已達上限",
+          description: "免費會員可使用 3 次活動預算規劃器，您已使用完畢。請升級至 Pro 會員享受無限使用。",
           variant: "destructive",
         });
-        setTimeout(() => window.location.href = '/api/auth/google', 1000);
       } else {
         toast({
-          title: t.calculationFailed,
-          description: error.message || t.tryAgain,
+          title: "計算失敗",
+          description: "活動預算計算發生錯誤，請稍後再試",
           variant: "destructive",
         });
       }
-    } finally {
-      setIsCalculating(false);
+      return;
     }
+  };
+
+  // Transform backend calculation result to frontend PlanningResult format
+  const transformBackendToFrontendResult = (backendResult: any, inputData: CampaignPlannerFormData): PlanningResult => {
+    const { totalTraffic, totalBudget, campaignDays, budgetBreakdown, trafficBreakdown, periodDays } = backendResult;
+    const startDate = new Date(inputData.startDate);
+    const endDate = new Date(inputData.endDate);
+
+    // Generate daily budget breakdown for UI display
+    const dailyBudgets: DailyBudget[] = [];
+
+    // Build campaign periods based on campaign type
+    let campaignPeriods: any = {};
+
+    if (campaignDays === 3) {
+      // 3-day campaign structure
+      campaignPeriods = {
+        day1: {
+          startDate: format(startDate, 'yyyy-MM-dd'),
+          endDate: format(startDate, 'yyyy-MM-dd'),
+          budget: budgetBreakdown.day1,
+          traffic: trafficBreakdown.day1,
+        },
+        day2: {
+          startDate: format(addDays(startDate, 1), 'yyyy-MM-dd'),
+          endDate: format(addDays(startDate, 1), 'yyyy-MM-dd'),
+          budget: budgetBreakdown.day2,
+          traffic: trafficBreakdown.day2,
+        },
+        day3: {
+          startDate: format(addDays(startDate, 2), 'yyyy-MM-dd'),
+          endDate: format(addDays(startDate, 2), 'yyyy-MM-dd'),
+          budget: budgetBreakdown.day3,
+          traffic: trafficBreakdown.day3,
+        },
+      };
+
+      // Generate daily budgets for 3-day campaign
+      for (let i = 0; i < 3; i++) {
+        const date = format(addDays(startDate, i), 'yyyy-MM-dd');
+        const periods = ['第一天', '第二天', '第三天'];
+        const budgets = [budgetBreakdown.day1, budgetBreakdown.day2, budgetBreakdown.day3];
+        const traffics = [trafficBreakdown.day1, trafficBreakdown.day2, trafficBreakdown.day3];
+        
+        dailyBudgets.push({
+          date,
+          period: periods[i],
+          budget: budgets[i],
+          traffic: traffics[i],
+        });
+      }
+    } else if (campaignDays >= 4 && campaignDays <= 9) {
+      // 4-9 day campaign structure
+      campaignPeriods = {
+        launch: {
+          startDate: format(startDate, 'yyyy-MM-dd'),
+          endDate: format(addDays(startDate, periodDays.launch - 1), 'yyyy-MM-dd'),
+          budget: budgetBreakdown.launch,
+          traffic: trafficBreakdown.launch,
+        },
+        main: {
+          startDate: format(addDays(startDate, periodDays.launch), 'yyyy-MM-dd'),
+          endDate: format(addDays(startDate, periodDays.launch + periodDays.main - 1), 'yyyy-MM-dd'),
+          budget: budgetBreakdown.main,
+          traffic: trafficBreakdown.main,
+        },
+        final: {
+          startDate: format(addDays(startDate, periodDays.launch + periodDays.main), 'yyyy-MM-dd'),
+          endDate: format(endDate, 'yyyy-MM-dd'),
+          budget: budgetBreakdown.final,
+          traffic: trafficBreakdown.final,
+        },
+      };
+    } else {
+      // 10+ day campaign structure (full 5 periods)
+      campaignPeriods = {
+        preheat: {
+          startDate: format(subDays(startDate, 4), 'yyyy-MM-dd'),
+          endDate: format(subDays(startDate, 1), 'yyyy-MM-dd'),
+          budget: budgetBreakdown.preheat,
+          traffic: trafficBreakdown.preheat,
+        },
+        launch: {
+          startDate: format(startDate, 'yyyy-MM-dd'),
+          endDate: format(addDays(startDate, 2), 'yyyy-MM-dd'),
+          budget: budgetBreakdown.launch,
+          traffic: trafficBreakdown.launch,
+        },
+        main: {
+          startDate: format(addDays(startDate, 3), 'yyyy-MM-dd'),
+          endDate: format(subDays(endDate, 3), 'yyyy-MM-dd'),
+          budget: budgetBreakdown.main,
+          traffic: trafficBreakdown.main,
+        },
+        final: {
+          startDate: format(subDays(endDate, 2), 'yyyy-MM-dd'),
+          endDate: format(endDate, 'yyyy-MM-dd'),
+          budget: budgetBreakdown.final,
+          traffic: trafficBreakdown.final,
+        },
+        repurchase: {
+          startDate: format(addDays(endDate, 1), 'yyyy-MM-dd'),
+          endDate: format(addDays(endDate, 7), 'yyyy-MM-dd'),
+          budget: budgetBreakdown.repurchase,
+          traffic: trafficBreakdown.repurchase,
+        },
+      };
+    }
+
+    return {
+      totalTraffic,
+      totalBudget,
+      campaignPeriods,
+      dailyBudgets,
+    };
   };
 
   const formatCurrency = (amount: number) => {
-    switch (locale) {
-      case "en":
-        return `$${amount.toLocaleString()}`;
-      case "ja":
-        return `¥${amount.toLocaleString()}`;
-      default:
-        return `NT$ ${amount.toLocaleString()}`;
-    }
+    return `NT$ ${amount.toLocaleString()}`;
   };
-
-  const formatNumber = (num: number) => {
-    return num.toLocaleString();
-  };
-
-  const calculatePeriodAllocations = (): PeriodAllocation[] => {
-    if (!results) return [];
-
-    const allocations: PeriodAllocation[] = [];
-    const periodNames: Record<string, string> = {
-      preheat: "預熱期",
-      launch: "起跑期", 
-      main: "活動期",
-      final: "倒數期",
-      repurchase: "回購期",
-      day1: "第1天",
-      day2: "第2天", 
-      day3: "第3天",
-      total: "總計"
-    };
-
-    Object.entries(results.budgetBreakdown).forEach(([period, budget]) => {
-      const traffic = results.trafficBreakdown[period] || 0;
-      const days = results.periodDays?.[period] || 1;
-      const percentage = ((budget / results.totalBudget) * 100);
-
-      allocations.push({
-        period: periodNames[period] || period,
-        budget,
-        traffic,
-        dailyBudget: Math.ceil(budget / days),
-        dailyTraffic: Math.ceil(traffic / days),
-        days,
-        percentage
-      });
-    });
-
-    return allocations;
-  };
-
-  const periodAllocations = calculatePeriodAllocations();
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <NavigationBar locale={locale as "zh-TW" | "en" | "ja"} />
+      <NavigationBar locale="zh-TW" />
       <div className="container mx-auto p-6 max-w-6xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">{t.title}</h1>
-          <p className="text-gray-600">{t.subtitle}</p>
-          <div className="flex items-center gap-4 mt-2">
-            <Badge variant="outline">{t.proBadge}</Badge>
-            {usageInfo && usageInfo.membershipLevel === 'free' && (
+          <h1 className="text-3xl font-bold mb-2">活動預算規劃器</h1>
+          <p className="text-gray-600">專業的活動預算規劃工具，採用動態預算分配演算法，適合各種活動週期</p>
+          <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+            <h3 className="text-sm font-semibold text-blue-800 mb-2">🚀 動態預算分配技術</h3>
+            <div className="text-xs text-blue-700 space-y-1">
+              <p>• <strong>短期活動</strong>（10-20天）：起跑期重點投放，確保瞬間流量爆發</p>
+              <p>• <strong>長期活動</strong>（30-60天）：自動增加活動期預算，避免中段失血</p>
+              <p>• <strong>智能調配</strong>：活動期預算隨天數動態調整，保持熱度不間斷</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
+            <Badge variant="outline">Pro 會員專屬</Badge>
+            {!isAuthenticated ? (
+              <Badge variant="destructive">需要 Google 登入</Badge>
+            ) : (usageData as any)?.membershipStatus?.level === 'pro' && (usageData as any)?.membershipStatus?.isActive ? (
+              <Badge variant="default">Pro 會員 - 無限使用</Badge>
+            ) : (
               <Badge variant="secondary">
-                {t.usageInfo}: {usageInfo.current}/{usageInfo.limit}
+                免費試用 剩餘 {Math.max(0, 3 - ((usageData as any)?.usage || 0))}/3 次
               </Badge>
             )}
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Input Form */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calculator className="h-5 w-5" />
-                {t.campaignSettings}
+                活動參數設定
               </CardTitle>
               <CardDescription>
-                {t.campaignDescription}
+                請輸入您的活動基本資訊，系統將自動計算最佳預算分配
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="startDate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{t.startDate}</FormLabel>
+                          <FormLabel>活動開始日期</FormLabel>
                           <FormControl>
                             <Input type="date" {...field} />
                           </FormControl>
@@ -412,13 +329,12 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name="endDate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{t.endDate}</FormLabel>
+                          <FormLabel>活動結束日期</FormLabel>
                           <FormControl>
                             <Input type="date" {...field} />
                           </FormControl>
@@ -428,212 +344,182 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
                     />
                   </div>
 
-                  <FormField
-                    control={form.control}
-                    name="targetRevenue"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t.targetRevenue}</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            {...field}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              field.onChange(value === '' ? undefined : parseFloat(value));
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="targetRevenue"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>目標營收 (NT$)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="例如：100000"
+                              {...field}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                field.onChange(value === '' ? undefined : parseFloat(value));
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="targetAov"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>目標客單價 (NT$)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="例如：1200"
+                              {...field}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                field.onChange(value === '' ? undefined : parseFloat(value));
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                  <FormField
-                    control={form.control}
-                    name="targetAov"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t.targetAov}</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            {...field}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              field.onChange(value === '' ? undefined : parseFloat(value));
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="targetConversionRate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>目標轉換率 (%)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="例如：2.5"
+                              {...field}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                field.onChange(value === '' ? undefined : parseFloat(value));
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="cpc"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>每次點擊成本 (NT$)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.1"
+                              placeholder="例如：5"
+                              {...field}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                field.onChange(value === '' ? undefined : parseFloat(value));
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                  <FormField
-                    control={form.control}
-                    name="targetConversionRate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t.targetConversionRate}</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            step="0.01"
-                            {...field}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              field.onChange(value === '' ? undefined : parseFloat(value));
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="cpc"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t.cpc}</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            step="0.1"
-                            {...field}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              field.onChange(value === '' ? undefined : parseFloat(value));
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {analyticsData && (
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={fillFromAnalytics}
-                      className="w-full"
-                    >
-                      從 GA 數據自動填入
-                    </Button>
-                  )}
-
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isCalculating}
-                  >
-                    {isCalculating ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        {t.calculating}
-                      </>
-                    ) : (
-                      t.calculate
-                    )}
+                  <Button type="submit" className="w-full" size="lg">
+                    開始計算活動預算
                   </Button>
                 </form>
               </Form>
             </CardContent>
           </Card>
 
-          {/* Results */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                {t.results}
-              </CardTitle>
-              <CardDescription>
-                {results ? "根據您的設定計算出的預算配置" : t.fillFormFirst}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {results ? (
-                <div className="space-y-6">
-                  {/* Summary */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <DollarSign className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                      <div className="text-2xl font-bold text-blue-600">
-                        {formatCurrency(results.totalBudget)}
-                      </div>
-                      <div className="text-sm text-gray-600">{t.totalBudget}</div>
+          {results && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  活動預算規劃結果
+                </CardTitle>
+                <CardDescription>根據您的活動參數計算出的最佳預算分配</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {formatCurrency(results.totalBudget)}
                     </div>
-                    <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <Users className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                      <div className="text-2xl font-bold text-green-600">
-                        {formatNumber(results.totalTraffic)}
-                      </div>
-                      <div className="text-sm text-gray-600">{t.totalTraffic}</div>
-                    </div>
+                    <div className="text-sm text-gray-600 mt-1">總預算</div>
                   </div>
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">
+                      {results.totalTraffic.toLocaleString()}
+                    </div>
+                    <div className="text-sm text-gray-600 mt-1">總流量</div>
+                  </div>
+                </div>
 
-                  {/* Period Breakdown */}
-                  {periodAllocations.length > 0 && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">
-                        {t.budgetAllocation} ({results.campaignDays} 天活動)
-                      </h3>
-                      <div className="flex flex-wrap gap-3">
-                        {periodAllocations.map((allocation, index) => (
-                          <div key={index} className="flex-1 min-w-36 p-3 border rounded-lg">
-                            <div className="flex justify-between items-center mb-2">
-                              <span className="font-medium text-sm">{allocation.period}</span>
-                              <span className="text-xs text-gray-600">
-                                {allocation.percentage.toFixed(1)}%
-                              </span>
-                            </div>
-                            <div className="space-y-1 text-xs">
-                              <div>
-                                <span className="text-gray-600">{t.budget}: </span>
-                                <span className="font-medium">{formatCurrency(allocation.budget)}</span>
-                              </div>
-                              <div>
-                                <span className="text-gray-600">{t.traffic}: </span>
-                                <span className="font-medium">{formatNumber(allocation.traffic)}</span>
-                              </div>
-                              {allocation.days > 1 && (
-                                <>
-                                  <div>
-                                    <span className="text-gray-600">{t.dailyBudget}: </span>
-                                    <span className="font-medium">{formatCurrency(allocation.dailyBudget)}</span>
-                                  </div>
-                                  <div>
-                                    <span className="text-gray-600">{t.dailyTraffic}: </span>
-                                    <span className="font-medium">{formatNumber(allocation.dailyTraffic)}</span>
-                                  </div>
-                                </>
-                              )}
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-semibold text-gray-800">活動期間預算分配</h4>
+                    {isAuthenticated && (
+                      <SaveProjectDialog 
+                        projectType="campaign_planner"
+                        projectData={{
+                          ...form.getValues(),
+                          results: results
+                        }}
+                      />
+                    )}
+                  </div>
+                  
+                  {/* Display campaign periods based on structure */}
+                  <div className="grid gap-3">
+                    {Object.entries(results.campaignPeriods).map(([period, data]: [string, any]) => {
+                      const periodNames: { [key: string]: string } = {
+                        preheat: '預熱期',
+                        launch: '起跑期',
+                        main: '活動期',
+                        final: '倒數期',
+                        repurchase: '回購期',
+                        day1: '第一天',
+                        day2: '第二天',
+                        day3: '第三天'
+                      };
+                      
+                      return (
+                        <div key={period} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                          <div>
+                            <div className="font-medium">{periodNames[period]}</div>
+                            <div className="text-sm text-gray-500">
+                              {data.startDate} - {data.endDate}
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Results saved automatically */}
+                          <div className="text-right">
+                            <div className="font-semibold">{formatCurrency(data.budget)}</div>
+                            <div className="text-sm text-gray-500">{data.traffic.toLocaleString()} 流量</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <Calculator className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>{t.fillFormFirst}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
-
-      {/* Project saving removed for now */}
-
+      
       <Footer />
     </div>
   );

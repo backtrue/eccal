@@ -18,25 +18,43 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  // Always check authentication status
-  const { data: user, isLoading, error } = useQuery({
+  // Smart auth checking: enable only when needed
+  const { data: user, isLoading } = useQuery({
     queryKey: ["/api/auth/user"],
     retry: (failureCount, error) => {
       // Don't retry if it's an auth error (401)
       if (error?.message?.includes('401')) return false;
-      return failureCount < 1;
+      return failureCount < 2;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes
     refetchOnWindowFocus: false,
     refetchInterval: false,
-    refetchOnMount: true,
+    refetchOnMount: true, // Check on mount
     refetchOnReconnect: false,
-    // Always enabled to properly detect auth state
-    enabled: true,
+    // Only enable if:
+    // 1. User just logged in (auth_success param)
+    // 2. We're on a protected page
+    // 3. There's a stored session indication
+    enabled: (() => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const hasAuthSuccess = urlParams.has('auth_success');
+      const isProtectedPage = window.location.pathname.includes('/dashboard') || 
+                             window.location.pathname.includes('/campaign-planner') ||
+                             window.location.pathname.includes('/bdmin');
+      const hasStoredAuth = document.cookie.includes('connect.sid');
+      
+      console.log('Auth Query Debug:', {
+        hasAuthSuccess,
+        isProtectedPage,
+        hasStoredAuth,
+        pathname: window.location.pathname,
+        enabled: hasAuthSuccess || isProtectedPage || hasStoredAuth
+      });
+      
+      return hasAuthSuccess || isProtectedPage || hasStoredAuth;
+    })(),
   });
-
-  console.log('[AUTH CONTEXT] Query state:', { user: !!user, isLoading, error: !!error });
 
   // Clean up auth_success parameter
   useEffect(() => {

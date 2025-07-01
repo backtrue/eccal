@@ -438,40 +438,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Secure Campaign Planner calculation endpoint with server-side validation
   app.post('/api/campaign-planner/calculate', requireAuth, async (req: any, res) => {
     try {
-      console.log('=== CAMPAIGN CALCULATION START ===');
-      console.log('User:', req.user?.email || req.user?.id || 'unknown');
-      console.log('Request data:', req.body);
-      
       const userId = req.user.claims?.sub || req.user.id;
-      if (!userId) {
-        throw new Error('User ID not found');
-      }
       const { startDate, endDate, targetRevenue, targetAov, targetConversionRate, cpc } = req.body;
-      
-      // 驗證必要參數
-      console.log('[CAMPAIGN] Parameters received:', { startDate, endDate, targetRevenue, targetAov, targetConversionRate, cpc });
-      
-      if (!startDate || !endDate || !targetRevenue || !targetAov || !targetConversionRate || !cpc) {
-        console.error('[CAMPAIGN] Missing parameters:', { startDate, endDate, targetRevenue, targetAov, targetConversionRate, cpc });
-        throw new Error('Missing required parameters');
-      }
-      
-      // 驗證數值參數
-      if (isNaN(targetRevenue) || isNaN(targetAov) || isNaN(targetConversionRate) || isNaN(cpc)) {
-        console.error('[CAMPAIGN] Invalid numeric parameters:', { targetRevenue, targetAov, targetConversionRate, cpc });
-        throw new Error('Invalid numeric parameters');
+
+      // 1. 後端檢查會員狀態和使用次數
+      const user = await storage.getUser(userId);
+      const membershipStatus = await storage.checkMembershipStatus(userId);
+      const currentUsage = user?.campaignPlannerUsage || 0;
+
+      // Validate permissions before calculation
+      if (membershipStatus.level === 'free' && currentUsage >= 3) {
+        return res.status(403).json({ 
+          error: 'usage_limit_exceeded',
+          message: '使用次數已達上限，請升級會員',
+          usage: currentUsage,
+          limit: 3
+        });
       }
 
       // 2. 執行後端計算邏輯
-      console.log('[CAMPAIGN] Starting calculation logic');
       const startDateObj = new Date(startDate);
       const endDateObj = new Date(endDate);
-      console.log('[CAMPAIGN] Date objects created:', { startDateObj, endDateObj });
       
       // 計算活動總需要流量 
-      console.log('[CAMPAIGN] Calculating total traffic with:', { targetRevenue, targetAov, targetConversionRate });
       const totalTraffic = Math.ceil((targetRevenue / targetAov) / (targetConversionRate / 100));
-      console.log('[CAMPAIGN] Total traffic calculated:', totalTraffic);
       
       // 計算活動期間天數
       const campaignDays = Math.ceil((endDateObj.getTime() - startDateObj.getTime()) / (1000 * 60 * 60 * 24)) + 1;
@@ -570,25 +560,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       };
 
-      console.log('Calculation successful, sending response');
-      
-      const response = { 
+      // 3. 如果計算成功，且是免費會員，才記錄用量
+      if (membershipStatus.level === 'free') {
+        await storage.incrementCampaignPlannerUsage(userId);
+      }
+
+      res.json({ 
         success: true, 
-        result
-      };
-      
-      console.log('[CAMPAIGN] Sending response with success:', response.success);
-      res.json(response);
+        result,
+        usage: {
+          current: membershipStatus.level === 'free' ? currentUsage + 1 : -1,
+          limit: membershipStatus.level === 'free' ? 3 : -1,
+          membershipLevel: membershipStatus.level
+        }
+      });
 
     } catch (error) {
-      console.error("[CAMPAIGN] Calculation error:", error);
-      console.error("[CAMPAIGN] Error details:", error instanceof Error ? error.message : String(error));
-      console.error("[CAMPAIGN] Error stack:", error instanceof Error ? error.stack : 'No stack trace');
-      res.status(500).json({ 
-        success: false,
-        message: "計算失敗，請稍後再試",
-        error: error instanceof Error ? error.message : String(error)
-      });
+      console.error("Campaign planner calculation error:", error);
+      res.status(500).json({ message: "計算失敗，請稍後再試" });
     }
   });
 
@@ -1385,162 +1374,6 @@ echo "Bulk import completed!"`;
     } catch (error) {
       console.error('Error setting maintenance mode:', error);
       res.status(500).json({ message: 'Failed to set maintenance mode' });
-    }
-  });
-
-  // ===== Debug Endpoint for Production Testing =====
-  
-  // Complete system status diagnostic
-  app.get('/api/system/status', (req, res) => {
-    const status = {
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development',
-      authentication: {
-        isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : false,
-        hasUser: !!req.user,
-        userId: (req.user as any)?.id || null,
-        userEmail: (req.user as any)?.email || null,
-        sessionId: req.sessionID || null,
-      },
-      session: {
-        exists: !!req.session,
-        keys: req.session ? Object.keys(req.session) : [],
-      },
-      headers: {
-        userAgent: req.get('User-Agent')?.substring(0, 50) + '...',
-        host: req.get('Host'),
-        cookie: req.get('Cookie') ? 'present' : 'absent',
-      },
-      database: {
-        connected: !!db,
-        url: process.env.DATABASE_URL ? 'configured' : 'missing',
-      },
-      oauth: {
-        clientId: process.env.GOOGLE_CLIENT_ID ? 'configured' : 'missing',
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET ? 'configured' : 'missing',
-      }
-    };
-    
-    res.json(status);
-  });
-  
-  // Debug endpoint for admin authentication and functionality
-  app.get('/api/debug/admin-status', async (req: any, res) => {
-    try {
-      const user = req.user;
-      const debugInfo = {
-        timestamp: new Date().toISOString(),
-        authenticated: !!user,
-        userInfo: user ? {
-          id: user.claims?.sub || 'no-sub',
-          email: user.claims?.email || 'no-email',
-          sessionExists: !!req.session
-        } : null,
-        adminStatus: user?.claims?.email === 'backtrue@gmail.com' ? 'admin' : 'not-admin',
-        sessionId: req.sessionID || 'no-session',
-        headers: {
-          userAgent: req.headers['user-agent'],
-          origin: req.headers.origin,
-          referer: req.headers.referer
-        }
-      };
-      res.json(debugInfo);
-    } catch (error) {
-      res.json({
-        error: 'Debug endpoint error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
-      });
-    }
-  });
-
-  // ===== Test Endpoints for Admin Functions =====
-  
-  // Test batch membership update (no auth required for testing)
-  app.post('/api/test/batch-membership', async (req: any, res) => {
-    try {
-      const { userIds, membershipLevel, durationDays } = req.body;
-      
-      if (!Array.isArray(userIds) || userIds.length === 0) {
-        return res.status(400).json({ message: 'Invalid user IDs array' });
-      }
-      
-      let expiresAt: Date | undefined;
-      if (membershipLevel === 'pro' && durationDays) {
-        expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + durationDays);
-      }
-      
-      const updatedCount = await storage.batchUpdateUserMembership(userIds, membershipLevel, expiresAt);
-      res.json({ 
-        success: true, 
-        updatedCount,
-        message: `Updated ${updatedCount} users to ${membershipLevel}` 
-      });
-    } catch (error) {
-      console.error('Error in test batch membership update:', error);
-      res.status(500).json({ message: 'Failed to batch update memberships', error: error instanceof Error ? error.message : 'Unknown error' });
-    }
-  });
-  
-  // Test batch credits add (no auth required for testing)
-  app.post('/api/test/batch-credits', async (req: any, res) => {
-    try {
-      const { userIds, amount, description } = req.body;
-      
-      if (!Array.isArray(userIds) || userIds.length === 0) {
-        return res.status(400).json({ message: 'Invalid user IDs array' });
-      }
-      
-      if (!amount || !description) {
-        return res.status(400).json({ message: 'Amount and description required' });
-      }
-      
-      const updatedCount = await storage.batchAddCredits(userIds, amount, description);
-      res.json({ 
-        success: true, 
-        updatedCount,
-        message: `Added ${amount} credits to ${updatedCount} users` 
-      });
-    } catch (error) {
-      console.error('Error in test batch credits add:', error);
-      res.status(500).json({ message: 'Failed to batch add credits', error: error instanceof Error ? error.message : 'Unknown error' });
-    }
-  });
-  
-  // Test announcement creation (no auth required for testing)
-  app.post('/api/test/announcement', async (req: any, res) => {
-    try {
-      const { title, content, type, targetAudience } = req.body;
-      
-      // Get a real user ID for testing
-      const firstUser = await storage.getFirstUser();
-      if (!firstUser) {
-        return res.status(400).json({ message: 'No users found in database for testing' });
-      }
-      
-      const announcement = await storage.createAnnouncement({
-        title,
-        content,
-        type: type || 'info',
-        targetAudience: targetAudience || 'all',
-        priority: 0,
-        startDate: null,
-        endDate: null,
-        createdBy: firstUser.id,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      });
-      
-      res.json({ 
-        success: true, 
-        announcement,
-        message: 'Test announcement created successfully' 
-      });
-    } catch (error) {
-      console.error('Error in test announcement creation:', error);
-      res.status(500).json({ message: 'Failed to create test announcement', error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 

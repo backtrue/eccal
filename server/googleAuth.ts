@@ -15,7 +15,7 @@ export function setupGoogleAuth(app: Express) {
     ttl: sessionTtl,
     tableName: "sessions",
     pruneSessionInterval: 2 * 60 * 60 * 1000, // 每2小時清理過期 session
-    disableTouch: false, // 啟用 touch 操作以支持 rolling session
+    disableTouch: true, // 停用 touch 操作減少資料庫負擔
   });
 
   app.use(session({
@@ -23,8 +23,8 @@ export function setupGoogleAuth(app: Express) {
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
-    rolling: true, // 啟用滾動過期 - 在用戶活動時續期session
-    unset: 'keep', // 保持session數據，不會意外清理
+    rolling: false, // 停用滾動過期以減少資料庫更新
+    unset: 'destroy', // 刪除 session 時立即清理
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -107,33 +107,23 @@ export function setupGoogleAuth(app: Express) {
 
   passport.deserializeUser(async (id: string, done) => {
     try {
-      console.log(`[AUTH] Deserializing user: ${id}`);
-      
       // Check cache first
       const cached = userCache.get(id);
       if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-        console.log(`[AUTH] User found in cache: ${id}`);
         return done(null, cached.user);
       }
 
-      console.log(`[AUTH] Cache miss, fetching from database: ${id}`);
       // Fetch from database
       const user = await storage.getUser(id);
-      console.log(`[AUTH] User from DB:`, user ? `Found ${user.email}` : 'Not found');
-      
-      if (!user) {
-        console.log(`[AUTH] User not found in database: ${id}`);
-        return done(null, false);
-      }
       
       // Cache the result
-      userCache.set(id, { user, timestamp: Date.now() });
-      console.log(`[AUTH] User successfully deserialized: ${user.email}`);
+      if (user) {
+        userCache.set(id, { user, timestamp: Date.now() });
+      }
       
-      done(null, user);
+      done(null, user || false);
     } catch (error) {
-      console.error(`[AUTH] Error deserializing user ${id}:`, error);
-      done(null, false); // Don't propagate error, just fail silently
+      done(error, false);
     }
   });
 
@@ -213,18 +203,10 @@ export function setupGoogleAuth(app: Express) {
 
 // Middleware to check if user is authenticated
 export function requireAuth(req: any, res: any, next: any) {
-  console.log(`[AUTH] requireAuth called for ${req.method} ${req.path}`);
-  console.log(`[AUTH] isAuthenticated():`, req.isAuthenticated ? req.isAuthenticated() : 'method not available');
-  console.log(`[AUTH] User exists:`, !!req.user);
-  console.log(`[AUTH] Session ID:`, req.sessionID || 'no session');
-  console.log(`[AUTH] Session keys:`, req.session ? Object.keys(req.session) : 'no session');
-  
-  if (req.isAuthenticated && req.isAuthenticated() && req.user) {
-    console.log(`[AUTH] Authentication successful for user:`, req.user.email || req.user.id || 'unknown');
+  if (req.isAuthenticated()) {
     return next();
   }
   
-  console.log(`[AUTH] Authentication failed - returning 401`);
   // Return 401 for unauthenticated requests - this is the standard HTTP status
   res.status(401).json({ error: 'Authentication required' });
 }
