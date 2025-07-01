@@ -50,18 +50,6 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
   const { data: usageData, refetch: refetchUsage } = useCampaignPlannerUsage();
   const { data: analyticsData } = useAnalyticsData();
   const [results, setResults] = useState<PlanningResult | null>(null);
-  
-  // Show loading state while authentication is being checked
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">檢查登入狀態中...</p>
-        </div>
-      </div>
-    );
-  }
 
   const form = useForm<CampaignPlannerFormData>({
     resolver: zodResolver(campaignPlannerSchema),
@@ -313,6 +301,18 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
   const formatCurrency = (amount: number) => {
     return `NT$ ${amount.toLocaleString()}`;
   };
+
+  // Show loading state while authentication is being checked
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">檢查登入狀態中...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
