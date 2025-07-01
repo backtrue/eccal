@@ -245,6 +245,8 @@ export default function AdminDashboard() {
     }
   });
 
+
+
   // Batch add credits mutation
   const batchCreditsMutation = useMutation({
     mutationFn: async ({ userIds, amount, description }: any) => {
@@ -263,10 +265,39 @@ export default function AdminDashboard() {
         description: "批次發放點數完成",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Batch credits update error:', error);
       toast({
         title: "錯誤",
         description: "批次發放點數失敗",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Create announcement mutation
+  const createAnnouncementMutation = useMutation({
+    mutationFn: async ({ title, content, type, targetAudience }: any) => {
+      return apiRequest('POST', '/api/bdmin/announcements', {
+        title,
+        content,
+        type: type || 'info',
+        targetAudience: targetAudience || 'all',
+        priority: 0
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/bdmin/announcements'] });
+      toast({
+        title: "成功",
+        description: "公告創建成功",
+      });
+    },
+    onError: (error) => {
+      console.error('Create announcement error:', error);
+      toast({
+        title: "錯誤",
+        description: "創建公告失敗",
         variant: "destructive",
       });
     }
