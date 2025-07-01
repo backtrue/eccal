@@ -1,0 +1,387 @@
+import { format, addDays, differenceInDays } from "date-fns";
+import { storage } from "./storage";
+import type { InsertCampaignPlan, InsertCampaignPeriod, InsertDailyBudget } from "@shared/schema";
+
+// 活動規劃服務類別
+export class CampaignPlannerService {
+  
+  // 計算活動預算分配
+  async calculateCampaignBudget(params: {
+    userId: string;
+    name: string;
+    startDate: string;
+    endDate: string;
+    targetRevenue: number;
+    targetAov: number;
+    targetConversionRate: number;
+    costPerClick: number;
+  }) {
+    const {
+      userId,
+      name,
+      startDate,
+      endDate,
+      targetRevenue,
+      targetAov,
+      targetConversionRate,
+      costPerClick
+    } = params;
+
+    // 1. 基本計算
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const totalDays = differenceInDays(end, start) + 1;
+    
+    const targetOrders = Math.ceil(targetRevenue / targetAov);
+    const totalTraffic = Math.ceil(targetOrders / (targetConversionRate / 100));
+    const totalBudget = Math.ceil(totalTraffic * costPerClick);
+
+    // 2. 建立活動計畫
+    const campaignPlanData: InsertCampaignPlan = {
+      userId,
+      name,
+      description: `目標營收: NT$ ${targetRevenue.toLocaleString()}，預計${totalDays}天活動`,
+      startDate: start,
+      endDate: end,
+      totalDays,
+      targetRevenue: targetRevenue.toString(),
+      targetAov: targetAov.toString(),
+      targetConversionRate: targetConversionRate.toString(),
+      costPerClick: costPerClick.toString(),
+      totalBudget: totalBudget.toString(),
+      totalTraffic,
+      totalOrders: targetOrders,
+      status: "draft"
+    };
+
+    const campaignPlan = await storage.createCampaignPlan(campaignPlanData);
+
+    // 3. 根據活動天數決定預算分配策略
+    const { periods, dailyBreakdown } = this.calculateBudgetAllocation({
+      campaignId: campaignPlan.id,
+      totalDays,
+      totalBudget,
+      totalTraffic,
+      targetOrders,
+      targetRevenue,
+      startDate: start,
+      endDate: end
+    });
+
+    // 4. 儲存預算期間
+    const campaignPeriods = await storage.createCampaignPeriods(periods);
+
+    // 5. 儲存每日預算
+    const dailyBudgets = await storage.createDailyBudgets(dailyBreakdown);
+
+    return {
+      campaign: campaignPlan,
+      periods: campaignPeriods,
+      dailyBreakdown: dailyBudgets,
+      summary: {
+        totalBudget,
+        totalTraffic,
+        totalOrders: targetOrders,
+        totalDays,
+        avgDailyBudget: Math.ceil(totalBudget / totalDays),
+        avgDailyTraffic: Math.ceil(totalTraffic / totalDays)
+      }
+    };
+  }
+
+  // 預算分配策略
+  private calculateBudgetAllocation(params: {
+    campaignId: string;
+    totalDays: number;
+    totalBudget: number;
+    totalTraffic: number;
+    targetOrders: number;
+    targetRevenue: number;
+    startDate: Date;
+    endDate: Date;
+  }) {
+    const {
+      campaignId,
+      totalDays,
+      totalBudget,
+      totalTraffic,
+      targetOrders,
+      targetRevenue,
+      startDate,
+      endDate
+    } = params;
+
+    let periods: InsertCampaignPeriod[] = [];
+    let dailyBreakdown: InsertDailyBudget[] = [];
+
+    if (totalDays <= 3) {
+      // 短期活動策略（1-3天）
+      const allocations = this.getShortTermAllocation(totalDays);
+      
+      for (let i = 0; i < totalDays; i++) {
+        const date = addDays(startDate, i);
+        const allocation = allocations[i];
+        const periodBudget = Math.ceil(totalBudget * allocation.percentage);
+        const periodTraffic = Math.ceil(totalTraffic * allocation.percentage);
+        const periodOrders = Math.ceil(targetOrders * allocation.percentage);
+        const periodRevenue = Math.ceil(targetRevenue * allocation.percentage);
+
+        // 建立期間
+        const period: InsertCampaignPeriod = {
+          campaignId,
+          name: `day_${i + 1}`,
+          displayName: allocation.name,
+          orderIndex: i,
+          startDate: date,
+          endDate: date,
+          durationDays: 1,
+          budgetAmount: periodBudget.toString(),
+          budgetPercentage: (allocation.percentage * 100).toString(),
+          dailyBudget: periodBudget.toString(),
+          trafficAmount: periodTraffic,
+          trafficPercentage: (allocation.percentage * 100).toString(),
+          dailyTraffic: periodTraffic,
+          expectedOrders: periodOrders,
+          expectedRevenue: periodRevenue.toString()
+        };
+        periods.push(period);
+
+        // 建立每日預算
+        const dailyBudget: InsertDailyBudget = {
+          campaignId,
+          periodId: '', // 會在儲存 period 後更新
+          date,
+          dayOfCampaign: i + 1,
+          budget: periodBudget.toString(),
+          traffic: periodTraffic,
+          expectedOrders: periodOrders,
+          expectedRevenue: periodRevenue.toString()
+        };
+        dailyBreakdown.push(dailyBudget);
+      }
+    } else if (totalDays <= 7) {
+      // 中期活動策略（4-7天）
+      const allocations = this.getMediumTermAllocation(totalDays);
+      this.buildPeriodsAndDailyBudgets({
+        campaignId,
+        allocations,
+        totalBudget,
+        totalTraffic,
+        targetOrders,
+        targetRevenue,
+        startDate,
+        periods,
+        dailyBreakdown
+      });
+    } else {
+      // 長期活動策略（8天以上）
+      const allocations = this.getLongTermAllocation(totalDays);
+      this.buildPeriodsAndDailyBudgets({
+        campaignId,
+        allocations,
+        totalBudget,
+        totalTraffic,
+        targetOrders,
+        targetRevenue,
+        startDate,
+        periods,
+        dailyBreakdown
+      });
+    }
+
+    return { periods, dailyBreakdown };
+  }
+
+  // 短期活動分配（1-3天）
+  private getShortTermAllocation(totalDays: number) {
+    if (totalDays === 1) {
+      return [{ name: "單日爆發", percentage: 1.0 }];
+    } else if (totalDays === 2) {
+      return [
+        { name: "首日衝刺", percentage: 0.6 },
+        { name: "收尾日", percentage: 0.4 }
+      ];
+    } else { // 3 days
+      return [
+        { name: "開場日", percentage: 0.5 },
+        { name: "主推日", percentage: 0.3 },
+        { name: "收尾日", percentage: 0.2 }
+      ];
+    }
+  }
+
+  // 中期活動分配（4-7天）
+  private getMediumTermAllocation(totalDays: number) {
+    return [
+      {
+        name: "launch",
+        displayName: "啟動期",
+        percentage: 0.45,
+        days: Math.ceil(totalDays * 0.4) // 40% 的天數
+      },
+      {
+        name: "main", 
+        displayName: "主推期",
+        percentage: 0.35,
+        days: Math.floor(totalDays * 0.4) // 40% 的天數
+      },
+      {
+        name: "final",
+        displayName: "收尾期", 
+        percentage: 0.2,
+        days: totalDays - Math.ceil(totalDays * 0.4) - Math.floor(totalDays * 0.4) // 剩餘天數
+      }
+    ];
+  }
+
+  // 長期活動分配（8天以上）
+  private getLongTermAllocation(totalDays: number) {
+    // 動態調整主推期預算比例
+    const extraDays = Math.max(0, totalDays - 20);
+    const extraBudgetRatio = Math.min(0.20, extraDays * 0.008);
+    
+    return [
+      {
+        name: "preheat",
+        displayName: "預熱期",
+        percentage: 0.04,
+        days: 4 // 固定4天預熱
+      },
+      {
+        name: "launch",
+        displayName: "啟動期",
+        percentage: 0.32 - extraBudgetRatio * 0.6,
+        days: 3 // 固定3天啟動
+      },
+      {
+        name: "main",
+        displayName: "主推期",
+        percentage: 0.38 + extraBudgetRatio,
+        days: totalDays - 10 // 扣除其他期間的固定天數
+      },
+      {
+        name: "final",
+        displayName: "收尾期",
+        percentage: 0.24 - extraBudgetRatio * 0.4,
+        days: 3 // 固定3天收尾
+      },
+      {
+        name: "repurchase",
+        displayName: "回購期",
+        percentage: 0.02,
+        days: 7 // 固定7天回購
+      }
+    ];
+  }
+
+  // 建立期間和每日預算
+  private buildPeriodsAndDailyBudgets(params: {
+    campaignId: string;
+    allocations: any[];
+    totalBudget: number;
+    totalTraffic: number;
+    targetOrders: number;
+    targetRevenue: number;
+    startDate: Date;
+    periods: InsertCampaignPeriod[];
+    dailyBreakdown: InsertDailyBudget[];
+  }) {
+    const {
+      campaignId,
+      allocations,
+      totalBudget,
+      totalTraffic,
+      targetOrders,
+      targetRevenue,
+      startDate,
+      periods,
+      dailyBreakdown
+    } = params;
+
+    let currentDate = new Date(startDate);
+    let dayOfCampaign = 1;
+
+    allocations.forEach((allocation, index) => {
+      const periodBudget = Math.ceil(totalBudget * allocation.percentage);
+      const periodTraffic = Math.ceil(totalTraffic * allocation.percentage);
+      const periodOrders = Math.ceil(targetOrders * allocation.percentage);
+      const periodRevenue = Math.ceil(targetRevenue * allocation.percentage);
+      const periodDays = allocation.days;
+      
+      const periodStartDate = new Date(currentDate);
+      const periodEndDate = addDays(currentDate, periodDays - 1);
+
+      // 建立期間
+      const period: InsertCampaignPeriod = {
+        campaignId,
+        name: allocation.name,
+        displayName: allocation.displayName,
+        orderIndex: index,
+        startDate: periodStartDate,
+        endDate: periodEndDate,
+        durationDays: periodDays,
+        budgetAmount: periodBudget.toString(),
+        budgetPercentage: (allocation.percentage * 100).toString(),
+        dailyBudget: Math.ceil(periodBudget / periodDays).toString(),
+        trafficAmount: periodTraffic,
+        trafficPercentage: (allocation.percentage * 100).toString(),
+        dailyTraffic: Math.ceil(periodTraffic / periodDays),
+        expectedOrders: periodOrders,
+        expectedRevenue: periodRevenue.toString()
+      };
+      periods.push(period);
+
+      // 建立該期間的每日預算
+      for (let i = 0; i < periodDays; i++) {
+        const date = addDays(periodStartDate, i);
+        const dailyBudgetAmount = Math.ceil(periodBudget / periodDays);
+        const dailyTrafficAmount = Math.ceil(periodTraffic / periodDays);
+        const dailyOrdersAmount = Math.ceil(periodOrders / periodDays);
+        const dailyRevenueAmount = Math.ceil(periodRevenue / periodDays);
+
+        const dailyBudget: InsertDailyBudget = {
+          campaignId,
+          periodId: '', // 會在儲存 period 後更新
+          date,
+          dayOfCampaign,
+          budget: dailyBudgetAmount.toString(),
+          traffic: dailyTrafficAmount,
+          expectedOrders: dailyOrdersAmount,
+          expectedRevenue: dailyRevenueAmount.toString()
+        };
+        dailyBreakdown.push(dailyBudget);
+        
+        dayOfCampaign++;
+      }
+
+      currentDate = addDays(periodEndDate, 1);
+    });
+  }
+
+  // 取得使用者的活動計畫列表
+  async getUserCampaignPlans(userId: string) {
+    return await storage.getUserCampaignPlans(userId);
+  }
+
+  // 取得活動計畫詳細資料
+  async getCampaignPlanDetails(campaignId: string, userId: string) {
+    const campaign = await storage.getCampaignPlan(campaignId, userId);
+    if (!campaign) return null;
+
+    const periods = await storage.getCampaignPeriods(campaignId);
+    const dailyBudgets = await storage.getDailyBudgets(campaignId);
+
+    return {
+      campaign,
+      periods,
+      dailyBudgets
+    };
+  }
+
+  // 刪除活動計畫
+  async deleteCampaignPlan(campaignId: string, userId: string) {
+    return await storage.deleteCampaignPlan(campaignId, userId);
+  }
+}
+
+export const campaignPlannerService = new CampaignPlannerService();

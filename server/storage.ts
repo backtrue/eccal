@@ -17,6 +17,20 @@ import {
   savedProjects,
   type SavedProject,
   type InsertSavedProject,
+  // Campaign Planner imports
+  campaignPlans,
+  type CampaignPlan,
+  type InsertCampaignPlan,
+  campaignPeriods,
+  type CampaignPeriod,
+  type InsertCampaignPeriod,
+  dailyBudgets,
+  type DailyBudget,
+  type InsertDailyBudget,
+  campaignTemplates,
+  type CampaignTemplate,
+  type InsertCampaignTemplate,
+  // Other imports
   seoSettings,
   type SeoSetting,
   type InsertSeoSetting,
@@ -87,9 +101,29 @@ export interface IStorage {
   upgradeToPro(userId: string, durationDays: number): Promise<User>;
   checkMembershipStatus(userId: string): Promise<{ level: "free" | "pro"; isActive: boolean; expiresAt?: Date }>;
   
-  // Campaign Planner usage tracking
+  // Campaign Planner usage tracking (legacy)
   incrementCampaignPlannerUsage(userId: string): Promise<User>;
   getCampaignPlannerUsage(userId: string): Promise<number>;
+  
+  // New Campaign Planner operations
+  createCampaignPlan(planData: InsertCampaignPlan): Promise<CampaignPlan>;
+  getCampaignPlan(campaignId: string, userId: string): Promise<CampaignPlan | undefined>;
+  getUserCampaignPlans(userId: string): Promise<CampaignPlan[]>;
+  updateCampaignPlan(campaignId: string, userId: string, updates: Partial<CampaignPlan>): Promise<CampaignPlan>;
+  deleteCampaignPlan(campaignId: string, userId: string): Promise<boolean>;
+  
+  // Campaign Periods operations
+  createCampaignPeriods(periods: InsertCampaignPeriod[]): Promise<CampaignPeriod[]>;
+  getCampaignPeriods(campaignId: string): Promise<CampaignPeriod[]>;
+  
+  // Daily Budgets operations
+  createDailyBudgets(budgets: InsertDailyBudget[]): Promise<DailyBudget[]>;
+  getDailyBudgets(campaignId: string): Promise<DailyBudget[]>;
+  
+  // Campaign Templates operations
+  getCampaignTemplates(userId?: string): Promise<CampaignTemplate[]>;
+  createCampaignTemplate(templateData: InsertCampaignTemplate): Promise<CampaignTemplate>;
+  getCampaignTemplate(templateId: string): Promise<CampaignTemplate | undefined>;
   
   // Admin operations
   addCreditsToAllUsers(amount: number, description: string): Promise<number>;
@@ -1304,6 +1338,147 @@ export class DatabaseStorage implements IStorage {
       .values(index)
       .returning();
     return newIndex;
+  }
+
+  // ===== NEW CAMPAIGN PLANNER OPERATIONS =====
+  
+  async createCampaignPlan(planData: InsertCampaignPlan): Promise<CampaignPlan> {
+    const [plan] = await db
+      .insert(campaignPlans)
+      .values({
+        ...planData,
+        id: crypto.randomUUID(),
+      })
+      .returning();
+    return plan;
+  }
+
+  async getCampaignPlan(campaignId: string, userId: string): Promise<CampaignPlan | undefined> {
+    const [plan] = await db
+      .select()
+      .from(campaignPlans)
+      .where(and(
+        eq(campaignPlans.id, campaignId),
+        eq(campaignPlans.userId, userId)
+      ));
+    return plan;
+  }
+
+  async getUserCampaignPlans(userId: string): Promise<CampaignPlan[]> {
+    const plans = await db
+      .select()
+      .from(campaignPlans)
+      .where(eq(campaignPlans.userId, userId))
+      .orderBy(desc(campaignPlans.createdAt));
+    return plans;
+  }
+
+  async updateCampaignPlan(campaignId: string, userId: string, updates: Partial<CampaignPlan>): Promise<CampaignPlan> {
+    const [updatedPlan] = await db
+      .update(campaignPlans)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(and(
+        eq(campaignPlans.id, campaignId),
+        eq(campaignPlans.userId, userId)
+      ))
+      .returning();
+    return updatedPlan;
+  }
+
+  async deleteCampaignPlan(campaignId: string, userId: string): Promise<boolean> {
+    const result = await db
+      .delete(campaignPlans)
+      .where(and(
+        eq(campaignPlans.id, campaignId),
+        eq(campaignPlans.userId, userId)
+      ));
+    return result.rowCount! > 0;
+  }
+
+  // Campaign Periods operations
+  async createCampaignPeriods(periods: InsertCampaignPeriod[]): Promise<CampaignPeriod[]> {
+    const periodsWithIds = periods.map(period => ({
+      ...period,
+      id: crypto.randomUUID(),
+    }));
+    
+    const createdPeriods = await db
+      .insert(campaignPeriods)
+      .values(periodsWithIds)
+      .returning();
+    return createdPeriods;
+  }
+
+  async getCampaignPeriods(campaignId: string): Promise<CampaignPeriod[]> {
+    const periods = await db
+      .select()
+      .from(campaignPeriods)
+      .where(eq(campaignPeriods.campaignId, campaignId))
+      .orderBy(campaignPeriods.orderIndex);
+    return periods;
+  }
+
+  // Daily Budgets operations
+  async createDailyBudgets(budgets: InsertDailyBudget[]): Promise<DailyBudget[]> {
+    const budgetsWithIds = budgets.map(budget => ({
+      ...budget,
+      id: crypto.randomUUID(),
+    }));
+    
+    const createdBudgets = await db
+      .insert(dailyBudgets)
+      .values(budgetsWithIds)
+      .returning();
+    return createdBudgets;
+  }
+
+  async getDailyBudgets(campaignId: string): Promise<DailyBudget[]> {
+    const budgets = await db
+      .select()
+      .from(dailyBudgets)
+      .where(eq(dailyBudgets.campaignId, campaignId))
+      .orderBy(dailyBudgets.date);
+    return budgets;
+  }
+
+  // Campaign Templates operations
+  async getCampaignTemplates(userId?: string): Promise<CampaignTemplate[]> {
+    let query = db.select().from(campaignTemplates);
+    
+    if (userId) {
+      // Get user's templates + public templates
+      query = query.where(
+        sql`${campaignTemplates.userId} = ${userId} OR ${campaignTemplates.isPublic} = true`
+      );
+    } else {
+      // Get only public templates
+      query = query.where(eq(campaignTemplates.isPublic, true));
+    }
+    
+    const templates = await query.orderBy(desc(campaignTemplates.useCount));
+    return templates;
+  }
+
+  async createCampaignTemplate(templateData: InsertCampaignTemplate): Promise<CampaignTemplate> {
+    const [template] = await db
+      .insert(campaignTemplates)
+      .values({
+        ...templateData,
+        id: crypto.randomUUID(),
+      })
+      .returning();
+    return template;
+  }
+
+  async getCampaignTemplate(templateId: string): Promise<CampaignTemplate | undefined> {
+    const [template] = await db
+      .select()
+      .from(campaignTemplates)
+      .where(eq(campaignTemplates.id, templateId));
+    return template;
   }
 }
 
