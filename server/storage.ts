@@ -64,6 +64,7 @@ export interface IStorage {
   // User operations for Google OAuth
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  getFirstUser(): Promise<User | undefined>;
   
   // User metrics operations
   getUserMetrics(userId: string): Promise<UserMetrics | undefined>;
@@ -197,6 +198,11 @@ export class DatabaseStorage implements IStorage {
   // User operations for Google OAuth
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getFirstUser(): Promise<User | undefined> {
+    const [user] = await db.select().from(users).limit(1);
     return user;
   }
 

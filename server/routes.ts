@@ -1436,6 +1436,12 @@ echo "Bulk import completed!"`;
     try {
       const { title, content, type, targetAudience } = req.body;
       
+      // Get a real user ID for testing
+      const firstUser = await storage.getFirstUser();
+      if (!firstUser) {
+        return res.status(400).json({ message: 'No users found in database for testing' });
+      }
+      
       const announcement = await storage.createAnnouncement({
         title,
         content,
@@ -1444,7 +1450,7 @@ echo "Bulk import completed!"`;
         priority: 0,
         startDate: null,
         endDate: null,
-        createdBy: 'test-user',
+        createdBy: firstUser.id,
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date()
