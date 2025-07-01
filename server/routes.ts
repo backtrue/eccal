@@ -1379,6 +1379,40 @@ echo "Bulk import completed!"`;
 
   // ===== Debug Endpoint for Production Testing =====
   
+  // Complete system status diagnostic
+  app.get('/api/system/status', (req, res) => {
+    const status = {
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
+      authentication: {
+        isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : false,
+        hasUser: !!req.user,
+        userId: req.user?.id || null,
+        userEmail: req.user?.email || null,
+        sessionId: req.sessionID || null,
+      },
+      session: {
+        exists: !!req.session,
+        keys: req.session ? Object.keys(req.session) : [],
+      },
+      headers: {
+        userAgent: req.get('User-Agent')?.substring(0, 50) + '...',
+        host: req.get('Host'),
+        cookie: req.get('Cookie') ? 'present' : 'absent',
+      },
+      database: {
+        connected: !!pool,
+        url: process.env.DATABASE_URL ? 'configured' : 'missing',
+      },
+      oauth: {
+        clientId: process.env.GOOGLE_CLIENT_ID ? 'configured' : 'missing',
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET ? 'configured' : 'missing',
+      }
+    };
+    
+    res.json(status);
+  });
+  
   // Debug endpoint for admin authentication and functionality
   app.get('/api/debug/admin-status', async (req: any, res) => {
     try {
