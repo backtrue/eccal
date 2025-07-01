@@ -121,13 +121,7 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
       if ((response as any).success) {
         // Transform backend result to frontend format
         const backendResult = (response as any).result;
-        console.log('[FRONTEND] Backend result received:', backendResult);
-        console.log('[FRONTEND] Campaign days:', backendResult.campaignDays);
-        console.log('[FRONTEND] Budget breakdown:', backendResult.budgetBreakdown);
-        console.log('[FRONTEND] Period days:', backendResult.periodDays);
-        
         const frontendResult = transformBackendToFrontendResult(backendResult, data);
-        console.log('[FRONTEND] Frontend result created:', frontendResult);
         setResults(frontendResult);
         
         // Update usage info from backend response
@@ -217,58 +211,67 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
       }
     } else if (campaignDays >= 4 && campaignDays <= 9) {
       // 4-9 day campaign structure
+      const launchDays = periodDays?.launch || Math.floor(campaignDays * 0.3);
+      const mainDays = periodDays?.main || Math.max(1, campaignDays - launchDays - (periodDays?.final || Math.floor(campaignDays * 0.3)));
+      
       campaignPeriods = {
         launch: {
           startDate: format(startDate, 'yyyy-MM-dd'),
-          endDate: format(addDays(startDate, periodDays.launch - 1), 'yyyy-MM-dd'),
-          budget: budgetBreakdown.launch,
-          traffic: trafficBreakdown.launch,
+          endDate: format(addDays(startDate, launchDays - 1), 'yyyy-MM-dd'),
+          budget: budgetBreakdown.launch || 0,
+          traffic: trafficBreakdown.launch || 0,
         },
         main: {
-          startDate: format(addDays(startDate, periodDays.launch), 'yyyy-MM-dd'),
-          endDate: format(addDays(startDate, periodDays.launch + periodDays.main - 1), 'yyyy-MM-dd'),
-          budget: budgetBreakdown.main,
-          traffic: trafficBreakdown.main,
+          startDate: format(addDays(startDate, launchDays), 'yyyy-MM-dd'),
+          endDate: format(addDays(startDate, launchDays + mainDays - 1), 'yyyy-MM-dd'),
+          budget: budgetBreakdown.main || 0,
+          traffic: trafficBreakdown.main || 0,
         },
         final: {
-          startDate: format(addDays(startDate, periodDays.launch + periodDays.main), 'yyyy-MM-dd'),
+          startDate: format(addDays(startDate, launchDays + mainDays), 'yyyy-MM-dd'),
           endDate: format(endDate, 'yyyy-MM-dd'),
-          budget: budgetBreakdown.final,
-          traffic: trafficBreakdown.final,
+          budget: budgetBreakdown.final || 0,
+          traffic: trafficBreakdown.final || 0,
         },
       };
     } else {
       // 10+ day campaign structure (full 5 periods)
+      const preheatDays = periodDays?.preheat || 4;
+      const launchDays = periodDays?.launch || 3;
+      const finalDays = periodDays?.final || 3;
+      const repurchaseDays = periodDays?.repurchase || 7;
+      const mainDays = periodDays?.main || Math.max(1, campaignDays - launchDays - finalDays);
+      
       campaignPeriods = {
         preheat: {
-          startDate: format(subDays(startDate, 4), 'yyyy-MM-dd'),
+          startDate: format(subDays(startDate, preheatDays), 'yyyy-MM-dd'),
           endDate: format(subDays(startDate, 1), 'yyyy-MM-dd'),
-          budget: budgetBreakdown.preheat,
-          traffic: trafficBreakdown.preheat,
+          budget: budgetBreakdown.preheat || 0,
+          traffic: trafficBreakdown.preheat || 0,
         },
         launch: {
           startDate: format(startDate, 'yyyy-MM-dd'),
-          endDate: format(addDays(startDate, 2), 'yyyy-MM-dd'),
-          budget: budgetBreakdown.launch,
-          traffic: trafficBreakdown.launch,
+          endDate: format(addDays(startDate, launchDays - 1), 'yyyy-MM-dd'),
+          budget: budgetBreakdown.launch || 0,
+          traffic: trafficBreakdown.launch || 0,
         },
         main: {
-          startDate: format(addDays(startDate, 3), 'yyyy-MM-dd'),
-          endDate: format(subDays(endDate, 3), 'yyyy-MM-dd'),
-          budget: budgetBreakdown.main,
-          traffic: trafficBreakdown.main,
+          startDate: format(addDays(startDate, launchDays), 'yyyy-MM-dd'),
+          endDate: format(addDays(startDate, launchDays + mainDays - 1), 'yyyy-MM-dd'),
+          budget: budgetBreakdown.main || 0,
+          traffic: trafficBreakdown.main || 0,
         },
         final: {
-          startDate: format(subDays(endDate, 2), 'yyyy-MM-dd'),
+          startDate: format(addDays(startDate, launchDays + mainDays), 'yyyy-MM-dd'),
           endDate: format(endDate, 'yyyy-MM-dd'),
-          budget: budgetBreakdown.final,
-          traffic: trafficBreakdown.final,
+          budget: budgetBreakdown.final || 0,
+          traffic: trafficBreakdown.final || 0,
         },
         repurchase: {
           startDate: format(addDays(endDate, 1), 'yyyy-MM-dd'),
-          endDate: format(addDays(endDate, 7), 'yyyy-MM-dd'),
-          budget: budgetBreakdown.repurchase,
-          traffic: trafficBreakdown.repurchase,
+          endDate: format(addDays(endDate, repurchaseDays), 'yyyy-MM-dd'),
+          budget: budgetBreakdown.repurchase || 0,
+          traffic: trafficBreakdown.repurchase || 0,
         },
       };
     }
