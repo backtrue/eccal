@@ -445,9 +445,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { startDate, endDate, targetRevenue, targetAov, targetConversionRate, cpc } = req.body;
 
       // 1. 後端檢查會員狀態和使用次數
+      console.log('[CAMPAIGN] Getting user data for userId:', userId);
       const user = await storage.getUser(userId);
+      console.log('[CAMPAIGN] User data retrieved:', user ? `${user.email} (usage: ${user.campaignPlannerUsage})` : 'User not found');
+      
+      console.log('[CAMPAIGN] Checking membership status');
       const membershipStatus = await storage.checkMembershipStatus(userId);
+      console.log('[CAMPAIGN] Membership status:', membershipStatus);
+      
       const currentUsage = user?.campaignPlannerUsage || 0;
+      console.log('[CAMPAIGN] Current usage:', currentUsage);
 
       // Validate permissions before calculation
       if (membershipStatus.level === 'free' && currentUsage >= 3) {
@@ -460,11 +467,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // 2. 執行後端計算邏輯
+      console.log('[CAMPAIGN] Starting calculation logic');
       const startDateObj = new Date(startDate);
       const endDateObj = new Date(endDate);
+      console.log('[CAMPAIGN] Date objects created:', { startDateObj, endDateObj });
       
       // 計算活動總需要流量 
+      console.log('[CAMPAIGN] Calculating total traffic with:', { targetRevenue, targetAov, targetConversionRate });
       const totalTraffic = Math.ceil((targetRevenue / targetAov) / (targetConversionRate / 100));
+      console.log('[CAMPAIGN] Total traffic calculated:', totalTraffic);
       
       // 計算活動期間天數
       const campaignDays = Math.ceil((endDateObj.getTime() - startDateObj.getTime()) / (1000 * 60 * 60 * 24)) + 1;
