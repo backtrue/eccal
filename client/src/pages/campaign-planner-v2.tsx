@@ -145,7 +145,7 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <NavigationBar locale={locale} />
+      <NavigationBar locale={locale as any} />
       
       <div className="container mx-auto p-6 max-w-7xl">
         {/* 頁面標題 */}
