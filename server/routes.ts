@@ -438,6 +438,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Secure Campaign Planner calculation endpoint with server-side validation
   app.post('/api/campaign-planner/calculate', requireAuth, async (req: any, res) => {
     try {
+      console.log('[CAMPAIGN] Starting calculation for user:', req.user.email || req.user.id);
+      console.log('[CAMPAIGN] Request body:', req.body);
+      
       const userId = req.user.claims?.sub || req.user.id;
       const { startDate, endDate, targetRevenue, targetAov, targetConversionRate, cpc } = req.body;
 
@@ -565,7 +568,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.incrementCampaignPlannerUsage(userId);
       }
 
-      res.json({ 
+      console.log('[CAMPAIGN] Calculation successful, sending response');
+      console.log('[CAMPAIGN] Result summary:', { 
+        totalBudget: result.totalBudget, 
+        totalTraffic: result.totalTraffic, 
+        campaignDays: result.campaignDays 
+      });
+      
+      const response = { 
         success: true, 
         result,
         usage: {
@@ -573,11 +583,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           limit: membershipStatus.level === 'free' ? 3 : -1,
           membershipLevel: membershipStatus.level
         }
-      });
+      };
+      
+      console.log('[CAMPAIGN] Sending response with success:', response.success);
+      res.json(response);
 
     } catch (error) {
-      console.error("Campaign planner calculation error:", error);
-      res.status(500).json({ message: "計算失敗，請稍後再試" });
+      console.error("[CAMPAIGN] Calculation error:", error);
+      console.error("[CAMPAIGN] Error details:", error instanceof Error ? error.message : String(error));
+      console.error("[CAMPAIGN] Error stack:", error instanceof Error ? error.stack : 'No stack trace');
+      res.status(500).json({ 
+        success: false,
+        message: "計算失敗，請稍後再試",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
