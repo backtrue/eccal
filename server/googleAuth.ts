@@ -116,6 +116,7 @@ export function setupGoogleAuth(app: Express) {
         return done(null, cached.user);
       }
 
+      console.log(`[AUTH] Cache miss, fetching from database: ${id}`);
       // Fetch from database
       const user = await storage.getUser(id);
       console.log(`[AUTH] User from DB:`, user ? `Found ${user.email}` : 'Not found');

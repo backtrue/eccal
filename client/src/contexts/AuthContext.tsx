@@ -18,23 +18,25 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  // Smart auth checking: enable only when needed
-  const { data: user, isLoading } = useQuery({
+  // Always check authentication status
+  const { data: user, isLoading, error } = useQuery({
     queryKey: ["/api/auth/user"],
     retry: (failureCount, error) => {
       // Don't retry if it's an auth error (401)
       if (error?.message?.includes('401')) return false;
-      return failureCount < 2;
+      return failureCount < 1;
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 15 * 60 * 1000, // 15 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
     refetchInterval: false,
-    refetchOnMount: true, // Check on mount
+    refetchOnMount: true,
     refetchOnReconnect: false,
-    // Enable authentication check for campaign planner and other protected pages
+    // Always enabled to properly detect auth state
     enabled: true,
   });
+
+  console.log('[AUTH CONTEXT] Query state:', { user: !!user, isLoading, error: !!error });
 
   // Clean up auth_success parameter
   useEffect(() => {
