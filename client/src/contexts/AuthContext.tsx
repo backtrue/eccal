@@ -23,19 +23,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Check if session cookie exists (lightweight check)
-  const hasSessionCookie = () => {
-    return document.cookie.includes('connect.sid=');
-  };
-
   // Manual auth check function (only called when needed)
   const checkAuth = async () => {
-    if (!hasSessionCookie()) {
-      setUser(null);
-      setIsAuthenticated(false);
-      return;
-    }
-
     setIsLoading(true);
     try {
       const response = await fetch('/api/auth/user', {
@@ -49,12 +38,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const userData = await response.json();
         setUser(userData);
         setIsAuthenticated(true);
+        console.log('Auth check successful:', userData.email || userData.name || 'User logged in');
       } else {
         setUser(null);
         setIsAuthenticated(false);
+        console.log('Auth check failed: User not authenticated');
       }
     } catch (error) {
-      console.log('Auth check failed:', error);
+      console.log('Auth check error:', error);
       setUser(null);
       setIsAuthenticated(false);
     } finally {
@@ -62,20 +53,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // Initial check on mount and auth_success parameter
+  // Initial check on mount - only for specific scenarios
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const isProtectedPage = ['/dashboard', '/campaign-planner', '/bdmin'].some(path => 
       window.location.pathname.includes(path)
     );
     
-    // Only check auth in these scenarios:
-    if (urlParams.has('auth_success') || isProtectedPage || hasSessionCookie()) {
+    // Only check auth in these specific scenarios:
+    const shouldCheckAuth = 
+      urlParams.has('auth_success') ||  // Just logged in
+      isProtectedPage;                  // On protected page
+    
+    if (shouldCheckAuth) {
+      console.log('Auth check triggered:', { 
+        hasAuthSuccess: urlParams.has('auth_success'), 
+        isProtectedPage,
+        currentPath: window.location.pathname 
+      });
       checkAuth();
     } else {
-      // No session cookie and not a protected page = not authenticated
+      // Default to not authenticated without making API call
       setIsAuthenticated(false);
       setUser(null);
+      console.log('Auth check skipped - not needed for current page');
     }
 
     // Clean up auth_success parameter
