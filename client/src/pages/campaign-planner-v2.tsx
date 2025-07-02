@@ -471,9 +471,14 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-orange-600">
-                      {formatCurrency(results.summary.avgDailyBudget)}
+                      {(() => {
+                        const targetRevenue = form.getValues('targetRevenue') || 0;
+                        const totalBudget = results.summary.totalBudget || 1;
+                        const roas = totalBudget > 0 ? (targetRevenue / totalBudget) : 0;
+                        return roas.toFixed(1) + 'x';
+                      })()}
                     </div>
-                    <div className="text-sm text-gray-600">日均預算</div>
+                    <div className="text-sm text-gray-600">目標 ROAS</div>
                   </div>
                 </div>
               </CardContent>
