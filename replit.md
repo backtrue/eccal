@@ -4,7 +4,7 @@
 
 This is a full-stack web application built to help e-commerce businesses calculate their advertising budget requirements based on revenue targets, average order value, and conversion rates. The application is branded as "報數據" (Report Data) and features a React frontend with a Node.js/Express backend, utilizing modern web technologies and UI components.
 
-**Version:** V1.2 - Multi-language support (Traditional Chinese, English, Japanese) with complete internationalization.
+**Version:** V2.4.0 - Complete Campaign Planner rewrite with advanced backend architecture and intelligent budget allocation algorithms.
 
 ## System Architecture
 
@@ -34,13 +34,16 @@ This is a full-stack web application built to help e-commerce businesses calcula
 ## Key Components
 
 ### Database Schema
-- **Users Table**: Basic user authentication with username/password
+- **Core Tables**: Users, sessions, campaign_plans, campaign_periods, daily_budgets
+- **Campaign System**: Normalized relational design with proper foreign key constraints
 - **Schema Location**: `shared/schema.ts`
 - **Validation**: Zod schemas for type safety and validation
 
 ### API Structure
 - **Base Path**: All API routes prefixed with `/api`
+- **Campaign Planner**: Dedicated REST API v2 system (`/api/v2/campaign-planner/*`)
 - **Storage Interface**: Abstracted storage layer with CRUD operations
+- **Service Layer**: Business logic in specialized service classes (campaignPlannerService)
 - **Error Handling**: Centralized error handling middleware
 
 ### Authentication & Authorization
@@ -207,6 +210,7 @@ Changelog:
 - June 29, 2025. Completed V2.2.2 - Unified Footer Component Architecture. Successfully implemented consistent Footer component across all 11 pages (home, calculator, dashboard, campaign-planner, brevo-sync, project-detail, privacy-policy, terms-of-service, admin-dashboard, admin-dashboard-simple, not-found). Fixed duplicate type definitions in shared/schema.ts causing TypeScript errors. All pages now use unified Footer import from @/components/Footer for consistent branding, easier maintenance, and better user experience. This architectural improvement simplifies future footer updates and ensures brand consistency across the entire application.
 - June 29, 2025. Fixed V2.3.1 - Resolved Replit monitoring system root cause and architecture issues. Problem: Frontend AuthProvider automatically sending /api/auth/user requests in production environment (not development), triggering Replit's waitForPort=5000 monitoring. Additional architecture issue: Vite output path (dist/public) vs production server expectation (server/public) mismatch causing 127.0.0.1:5000 proxy errors. Solution: Disabled automatic auth requests (enabled: false in AuthContext.tsx), created production fallback static files at server/public/index.html, simplified route/middleware logic to standard HTTP behavior. Architecture fix requires deployment to take effect - high-frequency monitoring requests from 35.232.111.100 will stop after redeployment.
 - June 30, 2025. Fixed V2.3.2 - Resolved Google OAuth authentication state update issues after login. Completely redesigned AuthContext with smart authentication detection that only triggers queries when needed: login success (auth_success param), protected pages (/dashboard, /campaign-planner, /bdmin), or existing session cookies. Removed inappropriate manual refresh button and restored natural user experience. Added debug logging for admin route access diagnostics. Authentication now works seamlessly without manual intervention while preventing unnecessary monitoring requests.
+- July 01, 2025. Major Release V2.4.0 - Complete Campaign Planner System Rewrite. Comprehensive overhaul addressing persistent debugging challenges with entirely new architecture: 1) New backend service layer (campaignPlannerService.ts) with intelligent budget allocation algorithms supporting 3-60 day campaigns, 2) Dedicated API routing system (campaignPlannerRoutes.ts) with proper REST endpoints, 3) Rebuilt frontend interface (campaign-planner-v2.tsx) with improved UX and error handling, 4) Fixed database foreign key constraint issues in campaign_plans/periods/daily_budgets relationships, 5) Resolved JSON response parsing in frontend API calls, 6) Enhanced debugging infrastructure with comprehensive logging. New system features dynamic budget allocation: 3-day campaigns (50%/25%/25%), 4-9 day campaigns (45%/30%/25%), 10+ day campaigns (full 5-period system with preheat/launch/main/final/repurchase periods). Campaign Planner now generates complete activity budgets with period breakdowns, daily allocations, and traffic projections.
 ```
 
 ## User Preferences
