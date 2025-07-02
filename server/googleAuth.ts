@@ -5,30 +5,7 @@ import type { Express } from "express";
 import { storage } from "./storage";
 
 export function setupGoogleAuth(app: Express) {
-  // 按照 PDF 建議：檢查 SESSION_SECRET 環境變數
-  if (!process.env.SESSION_SECRET) {
-    console.error("FATAL ERROR: SESSION_SECRET is not defined.");
-    process.exit(1);
-  }
-
-  // 按照 PDF 建議：使用 express-session（記憶體存儲）
-  app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false, // 按照 PDF 建議設為 false
-    cookie: {
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      secure: process.env.NODE_ENV === 'production', // 按照 PDF 建議
-      httpOnly: true, // 增加安全性
-    }
-  }));
-
-  // 按照 PDF 建議：初始化 Passport，務必放在 session 之後
-  app.use(passport.initialize());
-  app.use(passport.session());
-
-  app.use(passport.initialize());
-  app.use(passport.session());
+  // Session 和 Passport 中間件已經在 server/index.ts 中設置
 
   // Get the base URL from environment or request
   const getBaseUrl = (req?: any) => {

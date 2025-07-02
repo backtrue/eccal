@@ -7,7 +7,9 @@ import session from 'express-session';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import http from 'http';
-import { storage } from './storage'; // 請確認此檔案路徑正確
+import { storage } from './storage';
+import { registerRoutes } from './routes';
+import { setupVite, serveStatic } from './vite';
 
 // -------------------- 1. 基礎設定 --------------------
 const app = express();
@@ -130,8 +132,20 @@ app.get('/api/auth/user', (req, res) => {
 });
 
 
-// -------------------- 7. 伺服器啟動 --------------------
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// -------------------- 6. 註冊路由 --------------------
+(async () => {
+  const server = await registerRoutes(app);
+
+  // -------------------- 7. 設置前端服務 --------------------
+  if (app.get("env") === "development") {
+    await setupVite(app, server);
+  } else {
+    serveStatic(app);
+  }
+
+  // -------------------- 8. 伺服器啟動 --------------------
+  const PORT = process.env.PORT || 5000;
+  server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+})();
