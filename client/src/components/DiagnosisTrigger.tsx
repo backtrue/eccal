@@ -319,6 +319,44 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
                 )}
               </Button>
             </div>
+          ) : showAccountSelector ? (
+            <div className="space-y-4">
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-yellow-600" />
+                  <p className="text-sm font-medium text-yellow-800">
+                    請選擇要分析的廣告帳戶
+                  </p>
+                </div>
+                <p className="text-xs text-yellow-700 mt-1">
+                  從您的 Facebook 廣告帳戶中選擇一個進行健診分析
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                {availableAccounts.map((account) => (
+                  <div
+                    key={account.id}
+                    onClick={() => handleSelectAccount(account.id)}
+                    className="p-3 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-colors"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="font-medium text-sm">{account.name}</div>
+                        <div className="text-xs text-gray-500">帳戶 ID: {account.id}</div>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        <span className={`px-2 py-1 rounded ${
+                          account.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {account.status}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           ) : (
             <div className="space-y-4">
               <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
