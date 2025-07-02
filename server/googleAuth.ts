@@ -1,40 +1,29 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import session from "express-session";
-import connectPg from "connect-pg-simple";
 import type { Express } from "express";
 import { storage } from "./storage";
 
 export function setupGoogleAuth(app: Express) {
   // Set trust proxy for Replit environment
   app.set('trust proxy', 1);
+  
+  // 檢查 SESSION_SECRET 是否存在 - 按照 PDF 建議
+  if (!process.env.SESSION_SECRET) {
+    console.error("FATAL ERROR: SESSION_SECRET is not defined.");
+    process.exit(1);
+  }
 
-  // Session configuration
-  const sessionTtl = 24 * 60 * 60 * 1000; // 24 hours - 按照 PDF 建議
-  const pgStore = connectPg(session);
-  const sessionStore = new pgStore({
-    conString: process.env.DATABASE_URL,
-    createTableIfMissing: false,
-    ttl: sessionTtl,
-    tableName: "sessions",
-    pruneSessionInterval: 2 * 60 * 60 * 1000, // 每2小時清理過期 session
-    disableTouch: false, // 重新啟用 touch 操作
-  });
-
+  // 按照 PDF 建議使用標準 express-session（記憶體存儲）
   app.use(session({
-    secret: process.env.SESSION_SECRET || 'your_secret_key_fallback',
-    store: sessionStore,
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false, // 按照 PDF 建議設為 false
-    rolling: true, // 重新啟用滾動過期
-    unset: 'destroy',
-    name: 'connect.sid', // 明確設定 session cookie 名稱
     cookie: {
-      httpOnly: true,
-      secure: false, // 開發環境設為 false，按照 PDF 建議
-      maxAge: sessionTtl,
-      sameSite: 'lax',
-    },
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      secure: process.env.NODE_ENV === 'production', // 按照 PDF 建議
+      httpOnly: true, // 增加安全性
+    }
   }));
 
   app.use(passport.initialize());
@@ -93,16 +82,7 @@ export function setupGoogleAuth(app: Express) {
     });
   }, 30 * 60 * 1000);
 
-  // 每 2 小時清理過期 session 記錄以減少資料庫負擔
-  setInterval(async () => {
-    try {
-      if (sessionStore && typeof sessionStore.clear === 'function') {
-        await sessionStore.clear();
-      }
-    } catch (error) {
-      // 靜默處理清理錯誤
-    }
-  }, 2 * 60 * 60 * 1000);
+  // 使用記憶體存儲，不需要清理 session
 
   // Serialize/Deserialize user for sessions - 按照 PDF 建議修正
   passport.serializeUser((user: any, done) => {
