@@ -6,8 +6,11 @@ import type { Express } from "express";
 import { storage } from "./storage";
 
 export function setupGoogleAuth(app: Express) {
+  // Set trust proxy for Replit environment
+  app.set('trust proxy', 1);
+  
   // Session configuration
-  const sessionTtl = 8 * 60 * 60 * 1000; // 8 hours - 減少系統負擔
+  const sessionTtl = 24 * 60 * 60 * 1000; // 24 hours - 按照 PDF 建議
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
@@ -15,21 +18,22 @@ export function setupGoogleAuth(app: Express) {
     ttl: sessionTtl,
     tableName: "sessions",
     pruneSessionInterval: 2 * 60 * 60 * 1000, // 每2小時清理過期 session
-    disableTouch: true, // 停用 touch 操作減少資料庫負擔
+    disableTouch: false, // 重新啟用 touch 操作
   });
 
   app.use(session({
-    secret: process.env.SESSION_SECRET!,
+    secret: process.env.SESSION_SECRET || 'your_secret_key_fallback',
     store: sessionStore,
     resave: false,
-    saveUninitialized: false,
-    rolling: false, // 停用滾動過期以減少資料庫更新
-    unset: 'destroy', // 刪除 session 時立即清理
+    saveUninitialized: false, // 按照 PDF 建議設為 false
+    rolling: true, // 重新啟用滾動過期
+    unset: 'destroy',
+    name: 'connect.sid', // 明確設定 session cookie 名稱
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // 開發環境設為 false，按照 PDF 建議
       maxAge: sessionTtl,
-      sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax',
+      sameSite: 'lax',
     },
   }));
 
@@ -100,30 +104,37 @@ export function setupGoogleAuth(app: Express) {
     }
   }, 2 * 60 * 60 * 1000);
 
-  // Serialize/Deserialize user for sessions
+  // Serialize/Deserialize user for sessions - 按照 PDF 建議修正
   passport.serializeUser((user: any, done) => {
+    console.log('Serializing user:', user.id);
     done(null, user.id);
   });
 
   passport.deserializeUser(async (id: string, done) => {
     try {
+      console.log('Deserializing user:', id);
+      
       // Check cache first
       const cached = userCache.get(id);
       if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        console.log('User found in cache:', id);
         return done(null, cached.user);
       }
 
       // Fetch from database
       const user = await storage.getUser(id);
+      console.log('User fetched from database:', user ? user.id : 'not found');
       
       // Cache the result
       if (user) {
         userCache.set(id, { user, timestamp: Date.now() });
+        console.log('User cached:', id);
       }
       
-      done(null, user || false);
+      done(null, user || null); // 使用 null 而不是 false
     } catch (error) {
-      done(error, false);
+      console.error('Deserialization error:', error);
+      done(error, null);
     }
   });
 
@@ -216,19 +227,29 @@ export function setupGoogleAuth(app: Express) {
     });
   });
 
-  // User auth status endpoint - required for frontend auth state management
+  // User auth status endpoint - 按照 PDF 建議實作受保護路由檢查
   app.get('/api/auth/user', (req, res) => {
     try {
-      console.log(`[DEBUG] Auth request: IP=${req.ip}, UA=${req.get('User-Agent')?.slice(0, 50)}..., Headers: {`);
-      console.log(`  'x-forwarded-for': '${req.get('x-forwarded-for')}',`);
-      console.log(`  'x-replit-user-id': '${req.get('x-replit-user-id')}',`);
-      console.log(`  connection: ${req.get('connection')},`);
-      console.log(`  accept: '${req.get('accept')}'`);
-      console.log(`}`);
+      // 添加調試信息
+      console.log('Auth check - Session ID:', (req.session as any)?.id);
+      console.log('Auth check - isAuthenticated():', req.isAuthenticated());
+      console.log('Auth check - req.user exists:', !!req.user);
+      console.log('Auth check - User ID:', req.user ? (req.user as any).id : 'none');
       
+      // 檢查 session 是否存在
+      if (!(req.session as any)?.id) {
+        console.log('Auth check failed: no session');
+        return res.status(401).json({ error: 'No session' });
+      }
+      
+      // 使用 Passport 的 isAuthenticated() 方法檢查
       if (req.isAuthenticated() && req.user) {
+        console.log('Auth check successful:', (req.user as any).email);
+        // 設置適當的 cache 標頭
+        res.set('Cache-Control', 'private, max-age=300'); // 5分鐘 cache
         res.json(req.user);
       } else {
+        console.log('Auth check failed: not authenticated');
         res.status(401).json({ error: 'Not authenticated' });
       }
     } catch (error) {
