@@ -67,9 +67,9 @@ export class MetaService {
         throw new Error('Facebook Access Token 未設定');
       }
 
-      // 獲取廣告活動基本資訊
+      // 獲取廣告帳戶基本資訊
       const campaignResponse = await fetch(
-        `${this.baseUrl}/${campaignId}?fields=name,status&access_token=${token}`
+        `${this.baseUrl}/${adAccountId}?fields=name,account_status&access_token=${token}`
       );
       
       if (!campaignResponse.ok) {
@@ -88,7 +88,7 @@ export class MetaService {
       const until = endDate.toISOString().split('T')[0];
       
       const insightsResponse = await fetch(
-        `${this.baseUrl}/${campaignId}/insights?fields=impressions,clicks,spend,inline_link_clicks,actions,purchase_roas&time_range={'since':'${since}','until':'${until}'}&access_token=${token}`
+        `${this.baseUrl}/${adAccountId}/insights?fields=impressions,clicks,spend,inline_link_clicks,actions,purchase_roas&time_range={'since':'${since}','until':'${until}'}&access_token=${token}`
       );
       
       if (!insightsResponse.ok) {
@@ -111,8 +111,8 @@ export class MetaService {
       const viewContent = this.extractActionValue(actions, 'view_content') || 0;
       
       return {
-        campaignId,
-        campaignName: campaignInfo.name || `廣告活動 ${campaignId}`,
+        campaignId: adAccountId,
+        campaignName: campaignInfo.name || `廣告帳戶 ${adAccountId}`,
         impressions: parseInt(insights.impressions || '0'),
         clicks: parseInt(insights.clicks || '0'),
         spend: parseFloat(insights.spend || '0'),

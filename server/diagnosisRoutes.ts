@@ -508,8 +508,8 @@ async function updateAccountDiagnosisReport(
   aiReport: string,
   healthScore: number
 ) {
-  const { Pool } = await import('pg');
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  const pg = await import('pg');
+  const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
   
   await pool.query(`
     UPDATE ad_diagnosis_reports 
@@ -554,8 +554,8 @@ async function updateAccountDiagnosisReport(
 
 // 更新診斷報告狀態
 async function updateDiagnosisReportStatus(reportId: string, status: string, message?: string) {
-  const { Pool } = await import('pg');
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  const pg = await import('pg');
+  const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
   
   await pool.query(`
     UPDATE ad_diagnosis_reports 
