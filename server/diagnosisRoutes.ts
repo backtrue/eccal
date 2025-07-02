@@ -8,6 +8,33 @@ import { eq } from 'drizzle-orm';
 
 export function setupDiagnosisRoutes(app: Express) {
   
+  // 診斷系統配置檢查端點
+  app.get('/api/diagnosis/config', (req, res) => {
+    try {
+      const hasOpenAIKey = !!(process.env.OPENAI_API_KEY);
+      const hasFacebookAppId = !!(process.env.FACEBOOK_APP_ID);
+      const hasFacebookAppSecret = !!(process.env.FACEBOOK_APP_SECRET);
+      
+      res.json({
+        status: 'ok',
+        openai: hasOpenAIKey ? 'configured' : 'missing',
+        facebook: {
+          appId: hasFacebookAppId ? 'configured' : 'missing',
+          appSecret: hasFacebookAppSecret ? 'configured' : 'missing'
+        },
+        message: hasOpenAIKey && hasFacebookAppId && hasFacebookAppSecret 
+          ? 'API 正常配置' 
+          : 'API 配置不完整，但系統可正常運行'
+      });
+    } catch (error) {
+      console.error('配置檢查錯誤:', error);
+      res.status(500).json({ 
+        status: 'error', 
+        message: '配置檢查失敗' 
+      });
+    }
+  });
+  
   // Facebook 資料刪除回呼端點 (符合 Facebook 政策要求)
   app.post('/auth/facebook/data-deletion', async (req, res) => {
     try {
@@ -388,20 +415,31 @@ export function setupDiagnosisRoutes(app: Express) {
         diagnosisStatus: 'processing'
       });
 
-      // 背景處理帳戶診斷
-      processAccountDiagnosis(
-        processingReport.id,
-        userId,
-        user.metaAccessToken,
-        user.metaAdAccountId,
-        {
-          targetRevenue,
-          targetAov,
-          targetConversionRate,
-          cpc
-        }
-      ).catch(error => {
+      // 背景處理帳戶診斷 - 增加超時處理
+      Promise.race([
+        processAccountDiagnosis(
+          processingReport.id,
+          userId,
+          user.metaAccessToken,
+          user.metaAdAccountId,
+          {
+            targetRevenue,
+            targetAov,
+            targetConversionRate,
+            cpc
+          }
+        ),
+        // 5分鐘超時
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('診斷處理超時 (5分鐘)')), 5 * 60 * 1000)
+        )
+      ]).catch(async (error) => {
         console.error('背景帳戶診斷處理錯誤:', error);
+        await updateDiagnosisReportStatus(
+          processingReport.id, 
+          'failed', 
+          `診斷處理失敗: ${error.message}`
+        );
       });
 
       res.json({
@@ -481,24 +519,42 @@ async function processAccountDiagnosis(
     cpc: number;
   }
 ) {
+  console.log(`[DIAGNOSIS] 開始處理帳戶診斷 - reportId: ${reportId}, adAccountId: ${adAccountId}`);
+  
   try {
     // 1. 獲取 Meta 廣告帳戶數據
+    console.log(`[DIAGNOSIS] 步驟1: 獲取 Meta 廣告帳戶數據...`);
     const accountData = await metaAccountService.getAdAccountData(accessToken, adAccountId);
+    console.log(`[DIAGNOSIS] 步驟1 完成: 帳戶名稱 ${accountData.accountName}, 花費 ${accountData.spend}`);
     
     // 2. 計算診斷數據
+    console.log(`[DIAGNOSIS] 步驟2: 計算診斷數據...`);
     const diagnosisData = metaAccountService.calculateAccountDiagnosisData(targetData, accountData);
+    console.log(`[DIAGNOSIS] 步驟2 完成: 健康分數計算中...`);
     
     // 3. 生成 AI 診斷報告
+    console.log(`[DIAGNOSIS] 步驟3: 生成 AI 診斷報告...`);
     const aiReport = await metaAccountService.generateAccountDiagnosisReport(accountData.accountName, diagnosisData);
+    console.log(`[DIAGNOSIS] 步驟3 完成: AI 報告生成完成 (${aiReport.length} 字符)`);
     
     // 4. 計算健康分數
+    console.log(`[DIAGNOSIS] 步驟4: 計算健康分數...`);
     const healthScore = calculateAccountHealthScore(diagnosisData);
+    console.log(`[DIAGNOSIS] 步驟4 完成: 健康分數 ${healthScore}`);
     
     // 5. 更新報告
+    console.log(`[DIAGNOSIS] 步驟5: 更新報告...`);
     await updateAccountDiagnosisReport(reportId, accountData, diagnosisData, aiReport, healthScore);
+    console.log(`[DIAGNOSIS] 診斷處理完成 - reportId: ${reportId}`);
     
   } catch (error) {
-    console.error('處理帳戶診斷時發生錯誤:', error);
+    console.error(`[DIAGNOSIS] 處理帳戶診斷時發生錯誤 - reportId: ${reportId}:`, error);
+    console.error(`[DIAGNOSIS] 錯誤詳情:`, {
+      message: error instanceof Error ? error.message : '未知錯誤',
+      stack: error instanceof Error ? error.stack : 'No stack trace',
+      name: error instanceof Error ? error.name : 'Unknown Error'
+    });
+    
     // 更新報告狀態為失敗
     const errorMessage = error instanceof Error ? error.message : '未知錯誤';
     await updateDiagnosisReportStatus(reportId, 'failed', `帳戶診斷處理失敗: ${errorMessage}`);
