@@ -271,9 +271,10 @@ export class MetaAccountService {
    */
   async generateAccountDiagnosisReport(
     accountName: string,
-    diagnosisData: AccountDiagnosisData
+    diagnosisData: AccountDiagnosisData,
+    metaData?: MetaAccountData
   ): Promise<string> {
-    const prompt = this.buildAccountDiagnosisPrompt(accountName, diagnosisData);
+    const prompt = this.buildAccountDiagnosisPrompt(accountName, diagnosisData, metaData);
     
     try {
       const completion = await this.openai.chat.completions.create({
@@ -302,7 +303,7 @@ export class MetaAccountService {
   /**
    * 建構帳戶診斷 Prompt
    */
-  private buildAccountDiagnosisPrompt(accountName: string, data: AccountDiagnosisData): string {
+  private buildAccountDiagnosisPrompt(accountName: string, data: AccountDiagnosisData, metaData?: MetaAccountData): string {
     const healthScore = this.calculateAccountHealthScore(data);
     
     // 計算目標轉換率
@@ -341,8 +342,16 @@ export class MetaAccountService {
 請分析並列出：
 - 5個有符合目標 CTR (>2%) 的「廣告名稱」，並列出廣告的 post-id
   格式：廣告名稱 - Post ID: 123456789
+${metaData?.topPerformingAds ? `
+現有優質廣告參考：
+${metaData.topPerformingAds.map(ad => `- ${ad.name} - Post ID: ${ad.postId} (CTR: ${ad.ctr}%, ROAS: ${ad.roas}x)`).join('\n')}
+` : ''}
 - 5個有達到 ROAS 目標的「廣告組合名稱」，推薦加碼預算
   格式：廣告組合名稱 - 當前 ROAS: 3.2x，建議加碼 20%
+${metaData?.topPerformingAdSets ? `
+現有優質廣告組合參考：
+${metaData.topPerformingAdSets.map(adSet => `- ${adSet.name} - 當前 ROAS: ${adSet.roas}x，建議加碼 ${adSet.suggestedBudgetIncrease}%`).join('\n')}
+` : ''}
 
 ## 2. 📊 轉換漏斗優化建議
 詳細說明：

@@ -642,7 +642,7 @@ async function processAccountDiagnosis(
     
     // 3. 生成 AI 診斷報告
     console.log(`[DIAGNOSIS] 步驟3: 生成 AI 診斷報告...`);
-    const aiReport = await metaAccountService.generateAccountDiagnosisReport(accountData.accountName, diagnosisData);
+    const aiReport = await metaAccountService.generateAccountDiagnosisReport(accountData.accountName, diagnosisData, accountData);
     console.log(`[DIAGNOSIS] 步驟3 完成: AI 報告生成完成 (${aiReport.length} 字符)`);
     
     // 4. 計算健康分數
