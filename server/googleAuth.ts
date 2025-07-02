@@ -131,6 +131,11 @@ export function setupGoogleAuth(app: Express) {
   app.get('/api/auth/google', (req, res, next) => {
     console.log('Starting Google OAuth');
     
+    // Save the referring page for post-login redirect
+    const returnTo = req.query.returnTo as string || req.get('Referer') || '/';
+    (req.session as any).returnTo = returnTo;
+    console.log('Saving returnTo in session:', returnTo);
+    
     passport.authenticate('google', {
       accessType: 'offline',
       prompt: 'consent'
@@ -179,7 +184,20 @@ export function setupGoogleAuth(app: Express) {
           console.log('Brevo sync disabled due to IP whitelist - user email:', user.email);
           
           const baseUrl = getBaseUrl(req);
-          const redirectUrl = `${baseUrl}/?auth_success=1`;
+          const returnTo = (req.session as any)?.returnTo || '/';
+          delete (req.session as any).returnTo; // Clean up after use
+          
+          // Ensure the redirect URL is properly formatted
+          let redirectUrl: string;
+          if (returnTo.startsWith('http')) {
+            // Absolute URL - use as is
+            redirectUrl = `${returnTo}${returnTo.includes('?') ? '&' : '?'}auth_success=1`;
+          } else {
+            // Relative URL - prepend base URL
+            const cleanPath = returnTo.startsWith('/') ? returnTo : `/${returnTo}`;
+            redirectUrl = `${baseUrl}${cleanPath}${cleanPath.includes('?') ? '&' : '?'}auth_success=1`;
+          }
+          
           console.log('Redirecting to:', redirectUrl);
           res.redirect(redirectUrl);
         } catch (error) {

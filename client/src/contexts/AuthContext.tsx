@@ -18,7 +18,7 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  // Smart auth checking: enable only when needed
+  // Simplified auth checking: always enabled when there's a session cookie
   const { data: user, isLoading } = useQuery({
     queryKey: ["/api/auth/user"],
     retry: (failureCount, error) => {
@@ -32,27 +32,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
     refetchInterval: false,
     refetchOnMount: true, // Check on mount
     refetchOnReconnect: false,
-    // Only enable if:
+    // Enable auth query if:
     // 1. User just logged in (auth_success param)
-    // 2. We're on a protected page
-    // 3. There's a stored session indication
+    // 2. There's a session cookie (indicating potential active session)
     enabled: (() => {
       const urlParams = new URLSearchParams(window.location.search);
       const hasAuthSuccess = urlParams.has('auth_success');
-      const isProtectedPage = window.location.pathname.includes('/dashboard') || 
-                             window.location.pathname.includes('/campaign-planner') ||
-                             window.location.pathname.includes('/bdmin');
-      const hasStoredAuth = document.cookie.includes('connect.sid');
+      const hasSessionCookie = document.cookie.includes('connect.sid');
+      
+      const shouldEnable = hasAuthSuccess || hasSessionCookie;
       
       console.log('Auth Query Debug:', {
         hasAuthSuccess,
-        isProtectedPage,
-        hasStoredAuth,
+        hasSessionCookie,
         pathname: window.location.pathname,
-        enabled: hasAuthSuccess || isProtectedPage || hasStoredAuth
+        enabled: shouldEnable
       });
       
-      return hasAuthSuccess || isProtectedPage || hasStoredAuth;
+      return shouldEnable;
     })(),
   });
 
