@@ -81,62 +81,62 @@ export interface IStorage {
   // User operations for Google OAuth
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
-  
+
   // User metrics operations
   getUserMetrics(userId: string): Promise<UserMetrics | undefined>;
   saveUserMetrics(metrics: InsertUserMetrics): Promise<UserMetrics>;
   getLatestUserMetrics(userId: string): Promise<UserMetrics | undefined>;
-  
+
   // Credit system operations
   getUserCredits(userId: string): Promise<UserCredits | undefined>;
   createUserCredits(userId: string): Promise<UserCredits>;
   updateUserCredits(userId: string, balance: number, totalEarned?: number, totalSpent?: number): Promise<UserCredits>;
   addCreditTransaction(transaction: InsertCreditTransaction): Promise<CreditTransaction>;
   getCreditTransactions(userId: string): Promise<CreditTransaction[]>;
-  
+
   // Referral system operations
   createReferralCode(userId: string): Promise<string>;
   processReferral(referralCode: string, newUserId: string): Promise<UserReferral | null>;
   getReferralsByUser(userId: string): Promise<UserReferral[]>;
   getUserByReferralCode(referralCode: string): Promise<User | undefined>;
-  
+
   // Membership operations
   upgradeToPro(userId: string, durationDays: number): Promise<User>;
   checkMembershipStatus(userId: string): Promise<{ level: "free" | "pro"; isActive: boolean; expiresAt?: Date }>;
-  
+
   // Campaign Planner usage tracking (legacy)
   incrementCampaignPlannerUsage(userId: string): Promise<User>;
   getCampaignPlannerUsage(userId: string): Promise<number>;
-  
+
   // Ad Diagnosis operations
   createAdDiagnosisReport(reportData: InsertAdDiagnosisReport): Promise<AdDiagnosisReport>;
   getAdDiagnosisReport(reportId: string, userId: string): Promise<AdDiagnosisReport | undefined>;
   getUserAdDiagnosisReports(userId: string): Promise<AdDiagnosisReport[]>;
-  updateMetaTokens(userId: string, accessToken: string, adAccountId: string): Promise<User>;
-  
+  updateMetaTokens(userId: string, accessToken: string, adAccountId: string | null, adAccountName?: string | null): Promise<User>;
+
   // New Campaign Planner operations
   createCampaignPlan(planData: InsertCampaignPlan): Promise<CampaignPlan>;
   getCampaignPlan(campaignId: string, userId: string): Promise<CampaignPlan | undefined>;
   getUserCampaignPlans(userId: string): Promise<CampaignPlan[]>;
   updateCampaignPlan(campaignId: string, userId: string, updates: Partial<CampaignPlan>): Promise<CampaignPlan>;
   deleteCampaignPlan(campaignId: string, userId: string): Promise<boolean>;
-  
+
   // Campaign Periods operations
   createCampaignPeriods(periods: InsertCampaignPeriod[]): Promise<CampaignPeriod[]>;
   getCampaignPeriods(campaignId: string): Promise<CampaignPeriod[]>;
-  
+
   // Daily Budgets operations
   createDailyBudgets(budgets: InsertDailyBudget[]): Promise<DailyBudget[]>;
   getDailyBudgets(campaignId: string): Promise<DailyBudget[]>;
-  
+
   // Campaign Templates operations
   getCampaignTemplates(userId?: string): Promise<CampaignTemplate[]>;
   createCampaignTemplate(templateData: InsertCampaignTemplate): Promise<CampaignTemplate>;
   getCampaignTemplate(templateId: string): Promise<CampaignTemplate | undefined>;
-  
+
   // Admin operations
   addCreditsToAllUsers(amount: number, description: string): Promise<number>;
-  
+
   // Saved projects operations
   saveProject(userId: string, projectName: string, projectType: string, projectData: any, calculationResult?: any): Promise<SavedProject>;
   getUserProjects(userId: string): Promise<SavedProject[]>;
@@ -268,7 +268,7 @@ export class DatabaseStorage implements IStorage {
         console.error('Failed to create initial credits for user:', error);
       }
     }
-    
+
     // Add to Brevo if this is a new user with email
     if (isNewUser && user.email) {
       try {
@@ -340,7 +340,7 @@ export class DatabaseStorage implements IStorage {
         totalSpent: 0,
       })
       .returning();
-    
+
     // Add initial registration credit transaction
     await this.addCreditTransaction({
       userId,
@@ -349,7 +349,7 @@ export class DatabaseStorage implements IStorage {
       source: "registration",
       description: "Welcome bonus",
     });
-    
+
     return credits;
   }
 
@@ -357,7 +357,7 @@ export class DatabaseStorage implements IStorage {
     const updateData: any = { balance, updatedAt: new Date() };
     if (totalEarned !== undefined) updateData.totalEarned = totalEarned;
     if (totalSpent !== undefined) updateData.totalSpent = totalSpent;
-    
+
     const [credits] = await db
       .update(userCredits)
       .set(updateData)
@@ -394,16 +394,16 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(userReferrals)
       .where(eq(userReferrals.referralCode, referralCode));
-    
+
     if (!existingReferral) {
       // Create new referral record if referral code is valid format
       const referrerId = this.extractUserIdFromReferralCode(referralCode);
       if (!referrerId) return null;
-      
+
       // Check if referrer exists
       const referrer = await this.getUser(referrerId);
       if (!referrer) return null;
-      
+
       // Create referral record
       const [referral] = await db
         .insert(userReferrals)
@@ -414,13 +414,13 @@ export class DatabaseStorage implements IStorage {
           creditAwarded: false,
         })
         .returning();
-      
+
       // Award credit to referrer and referred user
       await this.awardReferralCredit(referrerId, newUserId);
-      
+
       return referral;
     }
-    
+
     return null;
   }
 
@@ -435,15 +435,15 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(userReferrals)
       .where(eq(userReferrals.referrerId, referrerId));
-    
+
     const referralCount = referrerReferrals.length;
-    
+
     // Calculate referrer reward: 50 base points + 50 bonus for first 3 referrals
     let referrerReward = 50; // Base reward
     if (referralCount <= 3) {
       referrerReward += 50; // Bonus for first 3 referrals (total 100 points)
     }
-    
+
     // Award credits to referrer
     const referrerCredits = await this.getUserCredits(referrerId);
     if (referrerCredits) {
@@ -456,7 +456,7 @@ export class DatabaseStorage implements IStorage {
           updatedAt: new Date()
         })
         .where(eq(userCredits.userId, referrerId));
-      
+
       const bonusText = referralCount <= 3 ? " (含前3人加碼獎勵)" : "";
       await this.addCreditTransaction({
         userId: referrerId,
@@ -467,7 +467,7 @@ export class DatabaseStorage implements IStorage {
         description: `推薦獎勵 - 第${referralCount}位推薦${bonusText}`,
       });
     }
-    
+
     // Award 30 credits to referred user (welcome bonus)
     const referredCredits = await this.getUserCredits(referredUserId);
     if (referredCredits) {
@@ -480,7 +480,7 @@ export class DatabaseStorage implements IStorage {
           updatedAt: new Date()
         })
         .where(eq(userCredits.userId, referredUserId));
-      
+
       await this.addCreditTransaction({
         userId: referredUserId,
         type: "earn",
@@ -490,7 +490,7 @@ export class DatabaseStorage implements IStorage {
         description: "推薦獎勵 - 被推薦獎勵",
       });
     }
-    
+
     // Mark referral as credited
     await db
       .update(userReferrals)
@@ -516,7 +516,7 @@ export class DatabaseStorage implements IStorage {
   async upgradeToPro(userId: string, durationDays: number): Promise<User> {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + durationDays);
-    
+
     const [user] = await db
       .update(users)
       .set({
@@ -526,27 +526,27 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(users.id, userId))
       .returning();
-    
+
     return user;
   }
 
   async checkMembershipStatus(userId: string): Promise<{ level: "free" | "pro"; isActive: boolean; expiresAt?: Date }> {
     const [user] = await db.select().from(users).where(eq(users.id, userId));
-    
+
     if (!user) {
       return { level: "free", isActive: true };
     }
-    
+
     const now = new Date();
     const level = user.membershipLevel as "free" | "pro";
-    
+
     if (level === "free") {
       return { level: "free", isActive: true };
     }
-    
+
     // Check if Pro membership is still active
     const isActive = user.membershipExpires ? user.membershipExpires > now : false;
-    
+
     // If Pro membership expired, downgrade to free
     if (!isActive && user.membershipLevel === "pro") {
       await db
@@ -557,10 +557,10 @@ export class DatabaseStorage implements IStorage {
           updatedAt: new Date()
         })
         .where(eq(users.id, userId));
-      
+
       return { level: "free", isActive: true };
     }
-    
+
     return { 
       level, 
       isActive, 
@@ -591,7 +591,7 @@ export class DatabaseStorage implements IStorage {
     // Get all users
     const allUsers = await db.select().from(users);
     let updatedCount = 0;
-    
+
     for (const user of allUsers) {
       try {
         // Get or create user credits
@@ -599,7 +599,7 @@ export class DatabaseStorage implements IStorage {
         if (!userCredit) {
           userCredit = await this.createUserCredits(user.id);
         }
-        
+
         // 使用原子操作更新所有用戶積分
         await db
           .update(userCredits)
@@ -609,7 +609,7 @@ export class DatabaseStorage implements IStorage {
             updatedAt: new Date()
           })
           .where(eq(userCredits.userId, user.id));
-        
+
         // Add transaction
         await this.addCreditTransaction({
           userId: user.id,
@@ -618,13 +618,13 @@ export class DatabaseStorage implements IStorage {
           source: "admin_bonus",
           description,
         });
-        
+
         updatedCount++;
       } catch (error) {
         console.error(`Failed to add credits to user ${user.id}:`, error);
       }
     }
-    
+
     return updatedCount;
   }
 
@@ -687,7 +687,7 @@ export class DatabaseStorage implements IStorage {
         .offset(offset),
       db.select({ count: count() }).from(users)
     ]);
-    
+
     return {
       users: users_result,
       total: total_result[0].count as number
@@ -774,7 +774,7 @@ export class DatabaseStorage implements IStorage {
 
   async batchAddCredits(userIds: string[], amount: number, description: string): Promise<number> {
     let totalUpdated = 0;
-    
+
     for (const userId of userIds) {
       const existingCredit = await this.getUserCredits(userId);
       if (existingCredit) {
@@ -798,7 +798,7 @@ export class DatabaseStorage implements IStorage {
         totalUpdated++;
       }
     }
-    
+
     return totalUpdated;
   }
 
@@ -835,7 +835,7 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(systemLogs.createdAt))
         .limit(limit);
     }
-    
+
     return await db.select().from(systemLogs)
       .orderBy(desc(systemLogs.createdAt))
       .limit(limit);
@@ -889,8 +889,7 @@ export class DatabaseStorage implements IStorage {
       .insert(userBehavior)
       .values(behavior)
       .returning();
-    return userBehaviorRecord;
-  }
+    return userBehaviorRecord;  }
 
   async getUserBehaviorStats(): Promise<{
     mostUsedFeatures: { feature: string; count: number }[];
@@ -913,12 +912,12 @@ export class DatabaseStorage implements IStorage {
       .groupBy(userBehavior.feature)
       .orderBy(desc(count()))
       .limit(10),
-      
+
       // Average page duration
       db.select({ avg: avg(userBehavior.duration) })
       .from(userBehavior)
       .where(sql`${userBehavior.duration} IS NOT NULL`),
-      
+
       // Daily active users (last 30 days)
       db.select({
         date: sql`DATE(${userBehavior.createdAt})`.as('date'),
@@ -972,7 +971,7 @@ export class DatabaseStorage implements IStorage {
 
   async getActiveAnnouncements(userMembershipLevel?: string): Promise<Announcement[]> {
     const now = new Date();
-    
+
     // 使用 Drizzle ORM 的參數化查詢，完全避免 SQL Injection 風險
     if (userMembershipLevel) {
       return await db.select().from(announcements)
@@ -1103,7 +1102,7 @@ export class DatabaseStorage implements IStorage {
         eq(apiUsage.service, service),
         gte(apiUsage.createdAt, since)
       ));
-    
+
     return (result.count as number) < maxRequests;
   }
 
@@ -1137,7 +1136,7 @@ export class DatabaseStorage implements IStorage {
 
   async generateCsvExport(type: string, filters?: any): Promise<string> {
     let csvContent = '';
-    
+
     switch (type) {
       case 'users':
         const allUsers = await db.select().from(users);
@@ -1146,7 +1145,7 @@ export class DatabaseStorage implements IStorage {
           `"${user.id}","${user.email || ''}","${user.firstName || ''}","${user.lastName || ''}","${user.membershipLevel}","${user.createdAt}"`
         ).join('\n');
         break;
-        
+
       case 'behavior':
         const behaviors = await db.select().from(userBehavior).limit(10000);
         csvContent = 'ID,User ID,Action,Page,Feature,Duration,Created At\n';
@@ -1154,7 +1153,7 @@ export class DatabaseStorage implements IStorage {
           `"${b.id}","${b.userId || ''}","${b.action}","${b.page || ''}","${b.feature || ''}","${b.duration || ''}","${b.createdAt}"`
         ).join('\n');
         break;
-        
+
       case 'api_usage':
         const apiUsages = await db.select().from(apiUsage).limit(10000);
         csvContent = 'ID,User ID,Service,Endpoint,Status Code,Response Time,Created At\n';
@@ -1162,11 +1161,11 @@ export class DatabaseStorage implements IStorage {
           `"${a.id}","${a.userId || ''}","${a.service}","${a.endpoint || ''}","${a.statusCode || ''}","${a.responseTime || ''}","${a.createdAt}"`
         ).join('\n');
         break;
-        
+
       default:
         csvContent = 'Type,Data\n"error","Invalid export type"';
     }
-    
+
     return csvContent;
   }
 
@@ -1191,11 +1190,11 @@ export class DatabaseStorage implements IStorage {
     const [setting] = await db.select()
       .from(adminSettings)
       .where(eq(adminSettings.key, 'maintenance_mode'));
-    
+
     if (!setting) {
       return { enabled: false };
     }
-    
+
     try {
       return JSON.parse(setting.value || '{"enabled": false}');
     } catch {
@@ -1206,7 +1205,7 @@ export class DatabaseStorage implements IStorage {
   async getSystemSettings(): Promise<Record<string, any>> {
     const settings = await db.select().from(adminSettings);
     const result: Record<string, any> = {};
-    
+
     settings.forEach(setting => {
       try {
         result[setting.key] = JSON.parse(setting.value || 'null');
@@ -1214,7 +1213,7 @@ export class DatabaseStorage implements IStorage {
         result[setting.key] = setting.value;
       }
     });
-    
+
     return result;
   }
 
@@ -1320,7 +1319,7 @@ export class DatabaseStorage implements IStorage {
 
   async searchKnowledgeDocuments(query: string, tags?: string[]): Promise<KnowledgeDocument[]> {
     let searchConditions = sql`${knowledgeDocuments.title} ILIKE ${`%${query}%`} OR ${knowledgeDocuments.content} ILIKE ${`%${query}%`}`;
-    
+
     if (tags && tags.length > 0) {
       searchConditions = sql`${searchConditions} OR ${knowledgeDocuments.tags} && ${tags}`;
     }
@@ -1350,7 +1349,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // ===== NEW CAMPAIGN PLANNER OPERATIONS =====
-  
+
   async createCampaignPlan(planData: InsertCampaignPlan): Promise<CampaignPlan> {
     const [plan] = await db
       .insert(campaignPlans)
@@ -1413,7 +1412,7 @@ export class DatabaseStorage implements IStorage {
       ...period,
       id: crypto.randomUUID(),
     }));
-    
+
     const createdPeriods = await db
       .insert(campaignPeriods)
       .values(periodsWithIds)
@@ -1436,7 +1435,7 @@ export class DatabaseStorage implements IStorage {
       ...budget,
       id: crypto.randomUUID(),
     }));
-    
+
     const createdBudgets = await db
       .insert(dailyBudgets)
       .values(budgetsWithIds)
@@ -1456,7 +1455,7 @@ export class DatabaseStorage implements IStorage {
   // Campaign Templates operations
   async getCampaignTemplates(userId?: string): Promise<CampaignTemplate[]> {
     let query = db.select().from(campaignTemplates);
-    
+
     if (userId) {
       // Get user's templates + public templates
       query = query.where(
@@ -1466,7 +1465,7 @@ export class DatabaseStorage implements IStorage {
       // Get only public templates
       query = query.where(eq(campaignTemplates.isPublic, true));
     }
-    
+
     const templates = await query.orderBy(desc(campaignTemplates.useCount));
     return templates;
   }
@@ -1519,14 +1518,22 @@ export class DatabaseStorage implements IStorage {
     return reports;
   }
 
-  async updateMetaTokens(userId: string, accessToken: string, adAccountId: string | null): Promise<User> {
+  async updateMetaTokens(userId: string, accessToken: string, adAccountId: string | null, adAccountName?: string | null): Promise<User> {
+    const updateData: Partial<User> = {
+      metaAccessToken: accessToken,
+    };
+
+    if (adAccountId) {
+      updateData.metaAdAccountId = adAccountId;
+    }
+
+    if (adAccountName) {
+      updateData.metaAdAccountName = adAccountName;
+    }
+
     const [user] = await db
       .update(users)
-      .set({
-        metaAccessToken: accessToken,
-        metaAdAccountId: adAccountId,
-        updatedAt: new Date()
-      })
+      .set(updateData)
       .where(eq(users.id, userId))
       .returning();
     return user;

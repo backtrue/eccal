@@ -232,6 +232,7 @@ export function setupDiagnosisRoutes(app: Express) {
       res.json({
         connected: !!(user?.metaAccessToken),
         adAccountId: user?.metaAdAccountId,
+        adAccountName: user?.metaAdAccountName,
         needsAccountSelection: !!(user?.metaAccessToken && !user?.metaAdAccountId)
       });
     } catch (error) {
@@ -317,8 +318,10 @@ export function setupDiagnosisRoutes(app: Express) {
         });
       }
 
-      // 更新用戶選擇的廣告帳戶
-      await storage.updateMetaTokens(userId, user.metaAccessToken, adAccountId);
+      const accountData = await accountResponse.json();
+
+      // 更新用戶選擇的廣告帳戶（包含名稱）
+      await storage.updateMetaTokens(userId, user.metaAccessToken, adAccountId, accountData.name);
 
       res.json({
         success: true,

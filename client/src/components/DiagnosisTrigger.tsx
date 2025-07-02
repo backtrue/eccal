@@ -24,6 +24,7 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
   const [facebookStatus, setFacebookStatus] = useState<{
     connected: boolean;
     adAccountId?: string;
+    adAccountName?: string;
     needsAccountSelection?: boolean;
   }>({ connected: false });
   const [availableAccounts, setAvailableAccounts] = useState<Array<{
@@ -367,7 +368,11 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
                   </p>
                 </div>
                 <p className="text-xs text-green-700 mt-1">
-                  帳戶 ID: {facebookStatus.adAccountId}
+                  {facebookStatus.adAccountName ? (
+                    <>帳戶名稱: {facebookStatus.adAccountName}</>
+                  ) : (
+                    <>帳戶 ID: {facebookStatus.adAccountId}</>
+                  )}
                 </p>
               </div>
 
