@@ -44,6 +44,7 @@ export interface DiagnosisData {
 
 export class MetaService {
   private openai: OpenAI;
+  private readonly baseUrl = 'https://graph.facebook.com/v19.0';
 
   constructor() {
     if (!process.env.OPENAI_API_KEY) {
@@ -55,28 +56,94 @@ export class MetaService {
   }
 
   /**
-   * 模擬獲取 Meta 廣告數據 (實際實現需要 Meta Marketing API)
-   * 這裡提供測試數據結構，實際部署時需要集成真實 API
+   * 獲取 Meta 廣告數據 (使用真實 Facebook Marketing API)
    */
   async getCampaignData(accessToken: string, campaignId: string): Promise<MetaCampaignData> {
-    // TODO: 實際實現 Meta Marketing API 調用
-    // 目前返回模擬數據用於開發測試
-    return {
-      campaignId,
-      campaignName: `測試廣告活動 ${campaignId}`,
-      impressions: 50000,
-      clicks: 1500,
-      spend: 15000,
-      linkClicks: 1200, // 連外點擊數
-      purchases: 24,
-      purchaseValue: 28800,
-      addToCart: 96,
-      viewContent: 1200,
-      dateRange: {
-        since: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        until: new Date().toISOString().split('T')[0]
+    try {
+      // 使用環境變數中的 access token 如果沒有提供的話
+      const token = accessToken || process.env.FACEBOOK_ACCESS_TOKEN;
+      
+      if (!token) {
+        throw new Error('Facebook Access Token 未設定');
       }
-    };
+
+      // 獲取廣告活動基本資訊
+      const campaignResponse = await fetch(
+        `${this.baseUrl}/${campaignId}?fields=name,status&access_token=${token}`
+      );
+      
+      if (!campaignResponse.ok) {
+        const errorData = await campaignResponse.json().catch(() => null);
+        throw new Error(`Facebook API 錯誤: ${campaignResponse.status} - ${errorData?.error?.message || campaignResponse.statusText}`);
+      }
+      
+      const campaignInfo = await campaignResponse.json();
+      
+      // 獲取廣告活動統計數據 (最近30天)
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - 30);
+      
+      const since = startDate.toISOString().split('T')[0];
+      const until = endDate.toISOString().split('T')[0];
+      
+      const insightsResponse = await fetch(
+        `${this.baseUrl}/${campaignId}/insights?fields=impressions,clicks,spend,inline_link_clicks,actions,purchase_roas&time_range={'since':'${since}','until':'${until}'}&access_token=${token}`
+      );
+      
+      if (!insightsResponse.ok) {
+        const errorData = await insightsResponse.json().catch(() => null);
+        throw new Error(`Facebook Insights API 錯誤: ${insightsResponse.status} - ${errorData?.error?.message || insightsResponse.statusText}`);
+      }
+      
+      const insightsData = await insightsResponse.json();
+      
+      if (!insightsData.data || insightsData.data.length === 0) {
+        throw new Error('找不到廣告活動數據，請確認活動 ID 是否正確且有數據');
+      }
+      
+      const insights = insightsData.data[0];
+      
+      // 解析 actions 數據以獲取購買和加入購物車數據
+      const actions = insights.actions || [];
+      const purchases = this.extractActionValue(actions, 'purchase') || 0;
+      const addToCart = this.extractActionValue(actions, 'add_to_cart') || 0;
+      const viewContent = this.extractActionValue(actions, 'view_content') || 0;
+      
+      return {
+        campaignId,
+        campaignName: campaignInfo.name || `廣告活動 ${campaignId}`,
+        impressions: parseInt(insights.impressions || '0'),
+        clicks: parseInt(insights.clicks || '0'),
+        spend: parseFloat(insights.spend || '0'),
+        linkClicks: parseInt(insights.inline_link_clicks || '0'),
+        purchases,
+        purchaseValue: parseFloat(insights.purchase_roas?.[0]?.value || '0') * purchases,
+        addToCart,
+        viewContent,
+        dateRange: {
+          since,
+          until
+        }
+      };
+    } catch (error) {
+      console.error('Meta API 錯誤:', error);
+      
+      // 如果是網路錯誤或 API 配置問題，提供詳細錯誤訊息
+      if (error instanceof Error) {
+        throw new Error(`無法獲取 Facebook 廣告數據: ${error.message}`);
+      }
+      
+      throw new Error('無法連接 Facebook Marketing API，請檢查網路連線和 API 權限');
+    }
+  }
+
+  /**
+   * 從 Facebook actions 數組中提取特定動作的值
+   */
+  private extractActionValue(actions: any[], actionType: string): number {
+    const action = actions.find(a => a.action_type === actionType);
+    return action ? parseInt(action.value || '0') : 0;
   }
 
   /**

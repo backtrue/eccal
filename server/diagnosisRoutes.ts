@@ -4,6 +4,33 @@ import { storage } from './storage';
 import { metaService } from './metaService';
 
 export function setupDiagnosisRoutes(app: Express) {
+  // 檢查 Facebook API 配置
+  app.get('/api/diagnosis/check-facebook-config', async (req, res) => {
+    try {
+      const hasAppId = !!process.env.FACEBOOK_APP_ID;
+      const hasAppSecret = !!process.env.FACEBOOK_APP_SECRET;
+      const hasAccessToken = !!process.env.FACEBOOK_ACCESS_TOKEN;
+      
+      if (!hasAppId || !hasAppSecret || !hasAccessToken) {
+        return res.json({
+          success: false,
+          message: 'Facebook API 配置不完整，請檢查環境變數設定'
+        });
+      }
+      
+      res.json({
+        success: true,
+        message: 'Facebook API 配置正常'
+      });
+    } catch (error) {
+      console.error('Facebook 配置檢查錯誤:', error);
+      res.status(500).json({
+        success: false,
+        message: '配置檢查失敗'
+      });
+    }
+  });
+
   // 觸發廣告健診
   app.post('/api/diagnosis/analyze', requireAuth, async (req: any, res) => {
     try {
