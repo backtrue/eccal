@@ -1519,7 +1519,7 @@ export class DatabaseStorage implements IStorage {
     return reports;
   }
 
-  async updateMetaTokens(userId: string, accessToken: string, adAccountId: string): Promise<User> {
+  async updateMetaTokens(userId: string, accessToken: string, adAccountId: string | null): Promise<User> {
     const [user] = await db
       .update(users)
       .set({

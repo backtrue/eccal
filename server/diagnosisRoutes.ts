@@ -188,20 +188,30 @@ export function setupDiagnosisRoutes(app: Express) {
       if (tokenData.access_token) {
         // 獲取廣告帳戶資訊
         const accountsResponse = await fetch(
-          `https://graph.facebook.com/v19.0/me/adaccounts?access_token=${tokenData.access_token}`
+          `https://graph.facebook.com/v19.0/me/adaccounts?fields=id,name,account_status&access_token=${tokenData.access_token}`
         );
         const accountsData = await accountsResponse.json();
         
-        // 存儲用戶的 Facebook 認證資訊
+        // 存儲用戶的 Facebook 認證資訊（暫時不選擇廣告帳戶）
         if (userId) {
           await storage.updateMetaTokens(
             userId as string, 
             tokenData.access_token,
-            accountsData.data?.[0]?.id || null
+            null // null 表示尚未選擇廣告帳戶
           );
+          
+          // 儲存可用的廣告帳戶列表到臨時儲存
+          const accountsList = accountsData.data?.map((account: any) => ({
+            id: account.id,
+            name: account.name,
+            status: account.account_status
+          })) || [];
+          
+          // 暫存廣告帳戶列表 (這裡可以使用 session 或其他方式)
+          // 為了簡化，我們先跳轉到選擇頁面
         }
         
-        res.redirect('/calculator?facebook_connected=true');
+        res.redirect('/calculator?facebook_auth_success=true');
       } else {
         console.error('Facebook token exchange failed:', tokenData);
         res.redirect('/calculator?error=token_exchange_failed');
@@ -221,13 +231,105 @@ export function setupDiagnosisRoutes(app: Express) {
       
       res.json({
         connected: !!(user?.metaAccessToken),
-        adAccountId: user?.metaAdAccountId
+        adAccountId: user?.metaAdAccountId,
+        needsAccountSelection: !!(user?.metaAccessToken && !user?.metaAdAccountId)
       });
     } catch (error) {
       console.error('檢查 Facebook 連接狀態錯誤:', error);
       res.status(500).json({
         connected: false,
         error: '檢查連接狀態失敗'
+      });
+    }
+  });
+
+  // 獲取用戶可用的 Facebook 廣告帳戶列表
+  app.get('/api/diagnosis/facebook-accounts', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user?.metaAccessToken) {
+        return res.status(400).json({
+          error: 'facebook_not_connected',
+          message: '請先連接 Facebook'
+        });
+      }
+
+      // 獲取廣告帳戶列表
+      const accountsResponse = await fetch(
+        `https://graph.facebook.com/v19.0/me/adaccounts?fields=id,name,account_status,currency&access_token=${user.metaAccessToken}`
+      );
+      
+      if (!accountsResponse.ok) {
+        throw new Error(`Facebook API 錯誤: ${accountsResponse.status}`);
+      }
+      
+      const accountsData = await accountsResponse.json();
+      
+      const accounts = accountsData.data?.map((account: any) => ({
+        id: account.id,
+        name: account.name,
+        status: account.account_status,
+        currency: account.currency || 'TWD'
+      })) || [];
+
+      res.json({ accounts });
+    } catch (error) {
+      console.error('獲取 Facebook 廣告帳戶錯誤:', error);
+      res.status(500).json({
+        error: '獲取廣告帳戶失敗',
+        message: error instanceof Error ? error.message : '未知錯誤'
+      });
+    }
+  });
+
+  // 選擇 Facebook 廣告帳戶
+  app.post('/api/diagnosis/select-facebook-account', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      const { adAccountId } = req.body;
+      
+      if (!adAccountId) {
+        return res.status(400).json({
+          error: 'missing_account_id',
+          message: '請選擇廣告帳戶'
+        });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user?.metaAccessToken) {
+        return res.status(400).json({
+          error: 'facebook_not_connected',
+          message: '請先連接 Facebook'
+        });
+      }
+
+      // 驗證廣告帳戶是否有效
+      const accountResponse = await fetch(
+        `https://graph.facebook.com/v19.0/${adAccountId}?fields=id,name,account_status&access_token=${user.metaAccessToken}`
+      );
+      
+      if (!accountResponse.ok) {
+        return res.status(400).json({
+          error: 'invalid_account',
+          message: '廣告帳戶無效或無權限存取'
+        });
+      }
+
+      // 更新用戶選擇的廣告帳戶
+      await storage.updateMetaTokens(userId, user.metaAccessToken, adAccountId);
+
+      res.json({
+        success: true,
+        message: '廣告帳戶設定成功',
+        adAccountId
+      });
+    } catch (error) {
+      console.error('選擇 Facebook 廣告帳戶錯誤:', error);
+      res.status(500).json({
+        error: '設定廣告帳戶失敗',
+        message: error instanceof Error ? error.message : '未知錯誤'
       });
     }
   });
@@ -393,7 +495,8 @@ async function processAccountDiagnosis(
   } catch (error) {
     console.error('處理帳戶診斷時發生錯誤:', error);
     // 更新報告狀態為失敗
-    await updateDiagnosisReportStatus(reportId, 'failed', `帳戶診斷處理失敗: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : '未知錯誤';
+    await updateDiagnosisReportStatus(reportId, 'failed', `帳戶診斷處理失敗: ${errorMessage}`);
   }
 }
 
