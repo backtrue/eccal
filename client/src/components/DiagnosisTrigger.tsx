@@ -204,13 +204,11 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
 
       toast({
         title: "帳戶診斷已開始！",
-        description: "AI 正在分析您的廣告帳戶，即將跳轉到報告頁面",
+        description: "AI 正在分析您的廣告帳戶，請稍候...",
       });
 
-      // 跳轉到診斷報告頁面
-      setTimeout(() => {
-        navigate(`/diagnosis-report/${data.reportId}`);
-      }, 2000);
+      // 立即跳轉到報告頁面（報告頁面會顯示處理中狀態並輪詢更新）
+      navigate(`/diagnosis-report/${data.reportId}`);
 
     } catch (error: any) {
       console.error('帳戶診斷啟動錯誤:', error);
@@ -219,7 +217,6 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
         description: error.message || "無法啟動廣告帳戶診斷",
         variant: "destructive",
       });
-    } finally {
       setIsDiagnosing(false);
     }
   };
