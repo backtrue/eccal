@@ -526,59 +526,6 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
                 </div>
               </CardContent>
             </Card>
-
-            {/* 每日預算表格 */}
-            <Card>
-              <CardHeader>
-                <CardTitle>每日預算明細</CardTitle>
-                <CardDescription>
-                  完整的每日預算和流量分配表
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-2">日期</th>
-                        <th className="text-left p-2">活動天數</th>
-                        <th className="text-right p-2">預算</th>
-                        <th className="text-right p-2">流量</th>
-                        <th className="text-right p-2">預期訂單</th>
-                        <th className="text-right p-2">預期營收</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {results.dailyBreakdown.slice(0, 10).map((day, index) => (
-                        <tr key={index} className="border-b hover:bg-gray-50">
-                          <td className="p-2">
-                            {format(new Date(day.date), 'MM/dd')}
-                          </td>
-                          <td className="p-2">第 {day.dayOfCampaign} 天</td>
-                          <td className="p-2 text-right font-semibold">
-                            {formatCurrency(parseInt(day.budget))}
-                          </td>
-                          <td className="p-2 text-right">
-                            {day.traffic.toLocaleString()}
-                          </td>
-                          <td className="p-2 text-right">
-                            {day.expectedOrders}
-                          </td>
-                          <td className="p-2 text-right">
-                            {formatCurrency(parseInt(day.expectedRevenue))}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {results.dailyBreakdown.length > 10 && (
-                    <div className="text-center p-4 text-gray-500">
-                      顯示前 10 天，總共 {results.dailyBreakdown.length} 天
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
           </div>
         )}
       </div>
