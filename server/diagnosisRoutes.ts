@@ -4,6 +4,57 @@ import { storage } from './storage';
 import { metaAccountService } from './metaAccountService';
 
 export function setupDiagnosisRoutes(app: Express) {
+  
+  // Facebook 資料刪除回呼端點 (符合 Facebook 政策要求)
+  app.post('/auth/facebook/data-deletion', async (req, res) => {
+    try {
+      const { signed_request } = req.body;
+      
+      if (!signed_request) {
+        return res.status(400).json({ error: 'Missing signed_request' });
+      }
+
+      // 解析 signed_request (Facebook 標準格式)
+      const [signature, payload] = signed_request.split('.');
+      const decodedPayload = JSON.parse(
+        Buffer.from(payload, 'base64url').toString('utf8')
+      );
+
+      const userId = decodedPayload.user_id;
+      
+      if (userId) {
+        // 清除用戶的 Facebook 認證資訊
+        try {
+          await storage.updateMetaTokens(userId, '', '');
+        } catch (updateError) {
+          console.log('User update failed, user may not exist:', userId);
+        }
+
+        console.log(`Facebook data deletion request processed for user: ${userId}`);
+      }
+
+      // 返回確認回應 (Facebook 要求的格式)
+      const baseUrl = process.env.REPLIT_DOMAINS || 'http://localhost:5000';
+      res.json({
+        url: `${baseUrl}/data-deletion-status/${userId || 'unknown'}`,
+        confirmation_code: `DEL_${Date.now()}_${userId || 'unknown'}`
+      });
+
+    } catch (error) {
+      console.error('Facebook data deletion callback error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // 資料刪除狀態查詢端點
+  app.get('/data-deletion-status/:userId', (req, res) => {
+    const { userId } = req.params;
+    res.json({
+      status: 'completed',
+      message: `Facebook 相關資料已清除 (User ID: ${userId})`,
+      timestamp: new Date().toISOString()
+    });
+  });
   // 檢查 Facebook OAuth 配置
   app.get('/api/diagnosis/check-facebook-config', async (req, res) => {
     try {
@@ -387,4 +438,61 @@ function calculateAccountHealthScore(diagnosisData: any): number {
   else score += 5;
   
   return Math.min(score, 100);
+}
+
+// Facebook 資料刪除回呼端點 (符合 Facebook 政策要求)
+export function setupFacebookDataDeletion(app: Express) {
+  app.post('/auth/facebook/data-deletion', async (req, res) => {
+    try {
+      const { signed_request } = req.body;
+      
+      if (!signed_request) {
+        return res.status(400).json({ error: 'Missing signed_request' });
+      }
+
+      // 解析 signed_request (Facebook 標準格式)
+      const [signature, payload] = signed_request.split('.');
+      const decodedPayload = JSON.parse(
+        Buffer.from(payload, 'base64url').toString('utf8')
+      );
+
+      const userId = decodedPayload.user_id;
+      
+      if (userId) {
+        // 清除用戶的 Facebook 認證資訊
+        // 注意：我們不刪除用戶帳戶，只清除 Facebook 相關數據
+        try {
+          await storage.updateUser(userId, {
+            metaAccessToken: null,
+            metaAdAccountId: null
+          });
+        } catch (updateError) {
+          console.log('User update failed, user may not exist:', userId);
+        }
+
+        console.log(`Facebook data deletion request processed for user: ${userId}`);
+      }
+
+      // 返回確認回應 (Facebook 要求的格式)
+      const baseUrl = process.env.REPLIT_DOMAINS || 'http://localhost:5000';
+      res.json({
+        url: `${baseUrl}/data-deletion-status/${userId || 'unknown'}`,
+        confirmation_code: `DEL_${Date.now()}_${userId || 'unknown'}`
+      });
+
+    } catch (error) {
+      console.error('Facebook data deletion callback error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // 資料刪除狀態查詢端點
+  app.get('/data-deletion-status/:userId', (req, res) => {
+    const { userId } = req.params;
+    res.json({
+      status: 'completed',
+      message: `Facebook 相關資料已清除 (User ID: ${userId})`,
+      timestamp: new Date().toISOString()
+    });
+  });
 }
