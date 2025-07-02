@@ -56,21 +56,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Initial check on mount - only for specific scenarios
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
+    const currentPath = window.location.pathname;
     const isProtectedPage = ['/dashboard', '/campaign-planner', '/bdmin'].some(path => 
-      window.location.pathname.includes(path)
+      currentPath.includes(path)
     );
+    const isCalculatorPage = currentPath === '/calculator' || currentPath.startsWith('/calculator/');
     
     // Only check auth in these specific scenarios:
     const shouldCheckAuth = 
       urlParams.has('auth_success') ||  // Just logged in
-      isProtectedPage;                  // On protected page
+      isProtectedPage ||                // On protected page
+      isCalculatorPage;                 // On calculator page (for diagnosis feature)
+    
+    console.log('Auth check decision:', { 
+      currentPath,
+      hasAuthSuccess: urlParams.has('auth_success'), 
+      isProtectedPage,
+      isCalculatorPage,
+      shouldCheckAuth
+    });
     
     if (shouldCheckAuth) {
-      console.log('Auth check triggered:', { 
-        hasAuthSuccess: urlParams.has('auth_success'), 
-        isProtectedPage,
-        currentPath: window.location.pathname 
-      });
+      console.log('Auth check triggered');
       checkAuth();
     } else {
       // Default to not authenticated without making API call

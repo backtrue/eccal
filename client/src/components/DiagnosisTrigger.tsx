@@ -48,6 +48,11 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
   useEffect(() => {
     const checkStatus = async () => {
       try {
+        // 如果認證狀態未知，先嘗試檢查認證
+        if (!isAuthenticated && !user) {
+          await checkAuth();
+        }
+        
         // 檢查 Facebook OAuth 配置
         const configResponse = await fetch('/api/diagnosis/check-facebook-config');
         const configData = await configResponse.json();
