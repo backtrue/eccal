@@ -16,6 +16,18 @@ export interface MetaAccountData {
     since: string;
     until: string;
   };
+  // 可選的成功廣告數據（開發環境使用）
+  topPerformingAds?: Array<{
+    name: string;
+    postId: string;
+    ctr: number;
+    roas: number;
+  }>;
+  topPerformingAdSets?: Array<{
+    name: string;
+    roas: number;
+    suggestedBudgetIncrease: number;
+  }>;
 }
 
 export interface AccountDiagnosisData {
@@ -90,7 +102,22 @@ export class MetaAccountService {
           addToCart: 180,
           viewContent: 1200,
           currency: "TWD",
-          dateRange: { since, until }
+          dateRange: { since, until },
+          // 新增模擬的成功廣告數據供 AI 分析使用
+          topPerformingAds: [
+            { name: "夏季新品促銷廣告", postId: "23849502927530773", ctr: 2.8, roas: 4.2 },
+            { name: "母親節限時優惠", postId: "23849502927530774", ctr: 3.1, roas: 3.8 },
+            { name: "週末閃購活動", postId: "23849502927530775", ctr: 2.5, roas: 5.1 },
+            { name: "新客首購禮", postId: "23849502927530776", ctr: 2.9, roas: 3.5 },
+            { name: "VIP會員專享", postId: "23849502927530777", ctr: 2.3, roas: 4.6 }
+          ],
+          topPerformingAdSets: [
+            { name: "25-35歲女性興趣定向", roas: 4.8, suggestedBudgetIncrease: 25 },
+            { name: "類似受眾-購買者", roas: 4.2, suggestedBudgetIncrease: 20 },
+            { name: "再行銷-購物車放棄", roas: 6.1, suggestedBudgetIncrease: 30 },
+            { name: "LLA 1%-高價值客戶", roas: 3.9, suggestedBudgetIncrease: 15 },
+            { name: "興趣+行為定向組合", roas: 3.6, suggestedBudgetIncrease: 18 }
+          ]
         };
       }
 
@@ -196,7 +223,9 @@ export class MetaAccountService {
     const targetDailyTraffic = targetDailyOrders / (targetData.targetConversionRate / 100);
     const targetDailyBudget = targetDailyTraffic * targetData.cpc;
     const targetCpa = targetData.targetAov / (targetData.targetConversionRate / 100);
-    const targetRoas = targetData.targetAov / targetCpa;
+    // 修正 ROAS 計算：月目標營業額 / 月廣告預算
+    const monthlyTargetBudget = targetDailyBudget * 30;
+    const targetRoas = targetData.targetRevenue / monthlyTargetBudget;
 
     // 實際數據 (30天平均)
     const actualDailyTraffic = metaData.linkClicks / 30;
@@ -276,6 +305,10 @@ export class MetaAccountService {
   private buildAccountDiagnosisPrompt(accountName: string, data: AccountDiagnosisData): string {
     const healthScore = this.calculateAccountHealthScore(data);
     
+    // 計算目標轉換率
+    const targetBrowseToCartRate = 15; // 業界標準
+    const targetCartToCheckoutRate = 25; // 業界標準
+    
     return `
 作為專業的 Facebook 廣告優化顧問，請針對「${accountName}」進行全面帳戶健診分析：
 
@@ -283,6 +316,7 @@ export class MetaAccountService {
 - 目標月營收：NT$${data.targetRevenue.toLocaleString()}
 - 目標客單價：NT$${data.targetAov.toLocaleString()}
 - 目標轉換率：${data.targetConversionRate}%
+- 目標 ROAS：${data.targetRoas.toFixed(2)}x
 - 目標日流量：${Math.round(data.targetDailyTraffic)} 人次
 - 目標日預算：NT$${Math.round(data.targetDailyBudget).toLocaleString()}
 
@@ -294,21 +328,35 @@ export class MetaAccountService {
 - 實際 ROAS：${data.actualRoas.toFixed(2)}x
 
 ## 🔄 轉換漏斗分析
-- 瀏覽→加購轉換率：${data.addToCartRate.toFixed(1)}%
-- 加購→結帳轉換率：${data.checkoutRate.toFixed(1)}%
+- 瀏覽→加購轉換率：${data.addToCartRate.toFixed(1)}% (目標：${targetBrowseToCartRate}%)
+- 加購→結帳轉換率：${data.checkoutRate.toFixed(1)}% (目標：${targetCartToCheckoutRate}%)
 - 整體轉換率：${data.overallConversionRate.toFixed(2)}%
 
 ## 🎯 健康分數
 帳戶健康分數：${healthScore}/100 分
 
-請提供：
-1. **核心問題診斷**：分析目標與實際表現的差距原因
-2. **優先改善建議**：提供 3-5 個具體的優化方向，按優先級排序
-3. **預算優化策略**：針對預算分配和出價策略的建議
-4. **轉換漏斗優化**：針對各階段轉換率的改善建議
-5. **下階段行動計畫**：可執行的短期（1-2週）和中期（1個月）改善計畫
+請按以下架構提供完整診斷報告：
 
-請用繁體中文回答，語氣專業但易懂，提供具體可行的建議。
+## 1. 🌟 成功亮點分析
+請分析並列出：
+- 5個有符合目標 CTR (>2%) 的「廣告名稱」，並列出廣告的 post-id
+  格式：廣告名稱 - Post ID: 123456789
+- 5個有達到 ROAS 目標的「廣告組合名稱」，推薦加碼預算
+  格式：廣告組合名稱 - 當前 ROAS: 3.2x，建議加碼 20%
+
+## 2. 📊 轉換漏斗優化建議
+詳細說明：
+- 「瀏覽→加購轉換率」現在是 ${data.addToCartRate.toFixed(1)}%，應該要提升到 ${targetBrowseToCartRate}%
+- 「加購→結帳轉換率」現在是 ${data.checkoutRate.toFixed(1)}%，應該要提升到 ${targetCartToCheckoutRate}%
+- 提供具體優化策略和可執行的改善方案
+
+## 3. ⚠️ 問題診斷與解決方案
+分析主要問題和具體改善建議
+
+## 4. 💰 預算優化建議
+針對目前預算配置給出調整建議
+
+請用繁體中文回答，語氣專業但易懂，提供具體可行的建議和實際的廣告名稱、Post ID 等資訊。
 `;
   }
 
