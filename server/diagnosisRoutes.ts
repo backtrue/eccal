@@ -289,16 +289,14 @@ async function processAccountDiagnosis(
   }
 }
 
-// 更新診斷報告
-async function updateDiagnosisReport(
+// 更新帳戶診斷報告
+async function updateAccountDiagnosisReport(
   reportId: string,
-  metaData: any,
+  accountData: any,
   diagnosisData: any,
   aiReport: string,
   healthScore: number
 ) {
-  // 使用 SQL 直接更新，因為 storage 接口可能還沒完全實現
-  // 實際部署時應該使用 storage.updateAdDiagnosisReport
   const { Pool } = await import('pg');
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   
@@ -323,19 +321,19 @@ async function updateDiagnosisReport(
       updated_at = NOW()
     WHERE id = $15
   `, [
-    metaData.campaignName,
-    diagnosisData.targetDailyTraffic,
-    diagnosisData.targetDailyBudget,
-    diagnosisData.targetCpa,
-    diagnosisData.targetRoas,
-    diagnosisData.actualDailyTraffic,
-    diagnosisData.actualDailySpend,
-    diagnosisData.actualCtr,
-    diagnosisData.actualCpa,
-    diagnosisData.actualRoas,
+    accountData.accountName,
+    Math.round(diagnosisData.targetDailyTraffic),
+    Math.round(diagnosisData.targetDailyBudget).toString(),
+    Math.round(diagnosisData.targetCpa).toString(),
+    diagnosisData.targetRoas.toFixed(2),
+    Math.round(diagnosisData.actualDailyTraffic),
+    Math.round(diagnosisData.actualDailySpend).toString(),
+    diagnosisData.actualCtr.toFixed(2),
+    Math.round(diagnosisData.actualCpa).toString(),
+    diagnosisData.actualRoas.toFixed(2),
     healthScore,
-    diagnosisData.trafficAchievementRate,
-    diagnosisData.budgetUtilizationRate,
+    diagnosisData.trafficAchievementRate.toFixed(1),
+    diagnosisData.budgetUtilizationRate.toFixed(1),
     aiReport,
     reportId
   ]);
@@ -360,8 +358,8 @@ async function updateDiagnosisReportStatus(reportId: string, status: string, mes
   pool.end();
 }
 
-// 計算健康分數
-function calculateHealthScore(diagnosisData: any): number {
+// 計算帳戶健康分數
+function calculateAccountHealthScore(diagnosisData: any): number {
   let score = 0;
   
   // 流量達成率 (25分)

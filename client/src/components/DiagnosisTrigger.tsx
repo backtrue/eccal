@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
-import { Activity, Zap } from "lucide-react";
+import { Activity, Zap, Link, CheckCircle, AlertCircle } from "lucide-react";
 import { useLocation } from "wouter";
 
 interface DiagnosisTriggerProps {
@@ -22,7 +20,11 @@ interface DiagnosisTriggerProps {
 
 export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTriggerProps) {
   const [isDiagnosing, setIsDiagnosing] = useState(false);
-  const [campaignId, setCampaignId] = useState("");
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [facebookStatus, setFacebookStatus] = useState<{
+    connected: boolean;
+    adAccountId?: string;
+  }>({ connected: false });
   const [systemStatus, setSystemStatus] = useState<{
     api: boolean;
     auth: boolean;
@@ -33,21 +35,36 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
   const { toast } = useToast();
   const [, navigate] = useLocation();
 
-  // 檢查系統狀態
+  // 檢查系統狀態和 Facebook 連接狀態
   useEffect(() => {
-    const checkSystemStatus = async () => {
+    const checkStatus = async () => {
       try {
-        const response = await fetch('/api/diagnosis/check-facebook-config');
-        const data = await response.json();
+        // 檢查 Facebook OAuth 配置
+        const configResponse = await fetch('/api/diagnosis/check-facebook-config');
+        const configData = await configResponse.json();
         
+        // 檢查用戶 Facebook 連接狀態
+        let fbStatus = { connected: false };
+        if (isAuthenticated) {
+          try {
+            const fbResponse = await apiRequest('GET', '/api/diagnosis/facebook-status');
+            fbStatus = fbResponse as any;
+          } catch (error) {
+            console.log('Facebook status check failed:', error);
+          }
+        }
+        
+        setFacebookStatus(fbStatus);
         setSystemStatus({
-          api: data.success,
+          api: configData.success,
           auth: isAuthenticated,
-          message: data.success 
+          message: configData.success 
             ? isAuthenticated 
-              ? "所有系統正常，可以開始診斷" 
-              : "API 正常，但需要登入"
-            : "Facebook API 配置異常"
+              ? fbStatus.connected
+                ? "所有系統正常，可以開始診斷"
+                : "需要連接 Facebook 廣告帳戶"
+              : "需要登入 Google 帳戶"
+            : "Facebook OAuth 配置異常"
         });
       } catch (error) {
         setSystemStatus({
@@ -58,23 +75,44 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
       }
     };
 
-    checkSystemStatus();
+    checkStatus();
   }, [isAuthenticated]);
 
-  const handleStartDiagnosis = async () => {
-    if (!campaignId.trim()) {
+  // 處理 Facebook OAuth 連接
+  const handleConnectFacebook = async () => {
+    if (!isAuthenticated) {
       toast({
-        title: "請輸入活動 ID",
-        description: "需要指定要診斷的 Facebook 廣告活動",
+        title: "請先登入",
+        description: "需要先登入 Google 帳戶才能連接 Facebook",
         variant: "destructive",
       });
       return;
     }
 
+    setIsConnecting(true);
+    try {
+      const response = await apiRequest('GET', '/api/diagnosis/facebook-auth-url');
+      const { authUrl } = response as any;
+      
+      // 跳轉到 Facebook OAuth 授權頁面
+      window.location.href = authUrl;
+      
+    } catch (error: any) {
+      console.error('Facebook OAuth 錯誤:', error);
+      toast({
+        title: "連接失敗",
+        description: error.message || "無法啟動 Facebook 授權",
+        variant: "destructive",
+      });
+      setIsConnecting(false);
+    }
+  };
+
+  // 開始帳戶診斷
+  const handleStartAccountDiagnosis = async () => {
     setIsDiagnosing(true);
     try {
-      const response = await apiRequest('POST', '/api/diagnosis/analyze', {
-        campaignId: campaignId.trim(),
+      const response = await apiRequest('POST', '/api/diagnosis/analyze-account', {
         targetRevenue: calculatorResults.targetRevenue,
         targetAov: calculatorResults.targetAov,
         targetConversionRate: calculatorResults.targetConversionRate,
@@ -82,8 +120,8 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
       });
 
       toast({
-        title: "診斷已開始！",
-        description: "AI 正在分析您的廣告成效，即將跳轉到報告頁面",
+        title: "帳戶診斷已開始！",
+        description: "AI 正在分析您的廣告帳戶，即將跳轉到報告頁面",
       });
 
       // 跳轉到診斷報告頁面
@@ -92,10 +130,10 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
       }, 2000);
 
     } catch (error: any) {
-      console.error('診斷啟動錯誤:', error);
+      console.error('帳戶診斷啟動錯誤:', error);
       toast({
         title: "診斷失敗",
-        description: error.message || "無法啟動廣告診斷",
+        description: error.message || "無法啟動廣告帳戶診斷",
         variant: "destructive",
       });
     } finally {
@@ -108,10 +146,10 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Activity className="h-5 w-5 text-blue-600" />
-          Facebook 廣告成效健診
+          Facebook 廣告帳戶健診
         </CardTitle>
         <CardDescription>
-          將您的商業目標與實際廣告成效進行 AI 智能比較，獲得專業優化建議
+          連接您的 Facebook 廣告帳戶，獲得 AI 智能診斷與優化建議
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -119,37 +157,29 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
         <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium text-gray-700">系統狀態</span>
-            <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${systemStatus.api ? 'bg-green-500' : 'bg-red-500'}`}></div>
-              <span className="text-xs text-gray-600">API</span>
-              <div className={`w-2 h-2 rounded-full ${systemStatus.auth ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-              <span className="text-xs text-gray-600">身份驗證</span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1">
+                <div className={`w-2 h-2 rounded-full ${systemStatus.api ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <span className="text-xs text-gray-600">API</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className={`w-2 h-2 rounded-full ${systemStatus.auth ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                <span className="text-xs text-gray-600">Google</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className={`w-2 h-2 rounded-full ${facebookStatus.connected ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                <span className="text-xs text-gray-600">Facebook</span>
+              </div>
             </div>
           </div>
           <p className="text-xs text-gray-600 mt-1">{systemStatus.message}</p>
         </div>
 
-        {!isAuthenticated && (
-          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div className="flex items-start gap-2">
-              <span className="text-yellow-600">⚠️</span>
-              <div>
-                <p className="text-sm font-medium text-yellow-800 mb-1">
-                  需要先登入 Google 帳戶
-                </p>
-                <p className="text-xs text-yellow-700">
-                  廣告健診功能需要身份驗證才能安全存取您的廣告數據。請點擊右上角的「登入」按鈕。
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         <div className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4 text-sm">
             <div>
-              <Label className="font-medium">您的目標設定</Label>
-              <div className="mt-2 space-y-1 text-gray-600">
+              <div className="font-medium mb-2">您的目標設定</div>
+              <div className="space-y-1 text-gray-600">
                 <p>月營收目標: NT${calculatorResults.targetRevenue.toLocaleString()}</p>
                 <p>平均客單價: NT${calculatorResults.targetAov}</p>
                 <p>目標轉換率: {calculatorResults.targetConversionRate}%</p>
@@ -157,51 +187,89 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
               </div>
             </div>
             <div>
-              <Label className="font-medium">健診功能特色</Label>
-              <div className="mt-2 space-y-1 text-sm text-gray-600">
-                <p>✅ 流量與預算達成率分析</p>
-                <p>✅ 廣告漏斗結構診斷</p>
-                <p>✅ 電商轉換瓶頸識別</p>
-                <p>✅ AI 多情境優化建議</p>
+              <div className="font-medium mb-2">帳戶健診功能</div>
+              <div className="space-y-1 text-sm text-gray-600">
+                <p>✅ 帳戶整體成效分析</p>
+                <p>✅ 廣告投放表現診斷</p>
+                <p>✅ 轉換漏斗優化建議</p>
+                <p>✅ AI 智能改善方案</p>
               </div>
             </div>
           </div>
 
-          {isAuthenticated ? (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="campaignId">廣告活動 ID</Label>
-                <Input
-                  id="campaignId"
-                  placeholder="請輸入要診斷的廣告活動 ID (例如: 23851234567890123)"
-                  value={campaignId}
-                  onChange={(e) => setCampaignId(e.target.value)}
-                />
-                <p className="text-xs text-gray-500">
-                  💡 可在 Facebook 廣告管理員中找到活動 ID
-                </p>
+          {!isAuthenticated ? (
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-yellow-800 mb-1">
+                    需要先登入 Google 帳戶
+                  </p>
+                  <p className="text-xs text-yellow-700">
+                    廣告健診功能需要身份驗證才能安全存取您的廣告數據。請點擊右上角的「登入」按鈕。
+                  </p>
+                </div>
               </div>
-
+            </div>
+          ) : !facebookStatus.connected ? (
+            <div className="space-y-4">
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <Link className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-blue-800 mb-1">
+                      連接您的 Facebook 廣告帳戶
+                    </p>
+                    <p className="text-xs text-blue-700 mb-3">
+                      我們需要存取您的廣告帳戶數據進行健診分析。您的廣告設定不會被修改，我們只會讀取統計數據。
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
               <Button 
-                onClick={handleStartDiagnosis}
-                disabled={isDiagnosing || !campaignId.trim()}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                onClick={handleConnectFacebook}
+                disabled={isConnecting}
+                className="w-full bg-[#1877F2] hover:bg-[#166fe5] text-white"
               >
-                {isDiagnosing ? (
-                  <>AI 分析中...</>
+                {isConnecting ? (
+                  <>正在跳轉 Facebook 授權...</>
                 ) : (
                   <>
-                    <Zap className="h-4 w-4 mr-2" />
-                    開始智能健診
+                    <Link className="h-4 w-4 mr-2" />
+                    連接 Facebook 廣告帳戶
                   </>
                 )}
               </Button>
             </div>
           ) : (
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800 text-center">
-                請先登入 Google 帳戶以使用診斷功能
-              </p>
+            <div className="space-y-4">
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <p className="text-sm font-medium text-green-800">
+                    Facebook 廣告帳戶已連接
+                  </p>
+                </div>
+                <p className="text-xs text-green-700 mt-1">
+                  帳戶 ID: {facebookStatus.adAccountId}
+                </p>
+              </div>
+
+              <Button 
+                onClick={handleStartAccountDiagnosis}
+                disabled={isDiagnosing}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              >
+                {isDiagnosing ? (
+                  <>AI 分析帳戶中...</>
+                ) : (
+                  <>
+                    <Zap className="h-4 w-4 mr-2" />
+                    開始帳戶智能健診
+                  </>
+                )}
+              </Button>
             </div>
           )}
         </div>
