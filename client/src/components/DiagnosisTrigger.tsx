@@ -42,14 +42,15 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
 
     setIsConnecting(true);
     try {
-      // 模擬 Meta OAuth 連接過程
-      // 實際實現時需要跳轉到 Facebook OAuth 頁面
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // 檢查 Facebook API 配置
+      const configResponse = await fetch('/api/diagnosis/check-facebook-config');
+      const configData = await configResponse.json();
       
-      await apiRequest('POST', '/api/diagnosis/connect-meta', {
-        accessToken: 'mock_facebook_token',
-        adAccountId: 'mock_ad_account_123'
-      });
+      if (!configData.success) {
+        throw new Error(configData.message || 'Facebook API 配置不完整');
+      }
+
+      await apiRequest('POST', '/api/diagnosis/connect-meta', {});
 
       toast({
         title: "連接成功！",

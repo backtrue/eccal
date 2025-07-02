@@ -51,12 +51,12 @@ export function setupDiagnosisRoutes(app: Express) {
         });
       }
 
-      // 獲取用戶 Meta 授權資訊
-      const user = await storage.getUser(userId);
-      if (!user?.metaAccessToken) {
+      // 使用系統配置的 Facebook Access Token
+      const accessToken = process.env.FACEBOOK_ACCESS_TOKEN;
+      if (!accessToken) {
         return res.status(400).json({
-          error: 'meta_authorization_required',
-          message: '需要先授權 Facebook 廣告帳戶'
+          error: 'facebook_config_missing',
+          message: 'Facebook API 配置不完整'
         });
       }
 
@@ -86,7 +86,7 @@ export function setupDiagnosisRoutes(app: Express) {
         processingReport.id,
         userId,
         campaignId,
-        user.metaAccessToken,
+        accessToken,
         {
           targetRevenue,
           targetAov,
