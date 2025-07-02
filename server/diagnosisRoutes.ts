@@ -55,6 +55,48 @@ export function setupDiagnosisRoutes(app: Express) {
       timestamp: new Date().toISOString()
     });
   });
+
+  // Facebook 取消授權回呼端點
+  app.post('/auth/facebook/deauthorize', async (req, res) => {
+    try {
+      const { signed_request } = req.body;
+      
+      if (!signed_request) {
+        return res.status(400).json({ error: 'Missing signed_request' });
+      }
+
+      // 解析 signed_request (Facebook 標準格式)
+      const [signature, payload] = signed_request.split('.');
+      const decodedPayload = JSON.parse(
+        Buffer.from(payload, 'base64url').toString('utf8')
+      );
+
+      const userId = decodedPayload.user_id;
+      
+      if (userId) {
+        // 清除用戶的 Facebook 認證資訊
+        try {
+          await storage.updateMetaTokens(userId, '', '');
+          console.log(`Facebook deauthorization processed for user: ${userId}`);
+        } catch (updateError) {
+          console.log('User deauthorization failed, user may not exist:', userId);
+        }
+      }
+
+      // 返回確認回應
+      res.json({
+        success: true,
+        message: 'Deauthorization processed successfully',
+        user_id: userId,
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error('Facebook deauthorization callback error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // 檢查 Facebook OAuth 配置
   app.get('/api/diagnosis/check-facebook-config', async (req, res) => {
     try {
