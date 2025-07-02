@@ -1,30 +1,9 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import session from "express-session";
 import type { Express } from "express";
 import { storage } from "./storage";
 
 export function setupGoogleAuth(app: Express) {
-  // Set trust proxy for Replit environment
-  app.set('trust proxy', 1);
-  
-  // 檢查 SESSION_SECRET 是否存在 - 按照 PDF 建議
-  if (!process.env.SESSION_SECRET) {
-    console.error("FATAL ERROR: SESSION_SECRET is not defined.");
-    process.exit(1);
-  }
-
-  // 按照 PDF 建議使用標準 express-session（記憶體存儲）
-  app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false, // 按照 PDF 建議設為 false
-    cookie: {
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      secure: process.env.NODE_ENV === 'production', // 按照 PDF 建議
-      httpOnly: true, // 增加安全性
-    }
-  }));
 
   app.use(passport.initialize());
   app.use(passport.session());

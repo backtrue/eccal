@@ -1,4 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
+import session from 'express-session';
+import passport from 'passport';
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
@@ -124,6 +126,28 @@ app.use(express.json({
   }
 }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+
+// 按照 PDF 建議：檢查 SESSION_SECRET 環境變數
+if (!process.env.SESSION_SECRET) {
+  console.error("FATAL ERROR: SESSION_SECRET is not defined.");
+  process.exit(1);
+}
+
+// 按照 PDF 建議：使用 express-session（記憶體存儲）
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false, // 按照 PDF 建議設為 false
+  cookie: {
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    secure: process.env.NODE_ENV === 'production', // 按照 PDF 建議
+    httpOnly: true, // 增加安全性
+  }
+}));
+
+// 按照 PDF 建議：初始化 Passport，務必放在 session 之後
+app.use(passport.initialize());
+app.use(passport.session());
 
 // 選擇性緩存控制 - 只對 HTML 頁面禁用緩存，保留 API 回應的正常緩存
 app.use((req, res, next) => {
