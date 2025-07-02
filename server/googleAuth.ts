@@ -8,7 +8,7 @@ import { storage } from "./storage";
 export function setupGoogleAuth(app: Express) {
   // Set trust proxy for Replit environment
   app.set('trust proxy', 1);
-  
+
   // Session configuration
   const sessionTtl = 24 * 60 * 60 * 1000; // 24 hours - 按照 PDF 建議
   const pgStore = connectPg(session);
@@ -72,7 +72,7 @@ export function setupGoogleAuth(app: Express) {
         googleRefreshToken: refreshToken,
         tokenExpiresAt: new Date(Math.min(Date.now() + 3600000, 2147483647)), // 32-bit safe max
       });
-      
+
       return done(null, user || false);
     } catch (error) {
       return done(error, false);
@@ -113,7 +113,7 @@ export function setupGoogleAuth(app: Express) {
   passport.deserializeUser(async (id: string, done) => {
     try {
       console.log('Deserializing user:', id);
-      
+
       // Check cache first
       const cached = userCache.get(id);
       if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
@@ -124,13 +124,13 @@ export function setupGoogleAuth(app: Express) {
       // Fetch from database
       const user = await storage.getUser(id);
       console.log('User fetched from database:', user ? user.id : 'not found');
-      
+
       // Cache the result
       if (user) {
         userCache.set(id, { user, timestamp: Date.now() });
         console.log('User cached:', id);
       }
-      
+
       done(null, user || null); // 使用 null 而不是 false
     } catch (error) {
       console.error('Deserialization error:', error);
@@ -141,44 +141,53 @@ export function setupGoogleAuth(app: Express) {
   // Auth routes - force consent to ensure refresh token
   app.get('/api/auth/google', (req, res, next) => {
     console.log('Starting Google OAuth');
-    
+
     // Save the referring page for post-login redirect
     const returnTo = req.query.returnTo as string || req.get('Referer') || '/';
     (req.session as any).returnTo = returnTo;
     console.log('Saving returnTo in session:', returnTo);
-    
+
     passport.authenticate('google', {
       accessType: 'offline',
       prompt: 'consent'
     })(req, res, next);
   });
-  
+
   app.get('/api/auth/google/callback', (req, res, next) => {
     console.log('Google OAuth callback triggered');
     passport.authenticate('google', (err: any, user: any, info: any) => {
       console.log('Google OAuth authenticate result:', { err: !!err, user: !!user, userInfo: user?.email });
-      
+
       if (err) {
         console.error('Google OAuth error:', err);
         return res.status(500).send('Authentication failed');
       }
-      
+
       if (!user) {
         console.error('Google OAuth failed - no user returned:', info);
         return res.status(401).send('Authentication failed');
       }
-      
+
       console.log('Attempting to log in user:', user.id);
       req.logIn(user, async (loginErr) => {
         if (loginErr) {
           console.error('Login error:', loginErr);
           return res.status(500).send('Login failed');
         }
-        
+
         console.log('User successfully logged in:', user.id);
         console.log('Session ID:', (req.session as any).id);
         console.log('Is authenticated:', req.isAuthenticated());
-        
+
+        // 確保 session 被保存
+        (req.session as any).save((saveErr: any) => {
+          if (saveErr) {
+            console.error('Session save error:', saveErr);
+          } else {
+            console.log('Session saved successfully');
+          }
+        });
+
         try {
           // Process referral if exists
           const referralCode = (req.session as any)?.referralCode;
@@ -190,14 +199,14 @@ export function setupGoogleAuth(app: Express) {
               console.error('Error processing referral:', error);
             }
           }
-          
+
           // Temporarily disable Brevo sync due to IP whitelist issues
           console.log('Brevo sync disabled due to IP whitelist - user email:', user.email);
-          
+
           const baseUrl = getBaseUrl(req);
           const returnTo = (req.session as any)?.returnTo || '/';
           delete (req.session as any).returnTo; // Clean up after use
-          
+
           // Ensure the redirect URL is properly formatted
           let redirectUrl: string;
           if (returnTo.startsWith('http')) {
@@ -208,7 +217,7 @@ export function setupGoogleAuth(app: Express) {
             const cleanPath = returnTo.startsWith('/') ? returnTo : `/${returnTo}`;
             redirectUrl = `${baseUrl}${cleanPath}${cleanPath.includes('?') ? '&' : '?'}auth_success=1`;
           }
-          
+
           console.log('Redirecting to:', redirectUrl);
           res.redirect(redirectUrl);
         } catch (error) {
@@ -235,13 +244,13 @@ export function setupGoogleAuth(app: Express) {
       console.log('Auth check - isAuthenticated():', req.isAuthenticated());
       console.log('Auth check - req.user exists:', !!req.user);
       console.log('Auth check - User ID:', req.user ? (req.user as any).id : 'none');
-      
+
       // 檢查 session 是否存在
       if (!(req.session as any)?.id) {
         console.log('Auth check failed: no session');
         return res.status(401).json({ error: 'No session' });
       }
-      
+
       // 使用 Passport 的 isAuthenticated() 方法檢查
       if (req.isAuthenticated() && req.user) {
         console.log('Auth check successful:', (req.user as any).email);
@@ -264,7 +273,7 @@ export function requireAuth(req: any, res: any, next: any) {
   if (req.isAuthenticated()) {
     return next();
   }
-  
+
   // Return 401 for unauthenticated requests - this is the standard HTTP status
   res.status(401).json({ error: 'Authentication required' });
 }

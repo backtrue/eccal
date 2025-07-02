@@ -61,16 +61,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
       currentPath.includes(path)
     );
     const isCalculatorPage = currentPath === '/calculator' || currentPath.startsWith('/calculator/');
+    const hasAuthSuccess = urlParams.has('auth_success');
     
     // Only check auth in these specific scenarios:
     const shouldCheckAuth = 
-      urlParams.has('auth_success') ||  // Just logged in
+      hasAuthSuccess ||  // Just logged in
       isProtectedPage ||                // On protected page
       isCalculatorPage;                 // On calculator page (for diagnosis feature)
     
     console.log('Auth check decision:', { 
       currentPath,
-      hasAuthSuccess: urlParams.has('auth_success'), 
+      hasAuthSuccess, 
       isProtectedPage,
       isCalculatorPage,
       shouldCheckAuth
@@ -78,7 +79,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     
     if (shouldCheckAuth) {
       console.log('Auth check triggered');
-      checkAuth();
+      
+      // For auth_success, add a small delay to ensure session is established
+      if (hasAuthSuccess) {
+        setTimeout(() => {
+          checkAuth();
+        }, 500); // 500ms delay to allow session to be fully established
+      } else {
+        checkAuth();
+      }
     } else {
       // Default to not authenticated without making API call
       setIsAuthenticated(false);
@@ -87,7 +96,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     // Clean up auth_success parameter
-    if (urlParams.has('auth_success')) {
+    if (hasAuthSuccess) {
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
