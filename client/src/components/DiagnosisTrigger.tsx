@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -26,9 +26,43 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
   const [isDiagnosing, setIsDiagnosing] = useState(false);
   const [campaignId, setCampaignId] = useState("");
   const [showCampaignInput, setShowCampaignInput] = useState(false);
+  const [systemStatus, setSystemStatus] = useState<{
+    api: boolean;
+    auth: boolean;
+    message: string;
+  }>({ api: false, auth: false, message: "檢查中..." });
+  
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [, navigate] = useLocation();
+
+  // 檢查系統狀態
+  useEffect(() => {
+    const checkSystemStatus = async () => {
+      try {
+        const response = await fetch('/api/diagnosis/check-facebook-config');
+        const data = await response.json();
+        
+        setSystemStatus({
+          api: data.success,
+          auth: isAuthenticated,
+          message: data.success 
+            ? isAuthenticated 
+              ? "所有系統正常，可以開始診斷" 
+              : "API 正常，但需要登入"
+            : "Facebook API 配置異常"
+        });
+      } catch (error) {
+        setSystemStatus({
+          api: false,
+          auth: isAuthenticated,
+          message: "無法連接到診斷服務"
+        });
+      }
+    };
+
+    checkSystemStatus();
+  }, [isAuthenticated]);
 
   const handleConnectMeta = async () => {
     if (!isAuthenticated) {
@@ -124,11 +158,32 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* 系統狀態指示 */}
+        <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+          <div className="flex items-center justify-between text-sm">
+            <span className="font-medium text-gray-700">系統狀態</span>
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${systemStatus.api ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <span className="text-xs text-gray-600">API</span>
+              <div className={`w-2 h-2 rounded-full ${systemStatus.auth ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+              <span className="text-xs text-gray-600">身份驗證</span>
+            </div>
+          </div>
+          <p className="text-xs text-gray-600 mt-1">{systemStatus.message}</p>
+        </div>
         {!isAuthenticated && (
           <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p className="text-sm text-yellow-800">
-              ⚠️ 需要先登入 Google 帳戶才能使用廣告健診功能
-            </p>
+            <div className="flex items-start gap-2">
+              <span className="text-yellow-600">⚠️</span>
+              <div>
+                <p className="text-sm font-medium text-yellow-800 mb-1">
+                  需要先登入 Google 帳戶
+                </p>
+                <p className="text-xs text-yellow-700">
+                  廣告健診功能需要身份驗證才能安全存取您的廣告數據。請點擊右上角的「登入」按鈕。
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -158,11 +213,12 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
             <Dialog>
               <DialogTrigger asChild>
                 <Button 
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50"
                   disabled={!isAuthenticated}
+                  title={!isAuthenticated ? "請先登入 Google 帳戶" : "點擊開始診斷"}
                 >
                   <Facebook className="h-4 w-4 mr-2" />
-                  連結 Facebook，立即健診
+                  {!isAuthenticated ? "需要登入才能使用" : "連結 Facebook，立即健診"}
                 </Button>
               </DialogTrigger>
               <DialogContent>
