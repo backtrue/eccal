@@ -17,7 +17,6 @@ import { useCampaignPlannerUsage } from "@/hooks/useCampaignPlannerUsage";
 import { apiRequest } from "@/lib/queryClient";
 import NavigationBar from "@/components/NavigationBar";
 import Footer from "@/components/Footer";
-import DiagnosisTrigger from "@/components/DiagnosisTrigger";
 
 // 表單驗證 Schema
 const campaignFormSchema = z.object({
@@ -533,26 +532,7 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
               </CardContent>
             </Card>
 
-            {/* Facebook 廣告健診觸發器 */}
-            <Card className="border-blue-200 bg-blue-50/50">
-              <CardHeader>
-                <CardTitle className="text-blue-800">🔍 Facebook 廣告成效診斷</CardTitle>
-                <CardDescription className="text-blue-600">
-                  診斷狀態：已啟用 | API 配置：正常 | 等待使用者操作
-                </CardDescription>
-              </CardHeader>
-            </Card>
-            
-            <DiagnosisTrigger 
-              calculatorResults={{
-                targetRevenue: form.getValues('targetRevenue') || 0,
-                targetAov: form.getValues('targetAov') || 0,
-                targetConversionRate: form.getValues('targetConversionRate') || 0,
-                cpc: form.getValues('costPerClick') || 5,
-                dailyTraffic: results.summary.avgDailyTraffic || 0,
-                dailyBudget: results.summary.avgDailyBudget || 0,
-              }}
-            />
+
           </div>
         )}
       </div>

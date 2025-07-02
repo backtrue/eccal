@@ -13,6 +13,7 @@ import NavigationBar from "@/components/NavigationBar";
 import { Link } from "wouter";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
 import AnalyticsDataLoader from "@/components/AnalyticsDataLoader";
+import DiagnosisTrigger from "@/components/DiagnosisTrigger";
 import { useAuth } from "@/hooks/useAuth";
 import { getTranslations, type Locale } from "@/lib/i18n";
 import { trackEvent } from "@/lib/analytics";
@@ -426,6 +427,20 @@ export default function Calculator({ locale }: CalculatorProps) {
                             </p>
                           </div>
                         </div>
+                      </div>
+
+                      {/* Facebook 廣告成效健診觸發器 */}
+                      <div className="mt-6">
+                        <DiagnosisTrigger 
+                          calculatorResults={{
+                            targetRevenue: form.getValues('targetRevenue') || 0,
+                            targetAov: form.getValues('averageOrderValue') || 0,
+                            targetConversionRate: form.getValues('conversionRate') || 0,
+                            cpc: t.cpcValue,
+                            dailyTraffic: results.requiredTraffic / 30, // 月流量轉為日流量
+                            dailyBudget: results.dailyAdBudget,
+                          }}
+                        />
                       </div>
                     </>
                   )}
