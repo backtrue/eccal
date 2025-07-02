@@ -40,7 +40,7 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
     message: string;
   }>({ api: false, auth: false, message: "檢查中..." });
   
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, checkAuth } = useAuth();
   const { toast } = useToast();
   const [, navigate] = useLocation();
 

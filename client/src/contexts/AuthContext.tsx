@@ -1,16 +1,17 @@
-import { createContext, useContext, ReactNode, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { createContext, useContext, ReactNode, useEffect, useState } from "react";
 
 interface AuthContextType {
   user: any;
   isLoading: boolean;
   isAuthenticated: boolean;
+  checkAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: false,
   isAuthenticated: false,
+  checkAuth: async () => {},
 });
 
 interface AuthProviderProps {
@@ -18,30 +19,66 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  // Check auth state reliably across all pages
-  const { data: user, isLoading, error } = useQuery({
-    queryKey: ["/api/auth/user"],
-    retry: (failureCount, error) => {
-      // Don't retry if it's an auth error (401) - this is expected for logged out users
-      if (error?.message?.includes('401') || error?.message?.includes('Not authenticated')) {
-        return false;
-      }
-      return failureCount < 2;
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-    refetchInterval: false,
-    refetchOnMount: true, // Always check on mount
-    refetchOnReconnect: false,
-    // Enable auth query in these scenarios:
-    enabled: true, // Always enabled to ensure consistent auth state
-    throwOnError: false, // Don't throw errors on 401 - handle gracefully
-  });
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Clean up auth_success parameter
+  // Check if session cookie exists (lightweight check)
+  const hasSessionCookie = () => {
+    return document.cookie.includes('connect.sid=');
+  };
+
+  // Manual auth check function (only called when needed)
+  const checkAuth = async () => {
+    if (!hasSessionCookie()) {
+      setUser(null);
+      setIsAuthenticated(false);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/auth/user', {
+        credentials: 'include',
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+        setIsAuthenticated(true);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    } catch (error) {
+      console.log('Auth check failed:', error);
+      setUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Initial check on mount and auth_success parameter
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
+    const isProtectedPage = ['/dashboard', '/campaign-planner', '/bdmin'].some(path => 
+      window.location.pathname.includes(path)
+    );
+    
+    // Only check auth in these scenarios:
+    if (urlParams.has('auth_success') || isProtectedPage || hasSessionCookie()) {
+      checkAuth();
+    } else {
+      // No session cookie and not a protected page = not authenticated
+      setIsAuthenticated(false);
+      setUser(null);
+    }
+
+    // Clean up auth_success parameter
     if (urlParams.has('auth_success')) {
       window.history.replaceState({}, '', window.location.pathname);
     }
@@ -52,7 +89,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       value={{
         user,
         isLoading,
-        isAuthenticated: !!user,
+        isAuthenticated,
+        checkAuth,
       }}
     >
       {children}
