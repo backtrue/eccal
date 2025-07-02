@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useLocale } from "@/hooks/useLocale";
 import NavigationBar from "@/components/NavigationBar";
 import Footer from "@/components/Footer";
 import DiagnosisReport from "@/components/DiagnosisReport";
@@ -12,11 +13,12 @@ import { Link } from "wouter";
 export default function DiagnosisReportPage() {
   const { reportId } = useParams();
   const { isAuthenticated } = useAuth();
+  const { locale } = useLocale();
 
   const { data: report, isLoading, error } = useQuery({
     queryKey: [`/api/diagnosis/report/${reportId}`],
     enabled: isAuthenticated && !!reportId,
-    refetchInterval: (data) => {
+    refetchInterval: (data: any) => {
       // 如果狀態是 processing，每5秒重新獲取
       return data?.diagnosisStatus === 'processing' ? 5000 : false;
     },
@@ -25,7 +27,7 @@ export default function DiagnosisReportPage() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <NavigationBar />
+        <NavigationBar locale={locale} />
         <div className="container mx-auto px-4 py-8">
           <Card className="max-w-md mx-auto">
             <CardHeader>
@@ -51,7 +53,7 @@ export default function DiagnosisReportPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <NavigationBar />
+        <NavigationBar locale={locale} />
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             <div className="animate-pulse space-y-6">
