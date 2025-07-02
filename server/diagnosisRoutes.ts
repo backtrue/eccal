@@ -259,9 +259,24 @@ export function setupDiagnosisRoutes(app: Express) {
       const userId = req.user.claims?.sub || req.user.id;
       const user = await storage.getUser(userId);
       
+      let adAccountName = '';
+      
+      // 如果有 access token 和 account ID，嘗試獲取帳戶名稱
+      if (user?.metaAccessToken && user?.metaAdAccountId) {
+        try {
+          const accountData = await metaAccountService.getAdAccountData(user.metaAccessToken, user.metaAdAccountId);
+          adAccountName = accountData.accountName;
+        } catch (error) {
+          console.log('無法獲取帳戶名稱:', error);
+          // 如果獲取失敗，使用帳戶 ID 作為顯示名稱
+          adAccountName = user.metaAdAccountId;
+        }
+      }
+      
       res.json({
         connected: !!(user?.metaAccessToken),
         adAccountId: user?.metaAdAccountId,
+        adAccountName,
         needsAccountSelection: !!(user?.metaAccessToken && !user?.metaAdAccountId)
       });
     } catch (error) {
