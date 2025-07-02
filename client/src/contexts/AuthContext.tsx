@@ -18,39 +18,25 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  // Simplified auth checking: always enabled when there's a session cookie
-  const { data: user, isLoading } = useQuery({
+  // Check auth state reliably across all pages
+  const { data: user, isLoading, error } = useQuery({
     queryKey: ["/api/auth/user"],
     retry: (failureCount, error) => {
-      // Don't retry if it's an auth error (401)
-      if (error?.message?.includes('401')) return false;
+      // Don't retry if it's an auth error (401) - this is expected for logged out users
+      if (error?.message?.includes('401') || error?.message?.includes('Not authenticated')) {
+        return false;
+      }
       return failureCount < 2;
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 15 * 60 * 1000, // 15 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
     refetchInterval: false,
-    refetchOnMount: true, // Check on mount
+    refetchOnMount: true, // Always check on mount
     refetchOnReconnect: false,
-    // Enable auth query if:
-    // 1. User just logged in (auth_success param)
-    // 2. There's a session cookie (indicating potential active session)
-    enabled: (() => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const hasAuthSuccess = urlParams.has('auth_success');
-      const hasSessionCookie = document.cookie.includes('connect.sid');
-      
-      const shouldEnable = hasAuthSuccess || hasSessionCookie;
-      
-      console.log('Auth Query Debug:', {
-        hasAuthSuccess,
-        hasSessionCookie,
-        pathname: window.location.pathname,
-        enabled: shouldEnable
-      });
-      
-      return shouldEnable;
-    })(),
+    // Enable auth query in these scenarios:
+    enabled: true, // Always enabled to ensure consistent auth state
+    throwOnError: false, // Don't throw errors on 401 - handle gracefully
   });
 
   // Clean up auth_success parameter

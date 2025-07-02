@@ -1527,9 +1527,8 @@ export class DatabaseStorage implements IStorage {
       updateData.metaAdAccountId = adAccountId;
     }
 
-    if (adAccountName) {
-      updateData.metaAdAccountName = adAccountName;
-    }
+    // Note: adAccountName is not stored in database schema
+    // Only storing the account ID for now
 
     const [user] = await db
       .update(users)

@@ -216,7 +216,26 @@ export function setupGoogleAuth(app: Express) {
     });
   });
 
-  // 完全移除 /api/auth/user 路由 - 問題是瀏覽器緩存的舊 JavaScript
+  // User auth status endpoint - required for frontend auth state management
+  app.get('/api/auth/user', (req, res) => {
+    try {
+      console.log(`[DEBUG] Auth request: IP=${req.ip}, UA=${req.get('User-Agent')?.slice(0, 50)}..., Headers: {`);
+      console.log(`  'x-forwarded-for': '${req.get('x-forwarded-for')}',`);
+      console.log(`  'x-replit-user-id': '${req.get('x-replit-user-id')}',`);
+      console.log(`  connection: ${req.get('connection')},`);
+      console.log(`  accept: '${req.get('accept')}'`);
+      console.log(`}`);
+      
+      if (req.isAuthenticated() && req.user) {
+        res.json(req.user);
+      } else {
+        res.status(401).json({ error: 'Not authenticated' });
+      }
+    } catch (error) {
+      console.error('Auth endpoint error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
 }
 
 // Middleware to check if user is authenticated
