@@ -1,206 +1,137 @@
-import express, { type Request, Response, NextFunction } from "express";
+// =================================================================
+// 請完整複製以下所有程式碼，並直接覆蓋掉您 server/index.ts 的內容
+// =================================================================
+
+import express from 'express';
 import session from 'express-session';
 import passport from 'passport';
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import http from 'http';
+import { storage } from './storage'; // 請確認此檔案路徑正確
 
-// Force production mode to avoid Vite development server issues
-process.env.NODE_ENV = 'production';
-
+// -------------------- 1. 基礎設定 --------------------
 const app = express();
+const server = http.createServer(app);
 
-// Ultimate solution: Completely silence TimeoutOverflowWarning at system level
-process.removeAllListeners('warning');
-process.on('warning', (warning) => {
-  if (warning.name !== 'TimeoutOverflowWarning') {
-    console.warn(warning);
-  }
-});
+app.set('trust proxy', 1); // 如果您的應用程式在反向代理後方，這很重要
 
-// Comprehensive error filtering to eliminate proxy connection noise
-const originalConsoleError = console.error;
-const originalStderrWrite = process.stderr.write;
-
-console.error = function(message: any, ...args: any[]) {
-  // Filter out all Vite proxy connection errors
-  const messageStr = String(message);
-  if (messageStr.includes('connect: connection refused') || 
-      messageStr.includes('ECONNREFUSED') ||
-      messageStr.includes('dial tcp 127.0.0.1:5000') ||
-      messageStr.includes('error proxying request') ||
-      messageStr.includes('starting up user application')) {
-    return; // Silently ignore these connection errors
-  }
-  originalConsoleError(message, ...args);
-};
-
-// Also intercept direct stderr writes
-process.stderr.write = function(chunk: any, encoding?: any, callback?: any) {
-  const chunkStr = String(chunk);
-  if (chunkStr.includes('connect: connection refused') || 
-      chunkStr.includes('ECONNREFUSED') ||
-      chunkStr.includes('dial tcp 127.0.0.1:5000') ||
-      chunkStr.includes('error proxying request') ||
-      chunkStr.includes('starting up user application')) {
-    // Silently ignore proxy connection errors
-    if (typeof encoding === 'function') {
-      encoding(); // Call callback if encoding is actually callback
-    } else if (callback) {
-      callback();
-    }
-    return true;
-  }
-  return originalStderrWrite.call(process.stderr, chunk, encoding, callback);
-};
-
-// Process monitoring and graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('收到 SIGTERM 信號，正在優雅關閉...');
-  process.exit(0);
-});
-
-process.on('SIGINT', () => {
-  console.log('收到 SIGINT 信號，正在優雅關閉...');
-  process.exit(0);
-});
-
-process.on('uncaughtException', (error) => {
-  console.error('未捕獲的異常:', error);
+// -------------------- 2. Session 中介軟體設定 --------------------
+if (!process.env.SESSION_SECRET) {
+  console.error("FATAL ERROR: SESSION_SECRET is not defined.");
   process.exit(1);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('未處理的 Promise 拒絕:', reason);
-});
-
-// Memory usage monitoring - optimized for lower overhead
-const logMemoryUsage = () => {
-  const usage = process.memoryUsage();
-  const mb = (bytes: number) => Math.round(bytes / 1024 / 1024 * 100) / 100;
-  
-  // Force garbage collection every time to maintain lower memory
-  if (global.gc) {
-    global.gc();
-  }
-  
-  const newUsage = process.memoryUsage();
-  
-  // Only log if memory usage is still concerning after GC (>150MB RSS)
-  if (newUsage.rss > 150 * 1024 * 1024) {
-    console.log(`記憶體使用 (GC後): RSS ${mb(newUsage.rss)}MB, Heap ${mb(newUsage.heapUsed)}/${mb(newUsage.heapTotal)}MB`);
-  }
-};
-
-// Check memory usage every 2 hours to reduce overhead
-setInterval(logMemoryUsage, 2 * 60 * 60 * 1000);
-
-// Trust proxy for production deployment
-if (process.env.NODE_ENV === 'production') {
-  app.set('trust proxy', 1);
 }
 
-// Debug monitoring - track what's triggering continuous requests
-app.use((req: Request, res: Response, next: NextFunction) => {
-  if (req.path === '/api/auth/user') {
-    const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
-    const userAgent = req.headers['user-agent'] || 'unknown';
-    console.log(`[DEBUG] Auth request: IP=${clientIP}, UA=${userAgent.substring(0, 50)}..., Headers:`, {
-      'x-forwarded-for': req.headers['x-forwarded-for'],
-      'x-replit-user-id': req.headers['x-replit-user-id'],
-      'connection': req.headers['connection'],
-      'accept': req.headers['accept']
-    });
-  }
-  
-  next();
-});
-
-app.use(express.json({ 
-  limit: '10mb',
-  // Custom reviver to handle large integers safely
-  reviver: (key: string, value: any) => {
-    if (typeof value === 'number' && value > 2147483647) {
-      return 2147483647; // Cap large numbers
-    }
-    return value;
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
   }
 }));
-app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
-// Session 和 Passport 設定將在 setupGoogleAuth 中處理
+// -------------------- 3. Passport 中介軟體設定 (必須在 Session 之後) --------------------
+app.use(passport.initialize());
+app.use(passport.session());
 
-// 選擇性緩存控制 - 只對 HTML 頁面禁用緩存，保留 API 回應的正常緩存
-app.use((req, res, next) => {
-  // 只對 HTML 頁面設置 no-cache，讓 API 回應保持可緩存
-  if (req.path === '/' || req.path.endsWith('.html') || req.accepts('html')) {
-    res.set({
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0'
-    });
-  }
-  next();
-});
+// -------------------- 4. Passport 策略 (Strategy) 設定 --------------------
+const getBaseUrl = () => {
+  return process.env.NODE_ENV === 'production'
+    ? 'https://eccal.thinkwithblack.com'
+    : 'http://localhost:5000'; // 開發時請確保端口正確
+};
 
-// Authentication routes are now fully enabled
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID!,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    callbackURL: `${getBaseUrl()}/api/auth/google/callback`,
+    scope: ['profile', 'email', 'https://www.googleapis.com/auth/analytics.readonly'],
+  },
+  async (accessToken, refreshToken, profile, done) => {
+    try {
+      let user = await storage.users.findUnique({ where: { email: profile._json.email! } });
+      if (!user) {
+        user = await storage.users.create({
+          data: {
+            name: profile.displayName,
+            email: profile._json.email!,
+            googleId: profile.id,
+            avatarUrl: profile._json.picture,
+          },
+        });
+      }
+      
+      if (accessToken) {
+        await storage.users.update({
+            where: { id: user.id },
+            data: { accessToken },
+        });
+      }
 
-// 完全停用所有 logging - 讓系統靜默運行
-app.use((req, res, next) => {
-  next();
-});
-
-(async () => {
-  const server = await registerRoutes(app);
-
-  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    // Log error for debugging but don't throw - this was causing service instability
-    console.error(`[ERROR] ${req.method} ${req.path}:`, {
-      status,
-      message,
-      userAgent: req.headers['user-agent']?.substring(0, 50),
-      ip: req.ip
-    });
-
-    // Send error response without throwing - prevents service crashes
-    if (!res.headersSent) {
-      res.status(status).json({ message });
+      console.log('User authenticated and found/created:', user.email);
+      return done(null, user);
+    } catch (error) {
+      console.error('Error in Google Strategy:', error);
+      return done(error, undefined);
     }
-  });
-
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
   }
+));
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen(port, "0.0.0.0", () => {
-    log(`serving on port ${port}`);
-  });
+// -------------------- 5. Passport 序列化與反序列化 --------------------
+passport.serializeUser((user: any, done) => {
+  console.log('Serializing user:', user.id);
+  done(null, user.id); // 只將 user ID 存入 session
+});
 
-  // Proper process signal handling to prevent Replit from thinking service is unstable
-  process.on('SIGTERM', () => {
-    console.log('SIGTERM received, shutting down gracefully');
-    server.close(() => {
-      console.log('Server closed');
-      process.exit(0);
+passport.deserializeUser(async (id: string, done) => {
+  try {
+    const user = await storage.users.findUnique({ where: { id: id } });
+    console.log('Deserializing user:', user ? user.email : 'not found');
+    done(null, user); // 從 session ID 找回完整 user 物件
+  } catch (err) {
+    done(err, null);
+  }
+});
+
+// -------------------- 6. 路由設定 (必須在所有中介軟體之後) --------------------
+// 登入路由
+app.get('/api/auth/google',
+  passport.authenticate('google')
+);
+
+// Google 回呼路由
+app.get('/api/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  (req, res) => {
+    console.log('Callback successful, redirecting to dashboard.');
+    res.redirect('/dashboard');
+  }
+);
+
+// 登出路由
+app.get('/api/auth/logout', (req, res, next) => {
+    req.logout((err) => {
+        if (err) { return next(err); }
+        res.redirect('/');
     });
-  });
+});
 
-  process.on('SIGINT', () => {
-    console.log('SIGINT received, shutting down gracefully');
-    server.close(() => {
-      console.log('Server closed');
-      process.exit(0);
-    });
-  });
-})();
+// 檢查使用者狀態的受保護路由
+app.get('/api/auth/user', (req, res) => {
+  if (req.isAuthenticated()) {
+    console.log('Auth status check: User is authenticated.', (req.user as any).email);
+    res.json(req.user);
+  } else {
+    console.log('Auth status check: User is NOT authenticated.');
+    res.status(401).json({ error: 'Not authenticated' });
+  }
+});
+
+
+// -------------------- 7. 伺服器啟動 --------------------
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
