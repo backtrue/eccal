@@ -2,6 +2,9 @@ import { Express } from 'express';
 import { requireAuth } from './googleAuth';
 import { storage } from './storage';
 import { metaAccountService } from './metaAccountService';
+import { db } from './db';
+import { adDiagnosisReports } from '@shared/schema';
+import { eq } from 'drizzle-orm';
 
 export function setupDiagnosisRoutes(app: Express) {
   
@@ -232,7 +235,6 @@ export function setupDiagnosisRoutes(app: Express) {
       res.json({
         connected: !!(user?.metaAccessToken),
         adAccountId: user?.metaAdAccountId,
-        adAccountName: user?.metaAdAccountName,
         needsAccountSelection: !!(user?.metaAccessToken && !user?.metaAdAccountId)
       });
     } catch (error) {
@@ -511,65 +513,37 @@ async function updateAccountDiagnosisReport(
   aiReport: string,
   healthScore: number
 ) {
-  const pg = await import('pg');
-  const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
-  
-  await pool.query(`
-    UPDATE ad_diagnosis_reports 
-    SET 
-      campaign_name = $1,
-      target_daily_traffic = $2,
-      target_daily_budget = $3,
-      target_cpa = $4,
-      target_roas = $5,
-      actual_daily_traffic = $6,
-      actual_daily_spend = $7,
-      actual_ctr = $8,
-      actual_cpa = $9,
-      actual_roas = $10,
-      overall_health_score = $11,
-      traffic_achievement_rate = $12,
-      budget_utilization_rate = $13,
-      ai_diagnosis_report = $14,
-      diagnosis_status = 'completed',
-      updated_at = NOW()
-    WHERE id = $15
-  `, [
-    accountData.accountName,
-    Math.round(diagnosisData.targetDailyTraffic),
-    Math.round(diagnosisData.targetDailyBudget).toString(),
-    Math.round(diagnosisData.targetCpa).toString(),
-    diagnosisData.targetRoas.toFixed(2),
-    Math.round(diagnosisData.actualDailyTraffic),
-    Math.round(diagnosisData.actualDailySpend).toString(),
-    diagnosisData.actualCtr.toFixed(2),
-    Math.round(diagnosisData.actualCpa).toString(),
-    diagnosisData.actualRoas.toFixed(2),
-    healthScore,
-    diagnosisData.trafficAchievementRate.toFixed(1),
-    diagnosisData.budgetUtilizationRate.toFixed(1),
-    aiReport,
-    reportId
-  ]);
-  
-  pool.end();
+  await db.update(adDiagnosisReports)
+    .set({
+      campaignName: accountData.accountName,
+      targetDailyTraffic: Math.round(diagnosisData.targetDailyTraffic),
+      targetDailyBudget: Math.round(diagnosisData.targetDailyBudget).toString(),
+      targetCpa: Math.round(diagnosisData.targetCpa).toString(),
+      targetRoas: diagnosisData.targetRoas.toFixed(2),
+      actualDailyTraffic: Math.round(diagnosisData.actualDailyTraffic),
+      actualDailySpend: Math.round(diagnosisData.actualDailySpend).toString(),
+      actualCtr: diagnosisData.actualCtr.toFixed(2),
+      actualCpa: Math.round(diagnosisData.actualCpa).toString(),
+      actualRoas: diagnosisData.actualRoas.toFixed(2),
+      overallHealthScore: healthScore,
+      trafficAchievementRate: diagnosisData.trafficAchievementRate.toFixed(1),
+      budgetUtilizationRate: diagnosisData.budgetUtilizationRate.toFixed(1),
+      aiDiagnosisReport: aiReport,
+      diagnosisStatus: 'completed',
+      updatedAt: new Date(),
+    })
+    .where(eq(adDiagnosisReports.id, reportId));
 }
 
 // 更新診斷報告狀態
 async function updateDiagnosisReportStatus(reportId: string, status: string, message?: string) {
-  const pg = await import('pg');
-  const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
-  
-  await pool.query(`
-    UPDATE ad_diagnosis_reports 
-    SET 
-      diagnosis_status = $1,
-      ai_diagnosis_report = $2,
-      updated_at = NOW()
-    WHERE id = $3
-  `, [status, message || '', reportId]);
-  
-  pool.end();
+  await db.update(adDiagnosisReports)
+    .set({
+      diagnosisStatus: status,
+      aiDiagnosisReport: message || '',
+      updatedAt: new Date(),
+    })
+    .where(eq(adDiagnosisReports.id, reportId));
 }
 
 // 計算帳戶健康分數
