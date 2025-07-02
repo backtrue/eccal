@@ -2,6 +2,9 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
+// Force production mode to avoid Vite development server issues
+process.env.NODE_ENV = 'production';
+
 const app = express();
 
 // Ultimate solution: Completely silence TimeoutOverflowWarning at system level

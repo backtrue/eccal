@@ -4,50 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>報數據-電商廣告預算計算機</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 40px; background: #f8f9fa; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .status { background: #d1ecf1; border: 1px solid #bee5eb; padding: 15px; border-radius: 4px; margin: 20px 0; }
-        .technical { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 4px; margin: 20px 0; font-size: 14px; }
-        h1 { color: #2c3e50; }
-        h3 { color: #495057; margin-top: 0; }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>報數據-電商廣告預算計算機</h1>
-        <div class="status">
-            <h3>系統架構修復中</h3>
-            <p>我們發現並正在修復一個基礎架構問題，該問題導致生產環境無法正確提供前端應用。</p>
-            <p><strong>問題根源：</strong>前端 AuthProvider 自動發送認證請求，觸發 Replit 監控系統持續檢查。</p>
-            <p><strong>修復狀態：</strong>已禁用自動認證請求，等待重新部署生效。</p>
-        </div>
-        <div class="technical">
-            <h4>技術細節</h4>
-            <ul>
-                <li>Vite 配置輸出：<code>dist/public</code></li>
-                <li>生產服務器期望：<code>server/public</code></li>
-                <li>開發環境代理錯誤：<code>127.0.0.1:5000</code></li>
-                <li>監控請求來源：<code>35.232.111.100</code></li>
-            </ul>
-            <p>修復完成後，高頻監控請求將停止，生產環境將正常運行。</p>
+    <div id="root">
+        <div style="padding: 2rem; text-align: center; font-family: system-ui, sans-serif;">
+            <h1>系統維護中</h1>
+            <p>正在為您準備最佳的服務體驗...</p>
+            <script>
+                // Auto refresh every 5 seconds during maintenance
+                setTimeout(() => {
+                    window.location.reload();
+                }, 5000);
+            </script>
         </div>
     </div>
-    <script>
-        // Prevent any automatic auth requests in this fallback page
-        console.log('Production fallback page - architecture fix in progress');
-        
-        // Override any potential auth requests
-        if (window.fetch) {
-            const originalFetch = window.fetch;
-            window.fetch = function(url, options) {
-                if (typeof url === 'string' && url.includes('/api/auth/user')) {
-                    console.log('Blocked auth request during maintenance:', url);
-                    return Promise.reject(new Error('Auth requests disabled during maintenance'));
-                }
-                return originalFetch.apply(this, arguments);
-            };
-        }
-    </script>
 </body>
 </html>
