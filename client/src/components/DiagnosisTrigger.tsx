@@ -24,7 +24,15 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
   const [facebookStatus, setFacebookStatus] = useState<{
     connected: boolean;
     adAccountId?: string;
+    needsAccountSelection?: boolean;
   }>({ connected: false });
+  const [availableAccounts, setAvailableAccounts] = useState<Array<{
+    id: string;
+    name: string;
+    status: string;
+    currency: string;
+  }>>([]);
+  const [showAccountSelector, setShowAccountSelector] = useState(false);
   const [systemStatus, setSystemStatus] = useState<{
     api: boolean;
     auth: boolean;
@@ -44,7 +52,7 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
         const configData = await configResponse.json();
         
         // 檢查用戶 Facebook 連接狀態
-        let fbStatus = { connected: false };
+        let fbStatus = { connected: false, adAccountId: undefined, needsAccountSelection: false };
         if (isAuthenticated) {
           try {
             const fbResponse = await apiRequest('GET', '/api/diagnosis/facebook-status');
@@ -55,14 +63,29 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
         }
         
         setFacebookStatus(fbStatus);
+        
+        // 如果需要選擇廣告帳戶，獲取可用帳戶列表
+        if (fbStatus?.needsAccountSelection) {
+          try {
+            const accountsResponse = await apiRequest('GET', '/api/diagnosis/facebook-accounts');
+            const accountsData = await accountsResponse.json();
+            setAvailableAccounts(accountsData.accounts || []);
+            setShowAccountSelector(true);
+          } catch (error) {
+            console.log('Failed to fetch Facebook accounts:', error);
+          }
+        }
+        
         setSystemStatus({
           api: configData.success,
           auth: isAuthenticated,
           message: configData.success 
             ? isAuthenticated 
-              ? fbStatus.connected
+              ? fbStatus.connected && fbStatus?.adAccountId
                 ? "所有系統正常，可以開始診斷"
-                : "需要連接 Facebook 廣告帳戶"
+                : fbStatus?.needsAccountSelection
+                  ? "請選擇要分析的廣告帳戶"
+                  : "需要連接 Facebook 廣告帳戶"
               : "需要登入 Google 帳戶"
             : "Facebook OAuth 配置異常"
         });
@@ -77,6 +100,46 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
 
     checkStatus();
   }, [isAuthenticated]);
+
+  // 處理廣告帳戶選擇
+  const handleSelectAccount = async (accountId: string) => {
+    try {
+      const response = await apiRequest('POST', '/api/diagnosis/select-facebook-account', {
+        adAccountId: accountId
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setFacebookStatus(prev => ({
+          ...prev,
+          adAccountId: accountId,
+          needsAccountSelection: false
+        }));
+        setShowAccountSelector(false);
+        
+        toast({
+          title: "帳戶設定成功",
+          description: `已選擇廣告帳戶 ${accountId}`,
+        });
+        
+        // 重新檢查狀態
+        setSystemStatus(prev => ({
+          ...prev,
+          message: "所有系統正常，可以開始診斷"
+        }));
+      } else {
+        throw new Error(data.message || '設定廣告帳戶失敗');
+      }
+    } catch (error: any) {
+      console.error('設定廣告帳戶錯誤:', error);
+      toast({
+        title: "設定失敗",
+        description: error.message || "設定廣告帳戶時發生錯誤",
+        variant: "destructive",
+      });
+    }
+  };
 
   // 處理 Facebook OAuth 連接
   const handleConnectFacebook = async () => {

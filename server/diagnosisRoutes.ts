@@ -622,10 +622,7 @@ export function setupFacebookDataDeletion(app: Express) {
         // 清除用戶的 Facebook 認證資訊
         // 注意：我們不刪除用戶帳戶，只清除 Facebook 相關數據
         try {
-          await storage.updateUser(userId, {
-            metaAccessToken: null,
-            metaAdAccountId: null
-          });
+          await storage.updateMetaTokens(userId, '', null);
         } catch (updateError) {
           console.log('User update failed, user may not exist:', userId);
         }
