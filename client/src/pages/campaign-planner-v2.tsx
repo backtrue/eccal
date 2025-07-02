@@ -534,6 +534,15 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
             </Card>
 
             {/* Facebook 廣告健診觸發器 */}
+            <Card className="border-blue-200 bg-blue-50/50">
+              <CardHeader>
+                <CardTitle className="text-blue-800">🔍 Facebook 廣告成效診斷</CardTitle>
+                <CardDescription className="text-blue-600">
+                  診斷狀態：已啟用 | API 配置：正常 | 等待使用者操作
+                </CardDescription>
+              </CardHeader>
+            </Card>
+            
             <DiagnosisTrigger 
               calculatorResults={{
                 targetRevenue: form.getValues('targetRevenue') || 0,
