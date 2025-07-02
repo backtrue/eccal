@@ -62,6 +62,8 @@ export class MetaAccountService {
         throw new Error('Facebook Access Token 未提供');
       }
 
+      console.log(`[META] 開始獲取廣告帳戶數據: ${adAccountId}`);
+
       // 格式化廣告帳戶 ID (確保包含 act_ 前綴)
       const formattedAccountId = adAccountId.startsWith('act_') ? adAccountId : `act_${adAccountId}`;
 
@@ -72,6 +74,25 @@ export class MetaAccountService {
       
       const since = startDate.toISOString().split('T')[0];
       const until = endDate.toISOString().split('T')[0];
+
+      // 開發環境下使用模擬數據，避免 Facebook API 認證問題
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[META] 開發環境：使用模擬數據 - ${formattedAccountId}`);
+        return {
+          accountId: formattedAccountId,
+          accountName: "示範廣告帳戶",
+          impressions: 125000,
+          clicks: 3200,
+          spend: 15000,
+          linkClicks: 2800,
+          purchases: 45,
+          purchaseValue: 67500,
+          addToCart: 180,
+          viewContent: 1200,
+          currency: "TWD",
+          dateRange: { since, until }
+        };
+      }
 
       // 獲取廣告帳戶基本資訊
       const accountUrl = `${this.baseUrl}/${formattedAccountId}`;

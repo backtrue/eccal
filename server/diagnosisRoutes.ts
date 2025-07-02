@@ -465,6 +465,51 @@ export function setupDiagnosisRoutes(app: Express) {
         return res.status(404).json({ error: '報告不存在' });
       }
 
+      // 檢查是否卡在處理狀態超過 10 分鐘，如果是則重新觸發處理
+      if (report.diagnosisStatus === 'processing' && report.createdAt) {
+        const createdAt = new Date(report.createdAt);
+        const now = new Date();
+        const timeDiff = now.getTime() - createdAt.getTime();
+        const tenMinutes = 10 * 60 * 1000; // 10 分鐘
+        
+        if (timeDiff > tenMinutes) {
+          console.log(`[DIAGNOSIS] 報告 ${reportId} 處理超時，重新觸發處理...`);
+          
+          // 獲取用戶資料以重新處理
+          const user = await storage.getUser(userId);
+          if (user?.metaAccessToken && user?.metaAdAccountId) {
+            // 從報告中推斷目標數據（簡化處理）
+            const targetData = {
+              targetRevenue: 100000, // 預設值
+              targetAov: 1000,
+              targetConversionRate: 0.02,
+              cpc: 5
+            };
+            
+            // 重新觸發背景處理
+            Promise.race([
+              processAccountDiagnosis(
+                reportId,
+                userId,
+                user.metaAccessToken,
+                user.metaAdAccountId,
+                targetData
+              ),
+              new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('診斷處理超時 (5分鐘)')), 5 * 60 * 1000)
+              )
+            ]).catch(async (error) => {
+              console.error('重新處理診斷錯誤:', error);
+              await updateDiagnosisReportStatus(
+                reportId, 
+                'failed', 
+                `重新處理失敗: ${error.message}`
+              );
+            });
+          }
+        }
+      }
+
       res.json(report);
     } catch (error) {
       console.error('獲取診斷報告錯誤:', error);
@@ -481,6 +526,69 @@ export function setupDiagnosisRoutes(app: Express) {
     } catch (error) {
       console.error('獲取診斷報告列表錯誤:', error);
       res.status(500).json({ error: '獲取報告列表失敗' });
+    }
+  });
+
+  // 手動重新處理卡住的診斷報告
+  app.post('/api/diagnosis/retry/:reportId', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      const { reportId } = req.params;
+
+      console.log(`[DIAGNOSIS] 手動重新處理診斷報告: ${reportId}`);
+
+      // 檢查報告是否存在
+      const report = await storage.getAdDiagnosisReport(reportId, userId);
+      if (!report) {
+        return res.status(404).json({ error: '報告不存在' });
+      }
+
+      // 獲取用戶 Facebook 認證資訊
+      const user = await storage.getUser(userId);
+      if (!user?.metaAccessToken || !user?.metaAdAccountId) {
+        return res.status(400).json({ error: 'Facebook 認證資訊不完整' });
+      }
+
+      // 使用預設目標數據重新處理
+      const targetData = {
+        targetRevenue: 100000,
+        targetAov: 1000,
+        targetConversionRate: 0.02,
+        cpc: 5
+      };
+
+      // 重置報告狀態
+      await updateDiagnosisReportStatus(reportId, 'processing', '重新處理中...');
+
+      // 觸發背景處理
+      Promise.race([
+        processAccountDiagnosis(
+          reportId,
+          userId,
+          user.metaAccessToken,
+          user.metaAdAccountId,
+          targetData
+        ),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('診斷處理超時 (5分鐘)')), 5 * 60 * 1000)
+        )
+      ]).catch(async (error) => {
+        console.error('重新處理診斷錯誤:', error);
+        await updateDiagnosisReportStatus(
+          reportId, 
+          'failed', 
+          `重新處理失敗: ${error.message}`
+        );
+      });
+
+      res.json({
+        success: true,
+        message: '診斷報告重新處理已啟動'
+      });
+
+    } catch (error) {
+      console.error('手動重新處理診斷錯誤:', error);
+      res.status(500).json({ error: '重新處理失敗' });
     }
   });
 
