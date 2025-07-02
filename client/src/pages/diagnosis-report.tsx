@@ -76,7 +76,7 @@ export default function DiagnosisReportPage() {
   if (error || !report) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <NavigationBar />
+        <NavigationBar locale={locale} />
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             <Card className="border-red-200">
@@ -104,7 +104,7 @@ export default function DiagnosisReportPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <NavigationBar />
+      <NavigationBar locale={locale} />
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* 頁面標題 */}
@@ -122,7 +122,7 @@ export default function DiagnosisReportPage() {
           </div>
 
           {/* 診斷報告內容 */}
-          <DiagnosisReport report={report} />
+          <DiagnosisReport report={report as any} />
         </div>
       </div>
       <Footer />
