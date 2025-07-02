@@ -17,6 +17,9 @@ import {
   savedProjects,
   type SavedProject,
   type InsertSavedProject,
+  adDiagnosisReports,
+  type AdDiagnosisReport,
+  type InsertAdDiagnosisReport,
   // Campaign Planner imports
   campaignPlans,
   type CampaignPlan,
@@ -1485,6 +1488,48 @@ export class DatabaseStorage implements IStorage {
       .from(campaignTemplates)
       .where(eq(campaignTemplates.id, templateId));
     return template;
+  }
+
+  // Ad Diagnosis operations
+  async createAdDiagnosisReport(reportData: InsertAdDiagnosisReport): Promise<AdDiagnosisReport> {
+    const [report] = await db
+      .insert(adDiagnosisReports)
+      .values(reportData)
+      .returning();
+    return report;
+  }
+
+  async getAdDiagnosisReport(reportId: string, userId: string): Promise<AdDiagnosisReport | undefined> {
+    const [report] = await db
+      .select()
+      .from(adDiagnosisReports)
+      .where(and(
+        eq(adDiagnosisReports.id, reportId),
+        eq(adDiagnosisReports.userId, userId)
+      ));
+    return report;
+  }
+
+  async getUserAdDiagnosisReports(userId: string): Promise<AdDiagnosisReport[]> {
+    const reports = await db
+      .select()
+      .from(adDiagnosisReports)
+      .where(eq(adDiagnosisReports.userId, userId))
+      .orderBy(desc(adDiagnosisReports.createdAt));
+    return reports;
+  }
+
+  async updateMetaTokens(userId: string, accessToken: string, adAccountId: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        metaAccessToken: accessToken,
+        metaAdAccountId: adAccountId,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
   }
 }
 
