@@ -1,26 +1,20 @@
 import { Express } from 'express';
 import { requireAuth } from './googleAuth';
 import { storage } from './storage';
-import { metaService } from './metaService';
+import { metaAccountService } from './metaAccountService';
 
 export function setupDiagnosisRoutes(app: Express) {
-  // 檢查 Facebook API 配置
+  // 檢查 Facebook OAuth 配置
   app.get('/api/diagnosis/check-facebook-config', async (req, res) => {
     try {
       const hasAppId = !!process.env.FACEBOOK_APP_ID;
       const hasAppSecret = !!process.env.FACEBOOK_APP_SECRET;
-      const hasAccessToken = !!process.env.FACEBOOK_ACCESS_TOKEN;
-      
-      if (!hasAppId || !hasAppSecret || !hasAccessToken) {
-        return res.json({
-          success: false,
-          message: 'Facebook API 配置不完整，請檢查環境變數設定'
-        });
-      }
       
       res.json({
-        success: true,
-        message: 'Facebook API 配置正常'
+        success: hasAppId && hasAppSecret,
+        message: hasAppId && hasAppSecret 
+          ? 'Facebook OAuth 配置正常' 
+          : 'Facebook OAuth 配置不完整'
       });
     } catch (error) {
       console.error('Facebook 配置檢查錯誤:', error);
@@ -31,12 +25,110 @@ export function setupDiagnosisRoutes(app: Express) {
     }
   });
 
-  // 觸發廣告健診
-  app.post('/api/diagnosis/analyze', requireAuth, async (req: any, res) => {
+  // 獲取 Facebook OAuth 授權 URL
+  app.get('/api/diagnosis/facebook-auth-url', requireAuth, (req: any, res) => {
+    try {
+      const appId = process.env.FACEBOOK_APP_ID;
+      const redirectUri = `${req.protocol}://${req.get('host')}/api/diagnosis/facebook-callback`;
+      const userId = req.user.claims?.sub || req.user.id;
+      
+      const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?` +
+        `client_id=${appId}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `scope=ads_read,ads_management&` +
+        `response_type=code&` +
+        `state=${userId}`;
+      
+      res.json({ authUrl });
+    } catch (error) {
+      console.error('生成 Facebook 授權 URL 錯誤:', error);
+      res.status(500).json({
+        success: false,
+        message: '生成授權 URL 失敗'
+      });
+    }
+  });
+
+  // Facebook OAuth 回調處理
+  app.get('/api/diagnosis/facebook-callback', async (req, res) => {
+    try {
+      const { code, state: userId } = req.query;
+      
+      if (!code) {
+        return res.redirect('/calculator?error=facebook_auth_denied');
+      }
+
+      // 交換 access token
+      const tokenUrl = 'https://graph.facebook.com/v19.0/oauth/access_token';
+      const redirectUri = `${req.protocol}://${req.get('host')}/api/diagnosis/facebook-callback`;
+      
+      const tokenResponse = await fetch(tokenUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          client_id: process.env.FACEBOOK_APP_ID!,
+          client_secret: process.env.FACEBOOK_APP_SECRET!,
+          redirect_uri: redirectUri,
+          code: code as string
+        })
+      });
+
+      const tokenData = await tokenResponse.json();
+      
+      if (tokenData.access_token) {
+        // 獲取廣告帳戶資訊
+        const accountsResponse = await fetch(
+          `https://graph.facebook.com/v19.0/me/adaccounts?access_token=${tokenData.access_token}`
+        );
+        const accountsData = await accountsResponse.json();
+        
+        // 存儲用戶的 Facebook 認證資訊
+        if (userId) {
+          await storage.updateMetaTokens(
+            userId as string, 
+            tokenData.access_token,
+            accountsData.data?.[0]?.id || null
+          );
+        }
+        
+        res.redirect('/calculator?facebook_connected=true');
+      } else {
+        console.error('Facebook token exchange failed:', tokenData);
+        res.redirect('/calculator?error=token_exchange_failed');
+      }
+      
+    } catch (error) {
+      console.error('Facebook OAuth callback error:', error);
+      res.redirect('/calculator?error=oauth_callback_failed');
+    }
+  });
+
+  // 檢查用戶 Facebook 連接狀態
+  app.get('/api/diagnosis/facebook-status', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      const user = await storage.getUser(userId);
+      
+      res.json({
+        connected: !!(user?.metaAccessToken),
+        adAccountId: user?.metaAdAccountId
+      });
+    } catch (error) {
+      console.error('檢查 Facebook 連接狀態錯誤:', error);
+      res.status(500).json({
+        connected: false,
+        error: '檢查連接狀態失敗'
+      });
+    }
+  });
+
+  // 觸發廣告帳戶健診
+  app.post('/api/diagnosis/analyze-account', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.claims?.sub || req.user.id;
       const {
-        campaignId,
         targetRevenue,
         targetAov,
         targetConversionRate,
@@ -44,27 +136,27 @@ export function setupDiagnosisRoutes(app: Express) {
       } = req.body;
 
       // 驗證必要參數
-      if (!campaignId || !targetRevenue || !targetAov || !targetConversionRate || !cpc) {
+      if (!targetRevenue || !targetAov || !targetConversionRate || !cpc) {
         return res.status(400).json({ 
           error: 'missing_parameters',
           message: '缺少必要參數'
         });
       }
 
-      // 使用系統配置的 Facebook Access Token
-      const accessToken = process.env.FACEBOOK_ACCESS_TOKEN;
-      if (!accessToken) {
+      // 獲取用戶的 Facebook 認證資訊
+      const user = await storage.getUser(userId);
+      if (!user?.metaAccessToken || !user?.metaAdAccountId) {
         return res.status(400).json({
-          error: 'facebook_config_missing',
-          message: 'Facebook API 配置不完整'
+          error: 'facebook_not_connected',
+          message: '請先連接 Facebook 廣告帳戶'
         });
       }
 
-      // 更新報告狀態為處理中
+      // 建立處理中的報告
       const processingReport = await storage.createAdDiagnosisReport({
         userId,
-        campaignId,
-        campaignName: '處理中...',
+        campaignId: user.metaAdAccountId,
+        campaignName: '正在分析帳戶...',
         targetDailyTraffic: 0,
         targetDailyBudget: '0',
         targetCpa: '0',
@@ -81,12 +173,12 @@ export function setupDiagnosisRoutes(app: Express) {
         diagnosisStatus: 'processing'
       });
 
-      // 背景處理診斷
-      processDiagnosis(
+      // 背景處理帳戶診斷
+      processAccountDiagnosis(
         processingReport.id,
         userId,
-        campaignId,
-        accessToken,
+        user.metaAccessToken,
+        user.metaAdAccountId,
         {
           targetRevenue,
           targetAov,
@@ -94,18 +186,18 @@ export function setupDiagnosisRoutes(app: Express) {
           cpc
         }
       ).catch(error => {
-        console.error('背景診斷處理錯誤:', error);
+        console.error('背景帳戶診斷處理錯誤:', error);
       });
 
       res.json({
         success: true,
         reportId: processingReport.id,
-        message: '診斷已開始，請稍後查看結果'
+        message: '帳戶診斷已開始，請稍後查看結果'
       });
 
     } catch (error) {
-      console.error('廣告診斷錯誤:', error);
-      res.status(500).json({ error: '診斷處理失敗' });
+      console.error('廣告帳戶診斷錯誤:', error);
+      res.status(500).json({ error: '帳戶診斷處理失敗' });
     }
   });
 
@@ -161,12 +253,12 @@ export function setupDiagnosisRoutes(app: Express) {
   });
 }
 
-// 背景處理診斷邏輯
-async function processDiagnosis(
+// 背景處理帳戶診斷邏輯
+async function processAccountDiagnosis(
   reportId: string,
   userId: string,
-  campaignId: string,
   accessToken: string,
+  adAccountId: string,
   targetData: {
     targetRevenue: number;
     targetAov: number;
@@ -175,25 +267,25 @@ async function processDiagnosis(
   }
 ) {
   try {
-    // 1. 獲取 Meta 廣告數據
-    const metaData = await metaService.getCampaignData(accessToken, campaignId);
+    // 1. 獲取 Meta 廣告帳戶數據
+    const accountData = await metaAccountService.getAdAccountData(accessToken, adAccountId);
     
     // 2. 計算診斷數據
-    const diagnosisData = metaService.calculateDiagnosisData(targetData, metaData);
+    const diagnosisData = metaAccountService.calculateAccountDiagnosisData(targetData, accountData);
     
     // 3. 生成 AI 診斷報告
-    const aiReport = await metaService.generateDiagnosisReport(metaData.campaignName, diagnosisData);
+    const aiReport = await metaAccountService.generateAccountDiagnosisReport(accountData.accountName, diagnosisData);
     
     // 4. 計算健康分數
-    const healthScore = calculateHealthScore(diagnosisData);
+    const healthScore = calculateAccountHealthScore(diagnosisData);
     
     // 5. 更新報告
-    await updateDiagnosisReport(reportId, metaData, diagnosisData, aiReport, healthScore);
+    await updateAccountDiagnosisReport(reportId, accountData, diagnosisData, aiReport, healthScore);
     
   } catch (error) {
-    console.error('處理診斷時發生錯誤:', error);
+    console.error('處理帳戶診斷時發生錯誤:', error);
     // 更新報告狀態為失敗
-    await updateDiagnosisReportStatus(reportId, 'failed', '診斷處理失敗');
+    await updateDiagnosisReportStatus(reportId, 'failed', `帳戶診斷處理失敗: ${error.message}`);
   }
 }
 

@@ -56,9 +56,9 @@ export class MetaService {
   }
 
   /**
-   * 獲取 Meta 廣告數據 (使用真實 Facebook Marketing API)
+   * 獲取 Meta 廣告帳戶數據 (帳戶級別分析)
    */
-  async getCampaignData(accessToken: string, campaignId: string): Promise<MetaCampaignData> {
+  async getAdAccountData(accessToken: string, adAccountId: string): Promise<MetaCampaignData> {
     try {
       // 使用環境變數中的 access token 如果沒有提供的話
       const token = accessToken || process.env.FACEBOOK_ACCESS_TOKEN;
