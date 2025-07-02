@@ -275,7 +275,7 @@ export class MetaService {
 - **流量目標達成率**：${data.trafficAchievementRate.toFixed(1)}%
 - **預算使用率**：${data.budgetUtilizationRate.toFixed(1)}%
 - **電商轉換瓶頸**：
-  - 加入購物車率 (ATC/VC)：${data.addToCartRate.toFixed(1)}%
+  - 加入購物車率 (ATC/VC)：${data.addToCartRate.toFixed(1)}% ${this.getAtcRating(data.addToCartRate)}
   - 購物車結帳率 (PUR/ATC)：${data.checkoutRate.toFixed(1)}%
 - **素材吸引力 (CTR) 評級**：${this.getCtrRating(data.actualCtr)}
 - **整體轉換率 (PUR/VC)**：${data.overallConversionRate.toFixed(2)}%
@@ -297,6 +297,11 @@ export class MetaService {
 ### 三、進階策略與機會點
 指出目前數據中表現良好的部分，並提供放大成效的進階策略。
 
+# 重要參考基準
+- 加入購物車率 (ATC/VC) 建議值：10-15%，優秀表現：15-20%
+- 購物車結帳率 (PUR/ATC) 建議值：20-30%，優秀表現：30-40%
+- 整體轉換率 (PUR/VC) 建議值：1-3%，優秀表現：3-5%
+
 請確保你的回覆是 Markdown 格式，並且語氣專業、自信且具有說服力。使用繁體中文回答。
 `;
   }
@@ -307,29 +312,35 @@ export class MetaService {
   private calculateHealthScore(data: DiagnosisData): number {
     let score = 0;
     
-    // 流量達成率 (25分)
-    if (data.trafficAchievementRate >= 80) score += 25;
-    else if (data.trafficAchievementRate >= 60) score += 20;
-    else if (data.trafficAchievementRate >= 40) score += 15;
-    else score += 5;
+    // 流量達成率 (20分)
+    if (data.trafficAchievementRate >= 80) score += 20;
+    else if (data.trafficAchievementRate >= 60) score += 16;
+    else if (data.trafficAchievementRate >= 40) score += 12;
+    else score += 4;
     
-    // CTR 表現 (25分)
-    if (data.actualCtr >= 3) score += 25;
-    else if (data.actualCtr >= 2) score += 20;
-    else if (data.actualCtr >= 1) score += 15;
-    else score += 5;
+    // CTR 表現 (20分)
+    if (data.actualCtr >= 3) score += 20;
+    else if (data.actualCtr >= 2) score += 16;
+    else if (data.actualCtr >= 1) score += 12;
+    else score += 4;
     
-    // ROAS 表現 (25分)
-    if (data.actualRoas >= data.targetRoas) score += 25;
-    else if (data.actualRoas >= data.targetRoas * 0.8) score += 20;
-    else if (data.actualRoas >= data.targetRoas * 0.6) score += 15;
-    else score += 5;
+    // ATC 率表現 (20分) - 新增獨立評分
+    if (data.addToCartRate >= 15) score += 20;
+    else if (data.addToCartRate >= 10) score += 16;
+    else if (data.addToCartRate >= 5) score += 12;
+    else score += 4;
     
-    // 轉換率表現 (25分)
-    if (data.overallConversionRate >= data.targetConversionRate) score += 25;
-    else if (data.overallConversionRate >= data.targetConversionRate * 0.8) score += 20;
-    else if (data.overallConversionRate >= data.targetConversionRate * 0.6) score += 15;
-    else score += 5;
+    // ROAS 表現 (20分)
+    if (data.actualRoas >= data.targetRoas) score += 20;
+    else if (data.actualRoas >= data.targetRoas * 0.8) score += 16;
+    else if (data.actualRoas >= data.targetRoas * 0.6) score += 12;
+    else score += 4;
+    
+    // 整體轉換率表現 (20分)
+    if (data.overallConversionRate >= data.targetConversionRate) score += 20;
+    else if (data.overallConversionRate >= data.targetConversionRate * 0.8) score += 16;
+    else if (data.overallConversionRate >= data.targetConversionRate * 0.6) score += 12;
+    else score += 4;
     
     return Math.min(score, 100);
   }
@@ -342,6 +353,16 @@ export class MetaService {
     if (ctr >= 2) return '正常 (2-3%)';
     if (ctr >= 1) return '注意 (1-2%)';
     return '危險 (低於 1%)';
+  }
+
+  /**
+   * 獲取 ATC 率評級
+   */
+  private getAtcRating(atcRate: number): string {
+    if (atcRate >= 15) return '(優秀 ≥15%)';
+    if (atcRate >= 10) return '(健康 10-15%)';
+    if (atcRate >= 5) return '(注意 5-10%)';
+    return '(危險 <5%)';
   }
 }
 
