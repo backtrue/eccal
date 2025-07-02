@@ -112,16 +112,21 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
       const data = await response.json();
       
       if (data.success) {
+        // 從帳戶列表中找到選中帳戶的名稱
+        const selectedAccount = availableAccounts.find(account => account.id === accountId);
+        const accountName = selectedAccount?.name || accountId;
+        
         setFacebookStatus(prev => ({
           ...prev,
           adAccountId: accountId,
+          adAccountName: accountName,
           needsAccountSelection: false
         }));
         setShowAccountSelector(false);
         
         toast({
-          title: "帳戶設定成功",
-          description: `已選擇廣告帳戶 ${accountId}`,
+          title: "帳戶切換成功",
+          description: `已切換到廣告帳戶: ${accountName}`,
         });
         
         // 重新檢查狀態
@@ -135,8 +140,8 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
     } catch (error: any) {
       console.error('設定廣告帳戶錯誤:', error);
       toast({
-        title: "設定失敗",
-        description: error.message || "設定廣告帳戶時發生錯誤",
+        title: "切換失敗",
+        description: error.message || "切換廣告帳戶時發生錯誤",
         variant: "destructive",
       });
     }
@@ -357,6 +362,14 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
                   </div>
                 ))}
               </div>
+              
+              <Button
+                variant="outline"
+                onClick={() => setShowAccountSelector(false)}
+                className="w-full"
+              >
+                取消切換
+              </Button>
             </div>
           ) : (
             <div className="space-y-4">
@@ -380,14 +393,26 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      setFacebookStatus({
-                        connected: false,
-                        adAccountId: '',
-                        adAccountName: '',
-                        needsAccountSelection: false
-                      });
-                      setShowAccountSelector(false);
+                    onClick={async () => {
+                      try {
+                        // 獲取可用的廣告帳戶列表
+                        const accountsResponse = await apiRequest('GET', '/api/diagnosis/facebook-accounts');
+                        const accountsData = await accountsResponse.json();
+                        setAvailableAccounts(accountsData.accounts || []);
+                        setShowAccountSelector(true);
+                        
+                        toast({
+                          title: "選擇廣告帳戶",
+                          description: "請從下方選擇要切換的廣告帳戶",
+                        });
+                      } catch (error: any) {
+                        console.error('獲取帳戶列表錯誤:', error);
+                        toast({
+                          title: "切換失敗",
+                          description: "無法獲取廣告帳戶列表",
+                          variant: "destructive",
+                        });
+                      }
                     }}
                     className="text-xs"
                   >
