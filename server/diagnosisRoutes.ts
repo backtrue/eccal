@@ -122,8 +122,23 @@ export function setupDiagnosisRoutes(app: Express) {
   app.get('/api/diagnosis/facebook-auth-url', requireAuth, (req: any, res) => {
     try {
       const appId = process.env.FACEBOOK_APP_ID;
+      
+      if (!appId) {
+        console.error('Facebook App ID not found in environment variables');
+        return res.status(500).json({
+          success: false,
+          message: 'Facebook App ID 未設定'
+        });
+      }
+      
       const redirectUri = `${req.protocol}://${req.get('host')}/api/diagnosis/facebook-callback`;
       const userId = req.user.claims?.sub || req.user.id;
+      
+      console.log('生成 Facebook OAuth URL:', {
+        appId: appId.substring(0, 5) + '***',
+        redirectUri,
+        userId: userId?.substring(0, 8) + '***'
+      });
       
       const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?` +
         `client_id=${appId}&` +

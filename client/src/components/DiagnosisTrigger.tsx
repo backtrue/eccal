@@ -92,7 +92,15 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
     setIsConnecting(true);
     try {
       const response = await apiRequest('GET', '/api/diagnosis/facebook-auth-url');
+      console.log('Facebook OAuth response:', response);
+      
       const { authUrl } = response as any;
+      
+      if (!authUrl) {
+        throw new Error('無法獲得 Facebook 授權 URL');
+      }
+      
+      console.log('跳轉到 Facebook OAuth:', authUrl.substring(0, 100) + '...');
       
       // 跳轉到 Facebook OAuth 授權頁面
       window.location.href = authUrl;
