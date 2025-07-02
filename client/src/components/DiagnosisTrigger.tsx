@@ -48,7 +48,7 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
         if (isAuthenticated) {
           try {
             const fbResponse = await apiRequest('GET', '/api/diagnosis/facebook-status');
-            fbStatus = fbResponse as any;
+            fbStatus = await fbResponse.json();
           } catch (error) {
             console.log('Facebook status check failed:', error);
           }
@@ -94,7 +94,11 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
       const response = await apiRequest('GET', '/api/diagnosis/facebook-auth-url');
       console.log('Facebook OAuth response:', response);
       
-      const { authUrl } = response as any;
+      // 解析 JSON 回應
+      const data = await response.json();
+      console.log('Facebook OAuth data:', data);
+      
+      const { authUrl } = data;
       
       if (!authUrl) {
         throw new Error('無法獲得 Facebook 授權 URL');
@@ -127,6 +131,8 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
         cpc: calculatorResults.cpc
       });
 
+      const data = await response.json();
+
       toast({
         title: "帳戶診斷已開始！",
         description: "AI 正在分析您的廣告帳戶，即將跳轉到報告頁面",
@@ -134,7 +140,7 @@ export default function DiagnosisTrigger({ calculatorResults }: DiagnosisTrigger
 
       // 跳轉到診斷報告頁面
       setTimeout(() => {
-        navigate(`/diagnosis-report/${(response as any).reportId}`);
+        navigate(`/diagnosis-report/${data.reportId}`);
       }, 2000);
 
     } catch (error: any) {
