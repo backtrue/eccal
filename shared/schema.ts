@@ -34,6 +34,9 @@ export const users = pgTable("users", {
   googleAccessToken: varchar("google_access_token"),
   googleRefreshToken: varchar("google_refresh_token"),
   tokenExpiresAt: timestamp("token_expires_at"),
+  // Meta/Facebook Ad Account Integration
+  metaAccessToken: varchar("meta_access_token"),
+  metaAdAccountId: varchar("meta_ad_account_id"),
   membershipLevel: varchar("membership_level", { length: 10 }).default("free").notNull(), // "free" or "pro"
   membershipExpires: timestamp("membership_expires"), // null for free, date for pro
   campaignPlannerUsage: integer("campaign_planner_usage").default(0).notNull(), // Track usage count
@@ -205,6 +208,39 @@ export const savedProjects = pgTable("saved_projects", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Facebook Ad Diagnosis Reports
+export const adDiagnosisReports = pgTable("ad_diagnosis_reports", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  campaignId: varchar("campaign_id").notNull(), // Facebook Campaign ID
+  campaignName: varchar("campaign_name").notNull(),
+  
+  // Target data from calculator
+  targetDailyTraffic: integer("target_daily_traffic").notNull(),
+  targetDailyBudget: decimal("target_daily_budget", { precision: 10, scale: 2 }).notNull(),
+  targetCpa: decimal("target_cpa", { precision: 10, scale: 2 }).notNull(),
+  targetRoas: decimal("target_roas", { precision: 5, scale: 2 }).notNull(),
+  
+  // Actual Facebook ad data
+  actualDailyTraffic: integer("actual_daily_traffic").notNull(),
+  actualDailySpend: decimal("actual_daily_spend", { precision: 10, scale: 2 }).notNull(),
+  actualCtr: decimal("actual_ctr", { precision: 5, scale: 4 }).notNull(), // Click-through rate
+  actualCpa: decimal("actual_cpa", { precision: 10, scale: 2 }).notNull(),
+  actualRoas: decimal("actual_roas", { precision: 5, scale: 2 }).notNull(),
+  
+  // Diagnosis results
+  overallHealthScore: integer("overall_health_score").notNull(), // 0-100
+  trafficAchievementRate: decimal("traffic_achievement_rate", { precision: 5, scale: 2 }).notNull(),
+  budgetUtilizationRate: decimal("budget_utilization_rate", { precision: 5, scale: 2 }).notNull(),
+  
+  // AI generated report
+  aiDiagnosisReport: text("ai_diagnosis_report").notNull(), // Markdown format
+  diagnosisStatus: varchar("diagnosis_status").default("completed").notNull(), // completed, processing, failed
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type InsertUserMetrics = typeof userMetrics.$inferInsert;
@@ -217,6 +253,8 @@ export type UserReferral = typeof userReferrals.$inferSelect;
 export type InsertUserReferral = typeof userReferrals.$inferInsert;
 export type SavedProject = typeof savedProjects.$inferSelect;
 export type InsertSavedProject = typeof savedProjects.$inferInsert;
+export type AdDiagnosisReport = typeof adDiagnosisReports.$inferSelect;
+export type InsertAdDiagnosisReport = typeof adDiagnosisReports.$inferInsert;
 
 // Campaign Planner Types
 export type CampaignPlan = typeof campaignPlans.$inferSelect;

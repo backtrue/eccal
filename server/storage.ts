@@ -105,6 +105,12 @@ export interface IStorage {
   incrementCampaignPlannerUsage(userId: string): Promise<User>;
   getCampaignPlannerUsage(userId: string): Promise<number>;
   
+  // Ad Diagnosis operations
+  createAdDiagnosisReport(reportData: InsertAdDiagnosisReport): Promise<AdDiagnosisReport>;
+  getAdDiagnosisReport(reportId: string, userId: string): Promise<AdDiagnosisReport | undefined>;
+  getUserAdDiagnosisReports(userId: string): Promise<AdDiagnosisReport[]>;
+  updateMetaTokens(userId: string, accessToken: string, adAccountId: string): Promise<User>;
+  
   // New Campaign Planner operations
   createCampaignPlan(planData: InsertCampaignPlan): Promise<CampaignPlan>;
   getCampaignPlan(campaignId: string, userId: string): Promise<CampaignPlan | undefined>;
