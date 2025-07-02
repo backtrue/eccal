@@ -21,6 +21,7 @@ import Dashboard from "./pages/dashboard";
 import BrevoSync from "./pages/brevo-sync";
 import ProjectDetail from "./pages/project-detail";
 import AdminDashboard from "./pages/admin-dashboard-simple";
+import DiagnosisReport from "./pages/diagnosis-report";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 
 // Error Boundary Component
@@ -117,6 +118,7 @@ function Router() {
       <Route path="/campaign-planner" component={() => <CampaignPlannerV2 locale={locale} />} />
       <Route path="/dashboard" component={() => <Dashboard locale={locale} />} />
       <Route path="/project/:id" component={ProjectDetail} />
+      <Route path="/diagnosis-report/:reportId" component={DiagnosisReport} />
       <Route path="/bdmin" component={() => (
         <ProtectedAdminRoute>
           <AdminDashboard />
