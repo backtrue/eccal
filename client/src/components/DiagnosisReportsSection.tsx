@@ -117,7 +117,10 @@ export default function DiagnosisReportsSection() {
             <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">還沒有診斷報告</h3>
             <p className="text-gray-600 mb-4">開始分析您的 Facebook 廣告成效</p>
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button 
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={() => navigate('/calculator')}
+            >
               開始診斷
             </Button>
           </div>
