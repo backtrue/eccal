@@ -87,9 +87,9 @@ export class MetaAccountService {
       const since = startDate.toISOString().split('T')[0];
       const until = endDate.toISOString().split('T')[0];
 
-      // 開發環境下使用模擬數據，避免 Facebook API 認證問題
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[META] 開發環境：使用模擬數據 - ${formattedAccountId}`);
+      // 檢查是否為測試 token (如 'mock_token')，只有在測試 token 時才使用模擬數據
+      if (accessToken === 'mock_token' || accessToken.startsWith('mock_')) {
+        console.log(`[META] 使用模擬數據（測試 token）- ${formattedAccountId}`);
         return {
           accountId: formattedAccountId,
           accountName: "示範廣告帳戶",
@@ -120,6 +120,8 @@ export class MetaAccountService {
           ]
         };
       }
+
+      console.log(`[META] 使用真實 Facebook API 獲取數據 - ${formattedAccountId}`);
 
       // 獲取廣告帳戶基本資訊
       const accountUrl = `${this.baseUrl}/${formattedAccountId}`;
