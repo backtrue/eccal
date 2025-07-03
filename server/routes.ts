@@ -966,14 +966,70 @@ echo "Bulk import completed!"`;
       const userId = req.user.id;
       const reports = await storage.getUserAdDiagnosisReports(userId);
       
-      // Sort reports by creation date (newest first)
-      const sortedReports = reports.sort((a, b) => {
-        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      // Group reports by campaignId (ad account ID)
+      const groupedReports = new Map();
+      
+      reports.forEach(report => {
+        const accountKey = report.campaignId;
+        if (!groupedReports.has(accountKey)) {
+          groupedReports.set(accountKey, {
+            adAccountId: report.campaignId,
+            adAccountName: report.campaignName,
+            latestReport: report,
+            historyReports: [],
+            totalReports: 0,
+            latestScore: report.overallHealthScore,
+            scoreHistory: []
+          });
+        }
+        
+        const group = groupedReports.get(accountKey);
+        group.totalReports++;
+        group.historyReports.push(report);
+        group.scoreHistory.push({
+          score: report.overallHealthScore,
+          date: report.createdAt,
+          reportId: report.id,
+          status: report.diagnosisStatus
+        });
+        
+        // Update latest report if this one is newer
+        const currentLatest = new Date(group.latestReport.createdAt || 0);
+        const reportDate = new Date(report.createdAt || 0);
+        if (reportDate > currentLatest) {
+          group.latestReport = report;
+          group.latestScore = report.overallHealthScore;
+          group.adAccountName = report.campaignName;
+        }
+      });
+      
+      // Convert to array and sort by latest report date
+      const groupedArray = Array.from(groupedReports.values()).map(group => {
+        // Sort history by date (newest first)
+        group.historyReports.sort((a: any, b: any) => {
+          const dateA = new Date(a.createdAt || 0).getTime();
+          const dateB = new Date(b.createdAt || 0).getTime();
+          return dateB - dateA;
+        });
+        
+        // Sort score history by date (newest first)
+        group.scoreHistory.sort((a: any, b: any) => {
+          const dateA = new Date(a.date || 0).getTime();
+          const dateB = new Date(b.date || 0).getTime();
+          return dateB - dateA;
+        });
+        
+        return group;
+      });
+      
+      // Sort groups by latest report date (newest first)
+      groupedArray.sort((a, b) => {
+        const dateA = new Date(a.latestReport.createdAt || 0).getTime();
+        const dateB = new Date(b.latestReport.createdAt || 0).getTime();
         return dateB - dateA;
       });
       
-      res.json(sortedReports);
+      res.json(groupedArray);
     } catch (error) {
       console.error('Error fetching diagnosis reports for dashboard:', error);
       res.status(500).json({ message: 'Failed to fetch diagnosis reports' });

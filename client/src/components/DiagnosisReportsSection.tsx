@@ -17,6 +17,21 @@ interface DiagnosisReport {
   aiDiagnosisReport?: string;
 }
 
+interface GroupedDiagnosisReport {
+  adAccountId: string;
+  adAccountName: string;
+  latestReport: DiagnosisReport;
+  historyReports: DiagnosisReport[];
+  totalReports: number;
+  latestScore: number;
+  scoreHistory: Array<{
+    score: number;
+    date: string;
+    reportId: string;
+    status: string;
+  }>;
+}
+
 interface DiagnosisSummary {
   total: number;
   processing: number;
@@ -63,8 +78,8 @@ export default function DiagnosisReportsSection() {
   const { data: reports, isLoading: reportsLoading } = useDiagnosisReports();
   const { data: summary, isLoading: summaryLoading } = useDiagnosisSummary();
 
-  // Type guards
-  const typedReports = Array.isArray(reports) ? reports as DiagnosisReport[] : [];
+  // Type guards for grouped reports
+  const typedReports = Array.isArray(reports) ? reports as unknown as GroupedDiagnosisReport[] : [];
   const typedSummary = (summary && typeof summary === 'object' && 'total' in summary) 
     ? summary as DiagnosisSummary 
     : null;
@@ -179,54 +194,93 @@ export default function DiagnosisReportsSection() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {typedReports.slice(0, 5).map((report: DiagnosisReport) => (
-                <div key={report.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium">{report.campaignName}</span>
-                      {getStatusBadge(report.diagnosisStatus)}
+            <div className="space-y-4">
+              {typedReports.slice(0, 5).map((groupedReport) => (
+                <div key={groupedReport.adAccountId} className="p-4 border rounded-lg hover:bg-gray-50">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium text-lg">{groupedReport.adAccountName}</span>
+                        {getStatusBadge(groupedReport.latestReport.diagnosisStatus)}
+                        <Badge variant="outline" className="text-xs">
+                          {groupedReport.totalReports} 次分析
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        最新分析: {formatDistanceToNow(new Date(groupedReport.latestReport.createdAt), { 
+                          addSuffix: true, 
+                          locale: zhTW 
+                        })}
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {formatDistanceToNow(new Date(report.createdAt), { 
-                        addSuffix: true, 
-                        locale: zhTW 
-                      })}
+                    
+                    <div className="flex items-center gap-3">
+                      {groupedReport.latestReport.diagnosisStatus === 'completed' && (
+                        <div className="text-right">
+                          <div className={`font-bold text-lg ${getHealthScoreColor(groupedReport.latestScore)}`}>
+                            {groupedReport.latestScore}分
+                          </div>
+                          <div className="text-xs text-gray-500">最新分數</div>
+                        </div>
+                      )}
+                    
+                      {groupedReport.latestReport.diagnosisStatus === 'processing' && (
+                        <div className="flex items-center gap-2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                          <span className="text-sm text-gray-500">分析中...</span>
+                        </div>
+                      )}
+                    
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        disabled={groupedReport.latestReport.diagnosisStatus === 'processing'}
+                        onClick={() => navigate(`/diagnosis-report/${groupedReport.latestReport.id}`)}
+                      >
+                        查看最新
+                      </Button>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-3">
-                    {report.diagnosisStatus === 'completed' && (
-                      <div className="text-right">
-                        <div className={`font-bold ${getHealthScoreColor(report.overallHealthScore)}`}>
-                          {report.overallHealthScore}分
-                        </div>
+                  {/* Score History Display */}
+                  {groupedReport.scoreHistory.length > 1 && (
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <div className="text-xs text-gray-500 mb-2">分數歷史記錄:</div>
+                      <div className="flex items-center gap-2 overflow-x-auto">
+                        {groupedReport.scoreHistory.slice(0, 5).map((history, index) => (
+                          <div 
+                            key={history.reportId}
+                            className={`flex flex-col items-center p-2 rounded border min-w-[60px] cursor-pointer hover:bg-blue-50 ${
+                              index === 0 ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'
+                            }`}
+                            onClick={() => navigate(`/diagnosis-report/${history.reportId}`)}
+                          >
+                            <div className={`text-sm font-semibold ${getHealthScoreColor(history.score)}`}>
+                              {history.score}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {new Date(history.date).toLocaleDateString('zh-TW', { 
+                                month: 'short', 
+                                day: 'numeric' 
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                        {groupedReport.scoreHistory.length > 5 && (
+                          <div className="text-xs text-gray-400 px-2">
+                            +{groupedReport.scoreHistory.length - 5} 更多
+                          </div>
+                        )}
                       </div>
-                    )}
-                    
-                    {report.diagnosisStatus === 'processing' && (
-                      <div className="flex items-center gap-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                        <span className="text-sm text-gray-500">分析中...</span>
-                      </div>
-                    )}
-                    
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      disabled={report.diagnosisStatus === 'processing'}
-                      onClick={() => navigate(`/diagnosis-report/${report.id}`)}
-                    >
-                      查看
-                    </Button>
-                  </div>
+                    </div>
+                  )}
                 </div>
               ))}
               
               {typedReports.length > 5 && (
                 <div className="text-center pt-4">
                   <Button variant="outline">
-                    查看全部 {typedReports.length} 個報告
+                    查看全部 {typedReports.length} 個廣告帳戶
                   </Button>
                 </div>
               )}
