@@ -23,6 +23,7 @@ import ProjectDetail from "./pages/project-detail";
 import AdminDashboard from "./pages/admin-dashboard-simple";
 import DiagnosisReport from "./pages/diagnosis-report";
 import DiagnosisReportDetail from "./pages/diagnosis-report-detail";
+import AuthDebug from "./pages/auth-debug";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 
 // Error Boundary Component
@@ -101,16 +102,7 @@ function Router() {
     }
   }, [location, locale, changeLocale]);
 
-  // Handle auth_success parameter immediately in Router
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('auth_success')) {
-      console.log('Router detected auth_success, cleaning URL...');
-      // Clean URL immediately to prevent issues
-      const cleanUrl = window.location.pathname;
-      window.history.replaceState({}, '', cleanUrl);
-    }
-  }, [location]);
+  // Note: auth_success parameter is handled by AuthContext, don't clean it here
 
   return (
     <Switch>
@@ -146,6 +138,9 @@ function Router() {
       <Route path="/jp/brevo-sync" component={() => <BrevoSync />} />
       <Route path="/jp/privacy" component={() => <Privacy locale="ja" />} />
       <Route path="/jp/terms" component={() => <Terms locale="ja" />} />
+      
+      {/* Debug routes */}
+      <Route path="/auth-debug" component={() => <AuthDebug />} />
       
       {/* Fallback to 404 */}
       <Route component={NotFound} />

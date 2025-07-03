@@ -74,7 +74,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       hasAuthSuccess, 
       isProtectedPage,
       isCalculatorPage,
-      shouldCheckAuth
+      shouldCheckAuth,
+      fullURL: window.location.href
     });
     
     if (shouldCheckAuth) {
@@ -82,6 +83,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       // For auth_success, add a small delay to ensure session is established
       if (hasAuthSuccess) {
+        console.log('Detected auth_success parameter, checking authentication...');
         setTimeout(() => {
           checkAuth();
         }, 500); // 500ms delay to allow session to be fully established
@@ -92,9 +94,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log('Auth check skipped - not needed for current page');
     }
 
-    // Clean up auth_success parameter
+    // Clean up auth_success parameter after processing
     if (hasAuthSuccess) {
-      window.history.replaceState({}, '', window.location.pathname);
+      setTimeout(() => {
+        window.history.replaceState({}, '', window.location.pathname);
+      }, 1000); // Delay cleanup to ensure auth check completes
     }
   }, []);
 

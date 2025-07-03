@@ -104,6 +104,12 @@ export function setupJWTGoogleAuth(app: Express) {
     if (process.env.NODE_ENV === 'production') {
       return 'https://eccal.thinkwithblack.com';
     }
+    
+    // 在 Replit 環境中，使用實際的外部 URL
+    if (req && req.get('host') && req.get('host').includes('replit.dev')) {
+      return `${req.protocol}://${req.get('host')}`;
+    }
+    
     return req ? `${req.protocol}://${req.get('host')}` : 'http://localhost:5000';
   };
 
@@ -296,6 +302,19 @@ export function setupJWTGoogleAuth(app: Express) {
       }
     });
   }
+
+  // 前端檢查 cookie 存在性端點
+  app.get('/api/auth/check-cookie', (req, res) => {
+    const cookies = req.cookies;
+    const authToken = cookies?.auth_token;
+    
+    res.json({
+      hasCookie: !!authToken,
+      cookieExists: authToken ? 'Yes' : 'No',
+      allCookies: Object.keys(cookies || {}),
+      timestamp: new Date().toISOString()
+    });
+  });
 
   // 用戶認證狀態 API - 使用 JWT
   app.get('/api/auth/user', jwtMiddleware, (req, res) => {
