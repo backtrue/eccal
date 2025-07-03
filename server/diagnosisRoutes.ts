@@ -607,6 +607,39 @@ export function setupDiagnosisRoutes(app: Express) {
     }
   });
 
+  // 刪除診斷報告
+  app.delete('/api/diagnosis/reports/:reportId', requireJWTAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { reportId } = req.params;
+
+      console.log(`[DIAGNOSIS] 刪除診斷報告: ${reportId} by user: ${userId}`);
+
+      // 檢查報告是否存在且屬於該用戶
+      const report = await storage.getAdDiagnosisReport(reportId, userId);
+      if (!report) {
+        return res.status(404).json({ error: '報告不存在或無權限訪問' });
+      }
+
+      // 執行刪除操作
+      const success = await storage.deleteAdDiagnosisReport(reportId, userId);
+      
+      if (success) {
+        console.log(`[DIAGNOSIS] 成功刪除診斷報告: ${reportId}`);
+        res.json({
+          success: true,
+          message: '診斷報告已成功刪除'
+        });
+      } else {
+        res.status(500).json({ error: '刪除失敗' });
+      }
+
+    } catch (error) {
+      console.error('刪除診斷報告錯誤:', error);
+      res.status(500).json({ error: '刪除操作失敗' });
+    }
+  });
+
   // Meta OAuth 模擬端點 (實際部署時需要真實 OAuth 流程)
   app.post('/api/diagnosis/connect-meta', requireJWTAuth, async (req: any, res) => {
     try {

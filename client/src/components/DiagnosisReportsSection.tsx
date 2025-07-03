@@ -1,12 +1,15 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { BarChart3, Clock, CheckCircle, XCircle, FileText, Activity } from 'lucide-react';
+import { BarChart3, Clock, CheckCircle, XCircle, FileText, Activity, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
 import { useLocation } from 'wouter';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 interface DiagnosisReport {
   id: string;
@@ -75,8 +78,38 @@ function getHealthScoreColor(score: number) {
 
 export default function DiagnosisReportsSection() {
   const [, navigate] = useLocation();
+  const { toast } = useToast();
   const { data: reports, isLoading: reportsLoading } = useDiagnosisReports();
   const { data: summary, isLoading: summaryLoading } = useDiagnosisSummary();
+
+  // 刪除診斷報告的 mutation
+  const deleteReportMutation = useMutation({
+    mutationFn: async (reportId: string) => {
+      return await apiRequest('DELETE', `/api/diagnosis/reports/${reportId}`);
+    },
+    onSuccess: () => {
+      // 刷新診斷報告列表
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/diagnosis-reports'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/diagnosis-summary'] });
+      toast({
+        title: "刪除成功",
+        description: "診斷報告已成功刪除",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "刪除失敗",
+        description: error.message || "無法刪除診斷報告",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteReport = (reportId: string, reportName: string) => {
+    if (confirm(`確定要刪除診斷報告「${reportName}」嗎？此操作無法撤銷。`)) {
+      deleteReportMutation.mutate(reportId);
+    }
+  };
 
   // Type guards for grouped reports
   const typedReports = Array.isArray(reports) ? reports as unknown as GroupedDiagnosisReport[] : [];
@@ -234,14 +267,28 @@ export default function DiagnosisReportsSection() {
                         </div>
                       )}
                     
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        disabled={groupedReport.latestReport.diagnosisStatus === 'processing'}
-                        onClick={() => navigate(`/diagnosis-report/${groupedReport.latestReport.id}`)}
-                      >
-                        查看最新
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          disabled={groupedReport.latestReport.diagnosisStatus === 'processing'}
+                          onClick={() => navigate(`/diagnosis-report/${groupedReport.latestReport.id}`)}
+                        >
+                          查看最新
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          disabled={deleteReportMutation.isPending}
+                          onClick={() => handleDeleteReport(
+                            groupedReport.latestReport.id, 
+                            groupedReport.adAccountName
+                          )}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                   

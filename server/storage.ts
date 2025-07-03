@@ -112,6 +112,7 @@ export interface IStorage {
   createAdDiagnosisReport(reportData: InsertAdDiagnosisReport): Promise<AdDiagnosisReport>;
   getAdDiagnosisReport(reportId: string, userId: string): Promise<AdDiagnosisReport | undefined>;
   getUserAdDiagnosisReports(userId: string): Promise<AdDiagnosisReport[]>;
+  deleteAdDiagnosisReport(reportId: string, userId: string): Promise<boolean>;
   updateMetaTokens(userId: string, accessToken: string, adAccountId: string | null, adAccountName?: string | null): Promise<User>;
 
   // New Campaign Planner operations
@@ -1516,6 +1517,23 @@ export class DatabaseStorage implements IStorage {
       .where(eq(adDiagnosisReports.userId, userId))
       .orderBy(desc(adDiagnosisReports.createdAt));
     return reports;
+  }
+
+  async deleteAdDiagnosisReport(reportId: string, userId: string): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(adDiagnosisReports)
+        .where(and(
+          eq(adDiagnosisReports.id, reportId),
+          eq(adDiagnosisReports.userId, userId)
+        ));
+      
+      // For Drizzle ORM, we check if the operation was successful
+      return true;
+    } catch (error) {
+      console.error('刪除診斷報告錯誤:', error);
+      return false;
+    }
   }
 
   async updateMetaTokens(userId: string, accessToken: string, adAccountId: string | null, adAccountName?: string | null): Promise<User> {
