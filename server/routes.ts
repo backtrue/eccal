@@ -958,6 +958,53 @@ echo "Bulk import completed!"`;
     }
   });
 
+  // ===== Diagnosis Dashboard API Routes =====
+  
+  // Get user's diagnosis reports for dashboard
+  app.get('/api/dashboard/diagnosis-reports', requireJWTAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const reports = await storage.getUserAdDiagnosisReports(userId);
+      
+      // Sort reports by creation date (newest first)
+      const sortedReports = reports.sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+      
+      res.json(sortedReports);
+    } catch (error) {
+      console.error('Error fetching diagnosis reports for dashboard:', error);
+      res.status(500).json({ message: 'Failed to fetch diagnosis reports' });
+    }
+  });
+
+  // Get diagnosis report summary for dashboard
+  app.get('/api/dashboard/diagnosis-summary', requireJWTAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const reports = await storage.getUserAdDiagnosisReports(userId);
+      
+      const summary = {
+        total: reports.length,
+        processing: reports.filter(r => r.diagnosisStatus === 'processing').length,
+        completed: reports.filter(r => r.diagnosisStatus === 'completed').length,
+        failed: reports.filter(r => r.diagnosisStatus === 'failed').length,
+        latestReport: reports.length > 0 ? reports.sort((a, b) => {
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return dateB - dateA;
+        })[0] : null
+      };
+      
+      res.json(summary);
+    } catch (error) {
+      console.error('Error fetching diagnosis summary:', error);
+      res.status(500).json({ message: 'Failed to fetch diagnosis summary' });
+    }
+  });
+
   // ===== Admin Dashboard API Routes =====
   
   // Admin authentication middleware (simplified - just checking if user is admin)

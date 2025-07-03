@@ -1,5 +1,5 @@
 import { Express } from 'express';
-import { requireAuth } from './googleAuth';
+import { requireJWTAuth } from './jwtAuth';
 import { storage } from './storage';
 import { metaAccountService } from './metaAccountService';
 import { db } from './db';
@@ -149,7 +149,7 @@ export function setupDiagnosisRoutes(app: Express) {
   });
 
   // 獲取 Facebook OAuth 授權 URL
-  app.get('/api/diagnosis/facebook-auth-url', requireAuth, (req: any, res) => {
+  app.get('/api/diagnosis/facebook-auth-url', requireJWTAuth, (req: any, res) => {
     try {
       const appId = process.env.FACEBOOK_APP_ID;
       
@@ -162,7 +162,7 @@ export function setupDiagnosisRoutes(app: Express) {
       }
       
       const redirectUri = `${req.protocol}://${req.get('host')}/api/diagnosis/facebook-callback`;
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       
       console.log('生成 Facebook OAuth URL:', {
         appId: appId.substring(0, 5) + '***',
@@ -254,9 +254,9 @@ export function setupDiagnosisRoutes(app: Express) {
   });
 
   // 檢查用戶 Facebook 連接狀態
-  app.get('/api/diagnosis/facebook-status', requireAuth, async (req: any, res) => {
+  app.get('/api/diagnosis/facebook-status', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       let adAccountName = '';
@@ -289,9 +289,9 @@ export function setupDiagnosisRoutes(app: Express) {
   });
 
   // 獲取用戶可用的 Facebook 廣告帳戶列表
-  app.get('/api/diagnosis/facebook-accounts', requireAuth, async (req: any, res) => {
+  app.get('/api/diagnosis/facebook-accounts', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (!user?.metaAccessToken) {
@@ -330,9 +330,9 @@ export function setupDiagnosisRoutes(app: Express) {
   });
 
   // 選擇 Facebook 廣告帳戶
-  app.post('/api/diagnosis/select-facebook-account', requireAuth, async (req: any, res) => {
+  app.post('/api/diagnosis/select-facebook-account', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const { adAccountId } = req.body;
       
       if (!adAccountId) {
@@ -382,9 +382,9 @@ export function setupDiagnosisRoutes(app: Express) {
   });
 
   // 觸發廣告帳戶健診
-  app.post('/api/diagnosis/analyze-account', requireAuth, async (req: any, res) => {
+  app.post('/api/diagnosis/analyze-account', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const {
         targetRevenue,
         targetAov,
@@ -470,9 +470,9 @@ export function setupDiagnosisRoutes(app: Express) {
   });
 
   // 獲取診斷報告
-  app.get('/api/diagnosis/report/:reportId', requireAuth, async (req: any, res) => {
+  app.get('/api/diagnosis/report/:reportId', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const { reportId } = req.params;
 
       const report = await storage.getAdDiagnosisReport(reportId, userId);
@@ -533,9 +533,9 @@ export function setupDiagnosisRoutes(app: Express) {
   });
 
   // 獲取用戶的所有診斷報告
-  app.get('/api/diagnosis/reports', requireAuth, async (req: any, res) => {
+  app.get('/api/diagnosis/reports', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const reports = await storage.getUserAdDiagnosisReports(userId);
       res.json(reports);
     } catch (error) {
@@ -545,9 +545,9 @@ export function setupDiagnosisRoutes(app: Express) {
   });
 
   // 手動重新處理卡住的診斷報告
-  app.post('/api/diagnosis/retry/:reportId', requireAuth, async (req: any, res) => {
+  app.post('/api/diagnosis/retry/:reportId', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const { reportId } = req.params;
 
       console.log(`[DIAGNOSIS] 手動重新處理診斷報告: ${reportId}`);
@@ -608,9 +608,9 @@ export function setupDiagnosisRoutes(app: Express) {
   });
 
   // Meta OAuth 模擬端點 (實際部署時需要真實 OAuth 流程)
-  app.post('/api/diagnosis/connect-meta', requireAuth, async (req: any, res) => {
+  app.post('/api/diagnosis/connect-meta', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const { accessToken, adAccountId } = req.body;
 
       // 實際實現中需要驗證 Meta access token 的有效性
