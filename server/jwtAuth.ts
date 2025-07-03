@@ -227,15 +227,88 @@ export function setupJWTGoogleAuth(app: Express) {
     res.redirect(`${baseUrl}/`);
   });
 
+  // JWT 狀態診斷端點
+  app.get('/api/auth/debug', (req, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      const cookieToken = req.cookies?.auth_token;
+      const hasPassportUser = !!(req as any).user;
+      let tokenVerification = 'No token';
+      
+      if (cookieToken) {
+        const verified = jwtUtils.verifyToken(cookieToken);
+        tokenVerification = verified ? `Valid: ${verified.email}` : 'Invalid token';
+      }
+      
+      console.log('JWT Debug:', {
+        authHeader: authHeader ? 'Present' : 'Missing',
+        cookieToken: cookieToken ? 'Present' : 'Missing',
+        hasPassportUser,
+        cookies: Object.keys(req.cookies || {}),
+        tokenVerification
+      });
+      
+      res.json({
+        authHeader: authHeader ? 'Present' : 'Missing',
+        cookieToken: cookieToken ? 'Present' : 'Missing',
+        hasPassportUser,
+        cookies: Object.keys(req.cookies || {}),
+        jwtVerification: tokenVerification
+      });
+    } catch (error) {
+      console.error('Debug endpoint error:', error);
+      res.status(500).json({ error: 'Debug failed' });
+    }
+  });
+
+  // 測試 JWT 設置端點 (僅開發環境)
+  if (process.env.NODE_ENV === 'development') {
+    app.get('/api/auth/test-jwt', async (req, res) => {
+      try {
+        // 創建測試用戶
+        const testUser = {
+          id: 'test-user-123',
+          email: 'test@example.com',
+          firstName: 'Test',
+          lastName: 'User'
+        };
+        
+        // 生成 JWT token
+        const token = jwtUtils.generateToken(testUser);
+        
+        // 設置 cookie
+        res.cookie('auth_token', token, {
+          httpOnly: true,
+          secure: false, // 開發環境使用 HTTP
+          sameSite: 'lax',
+          maxAge: 7 * 24 * 60 * 60 * 1000 // 7天
+        });
+        
+        console.log('Test JWT cookie set for:', testUser.email);
+        res.json({ 
+          success: true, 
+          message: 'Test JWT cookie set',
+          user: testUser
+        });
+      } catch (error) {
+        console.error('Test JWT error:', error);
+        res.status(500).json({ error: 'Test JWT failed' });
+      }
+    });
+  }
+
   // 用戶認證狀態 API - 使用 JWT
   app.get('/api/auth/user', jwtMiddleware, (req, res) => {
     try {
+      const token = jwtUtils.extractTokenFromRequest(req);
+      console.log('Auth check - token present:', !!token);
+      
       if ((req as any).user) {
         console.log('JWT auth check successful:', (req as any).user.email);
         res.set('Cache-Control', 'private, max-age=300'); // 5分鐘 cache
         res.json((req as any).user);
       } else {
-        console.log('JWT auth check failed: no valid token');
+        console.log('JWT auth check failed: no valid user in request');
         res.status(401).json({ error: 'Not authenticated' });
       }
     } catch (error) {
