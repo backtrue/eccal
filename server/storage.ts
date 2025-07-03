@@ -1537,6 +1537,74 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return user;
   }
+
+  // Diagnosis report operations
+  async getDiagnosisReport(reportId: string, userId: string): Promise<AdDiagnosisReport | null> {
+    const [report] = await db
+      .select()
+      .from(adDiagnosisReports)
+      .where(and(
+        eq(adDiagnosisReports.id, reportId),
+        eq(adDiagnosisReports.userId, userId)
+      ));
+    
+    return report || null;
+  }
+
+  async getUserDiagnosisReports(userId: string): Promise<AdDiagnosisReport[]> {
+    const reports = await db
+      .select()
+      .from(adDiagnosisReports)
+      .where(eq(adDiagnosisReports.userId, userId))
+      .orderBy(desc(adDiagnosisReports.createdAt));
+    
+    return reports;
+  }
+
+  async createDiagnosisReport(report: InsertAdDiagnosisReport): Promise<AdDiagnosisReport> {
+    const [newReport] = await db
+      .insert(adDiagnosisReports)
+      .values(report)
+      .returning();
+    
+    return newReport;
+  }
+
+  async updateDiagnosisReportStatus(reportId: string, status: 'processing' | 'completed' | 'failed', aiReport?: string): Promise<void> {
+    const updates: any = {
+      diagnosisStatus: status,
+      updatedAt: new Date(),
+    };
+
+    if (aiReport) {
+      updates.aiDiagnosisReport = aiReport;
+    }
+
+    await db
+      .update(adDiagnosisReports)
+      .set(updates)
+      .where(eq(adDiagnosisReports.id, reportId));
+  }
+
+  async getDiagnosisReportsSummary(userId: string): Promise<{
+    total: number;
+    processing: number;
+    completed: number;
+    failed: number;
+    latestReport: AdDiagnosisReport | null;
+  }> {
+    const reports = await this.getUserDiagnosisReports(userId);
+    
+    const summary = {
+      total: reports.length,
+      processing: reports.filter(r => r.diagnosisStatus === 'processing').length,
+      completed: reports.filter(r => r.diagnosisStatus === 'completed').length,
+      failed: reports.filter(r => r.diagnosisStatus === 'failed').length,
+      latestReport: reports.length > 0 ? reports[0] : null,
+    };
+
+    return summary;
+  }
 }
 
 export const storage = new DatabaseStorage();

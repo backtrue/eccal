@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { BarChart3, Clock, CheckCircle, XCircle, FileText, Activity } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
+import { useLocation } from 'wouter';
 
 interface DiagnosisReport {
   id: string;
@@ -58,6 +59,7 @@ function getHealthScoreColor(score: number) {
 }
 
 export default function DiagnosisReportsSection() {
+  const [, navigate] = useLocation();
   const { data: reports, isLoading: reportsLoading } = useDiagnosisReports();
   const { data: summary, isLoading: summaryLoading } = useDiagnosisSummary();
 
@@ -213,6 +215,7 @@ export default function DiagnosisReportsSection() {
                       variant="outline" 
                       size="sm"
                       disabled={report.diagnosisStatus === 'processing'}
+                      onClick={() => navigate(`/diagnosis-report/${report.id}`)}
                     >
                       查看
                     </Button>

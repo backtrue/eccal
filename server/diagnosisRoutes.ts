@@ -808,4 +808,23 @@ export function setupFacebookDataDeletion(app: Express) {
       timestamp: new Date().toISOString()
     });
   });
+
+  // 獲取單個診斷報告詳情
+  app.get('/api/diagnosis/report/:id', requireJWTAuth, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.id;
+      
+      const report = await storage.getDiagnosisReport(id, userId);
+      
+      if (!report) {
+        return res.status(404).json({ error: 'Report not found' });
+      }
+
+      res.json(report);
+    } catch (error) {
+      console.error('Get diagnosis report error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
 }
