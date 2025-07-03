@@ -103,21 +103,7 @@ export class MetaAccountService {
           viewContent: 1200,
           currency: "TWD",
           dateRange: { since, until },
-          // 新增模擬的成功廣告數據供 AI 分析使用
-          topPerformingAds: [
-            { name: "夏季新品促銷廣告", postId: "23849502927530773", ctr: 2.8, roas: 4.2 },
-            { name: "母親節限時優惠", postId: "23849502927530774", ctr: 3.1, roas: 3.8 },
-            { name: "週末閃購活動", postId: "23849502927530775", ctr: 2.5, roas: 5.1 },
-            { name: "新客首購禮", postId: "23849502927530776", ctr: 2.9, roas: 3.5 },
-            { name: "VIP會員專享", postId: "23849502927530777", ctr: 2.3, roas: 4.6 }
-          ],
-          topPerformingAdSets: [
-            { name: "25-35歲女性興趣定向", roas: 4.8, suggestedBudgetIncrease: 25 },
-            { name: "類似受眾-購買者", roas: 4.2, suggestedBudgetIncrease: 20 },
-            { name: "再行銷-購物車放棄", roas: 6.1, suggestedBudgetIncrease: 30 },
-            { name: "LLA 1%-高價值客戶", roas: 3.9, suggestedBudgetIncrease: 15 },
-            { name: "興趣+行為定向組合", roas: 3.6, suggestedBudgetIncrease: 18 }
-          ]
+
         };
       }
 
@@ -338,16 +324,16 @@ export class MetaAccountService {
 ## 🎯 健康分數
 帳戶健康分數：${healthScore}/100 分
 
+**重要指示：請勿在診斷報告中提及任何具體的廣告名稱、Post ID、廣告組合名稱或其他需要從 Facebook API 獲取的具體資訊。只進行策略性分析。**
+
 請按以下架構提供完整診斷報告：
 
 ## 1. 🌟 成功亮點分析
-請分析帳戶的整體表現亮點：
-- 識別表現良好的指標（如 CTR、ROAS、轉換率）
-- 分析成功的原因和可複製的策略
-- 注意：請勿生成具體的廣告名稱或 Post ID，因為這些需要從實際 Facebook 數據中獲取
-- 分析表現優異的策略類型和受眾定向
-- 提供可行的優化建議和擴展方向
-- 注意：請勿生成具體的廣告組合名稱，這些需要從實際 Facebook 數據中獲取
+基於現有數據分析帳戶優勢：
+- CTR 表現分析和成功因素
+- ROAS 達成情況和優化策略
+- 轉換率表現評估
+- 受眾定向效果分析
 
 ## 2. 📊 轉換漏斗優化建議
 詳細說明：
@@ -356,12 +342,12 @@ export class MetaAccountService {
 - 提供具體優化策略和可執行的改善方案
 
 ## 3. ⚠️ 問題診斷與解決方案
-分析主要問題和具體改善建議
+基於實際數據指出問題並提供解決方案
 
 ## 4. 💰 預算優化建議
 針對目前預算配置給出調整建議
 
-請用繁體中文回答，語氣專業但易懂，提供具體可行的建議和實際的廣告名稱、Post ID 等資訊。
+請用繁體中文回答，語氣專業但易懂。嚴格遵守：絕對不要編造任何廣告名稱、Post ID、廣告組合名稱等具體細節，只提供基於真實數據的策略性建議。
 `;
   }
 
