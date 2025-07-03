@@ -237,6 +237,9 @@ export const adDiagnosisReports = pgTable("ad_diagnosis_reports", {
   aiDiagnosisReport: text("ai_diagnosis_report").notNull(), // Markdown format
   diagnosisStatus: varchar("diagnosis_status").default("completed").notNull(), // completed, processing, failed
   
+  // High-performing ads data (JSON array)
+  topPerformingAds: jsonb("top_performing_ads"), // Array of high-performing ads with CTR > average and impressions > 500
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

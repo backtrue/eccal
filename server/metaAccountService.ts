@@ -16,17 +16,14 @@ export interface MetaAccountData {
     since: string;
     until: string;
   };
-  // 可選的成功廣告數據（開發環境使用）
+  // 真實廣告數據（從 Facebook API 獲取）
   topPerformingAds?: Array<{
-    name: string;
-    postId: string;
+    adName: string;
+    effectiveObjectStoryId: string;
     ctr: number;
-    roas: number;
-  }>;
-  topPerformingAdSets?: Array<{
-    name: string;
-    roas: number;
-    suggestedBudgetIncrease: number;
+    impressions: number;
+    clicks: number;
+    spend: number;
   }>;
 }
 
@@ -164,6 +161,21 @@ export class MetaAccountService {
       
       const purchaseValue = this.extractActionValue(actionValues, 'purchase');
 
+      // 獲取廣告級別數據來計算 top performing ads
+      let topPerformingAds: Array<{
+        adName: string;
+        effectiveObjectStoryId: string;
+        ctr: number;
+        impressions: number;
+        clicks: number;
+        spend: number;
+      }> = [];
+      try {
+        topPerformingAds = await this.getTopPerformingAds(accessToken, formattedAccountId, since, until);
+      } catch (error) {
+        console.log('[META] 獲取廣告級別數據失敗，繼續使用帳戶級別數據');
+      }
+      
       return {
         accountId: formattedAccountId,
         accountName: accountData.name || '廣告帳戶',
@@ -176,12 +188,135 @@ export class MetaAccountService {
         addToCart,
         viewContent,
         currency: accountData.currency || 'TWD',
-        dateRange: { since, until }
+        dateRange: { since, until },
+        topPerformingAds
       };
 
     } catch (error) {
       console.error('獲取 Meta 廣告帳戶數據錯誤:', error);
       throw error;
+    }
+  }
+
+  /**
+   * 獲取表現最佳的廣告 (CTR 高於平均值且曝光 > 500)
+   */
+  private async getTopPerformingAds(accessToken: string, adAccountId: string, since: string, until: string): Promise<Array<{
+    adName: string;
+    effectiveObjectStoryId: string;
+    ctr: number;
+    impressions: number;
+    clicks: number;
+    spend: number;
+  }>> {
+    try {
+      console.log(`[META] 開始獲取廣告級別數據用於篩選高效廣告`);
+      
+      // 獲取廣告帳戶下的所有廣告
+      const adsUrl = `${this.baseUrl}/${adAccountId}/ads`;
+      const adsParams = new URLSearchParams({
+        access_token: accessToken,
+        fields: 'id,name,effective_object_story_id,status',
+        limit: '100', // 限制數量避免過多數據
+        filtering: JSON.stringify([{
+          field: 'ad.effective_status',
+          operator: 'IN',
+          value: ['ACTIVE', 'PAUSED']
+        }])
+      });
+
+      const adsResponse = await fetch(`${adsUrl}?${adsParams}`);
+      if (!adsResponse.ok) {
+        throw new Error(`Facebook Ads API 錯誤: ${adsResponse.status}`);
+      }
+
+      const adsData = await adsResponse.json();
+      const ads = adsData.data || [];
+
+      if (ads.length === 0) {
+        console.log(`[META] 該帳戶沒有找到廣告數據`);
+        return [];
+      }
+
+      // 獲取每個廣告的統計數據
+      const adPerformanceData = [];
+      
+      for (const ad of ads) {
+        try {
+          const insightsUrl = `${this.baseUrl}/${ad.id}/insights`;
+          const insightsParams = new URLSearchParams({
+            access_token: accessToken,
+            fields: 'impressions,clicks,spend',
+            time_range: JSON.stringify({
+              since: since,
+              until: until
+            })
+          });
+
+          const insightsResponse = await fetch(`${insightsUrl}?${insightsParams}`);
+          if (!insightsResponse.ok) {
+            console.log(`[META] 無法獲取廣告 ${ad.id} 的統計數據`);
+            continue;
+          }
+
+          const insightsData = await insightsResponse.json();
+          const insights = insightsData.data?.[0];
+
+          if (!insights) {
+            continue;
+          }
+
+          const impressions = parseInt(insights.impressions || '0');
+          const clicks = parseInt(insights.clicks || '0');
+          const spend = parseFloat(insights.spend || '0');
+          const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+
+          // 只考慮有曝光數據的廣告
+          if (impressions > 0) {
+            adPerformanceData.push({
+              adName: ad.name || '未命名廣告',
+              effectiveObjectStoryId: ad.effective_object_story_id || '',
+              ctr,
+              impressions,
+              clicks,
+              spend
+            });
+          }
+        } catch (error) {
+          console.log(`[META] 處理廣告 ${ad.id} 時發生錯誤:`, error);
+          continue;
+        }
+      }
+
+      if (adPerformanceData.length === 0) {
+        console.log(`[META] 沒有找到有效的廣告統計數據`);
+        return [];
+      }
+
+      // 計算帳戶平均 CTR
+      const totalImpressions = adPerformanceData.reduce((sum, ad) => sum + ad.impressions, 0);
+      const totalClicks = adPerformanceData.reduce((sum, ad) => sum + ad.clicks, 0);
+      const averageCtr = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
+
+      console.log(`[META] 帳戶平均 CTR: ${averageCtr.toFixed(2)}%`);
+
+      // 篩選條件：CTR > 平均值 且 曝光 > 500
+      const filteredAds = adPerformanceData.filter(ad => 
+        ad.ctr > averageCtr && ad.impressions > 500
+      );
+
+      // 按 CTR 排序並取前 5 名
+      const topAds = filteredAds
+        .sort((a, b) => b.ctr - a.ctr)
+        .slice(0, 5);
+
+      console.log(`[META] 找到 ${topAds.length} 個高效廣告 (CTR > ${averageCtr.toFixed(2)}%, 曝光 > 500)`);
+
+      return topAds;
+
+    } catch (error) {
+      console.error('獲取廣告級別數據錯誤:', error);
+      return [];
     }
   }
 

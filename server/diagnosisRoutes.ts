@@ -708,6 +708,7 @@ async function updateAccountDiagnosisReport(
       trafficAchievementRate: diagnosisData.trafficAchievementRate.toFixed(1),
       budgetUtilizationRate: diagnosisData.budgetUtilizationRate.toFixed(1),
       aiDiagnosisReport: aiReport,
+      topPerformingAds: accountData.topPerformingAds || [],
       diagnosisStatus: 'completed',
       updatedAt: new Date(),
     })

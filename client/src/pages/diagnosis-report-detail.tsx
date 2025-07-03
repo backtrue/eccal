@@ -162,6 +162,81 @@ export default function DiagnosisReportDetailPage() {
           </Card>
         )}
 
+        {/* High-Performing Ads Section */}
+        {typedReport.topPerformingAds && typedReport.topPerformingAds.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                ⭐ 高效廣告列表
+                <Badge variant="secondary">{typedReport.topPerformingAds.length} 個廣告</Badge>
+              </CardTitle>
+              <p className="text-sm text-gray-600">
+                以下廣告的點擊率高於帳戶平均值，且曝光次數超過 500 次，建議您加碼投資或複製這些廣告的創意策略：
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {typedReport.topPerformingAds.map((ad: any, index: number) => (
+                  <div key={index} className="border rounded-lg p-4 bg-gradient-to-r from-green-50 to-blue-50">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg text-gray-900 mb-1">
+                          {ad.adName || '未命名廣告'}
+                        </h3>
+                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <span>
+                            <strong>貼文編號：</strong>
+                            <code className="bg-gray-100 px-2 py-1 rounded text-xs ml-1">
+                              {ad.effectiveObjectStoryId || '無'}
+                            </code>
+                          </span>
+                        </div>
+                      </div>
+                      <Badge className="bg-green-100 text-green-800">
+                        第 {index + 1} 名
+                      </Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-4 gap-4 mt-3">
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-green-600">
+                          {ad.ctr?.toFixed(2)}%
+                        </div>
+                        <div className="text-xs text-gray-500">點擊率</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-blue-600">
+                          {ad.impressions?.toLocaleString()}
+                        </div>
+                        <div className="text-xs text-gray-500">曝光次數</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-purple-600">
+                          {ad.clicks?.toLocaleString()}
+                        </div>
+                        <div className="text-xs text-gray-500">點擊次數</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-orange-600">
+                          NT${ad.spend?.toLocaleString()}
+                        </div>
+                        <div className="text-xs text-gray-500">花費</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  💡 <strong>優化建議：</strong>您可以使用這些貼文編號快速找到對應的廣告素材，
+                  建議將這些高效廣告的預算提高 20-50%，或複製其創意策略到新的廣告組合中。
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Report Content */}
         {typedReport.aiDiagnosisReport && (
           <Card>
