@@ -459,7 +459,26 @@ export class MetaAccountService {
 ## 🎯 健康分數
 帳戶健康分數：${healthScore}/100 分
 
-**重要指示：請勿在診斷報告中提及任何具體的廣告名稱、Post ID、廣告組合名稱或其他需要從 Facebook API 獲取的具體資訊。只進行策略性分析。**
+${metaData && metaData.topPerformingAds && metaData.topPerformingAds.length > 0 ? `
+## ⭐ 高效廣告分析
+基於帳戶數據分析，發現以下 ${metaData.topPerformingAds.length} 個高效廣告（CTR 高於帳戶平均值且曝光次數 > 500）：
+
+${metaData.topPerformingAds.map((ad, index) => `
+### 第 ${index + 1} 名高效廣告
+- 廣告名稱：${ad.adName}
+- 貼文編號：${ad.effectiveObjectStoryId}
+- 點擊率：${ad.ctr.toFixed(2)}%
+- 曝光次數：${ad.impressions.toLocaleString()}
+- 點擊次數：${ad.clicks.toLocaleString()}
+- 花費金額：NT$${ad.spend.toLocaleString()}
+`).join('')}
+
+**優化建議：** 這些廣告表現優異，建議：
+1. 將這些高效廣告的預算提高 20-50%
+2. 複製這些廣告的創意策略到新的廣告組合
+3. 分析這些廣告的共同特徵，應用到其他廣告素材
+4. 使用貼文編號快速在廣告管理員中找到對應素材
+` : ''}
 
 請按以下架構提供完整診斷報告：
 

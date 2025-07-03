@@ -7,6 +7,7 @@ import { ArrowLeft, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
 import { Link } from 'wouter';
+import { marked } from 'marked';
 
 function getStatusBadge(status: string) {
   switch (status) {
@@ -245,7 +246,15 @@ export default function DiagnosisReportDetailPage() {
             </CardHeader>
             <CardContent>
               <div className="prose prose-sm max-w-none">
-                <div className="whitespace-pre-wrap">{typedReport.aiDiagnosisReport}</div>
+                <div 
+                  className="markdown-content"
+                  dangerouslySetInnerHTML={{ 
+                    __html: marked(typedReport.aiDiagnosisReport, {
+                      breaks: true,
+                      gfm: true
+                    })
+                  }} 
+                />
               </div>
             </CardContent>
           </Card>
