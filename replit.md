@@ -128,6 +128,7 @@ This is a full-stack web application built to help e-commerce businesses calcula
 
 ```
 Changelog:
+- July 03, 2025. Major Authentication Overhaul V2.7.0 - Completely replaced session-based Google OAuth with JWT (jsonwebtoken) authentication system. Implemented stateless authentication using httpOnly cookies for enhanced security and scalability. Key changes: removed express-session dependency, created jwtAuth.ts with comprehensive JWT utilities, simplified server architecture with JWT middleware, maintained complete Google OAuth flow while eliminating session storage overhead. JWT tokens have 7-day validity with secure cookie storage (httpOnly, sameSite). This architecture is more suitable for modern web applications and multi-server deployments.
 - June 25, 2025. Initial setup with basic calculator functionality
 - June 25, 2025. Added Footer with company branding and legal links
 - June 25, 2025. Updated branding to "報數據-電商廣告預算計算機"
