@@ -38,7 +38,7 @@ export default function DiagnosisReportDetailPage() {
   const reportId = params?.id;
 
   const { data: report, isLoading, error } = useQuery({
-    queryKey: ['/api/diagnosis/report', reportId],
+    queryKey: [`/api/diagnosis/report/${reportId}`],
     enabled: !!reportId,
   });
 
