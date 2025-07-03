@@ -89,10 +89,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
         checkAuth();
       }
     } else {
-      // Default to not authenticated without making API call
-      setIsAuthenticated(false);
-      setUser(null);
-      console.log('Auth check skipped - not needed for current page');
+      // For JWT, we should still check if user is already authenticated
+      // via existing cookie, but only do it once on initial load
+      const hasCheckedBefore = sessionStorage.getItem('auth_checked');
+      if (!hasCheckedBefore) {
+        console.log('Initial auth check for JWT cookie');
+        checkAuth();
+        sessionStorage.setItem('auth_checked', 'true');
+      } else {
+        console.log('Auth check skipped - not needed for current page');
+      }
     }
 
     // Clean up auth_success parameter

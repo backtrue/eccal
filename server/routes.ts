@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { setupGoogleAuth, requireAuth } from "./googleAuth";
+import { requireJWTAuth } from "./jwtAuth";
 import { analyticsService } from "./googleAnalytics";
 import { storage } from "./storage";
 import { db } from "./db";
@@ -14,9 +14,6 @@ import fs from "fs";
 import path from "path";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup Google OAuth authentication
-  setupGoogleAuth(app);
-  
   // Setup new Campaign Planner v2 routes
   setupCampaignPlannerRoutes(app);
   
@@ -37,31 +34,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Protected route - Get user info (simplified without monitoring detection)
-  app.get('/api/auth/user', requireAuth, async (req: any, res) => {
-    try {
-      const user = req.user;
-      
-      if (!user) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
-      // Set appropriate cache headers
-      res.set({
-        'Cache-Control': 'private, max-age=300', // 5 minutes cache
-        'ETag': `"user-${user.id || 'anonymous'}-${Math.floor(Date.now() / 300000)}"`,
-      });
-      
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
+  // Note: /api/auth/user route is handled in jwtAuth.ts
   // Analytics routes
-  app.get('/api/analytics/properties', requireAuth, async (req: any, res) => {
+  app.get('/api/analytics/properties', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const properties = await analyticsService.getUserAnalyticsProperties(userId);
       res.json(properties || []);
     } catch (error) {
@@ -70,9 +47,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/analytics/data', requireAuth, async (req: any, res) => {
+  app.post('/api/analytics/data', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const { propertyId } = req.body;
       
       if (!propertyId) {
@@ -104,9 +81,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User metrics route
-  app.get('/api/user/metrics', requireAuth, async (req: any, res) => {
+  app.get('/api/user/metrics', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const metrics = await storage.getLatestUserMetrics(userId);
       res.json(metrics);
     } catch (error) {
@@ -116,9 +93,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User statistics route
-  app.get('/api/user/stats', requireAuth, async (req: any, res) => {
+  app.get('/api/user/stats', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       
       // Get total calculations (from user_metrics table)
       const allMetrics = await db
@@ -139,9 +116,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User referrals route
-  app.get('/api/user/referrals', requireAuth, async (req: any, res) => {
+  app.get('/api/user/referrals', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const referrals = await storage.getReferralsByUser(userId);
       res.json(referrals);
     } catch (error) {
@@ -151,7 +128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Logout endpoint
-  app.post('/api/auth/logout', requireAuth, async (req: any, res) => {
+  app.post('/api/auth/logout', requireJWTAuth, async (req: any, res) => {
     try {
       req.logout((err: any) => {
         if (err) {
@@ -227,9 +204,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Credit system routes
-  app.get('/api/credits', requireAuth, async (req: any, res) => {
+  app.get('/api/credits', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const credits = await storage.getUserCredits(userId);
       const transactions = await storage.getCreditTransactions(userId);
       
@@ -243,9 +220,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/credits/spend', requireAuth, async (req: any, res) => {
+  app.post('/api/credits/spend', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const { amount, description } = req.body;
       
       const credits = await storage.getUserCredits(userId);
@@ -278,9 +255,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Referral system routes
-  app.get('/api/referral/code', requireAuth, async (req: any, res) => {
+  app.get('/api/referral/code', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const referralCode = await storage.createReferralCode(userId);
       res.json({ referralCode });
     } catch (error) {
@@ -289,9 +266,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/referrals', requireAuth, async (req: any, res) => {
+  app.get('/api/referrals', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const referrals = await storage.getReferralsByUser(userId);
       
       // Get referred user details
@@ -318,9 +295,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get referral statistics for progress tracking
-  app.get('/api/referral/stats', requireAuth, async (req: any, res) => {
+  app.get('/api/referral/stats', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const referrals = await storage.getReferralsByUser(userId);
       
       const totalReferrals = referrals.length;
@@ -362,9 +339,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Membership routes
-  app.get('/api/membership/status', requireAuth, async (req: any, res) => {
+  app.get('/api/membership/status', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const status = await storage.checkMembershipStatus(userId);
       res.json(status);
     } catch (error) {
@@ -373,9 +350,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/membership/upgrade-to-pro', requireAuth, async (req: any, res) => {
+  app.post('/api/membership/upgrade-to-pro', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const { durationDays = 30 } = req.body;
       const upgradePrice = 350;
       
@@ -421,9 +398,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Campaign Planner usage tracking
-  app.get('/api/campaign-planner/usage', requireAuth, async (req: any, res) => {
+  app.get('/api/campaign-planner/usage', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       const membershipStatus = await storage.checkMembershipStatus(userId);
       
@@ -444,9 +421,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Secure Campaign Planner calculation endpoint with server-side validation
-  app.post('/api/campaign-planner/calculate', requireAuth, async (req: any, res) => {
+  app.post('/api/campaign-planner/calculate', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const { startDate, endDate, targetRevenue, targetAov, targetConversionRate, cpc } = req.body;
 
       // 1. 後端檢查會員狀態和使用次數
@@ -589,9 +566,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/campaign-planner/record-usage', requireAuth, async (req: any, res) => {
+  app.post('/api/campaign-planner/record-usage', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       console.log('Recording usage for user:', userId);
       
       const membershipStatus = await storage.checkMembershipStatus(userId);
@@ -635,9 +612,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Test referral system endpoint
-  app.post('/api/admin/test-referral', requireAuth, async (req: any, res) => {
+  app.post('/api/admin/test-referral', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const { testEmail } = req.body;
       
       if (!testEmail) {
@@ -891,9 +868,9 @@ echo "Bulk import completed!"`;
   // ===== Saved Projects API =====
   
   // Save a new project
-  app.post('/api/projects', requireAuth, async (req: any, res) => {
+  app.post('/api/projects', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const { projectName, projectType, projectData, calculationResult } = req.body;
       
       console.log('Saving project for user:', userId, 'Project name:', projectName);
@@ -915,9 +892,9 @@ echo "Bulk import completed!"`;
   });
 
   // Get user's projects
-  app.get('/api/projects', requireAuth, async (req: any, res) => {
+  app.get('/api/projects', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const projects = await storage.getUserProjects(userId);
       res.json(projects);
     } catch (error) {
@@ -927,9 +904,9 @@ echo "Bulk import completed!"`;
   });
 
   // Get a specific project
-  app.get('/api/projects/:id', requireAuth, async (req: any, res) => {
+  app.get('/api/projects/:id', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const projectId = req.params.id;
       const project = await storage.getProject(projectId, userId);
       
@@ -945,9 +922,9 @@ echo "Bulk import completed!"`;
   });
 
   // Update a project
-  app.put('/api/projects/:id', requireAuth, async (req: any, res) => {
+  app.put('/api/projects/:id', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const projectId = req.params.id;
       const updates = req.body;
       
@@ -964,9 +941,9 @@ echo "Bulk import completed!"`;
   });
 
   // Delete a project
-  app.delete('/api/projects/:id', requireAuth, async (req: any, res) => {
+  app.delete('/api/projects/:id', requireJWTAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const projectId = req.params.id;
       
       const success = await storage.deleteProject(projectId, userId);
@@ -1006,7 +983,7 @@ echo "Bulk import completed!"`;
   };
 
   // Get user statistics for BI dashboard
-  app.get('/api/bdmin/stats', requireAuth, requireAdmin, async (req: any, res) => {
+  app.get('/api/bdmin/stats', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
       const stats = await storage.getUserStats();
       res.json(stats);
@@ -1017,7 +994,7 @@ echo "Bulk import completed!"`;
   });
 
   // Get all users with pagination
-  app.get('/api/bdmin/users', requireAuth, requireAdmin, async (req: any, res) => {
+  app.get('/api/bdmin/users', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
       const limit = parseInt(req.query.limit) || 50;
       const offset = parseInt(req.query.offset) || 0;
@@ -1032,7 +1009,7 @@ echo "Bulk import completed!"`;
   });
 
   // Update user membership manually
-  app.put('/api/bdmin/users/:userId/membership', requireAuth, requireAdmin, async (req: any, res) => {
+  app.put('/api/bdmin/users/:userId/membership', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
       const { userId } = req.params;
       const { membershipLevel, durationDays } = req.body;
@@ -1052,7 +1029,7 @@ echo "Bulk import completed!"`;
   });
 
   // Batch update user memberships
-  app.put('/api/bdmin/users/batch/membership', requireAuth, requireAdmin, async (req: any, res) => {
+  app.put('/api/bdmin/users/batch/membership', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
       const { userIds, membershipLevel, durationDays } = req.body;
       
@@ -1079,7 +1056,7 @@ echo "Bulk import completed!"`;
   });
 
   // Batch add credits to users
-  app.post('/api/bdmin/users/batch/credits', requireAuth, requireAdmin, async (req: any, res) => {
+  app.post('/api/bdmin/users/batch/credits', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
       const { userIds, amount, description } = req.body;
       
@@ -1104,7 +1081,7 @@ echo "Bulk import completed!"`;
   });
 
   // Get SEO settings
-  app.get('/api/bdmin/seo', requireAuth, requireAdmin, async (req: any, res) => {
+  app.get('/api/bdmin/seo', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
       const settings = await storage.getSeoSettings();
       res.json(settings);
@@ -1115,7 +1092,7 @@ echo "Bulk import completed!"`;
   });
 
   // Update SEO settings
-  app.put('/api/bdmin/seo/:page', requireAuth, requireAdmin, async (req: any, res) => {
+  app.put('/api/bdmin/seo/:page', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
       const { page } = req.params;
       const { title, description, keywords, ogTitle, ogDescription } = req.body;
@@ -1136,7 +1113,7 @@ echo "Bulk import completed!"`;
   });
 
   // Get system logs
-  app.get('/api/bdmin/logs', requireAuth, requireAdmin, async (req: any, res) => {
+  app.get('/api/bdmin/logs', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
       const level = req.query.level as string;
       const limit = parseInt(req.query.limit) || 100;
@@ -1150,7 +1127,7 @@ echo "Bulk import completed!"`;
   });
 
   // Get system monitoring stats
-  app.get('/api/bdmin/system', requireAuth, requireAdmin, async (req: any, res) => {
+  app.get('/api/bdmin/system', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
       const systemStats = await storage.getSystemStats();
       
@@ -1176,7 +1153,7 @@ echo "Bulk import completed!"`;
   // ===== Advanced Admin Features =====
   
   // User behavior analytics
-  app.get('/api/bdmin/behavior/stats', requireAuth, requireAdmin, async (req: any, res) => {
+  app.get('/api/bdmin/behavior/stats', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
       const stats = await storage.getUserBehaviorStats();
       res.json(stats);
@@ -1213,7 +1190,7 @@ echo "Bulk import completed!"`;
   });
 
   // Announcements management
-  app.get('/api/bdmin/announcements', requireAuth, requireAdmin, async (req: any, res) => {
+  app.get('/api/bdmin/announcements', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
       const announcements = await storage.getAllAnnouncements();
       res.json(announcements);
@@ -1223,9 +1200,9 @@ echo "Bulk import completed!"`;
     }
   });
 
-  app.post('/api/bdmin/announcements', requireAuth, requireAdmin, async (req: any, res) => {
+  app.post('/api/bdmin/announcements', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const { title, content, type, targetAudience, priority, startDate, endDate } = req.body;
       
       const announcement = await storage.createAnnouncement({
@@ -1249,7 +1226,7 @@ echo "Bulk import completed!"`;
     }
   });
 
-  app.put('/api/bdmin/announcements/:id', requireAuth, requireAdmin, async (req: any, res) => {
+  app.put('/api/bdmin/announcements/:id', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
       const { id } = req.params;
       const updates = req.body;
@@ -1262,7 +1239,7 @@ echo "Bulk import completed!"`;
     }
   });
 
-  app.delete('/api/bdmin/announcements/:id', requireAuth, requireAdmin, async (req: any, res) => {
+  app.delete('/api/bdmin/announcements/:id', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
       const { id } = req.params;
       const success = await storage.deleteAnnouncement(parseInt(id));
@@ -1293,7 +1270,7 @@ echo "Bulk import completed!"`;
   });
 
   // API usage tracking and stats
-  app.get('/api/bdmin/api-usage', requireAuth, requireAdmin, async (req: any, res) => {
+  app.get('/api/bdmin/api-usage', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
       const { service } = req.query;
       const stats = await storage.getApiUsageStats(service as string);
@@ -1305,9 +1282,9 @@ echo "Bulk import completed!"`;
   });
 
   // Data export operations
-  app.post('/api/bdmin/export', requireAuth, requireAdmin, async (req: any, res) => {
+  app.post('/api/bdmin/export', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       const { type, filters } = req.body;
       
       // Create export job
@@ -1353,7 +1330,7 @@ echo "Bulk import completed!"`;
     }
   });
 
-  app.get('/api/bdmin/exports', requireAuth, requireAdmin, async (req: any, res) => {
+  app.get('/api/bdmin/exports', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
       const exports = await storage.getExportJobs();
       res.json(exports);
@@ -1364,7 +1341,7 @@ echo "Bulk import completed!"`;
   });
 
   // Maintenance mode controls
-  app.get('/api/bdmin/maintenance', requireAuth, requireAdmin, async (req: any, res) => {
+  app.get('/api/bdmin/maintenance', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
       const mode = await storage.getMaintenanceMode();
       res.json(mode);
@@ -1374,7 +1351,7 @@ echo "Bulk import completed!"`;
     }
   });
 
-  app.post('/api/bdmin/maintenance', requireAuth, requireAdmin, async (req: any, res) => {
+  app.post('/api/bdmin/maintenance', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
       const { enabled, message } = req.body;
       await storage.setMaintenanceMode(enabled, message);
@@ -1419,11 +1396,11 @@ echo "Bulk import completed!"`;
   });
 
   // Upload PDF and start AI analysis
-  app.post('/api/bdmin/marketing-plans', requireAuth, requireAdmin, upload.single('file'), async (req: any, res) => {
+  app.post('/api/bdmin/marketing-plans', requireJWTAuth, requireAdmin, upload.single('file'), async (req: any, res) => {
     let tempFilePath = '';
     
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      const userId = req.user.id;
       
       if (!req.file) {
         return res.status(400).json({ message: 'No PDF file uploaded' });
@@ -1565,7 +1542,7 @@ echo "Bulk import completed!"`;
   }
 
   // Get all marketing plans
-  app.get('/api/bdmin/marketing-plans', requireAuth, requireAdmin, async (req: any, res) => {
+  app.get('/api/bdmin/marketing-plans', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
       const plans = await storage.getMarketingPlans();
       res.json(plans);
@@ -1576,7 +1553,7 @@ echo "Bulk import completed!"`;
   });
 
   // Get analysis items for a specific plan
-  app.get('/api/bdmin/marketing-plans/:id', requireAuth, requireAdmin, async (req: any, res) => {
+  app.get('/api/bdmin/marketing-plans/:id', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
       const { id } = req.params;
       const items = await storage.getAnalysisItemsForPlan(id);
@@ -1588,7 +1565,7 @@ echo "Bulk import completed!"`;
   });
 
   // Update analysis item phase or approval status
-  app.put('/api/bdmin/analysis-items/:id', requireAuth, requireAdmin, async (req: any, res) => {
+  app.put('/api/bdmin/analysis-items/:id', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
       const { id } = req.params;
       const { phase, isApproved } = req.body;
@@ -1614,7 +1591,7 @@ echo "Bulk import completed!"`;
   });
 
   // Admin Dashboard API Routes - Real data connections
-  app.get('/api/bdmin/stats', requireAuth, async (req, res) => {
+  app.get('/api/bdmin/stats', requireJWTAuth, async (req, res) => {
     try {
       // Query real user statistics
       const allUsers = await db.select().from(usersTable);
@@ -1643,7 +1620,7 @@ echo "Bulk import completed!"`;
 
 
 
-  app.post('/api/bdmin/users/bulk-membership', requireAuth, async (req, res) => {
+  app.post('/api/bdmin/users/bulk-membership', requireJWTAuth, async (req, res) => {
     try {
       const { userIds, membershipLevel, duration } = req.body;
       
@@ -1671,7 +1648,7 @@ echo "Bulk import completed!"`;
     }
   });
 
-  app.post('/api/bdmin/users/bulk-credits', requireAuth, async (req, res) => {
+  app.post('/api/bdmin/users/bulk-credits', requireJWTAuth, async (req, res) => {
     try {
       const { userIds, amount } = req.body;
       
