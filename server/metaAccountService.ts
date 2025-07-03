@@ -341,19 +341,13 @@ export class MetaAccountService {
 請按以下架構提供完整診斷報告：
 
 ## 1. 🌟 成功亮點分析
-請分析並列出：
-- 5個有符合目標 CTR (>2%) 的「廣告名稱」，並列出廣告的 post-id
-  格式：廣告名稱 - Post ID: 123456789
-${metaData?.topPerformingAds ? `
-現有優質廣告參考：
-${metaData.topPerformingAds.map(ad => `- ${ad.name} - Post ID: ${ad.postId} (CTR: ${ad.ctr}%, ROAS: ${ad.roas}x)`).join('\n')}
-` : ''}
-- 5個有達到 ROAS 目標的「廣告組合名稱」，推薦加碼預算
-  格式：廣告組合名稱 - 當前 ROAS: 3.2x，建議加碼 20%
-${metaData?.topPerformingAdSets ? `
-現有優質廣告組合參考：
-${metaData.topPerformingAdSets.map(adSet => `- ${adSet.name} - 當前 ROAS: ${adSet.roas}x，建議加碼 ${adSet.suggestedBudgetIncrease}%`).join('\n')}
-` : ''}
+請分析帳戶的整體表現亮點：
+- 識別表現良好的指標（如 CTR、ROAS、轉換率）
+- 分析成功的原因和可複製的策略
+- 注意：請勿生成具體的廣告名稱或 Post ID，因為這些需要從實際 Facebook 數據中獲取
+- 分析表現優異的策略類型和受眾定向
+- 提供可行的優化建議和擴展方向
+- 注意：請勿生成具體的廣告組合名稱，這些需要從實際 Facebook 數據中獲取
 
 ## 2. 📊 轉換漏斗優化建議
 詳細說明：
