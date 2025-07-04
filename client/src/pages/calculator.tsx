@@ -310,6 +310,7 @@ export default function Calculator({ locale }: CalculatorProps) {
                     <div className="bg-blue-50 p-4 rounded-lg">
                       <h3 className="font-semibold text-blue-900 mb-2">每月所需訂單數</h3>
                       <p className="text-2xl font-bold text-blue-600">{formatNumber(results.requiredOrders)} 筆</p>
+                      <p className="text-sm text-blue-700">每日約 {formatNumber(Math.round(results.requiredOrders / 30))} 筆</p>
                     </div>
                     
                     <div className="bg-green-50 p-4 rounded-lg">
