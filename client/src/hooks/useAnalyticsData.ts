@@ -15,26 +15,25 @@ export interface AnalyticsData {
   sessions: number;
 }
 
-export function useAnalyticsProperties() {
+export function useAnalyticsProperties(enabled: boolean = true) {
   return useQuery({
     queryKey: ["/api/analytics/properties"],
-    enabled: true, // 重新啟用以顯示 GA 資源選單
+    enabled,
     staleTime: 30 * 60 * 1000, // 30分鐘
     gcTime: 60 * 60 * 1000, // 1小時快取
   });
 }
 
-export function useAnalyticsData() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (propertyId: string): Promise<AnalyticsData> => {
+export function useAnalyticsData(propertyId: string, options: { enabled: boolean } = { enabled: true }) {
+  return useQuery({
+    queryKey: ["/api/analytics/data", propertyId],
+    queryFn: async (): Promise<AnalyticsData> => {
       const response = await apiRequest("POST", "/api/analytics/data", { propertyId });
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user/metrics"] });
-    },
+    enabled: options.enabled && !!propertyId,
+    staleTime: 10 * 60 * 1000, // 10分鐘
+    gcTime: 30 * 60 * 1000, // 30分鐘快取
   });
 }
 
