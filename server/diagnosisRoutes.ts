@@ -162,7 +162,7 @@ export function setupDiagnosisRoutes(app: Express) {
         });
       }
 
-      const redirectUri = `${req.protocol}://${req.get('host')}/api/diagnosis/facebook-callback`;
+      const redirectUri = `https://${req.get('host')}/api/diagnosis/facebook-callback`;
       const userId = req.user.id;
 
       console.log('生成 Facebook OAuth URL:', {
@@ -199,7 +199,7 @@ export function setupDiagnosisRoutes(app: Express) {
 
       // 交換 access token
       const tokenUrl = 'https://graph.facebook.com/v19.0/oauth/access_token';
-      const redirectUri = `${req.protocol}://${req.get('host')}/api/diagnosis/facebook-callback`;
+      const redirectUri = `https://${req.get('host')}/api/diagnosis/facebook-callback`;
 
       const tokenResponse = await fetch(tokenUrl, {
         method: 'POST',
