@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { useFacebookAuthUrl } from '@/hooks/useFacebookDiagnosis';
+import { apiRequest } from '@/lib/queryClient';
 import { Facebook, Loader2 } from 'lucide-react';
 
 interface FacebookLoginButtonProps {
@@ -7,25 +8,12 @@ interface FacebookLoginButtonProps {
 }
 
 export default function FacebookLoginButton({ className }: FacebookLoginButtonProps) {
-  const { refetch: getFacebookAuthUrl, isLoading } = useFacebookAuthUrl();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleFacebookLogin = async () => {
-    console.log('Facebook 登入按鈕被點擊');
-    try {
-      const result = await getFacebookAuthUrl();
-      console.log('Facebook Auth URL 結果:', result);
-      if (result.data && typeof result.data === 'string') {
-        console.log('重定向到:', result.data);
-        window.location.href = result.data;
-      } else if (result.data && typeof result.data === 'object' && (result.data as any).authUrl) {
-        console.log('重定向到:', (result.data as any).authUrl);
-        window.location.href = (result.data as any).authUrl;
-      } else {
-        console.error('未收到有效的授權 URL:', result.data);
-      }
-    } catch (error) {
-      console.error('Facebook 登入失敗:', error);
-    }
+  const handleFacebookLogin = () => {
+    setIsLoading(true);
+    // 直接重定向到 Facebook Auth URL 端點
+    window.location.href = '/api/diagnosis/facebook-auth-url';
   };
 
   return (

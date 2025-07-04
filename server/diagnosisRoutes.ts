@@ -8,6 +8,47 @@ import { eq } from 'drizzle-orm';
 
 export function setupDiagnosisRoutes(app: Express) {
 
+  // Facebook OAuth 授權 URL - 提前設置，避免被其他中間件攔截
+  app.get('/api/diagnosis/facebook-auth-url', (req: any, res) => {
+    try {
+      const appId = process.env.FACEBOOK_APP_ID;
+
+      if (!appId) {
+        console.error('Facebook App ID not found in environment variables');
+        return res.status(500).json({
+          success: false,
+          message: 'Facebook App ID 未設定'
+        });
+      }
+
+      const redirectUri = `https://${req.get('host')}/api/diagnosis/facebook-callback`;
+      // 對於未認證用戶，使用臨時狀態
+      const userId = req.user?.id || 'anonymous';
+
+      console.log('生成 Facebook OAuth URL:', {
+        appId: appId.substring(0, 5) + '***',
+        redirectUri,
+        userIdMask: userId.substring(0, 8) + '***'
+      });
+
+      const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?` +
+        `client_id=${appId}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `scope=ads_read,ads_management&` +
+        `response_type=code&` +
+        `state=${userId}`;
+
+      // 直接重定向到 Facebook OAuth 頁面
+      res.redirect(authUrl);
+    } catch (error) {
+      console.error('生成 Facebook 授權 URL 錯誤:', error);
+      res.status(500).json({
+        success: false,
+        message: '生成授權 URL 失敗'
+      });
+    }
+  });
+
   // 診斷系統配置檢查端點
   app.get('/api/diagnosis/config', (req, res) => {
     try {
@@ -149,44 +190,7 @@ export function setupDiagnosisRoutes(app: Express) {
     }
   });
 
-  // 獲取 Facebook OAuth 授權 URL
-  app.get('/api/diagnosis/facebook-auth-url', requireJWTAuth, (req: any, res) => {
-    try {
-      const appId = process.env.FACEBOOK_APP_ID;
 
-      if (!appId) {
-        console.error('Facebook App ID not found in environment variables');
-        return res.status(500).json({
-          success: false,
-          message: 'Facebook App ID 未設定'
-        });
-      }
-
-      const redirectUri = `https://${req.get('host')}/api/diagnosis/facebook-callback`;
-      const userId = req.user.id;
-
-      console.log('生成 Facebook OAuth URL:', {
-        appId: appId.substring(0, 5) + '***',
-        redirectUri,
-        userId: userId?.substring(0, 8) + '***'
-      });
-
-      const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?` +
-        `client_id=${appId}&` +
-        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-        `scope=ads_read,ads_management&` +
-        `response_type=code&` +
-        `state=${userId}`;
-
-      res.json({ authUrl });
-    } catch (error) {
-      console.error('生成 Facebook 授權 URL 錯誤:', error);
-      res.status(500).json({
-        success: false,
-        message: '生成授權 URL 失敗'
-      });
-    }
-  });
 
   // Facebook OAuth 回調處理
   app.get('/api/diagnosis/facebook-callback', async (req, res) => {
