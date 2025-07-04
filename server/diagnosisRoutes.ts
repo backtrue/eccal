@@ -687,19 +687,22 @@ export function setupDiagnosisRoutes(app: Express) {
     }
   });
 
-  // 獲取 Facebook OAuth 授權 URL
-  app.get('/api/diagnosis/facebook-auth-url', requireJWTAuth, async (req: any, res) => {
+  // 獲取 Facebook OAuth 授權 URL (不需要JWT認證)
+  app.get('/api/diagnosis/facebook-auth-url', async (req: any, res) => {
     try {
       // 強制使用 HTTPS
       const baseUrl = `https://${req.get('host')}`;
       const redirectUri = `${baseUrl}/api/diagnosis/facebook-callback`;
+      
+      // 生成隨機 state 用於安全驗證
+      const state = Math.random().toString(36).substring(2, 15);
       
       const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?` +
         `client_id=${process.env.FACEBOOK_APP_ID}&` +
         `redirect_uri=${encodeURIComponent(redirectUri)}&` +
         `scope=ads_read,ads_management,business_management&` +
         `response_type=code&` +
-        `state=${req.user.id}`;
+        `state=${state}`;
 
       console.log(`[FACEBOOK_AUTH] Generated auth URL for user ${req.user.id}`);
       console.log(`[FACEBOOK_AUTH] Redirect URI: ${redirectUri}`);
@@ -711,17 +714,17 @@ export function setupDiagnosisRoutes(app: Express) {
     }
   });
 
-  // Facebook OAuth 回調處理
+  // Facebook OAuth 回調處理 (獨立於JWT認證)
   app.get('/api/diagnosis/facebook-callback', async (req, res) => {
     try {
-      const { code, state: userId } = req.query;
+      const { code, state } = req.query;
       
       if (!code) {
         console.error('[FACEBOOK_CALLBACK] No authorization code received');
         return res.status(400).send('授權失敗：未收到授權碼');
       }
 
-      console.log(`[FACEBOOK_CALLBACK] Processing callback for user ${userId}`);
+      console.log(`[FACEBOOK_CALLBACK] Processing callback with state: ${state}`);
 
       // 交換 access token - 強制使用 HTTPS
       const baseUrl = `https://${req.get('host')}`;
@@ -745,12 +748,17 @@ export function setupDiagnosisRoutes(app: Express) {
         return res.status(400).send(`授權失敗：${tokenData.error.message}`);
       }
 
-      console.log(`[FACEBOOK_CALLBACK] Token exchange successful for user ${userId}`);
+      console.log(`[FACEBOOK_CALLBACK] Token exchange successful`);
 
-      // 儲存 access token 到用戶資料
-      await storage.updateMetaTokens(userId as string, tokenData.access_token, null);
+      // 暫時將 access token 存儲在 session/cookie 中
+      res.cookie('facebook_access_token', tokenData.access_token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+        maxAge: 2 * 60 * 60 * 1000 // 2 hours
+      });
 
-      console.log(`[FACEBOOK_CALLBACK] Token saved, redirecting to calculator`);
+      console.log(`[FACEBOOK_CALLBACK] Token saved in cookie, redirecting to calculator`);
       
       // 重定向回計算器頁面
       res.redirect('/calculator?facebook_connected=true');
