@@ -64,6 +64,10 @@ export default function Calculator({ locale }: CalculatorProps) {
     selectedProperty, 
     { enabled: false } // 不自動載入，需手動觸發
   );
+  
+  // Facebook diagnosis hooks
+  const { data: fbConnection } = useFacebookConnection(isAuthenticated);
+  const diagnosisMutation = useFacebookDiagnosis();
 
   const form = useForm<CalculatorFormData>({
     resolver: zodResolver(createCalculatorSchema(t)),
@@ -125,7 +129,16 @@ export default function Calculator({ locale }: CalculatorProps) {
     }
   };
 
-
+  const handleDiagnosis = () => {
+    if (!results) return;
+    
+    diagnosisMutation.mutate({
+      targetRevenue: form.getValues('targetRevenue'),
+      targetAov: form.getValues('averageOrderValue'),
+      targetConversionRate: form.getValues('conversionRate'),
+      cpc: 5
+    });
+  };
 
   const formatNumber = (num: number) => {
     return num.toLocaleString('zh-TW');
@@ -336,29 +349,56 @@ export default function Calculator({ locale }: CalculatorProps) {
                   </div>
                 </div>
 
-                {/* Facebook Diagnosis Section - Coming Soon */}
+                {/* Facebook Diagnosis Section */}
                 {isAuthenticated && (
                   <div className="mt-8 pt-6 border-t">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-semibold flex items-center gap-2">
                         <Facebook className="h-5 w-5 text-blue-600" />
-                        Facebook 廣告診斷
+                        Facebook 廣告健檢
                       </h3>
-                      <Badge variant="outline" className="border-blue-200 text-blue-600">
-                        即將推出
-                      </Badge>
+                      {(fbConnection as any)?.connected ? (
+                        <Badge variant="default" className="bg-green-100 text-green-800">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          已連接
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="border-orange-200 text-orange-600">
+                          <AlertCircle className="h-3 w-3 mr-1" />
+                          未連接
+                        </Badge>
+                      )}
                     </div>
                     
                     <p className="text-gray-600 text-sm mb-4">
-                      Facebook 廣告診斷功能正在開發中，敬請期待！
+                      基於您的計算結果，我們將分析 Facebook 廣告帳戶的四大核心指標：
                     </p>
                     
+                    <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span>訂單數對比</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                        <span>預算效率</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span>流量表現</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                        <span>ROAS 達成率</span>
+                      </div>
+                    </div>
+                    
                     <Button 
-                      disabled
+                      onClick={handleDiagnosis}
+                      disabled={diagnosisMutation.isPending}
                       className="w-full"
-                      variant="outline"
                     >
-                      功能開發中...
+                      {diagnosisMutation.isPending ? '分析中...' : '開始廣告健檢'}
                     </Button>
                   </div>
                 )}

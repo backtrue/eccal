@@ -382,8 +382,30 @@ export function setupDiagnosisRoutes(app: Express) {
     }
   });
 
-  // 觸發廣告帳戶健診
-  app.post('/api/diagnosis/analyze-account', requireJWTAuth, async (req: any, res) => {
+  // 檢查 Facebook 連接狀態
+  app.get('/api/diagnosis/facebook-connection', requireJWTAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      const connected = !!(user?.metaAccessToken && user?.metaAdAccountId);
+      
+      res.json({
+        connected,
+        accountId: user?.metaAdAccountId || null,
+        accountName: connected ? '已連接廣告帳戶' : null
+      });
+    } catch (error) {
+      console.error('檢查 Facebook 連接狀態錯誤:', error);
+      res.status(500).json({
+        error: 'connection_check_failed',
+        message: '檢查連接狀態失敗'
+      });
+    }
+  });
+
+  // 觸發廣告帳戶健診 (修正路徑為 /analyze)
+  app.post('/api/diagnosis/analyze', requireJWTAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
       const {
@@ -684,20 +706,51 @@ async function processAccountDiagnosis(
     const accountData = await metaAccountService.getAdAccountData(accessToken, adAccountId);
     console.log(`[DIAGNOSIS] 步驟1 完成: 帳戶名稱 ${accountData.accountName}, 花費 ${accountData.spend}`);
 
-    // 2. 計算診斷數據
-    console.log(`[DIAGNOSIS] 步驟2: 計算診斷數據...`);
-    const diagnosisData = metaAccountService.calculateAccountDiagnosisData(targetData, accountData);
-    console.log(`[DIAGNOSIS] 步驟2 完成: 健康分數計算中...`);
+    // 2. 計算診斷數據和四大核心指標比較
+    console.log(`[DIAGNOSIS] 步驟2: 計算四大核心指標對比數據...`);
+    
+    // 計算目標指標
+    const targetOrders = Math.round(targetData.targetRevenue / targetData.targetAov);
+    const targetTraffic = Math.round(targetOrders / (targetData.targetConversionRate / 100));
+    const targetDailyBudget = Math.round((targetTraffic * targetData.cpc) / 30);
+    const targetRoas = targetData.targetRevenue / (targetDailyBudget * 30);
+    
+    // 計算實際指標 (從 Facebook 數據)
+    const actualOrders = accountData.purchases || 0;
+    const actualTraffic = accountData.linkClicks || 0;
+    const actualDailyBudget = accountData.spend / 30;
+    const actualRoas = actualOrders > 0 ? accountData.purchaseValue / accountData.spend : 0;
+    
+    const diagnosisData = {
+      comparison: {
+        targetOrders,
+        actualOrders,
+        targetBudget: targetDailyBudget * 30,
+        actualBudget: accountData.spend,
+        targetTraffic,
+        actualTraffic,
+        targetRoas,
+        actualRoas
+      },
+      achievementRates: {
+        ordersRate: actualOrders / targetOrders * 100,
+        budgetEfficiency: targetDailyBudget > 0 ? actualDailyBudget / targetDailyBudget * 100 : 0,
+        trafficRate: actualTraffic / targetTraffic * 100,
+        roasRate: targetRoas > 0 ? actualRoas / targetRoas * 100 : 0
+      }
+    };
+    
+    console.log(`[DIAGNOSIS] 步驟2 完成: 四大指標對比完成`, diagnosisData);
 
-    // 3. 生成 AI 診斷報告
-    console.log(`[DIAGNOSIS] 步驟3: 生成 AI 診斷報告...`);
-    const aiReport = await metaAccountService.generateAccountDiagnosisReport(accountData.accountName, diagnosisData, accountData);
-    console.log(`[DIAGNOSIS] 步驟3 完成: AI 報告生成完成 (${aiReport.length} 字符)`);
+    // 3. 計算健康分數 (基於四大核心指標)
+    console.log(`[DIAGNOSIS] 步驟3: 計算健康分數...`);
+    const healthScore = calculateFourMetricsHealthScore(diagnosisData);
+    console.log(`[DIAGNOSIS] 步驟3 完成: 健康分數 ${healthScore}`);
 
-    // 4. 計算健康分數
-    console.log(`[DIAGNOSIS] 步驟4: 計算健康分數...`);
-    const healthScore = calculateAccountHealthScore(diagnosisData);
-    console.log(`[DIAGNOSIS] 步驟4 完成: 健康分數 ${healthScore}`);
+    // 4. 生成 AI 診斷報告 (基於四大核心指標)
+    console.log(`[DIAGNOSIS] 步驟4: 生成 AI 診斷報告...`);
+    const aiReport = await generateFourMetricsAIReport(accountData.accountName, diagnosisData, accountData);
+    console.log(`[DIAGNOSIS] 步驟4 完成: AI 報告生成完成 (${aiReport.length} 字符)`);
 
     // 5. 更新報告
     console.log(`[DIAGNOSIS] 步驟5: 更新報告...`);
@@ -760,7 +813,91 @@ async function updateDiagnosisReportStatus(reportId: string, status: string, mes
     .where(eq(adDiagnosisReports.id, reportId));
 }
 
-// 計算帳戶健康分數
+// 基於四大核心指標的健康分數計算
+function calculateFourMetricsHealthScore(diagnosisData: any): number {
+  const { achievementRates } = diagnosisData;
+  
+  // 權重配置 (四大核心指標)
+  const weights = {
+    orders: 0.30,      // 訂單數達成率
+    budget: 0.25,      // 預算效率
+    traffic: 0.25,     // 流量達成率
+    roas: 0.20         // ROAS 達成率
+  };
+
+  // 計算各項分數 (0-100)
+  const ordersScore = Math.min(achievementRates.ordersRate, 150); // 最高150%
+  const budgetScore = 100 - Math.abs(achievementRates.budgetEfficiency - 100); // 接近100%最好
+  const trafficScore = Math.min(achievementRates.trafficRate, 150); // 最高150%
+  const roasScore = Math.min(achievementRates.roasRate, 150); // 最高150%
+
+  // 加權計算總分
+  const totalScore = 
+    ordersScore * weights.orders +
+    budgetScore * weights.budget +
+    trafficScore * weights.traffic +
+    roasScore * weights.roas;
+
+  return Math.round(Math.max(0, Math.min(100, totalScore)));
+}
+
+// 基於四大核心指標的 AI 診斷報告生成
+async function generateFourMetricsAIReport(
+  accountName: string, 
+  diagnosisData: any, 
+  accountData: any
+): Promise<string> {
+  const { comparison, achievementRates } = diagnosisData;
+  
+  const prompt = `作為 Facebook 廣告專家，請基於以下四大核心指標分析廣告帳戶表現：
+
+廣告帳戶：${accountName}
+
+四大核心指標對比：
+1. 訂單數對比：
+   - 目標訂單數：${comparison.targetOrders} 筆
+   - 實際訂單數：${comparison.actualOrders} 筆
+   - 達成率：${achievementRates.ordersRate.toFixed(1)}%
+
+2. 預算效率：
+   - 目標月預算：NT$ ${comparison.targetBudget.toLocaleString()}
+   - 實際月花費：NT$ ${comparison.actualBudget.toLocaleString()}
+   - 預算效率：${achievementRates.budgetEfficiency.toFixed(1)}%
+
+3. 流量表現：
+   - 目標流量：${comparison.targetTraffic.toLocaleString()} 人次
+   - 實際流量：${comparison.actualTraffic.toLocaleString()} 人次
+   - 流量達成率：${achievementRates.trafficRate.toFixed(1)}%
+
+4. ROAS 表現：
+   - 目標 ROAS：${comparison.targetRoas.toFixed(1)}x
+   - 實際 ROAS：${comparison.actualRoas.toFixed(1)}x
+   - ROAS 達成率：${achievementRates.roasRate.toFixed(1)}%
+
+請提供：
+1. 四大指標的整體分析
+2. 每個指標的具體問題診斷
+3. 實用的改進建議
+4. 優先改善順序
+
+請用繁體中文回答，語調專業且具體。`;
+
+  try {
+    const response = await metaAccountService['openai'].chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 1500,
+      temperature: 0.7,
+    });
+
+    return response.choices[0].message.content || '無法生成診斷報告';
+  } catch (error) {
+    console.error('AI 診斷報告生成失敗:', error);
+    return '系統暫時無法生成 AI 診斷報告，請稍後再試。';
+  }
+}
+
+// 計算帳戶健康分數 (原有邏輯，保持向後兼容)
 function calculateAccountHealthScore(diagnosisData: any): number {
   let score = 0;
 

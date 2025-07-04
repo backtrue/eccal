@@ -54,7 +54,7 @@ export function useFacebookDiagnosis() {
       const response = await apiRequest('POST', '/api/diagnosis/analyze', data);
       return response;
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       toast({
         title: "診斷完成",
         description: `您的廣告帳戶健康分數：${data.healthScore}/100`,
