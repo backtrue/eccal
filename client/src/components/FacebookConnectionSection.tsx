@@ -29,14 +29,9 @@ export function FacebookConnectionSection({
 }: FacebookConnectionSectionProps) {
   const [connectionStep, setConnectionStep] = useState<'auth' | 'select' | 'ready' | 'diagnosis'>('auth');
   const [selectedAccount, setSelectedAccount] = useState<string>('');
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const { toast } = useToast();
-
-  // Hooks
-  const connectionQuery = useFacebookConnection(true); // 啟用真正的連接檢查
-  const authUrlQuery = useFacebookAuthUrl();
-  const accountsQuery = useFacebookAdAccounts(connectionStep === 'select');
-  const selectAccountMutation = useSelectFacebookAccount();
-  const diagnosisMutation = useFacebookDiagnosis();
 
   // 檢查 Facebook 連接成功回調
   useEffect(() => {
