@@ -691,14 +691,56 @@ export function setupDiagnosisRoutes(app: Express) {
       const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?` +
         `client_id=${process.env.FACEBOOK_APP_ID}&` +
         `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-        `scope=ads_read,ads_management&` +
+        `scope=ads_read,ads_management,business_management&` +
         `response_type=code&` +
         `state=${req.user.id}`;
 
+      console.log(`[FACEBOOK_AUTH] Generated auth URL for user ${req.user.id}:`, authUrl);
       res.json({ authUrl });
     } catch (error) {
       console.error('生成 Facebook 授權 URL 錯誤:', error);
       res.status(500).json({ error: '生成授權連結失敗' });
+    }
+  });
+
+  // Facebook OAuth 回調處理
+  app.get('/api/diagnosis/facebook-callback', async (req, res) => {
+    try {
+      const { code, state: userId } = req.query;
+      
+      if (!code) {
+        return res.status(400).send('授權失敗：未收到授權碼');
+      }
+
+      console.log(`[FACEBOOK_CALLBACK] Processing callback for user ${userId} with code: ${code}`);
+
+      // 交換 access token
+      const baseUrl = req.protocol === 'https' ? `https://${req.get('host')}` : `https://${req.get('host')}`;
+      const redirectUri = `${baseUrl}/api/diagnosis/facebook-callback`;
+      
+      const tokenResponse = await fetch(`https://graph.facebook.com/v19.0/oauth/access_token?` +
+        `client_id=${process.env.FACEBOOK_APP_ID}&` +
+        `client_secret=${process.env.FACEBOOK_APP_SECRET}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `code=${code}`);
+
+      const tokenData = await tokenResponse.json();
+      
+      if (tokenData.error) {
+        console.error('Facebook token exchange error:', tokenData.error);
+        return res.status(400).send(`授權失敗：${tokenData.error.message}`);
+      }
+
+      console.log(`[FACEBOOK_CALLBACK] Token exchange successful for user ${userId}`);
+
+      // 儲存 access token 到用戶資料
+      await storage.updateMetaTokens(userId as string, tokenData.access_token, null);
+
+      // 重定向回計算器頁面
+      res.redirect('/calculator?facebook_connected=true');
+    } catch (error) {
+      console.error('Facebook OAuth 回調錯誤:', error);
+      res.status(500).send('授權處理失敗');
     }
   });
 
@@ -712,12 +754,33 @@ export function setupDiagnosisRoutes(app: Express) {
         return res.status(401).json({ error: '請先授權 Facebook 帳戶' });
       }
 
-      // 模擬廣告帳戶列表 (實際實現需要調用 Facebook API)
-      const accounts = [
-        { id: 'act_123456789', name: '我的廣告帳戶' },
-        { id: 'act_987654321', name: '電商推廣帳戶' }
-      ];
+      console.log(`[FACEBOOK_ACCOUNTS] Fetching accounts for user ${userId}`);
 
+      // 調用 Facebook API 獲取廣告帳戶
+      const response = await fetch(`https://graph.facebook.com/v19.0/me/adaccounts?` +
+        `fields=id,name,account_status,currency,timezone_name&` +
+        `access_token=${user.metaAccessToken}`);
+
+      const data = await response.json();
+
+      if (data.error) {
+        console.error('Facebook API error:', data.error);
+        return res.status(400).json({ error: `Facebook API 錯誤: ${data.error.message}` });
+      }
+
+      // 只返回啟用的廣告帳戶
+      const activeAccounts = data.data?.filter((account: any) => 
+        account.account_status === 1 || account.account_status === 2
+      ) || [];
+
+      const accounts = activeAccounts.map((account: any) => ({
+        id: account.id,
+        name: account.name,
+        currency: account.currency,
+        timezone: account.timezone_name
+      }));
+
+      console.log(`[FACEBOOK_ACCOUNTS] Found ${accounts.length} active accounts for user ${userId}`);
       res.json({ accounts });
     } catch (error) {
       console.error('獲取 Facebook 廣告帳戶錯誤:', error);

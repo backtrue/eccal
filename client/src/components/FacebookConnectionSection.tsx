@@ -29,34 +29,65 @@ export function FacebookConnectionSection({
 }: FacebookConnectionSectionProps) {
   const [connectionStep, setConnectionStep] = useState<'auth' | 'select' | 'ready' | 'diagnosis'>('auth');
   const [selectedAccount, setSelectedAccount] = useState<string>('');
-  const [mockConnected, setMockConnected] = useState(false);
   const { toast } = useToast();
 
   // Hooks
-  const connectionQuery = useFacebookConnection(false); // 暫時停用自動檢查
+  const connectionQuery = useFacebookConnection(true); // 啟用真正的連接檢查
   const authUrlQuery = useFacebookAuthUrl();
   const accountsQuery = useFacebookAdAccounts(connectionStep === 'select');
   const selectAccountMutation = useSelectFacebookAccount();
   const diagnosisMutation = useFacebookDiagnosis();
 
-  // 模擬連接成功的處理
-  const handleMockConnection = () => {
-    setMockConnected(true);
-    setConnectionStep('ready');
-    onConnectionSuccess?.();
-    toast({
-      title: "Facebook 帳戶已連接",
-      description: "現在可以進行廣告健檢分析",
-    });
-  };
+  // 檢查 Facebook 連接成功回調
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('facebook_connected') === 'true') {
+      // 清除 URL 參數
+      window.history.replaceState({}, '', window.location.pathname);
+      
+      // 刷新連接狀態
+      connectionQuery.refetch();
+      toast({
+        title: "Facebook 帳戶連接成功",
+        description: "正在檢查您的廣告帳戶...",
+      });
+    }
+  }, []);
 
-  // Handle Facebook OAuth - 現在實際實現
+  // 檢查連接狀態並更新 UI
+  useEffect(() => {
+    if (connectionQuery.data) {
+      const connection = connectionQuery.data as any;
+      if (connection.connected && connection.accountId) {
+        setConnectionStep('ready');
+        onConnectionSuccess?.();
+      } else if (connection.connected && !connection.accountId) {
+        setConnectionStep('select');
+      } else {
+        setConnectionStep('auth');
+      }
+    }
+  }, [connectionQuery.data, onConnectionSuccess]);
+
+  // Handle Facebook OAuth - 真正的 OAuth 流程
   const handleFacebookAuth = async () => {
-    toast({
-      title: "功能開發中",
-      description: "Facebook 真實連接功能正在開發中，請點擊下方模擬連接按鈕測試診斷功能",
-      variant: "default",
-    });
+    try {
+      const result = await authUrlQuery.refetch();
+      const data = result.data as any;
+      if (data?.authUrl) {
+        console.log('[FACEBOOK_AUTH] Redirecting to Facebook OAuth:', data.authUrl);
+        window.location.href = data.authUrl;
+      } else {
+        throw new Error('無法獲取授權連結');
+      }
+    } catch (error) {
+      console.error('Facebook 授權錯誤:', error);
+      toast({
+        title: "授權失敗",
+        description: "無法獲取 Facebook 授權連結，請稍後再試",
+        variant: "destructive",
+      });
+    }
   };
 
   // Handle account selection
@@ -103,7 +134,7 @@ export function FacebookConnectionSection({
         </div>
         
         <p className="text-gray-600 text-sm">
-          真實的 Facebook API 連接功能正在開發中，您可以使用模擬連接來測試診斷功能
+          連接您的 Facebook 廣告帳戶以進行專業廣告健檢分析
         </p>
         
         <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
@@ -125,23 +156,13 @@ export function FacebookConnectionSection({
           </div>
         </div>
         
-        <div className="space-y-2">
-          <Button 
-            onClick={handleFacebookAuth}
-            disabled={authUrlQuery.isFetching}
-            className="w-full bg-blue-600 hover:bg-blue-700"
-            variant="outline"
-          >
-            Facebook OAuth 授權 (開發中)
-          </Button>
-          
-          <Button 
-            onClick={handleMockConnection}
-            className="w-full bg-green-600 hover:bg-green-700"
-          >
-            模擬連接 (測試診斷功能)
-          </Button>
-        </div>
+        <Button 
+          onClick={handleFacebookAuth}
+          disabled={authUrlQuery.isFetching}
+          className="w-full bg-blue-600 hover:bg-blue-700"
+        >
+          {authUrlQuery.isFetching ? '準備中...' : '連接 Facebook 廣告帳戶'}
+        </Button>
       </div>
     );
   }
@@ -181,14 +202,11 @@ export function FacebookConnectionSection({
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-sm text-green-600">
           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-          <span>{mockConnected ? '模擬廣告帳戶已連接' : 'Facebook 廣告帳戶已連接'}</span>
+          <span>Facebook 廣告帳戶已連接</span>
         </div>
         
         <p className="text-gray-600 text-sm">
-          {mockConnected 
-            ? '使用模擬的 Facebook 廣告數據分析四大核心指標 (真實 API 連接開發中)：'
-            : '基於您的計算結果，我們將分析 Facebook 廣告帳戶的四大核心指標：'
-          }
+          基於您的計算結果，我們將分析 Facebook 廣告帳戶的四大核心指標：
         </p>
         
         <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
