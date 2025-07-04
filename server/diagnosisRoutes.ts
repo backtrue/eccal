@@ -195,15 +195,30 @@ export function setupDiagnosisRoutes(app: Express) {
   // Facebook OAuth 回調處理
   app.get('/api/diagnosis/facebook-callback', async (req, res) => {
     try {
-      const { code, state: userId } = req.query;
+      const { code, state: userId, error } = req.query;
+
+      console.log('Facebook OAuth 回調:', { 
+        code: code ? 'present' : 'missing', 
+        userId, 
+        error,
+        fullQuery: req.query 
+      });
+
+      if (error) {
+        console.error('Facebook OAuth 錯誤:', error);
+        return res.redirect('/calculator?error=facebook_auth_error');
+      }
 
       if (!code) {
+        console.error('Facebook OAuth 缺少授權碼');
         return res.redirect('/calculator?error=facebook_auth_denied');
       }
 
       // 交換 access token
       const tokenUrl = 'https://graph.facebook.com/v19.0/oauth/access_token';
       const redirectUri = `https://${req.get('host')}/api/diagnosis/facebook-callback`;
+
+      console.log('交換 Facebook 存取權杖:', { redirectUri });
 
       const tokenResponse = await fetch(tokenUrl, {
         method: 'POST',
@@ -219,31 +234,60 @@ export function setupDiagnosisRoutes(app: Express) {
       });
 
       const tokenData = await tokenResponse.json();
+      console.log('Facebook 權杖回應:', { 
+        success: !!tokenData.access_token, 
+        error: tokenData.error 
+      });
 
       if (tokenData.access_token) {
-        // 獲取廣告帳戶資訊
-        const accountsResponse = await fetch(
-          `https://graph.facebook.com/v19.0/me/adaccounts?fields=id,name,account_status&access_token=${tokenData.access_token}`
-        );
-        const accountsData = await accountsResponse.json();
+        // 對於未認證的用戶，需要創建 JWT 認證
+        if (userId === 'anonymous') {
+          // 先獲取用戶資訊
+          const userInfoResponse = await fetch(
+            `https://graph.facebook.com/v19.0/me?fields=id,name,email&access_token=${tokenData.access_token}`
+          );
+          const userInfo = await userInfoResponse.json();
+          
+          console.log('Facebook 用戶資訊:', { 
+            id: userInfo.id, 
+            name: userInfo.name, 
+            email: userInfo.email 
+          });
 
-        // 存儲用戶的 Facebook 認證資訊（暫時不選擇廣告帳戶）
-        if (userId) {
+          // 創建或更新用戶
+          const user = await storage.upsertUser({
+            email: userInfo.email || `${userInfo.id}@facebook.com`,
+            firstName: userInfo.name?.split(' ')[0] || 'Facebook',
+            lastName: userInfo.name?.split(' ').slice(1).join(' ') || 'User',
+            profileImageUrl: `https://graph.facebook.com/${userInfo.id}/picture?type=large`,
+            googleId: null,
+            googleAccessToken: null,
+            googleRefreshToken: null,
+            tokenExpiresAt: null,
+            metaAccessToken: tokenData.access_token,
+            metaAccountId: null
+          });
+
+          // 生成 JWT 認證
+          const jwt = jwtUtils.generateToken(user);
+          
+          // 設定 JWT Cookie
+          res.cookie('auth_token', jwt, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+          });
+
+          console.log('為新用戶創建 JWT 認證:', user.id);
+        } else {
+          // 更新現有用戶的 Facebook 認證
           await storage.updateMetaTokens(
             userId as string, 
             tokenData.access_token,
-            null // null 表示尚未選擇廣告帳戶
+            null
           );
-
-          // 儲存可用的廣告帳戶列表到臨時儲存
-          const accountsList = accountsData.data?.map((account: any) => ({
-            id: account.id,
-            name: account.name,
-            status: account.account_status
-          })) || [];
-
-          // 暫存廣告帳戶列表 (這裡可以使用 session 或其他方式)
-          // 為了簡化，我們先跳轉到選擇頁面
+          console.log('更新現有用戶的 Facebook 認證:', userId);
         }
 
         res.redirect('/calculator?facebook_auth_success=true');
