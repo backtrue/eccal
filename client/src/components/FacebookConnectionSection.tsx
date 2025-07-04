@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   useFacebookConnection, 
   useFacebookAuthUrl, 
@@ -32,6 +33,7 @@ export function FacebookConnectionSection({
   const [accounts, setAccounts] = useState<any[]>([]);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const { toast } = useToast();
+  const { checkAuth } = useAuth();
 
   // 檢查 Facebook 連接成功回調
   useEffect(() => {
@@ -39,20 +41,30 @@ export function FacebookConnectionSection({
     const facebookAuthSuccess = urlParams.get('facebook_auth_success') === 'true';
     
     if (facebookAuthSuccess) {
-      // 清除 URL 參數
-      window.history.replaceState({}, '', window.location.pathname);
-      
       toast({
         title: "Facebook 授權成功",
         description: "請選擇要分析的廣告帳戶",
       });
       
-      // 只有在確認授權成功後才進入選擇步驟
-      setConnectionStep('select');
-      // 延遲獲取帳戶列表，確保授權完成
-      setTimeout(() => {
-        fetchFacebookAccounts();
-      }, 500);
+      // 先清除 URL 參數
+      window.history.replaceState({}, '', window.location.pathname);
+      
+      // 主動觸發認證檢查以更新 JWT 認證狀態
+      checkAuth().then(() => {
+        // 認證檢查完成後進入選擇步驟
+        setConnectionStep('select');
+        // 延遲獲取帳戶列表，確保 JWT 認證完成
+        setTimeout(() => {
+          fetchFacebookAccounts();
+        }, 500);
+      }).catch((error) => {
+        console.error('認證檢查失敗:', error);
+        toast({
+          title: "認證檢查失敗",
+          description: "請重新嘗試 Facebook 授權",
+          variant: "destructive",
+        });
+      });
     }
   }, []);
 
