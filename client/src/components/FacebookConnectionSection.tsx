@@ -58,14 +58,22 @@ export function FacebookConnectionSection({
   useEffect(() => {
     if (connectionQuery.data) {
       const connection = connectionQuery.data as any;
-      if (connection.connected && connection.accountId) {
+      console.log('[FACEBOOK_CONNECTION] Current connection status:', connection);
+      
+      if (connection.hasAccessToken && connection.hasSelectedAccount) {
+        console.log('[FACEBOOK_CONNECTION] User has token and selected account - setting to ready');
         setConnectionStep('ready');
         onConnectionSuccess?.();
-      } else if (connection.connected && !connection.accountId) {
+      } else if (connection.hasAccessToken && !connection.hasSelectedAccount) {
+        console.log('[FACEBOOK_CONNECTION] User has token but no account selected - setting to select');
         setConnectionStep('select');
       } else {
+        console.log('[FACEBOOK_CONNECTION] User needs to authorize - setting to auth');
         setConnectionStep('auth');
       }
+    } else {
+      console.log('[FACEBOOK_CONNECTION] No connection data - setting to auth');
+      setConnectionStep('auth');
     }
   }, [connectionQuery.data, onConnectionSuccess]);
 
@@ -122,6 +130,14 @@ export function FacebookConnectionSection({
       }
     });
   };
+
+  // 調試輸出
+  console.log('[FACEBOOK_DEBUG] Current state:', {
+    connectionStep,
+    isLoading: connectionQuery.isLoading,
+    connectionData: connectionQuery.data,
+    error: connectionQuery.error
+  });
 
   // Render different steps (removed check step since we don't use it)
 
