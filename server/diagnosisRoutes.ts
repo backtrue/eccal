@@ -669,12 +669,17 @@ export function setupDiagnosisRoutes(app: Express) {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
       
-      const connected = !!(user?.metaAccessToken && user?.metaAdAccountId);
+      const hasAccessToken = !!(user?.metaAccessToken);
+      const hasSelectedAccount = !!(user?.metaAdAccountId);
+      
+      console.log(`[FACEBOOK_CONNECTION] User ${userId} - Token: ${hasAccessToken}, Account: ${hasSelectedAccount}`);
       
       res.json({
-        connected,
+        connected: hasAccessToken,
         accountId: user?.metaAdAccountId || null,
-        accountName: user?.metaAdAccountId ? `廣告帳戶 ${user.metaAdAccountId}` : null
+        accountName: user?.metaAdAccountId ? `廣告帳戶 ${user.metaAdAccountId}` : null,
+        hasAccessToken,
+        hasSelectedAccount
       });
     } catch (error) {
       console.error('檢查 Facebook 連接狀態錯誤:', error);
@@ -685,7 +690,8 @@ export function setupDiagnosisRoutes(app: Express) {
   // 獲取 Facebook OAuth 授權 URL
   app.get('/api/diagnosis/facebook-auth-url', requireJWTAuth, async (req: any, res) => {
     try {
-      const baseUrl = req.protocol === 'https' ? `https://${req.get('host')}` : `https://${req.get('host')}`;
+      // 強制使用 HTTPS
+      const baseUrl = `https://${req.get('host')}`;
       const redirectUri = `${baseUrl}/api/diagnosis/facebook-callback`;
       
       const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?` +
@@ -695,7 +701,9 @@ export function setupDiagnosisRoutes(app: Express) {
         `response_type=code&` +
         `state=${req.user.id}`;
 
-      console.log(`[FACEBOOK_AUTH] Generated auth URL for user ${req.user.id}:`, authUrl);
+      console.log(`[FACEBOOK_AUTH] Generated auth URL for user ${req.user.id}`);
+      console.log(`[FACEBOOK_AUTH] Redirect URI: ${redirectUri}`);
+      console.log(`[FACEBOOK_AUTH] Full auth URL: ${authUrl}`);
       res.json({ authUrl });
     } catch (error) {
       console.error('生成 Facebook 授權 URL 錯誤:', error);
@@ -709,21 +717,27 @@ export function setupDiagnosisRoutes(app: Express) {
       const { code, state: userId } = req.query;
       
       if (!code) {
+        console.error('[FACEBOOK_CALLBACK] No authorization code received');
         return res.status(400).send('授權失敗：未收到授權碼');
       }
 
-      console.log(`[FACEBOOK_CALLBACK] Processing callback for user ${userId} with code: ${code}`);
+      console.log(`[FACEBOOK_CALLBACK] Processing callback for user ${userId}`);
 
-      // 交換 access token
-      const baseUrl = req.protocol === 'https' ? `https://${req.get('host')}` : `https://${req.get('host')}`;
+      // 交換 access token - 強制使用 HTTPS
+      const baseUrl = `https://${req.get('host')}`;
       const redirectUri = `${baseUrl}/api/diagnosis/facebook-callback`;
       
-      const tokenResponse = await fetch(`https://graph.facebook.com/v19.0/oauth/access_token?` +
+      console.log(`[FACEBOOK_CALLBACK] Using redirect URI: ${redirectUri}`);
+      
+      const tokenUrl = `https://graph.facebook.com/v19.0/oauth/access_token?` +
         `client_id=${process.env.FACEBOOK_APP_ID}&` +
         `client_secret=${process.env.FACEBOOK_APP_SECRET}&` +
         `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-        `code=${code}`);
+        `code=${code}`;
 
+      console.log(`[FACEBOOK_CALLBACK] Requesting token from Facebook API`);
+      
+      const tokenResponse = await fetch(tokenUrl);
       const tokenData = await tokenResponse.json();
       
       if (tokenData.error) {
@@ -736,6 +750,8 @@ export function setupDiagnosisRoutes(app: Express) {
       // 儲存 access token 到用戶資料
       await storage.updateMetaTokens(userId as string, tokenData.access_token, null);
 
+      console.log(`[FACEBOOK_CALLBACK] Token saved, redirecting to calculator`);
+      
       // 重定向回計算器頁面
       res.redirect('/calculator?facebook_connected=true');
     } catch (error) {
