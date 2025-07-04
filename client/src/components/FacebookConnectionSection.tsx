@@ -40,40 +40,48 @@ export function FacebookConnectionSection({
       // 清除 URL 參數
       window.history.replaceState({}, '', window.location.pathname);
       
-      // 刷新連接狀態
-      connectionQuery.refetch();
+      // 設置為帳戶選擇步驟並獲取帳戶列表
+      setConnectionStep('select');
+      fetchFacebookAccounts();
+      
       toast({
-        title: "Facebook 帳戶連接成功",
-        description: "正在檢查您的廣告帳戶...",
+        title: "Facebook 授權成功",
+        description: "正在獲取您的廣告帳戶...",
       });
     }
   }, []);
 
-  // 檢查連接狀態並更新 UI
-  useEffect(() => {
-    if (connectionQuery.data) {
-      const connection = connectionQuery.data as any;
+  // 獲取 Facebook 廣告帳戶列表
+  const fetchFacebookAccounts = async () => {
+    try {
+      const response = await fetch('/api/diagnosis/facebook-accounts-list');
+      const data = await response.json();
       
-      if (connection.hasAccessToken && connection.hasSelectedAccount) {
-        setConnectionStep('ready');
-        onConnectionSuccess?.();
-      } else if (connection.hasAccessToken && !connection.hasSelectedAccount) {
-        setConnectionStep('select');
+      if (data.accounts) {
+        setAccounts(data.accounts);
       } else {
-        setConnectionStep('auth');
+        throw new Error(data.error || '無法獲取廣告帳戶');
       }
-    } else {
+    } catch (error) {
+      console.error('獲取廣告帳戶失敗:', error);
+      toast({
+        title: "獲取帳戶失敗",
+        description: "無法獲取 Facebook 廣告帳戶列表",
+        variant: "destructive",
+      });
       setConnectionStep('auth');
     }
-  }, [connectionQuery.data, onConnectionSuccess]);
+  };
 
-  // Handle Facebook OAuth - 真正的 OAuth 流程
+  // 步驟 1: 點擊連接 Facebook 廣告帳戶
   const handleFacebookAuth = async () => {
     try {
-      const result = await authUrlQuery.refetch();
-      const data = result.data as any;
-      if (data?.authUrl) {
-        console.log('[FACEBOOK_AUTH] Redirecting to Facebook OAuth:', data.authUrl);
+      const response = await fetch('/api/diagnosis/facebook-auth-url');
+      const data = await response.json();
+      
+      if (data.authUrl) {
+        console.log('重定向到 Facebook OAuth:', data.authUrl);
+        // 步驟 2: 重定向到 Facebook OAuth 授權頁面
         window.location.href = data.authUrl;
       } else {
         throw new Error('無法獲取授權連結');
@@ -88,19 +96,40 @@ export function FacebookConnectionSection({
     }
   };
 
-  // Handle account selection
-  const handleAccountSelect = (accountId: string) => {
-    setSelectedAccount(accountId);
-    selectAccountMutation.mutate(accountId, {
-      onSuccess: () => {
+  // 步驟 5: 選擇要分析的廣告帳戶
+  const handleAccountSelect = async (accountId: string) => {
+    try {
+      const response = await fetch('/api/diagnosis/facebook-select-account', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ accountId }),
+      });
+
+      if (response.ok) {
+        setSelectedAccount(accountId);
         setConnectionStep('ready');
         onConnectionSuccess?.();
+        toast({
+          title: "連接成功",
+          description: "Facebook 廣告帳戶已連接，可以進行診斷",
+        });
+      } else {
+        throw new Error('選擇帳戶失敗');
       }
-    });
+    } catch (error) {
+      console.error('選擇帳戶錯誤:', error);
+      toast({
+        title: "選擇失敗",
+        description: "無法選擇廣告帳戶",
+        variant: "destructive",
+      });
+    }
   };
 
-  // Handle diagnosis
-  const handleDiagnosis = () => {
+  // 步驟 6: 開始廣告健檢診斷
+  const handleDiagnosis = async () => {
     if (!calculationData) {
       toast({
         title: "計算資料缺失",
@@ -111,23 +140,35 @@ export function FacebookConnectionSection({
     }
 
     setConnectionStep('diagnosis');
-    diagnosisMutation.mutate(calculationData, {
-      onSuccess: () => {
-        onDiagnosisComplete?.();
-      },
-      onError: () => {
-        setConnectionStep('ready');
-      }
-    });
-  };
+    
+    try {
+      const response = await fetch('/api/diagnosis/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(calculationData),
+      });
 
-  // 調試輸出
-  console.log('[FACEBOOK_DEBUG] Current state:', {
-    connectionStep,
-    isLoading: connectionQuery.isLoading,
-    connectionData: connectionQuery.data,
-    error: connectionQuery.error
-  });
+      if (response.ok) {
+        onDiagnosisComplete?.();
+        toast({
+          title: "診斷完成",
+          description: "Facebook 廣告健檢分析已完成",
+        });
+      } else {
+        throw new Error('診斷失敗');
+      }
+    } catch (error) {
+      console.error('診斷錯誤:', error);
+      setConnectionStep('ready');
+      toast({
+        title: "診斷失敗",
+        description: "無法完成廣告健檢分析",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Render different steps (removed check step since we don't use it)
 
@@ -164,39 +205,47 @@ export function FacebookConnectionSection({
         
         <Button 
           onClick={handleFacebookAuth}
-          disabled={authUrlQuery.isFetching}
           className="w-full bg-blue-600 hover:bg-blue-700"
         >
-          {authUrlQuery.isFetching ? '準備中...' : '連接 Facebook 廣告帳戶'}
+          連接 Facebook 廣告帳戶
         </Button>
       </div>
     );
   }
 
+  // 步驟 4: 選擇廣告帳戶
   if (connectionStep === 'select') {
     return (
       <div className="space-y-4">
+        <div className="flex items-center gap-2 text-sm text-blue-600">
+          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <span>Facebook 授權成功</span>
+        </div>
+        
         <p className="text-gray-600 text-sm">
           請選擇要分析的 Facebook 廣告帳戶
         </p>
         
-        <Select value={selectedAccount} onValueChange={handleAccountSelect}>
-          <SelectTrigger>
-            <SelectValue placeholder="選擇廣告帳戶" />
-          </SelectTrigger>
-          <SelectContent>
-            {(accountsQuery.data as any)?.accounts?.map((account: any) => (
-              <SelectItem key={account.id} value={account.id}>
-                {account.name} ({account.id})
-              </SelectItem>
+        {accounts.length > 0 ? (
+          <div className="space-y-2">
+            {accounts.map((account) => (
+              <Button
+                key={account.id}
+                onClick={() => handleAccountSelect(account.id)}
+                variant="outline"
+                className="w-full text-left justify-start"
+              >
+                <div className="flex flex-col items-start">
+                  <span className="font-medium">{account.name}</span>
+                  <span className="text-xs text-gray-500">{account.id}</span>
+                </div>
+              </Button>
             ))}
-          </SelectContent>
-        </Select>
-        
-        {selectAccountMutation.isPending && (
+          </div>
+        ) : (
           <div className="text-center text-gray-600">
             <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-            <span className="text-sm">連接中...</span>
+            <span className="text-sm">載入廣告帳戶中...</span>
           </div>
         )}
       </div>

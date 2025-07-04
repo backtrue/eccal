@@ -768,22 +768,34 @@ export function setupDiagnosisRoutes(app: Express) {
     }
   });
 
-  // 獲取用戶的 Facebook 廣告帳戶列表
-  app.get('/api/diagnosis/facebook-accounts', requireJWTAuth, async (req: any, res) => {
+  // 檢查 Facebook token 是否存在 (不需要認證)
+  app.get('/api/diagnosis/facebook-token-check', async (req, res) => {
     try {
-      const userId = req.user.id;
-      const user = await storage.getUser(userId);
+      const token = req.cookies.facebook_access_token;
+      res.json({ 
+        hasToken: !!token,
+        token: token || null
+      });
+    } catch (error) {
+      res.status(500).json({ error: '檢查 token 失敗' });
+    }
+  });
+
+  // 獲取 Facebook 廣告帳戶列表 (使用 cookie 中的 token)
+  app.get('/api/diagnosis/facebook-accounts-list', async (req, res) => {
+    try {
+      const accessToken = req.cookies.facebook_access_token;
       
-      if (!user?.metaAccessToken) {
+      if (!accessToken) {
         return res.status(401).json({ error: '請先授權 Facebook 帳戶' });
       }
 
-      console.log(`[FACEBOOK_ACCOUNTS] Fetching accounts for user ${userId}`);
+      console.log(`[FACEBOOK_ACCOUNTS] Fetching accounts with token`);
 
       // 調用 Facebook API 獲取廣告帳戶
       const response = await fetch(`https://graph.facebook.com/v19.0/me/adaccounts?` +
         `fields=id,name,account_status,currency,timezone_name&` +
-        `access_token=${user.metaAccessToken}`);
+        `access_token=${accessToken}`);
 
       const data = await response.json();
 
@@ -804,7 +816,7 @@ export function setupDiagnosisRoutes(app: Express) {
         timezone: account.timezone_name
       }));
 
-      console.log(`[FACEBOOK_ACCOUNTS] Found ${accounts.length} active accounts for user ${userId}`);
+      console.log(`[FACEBOOK_ACCOUNTS] Found ${accounts.length} active accounts`);
       res.json({ accounts });
     } catch (error) {
       console.error('獲取 Facebook 廣告帳戶錯誤:', error);
@@ -812,23 +824,29 @@ export function setupDiagnosisRoutes(app: Express) {
     }
   });
 
-  // 選擇 Facebook 廣告帳戶
-  app.post('/api/diagnosis/select-account', requireJWTAuth, async (req: any, res) => {
+  // 選擇 Facebook 廣告帳戶 (不需要JWT認證)
+  app.post('/api/diagnosis/facebook-select-account', async (req, res) => {
     try {
-      const userId = req.user.id;
       const { accountId } = req.body;
 
       if (!accountId) {
         return res.status(400).json({ error: '請選擇廣告帳戶' });
       }
 
-      const user = await storage.getUser(userId);
-      if (!user?.metaAccessToken) {
+      const accessToken = req.cookies.facebook_access_token;
+      if (!accessToken) {
         return res.status(401).json({ error: '請先授權 Facebook 帳戶' });
       }
 
-      // 更新用戶的廣告帳戶 ID
-      await storage.updateMetaTokens(userId, user.metaAccessToken, accountId);
+      // 將選擇的帳戶 ID 存儲在 cookie 中
+      res.cookie('facebook_selected_account', accountId, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+        maxAge: 2 * 60 * 60 * 1000 // 2 hours
+      });
+
+      console.log(`[FACEBOOK_SELECT] Account ${accountId} selected`);
 
       res.json({
         success: true,
@@ -838,6 +856,65 @@ export function setupDiagnosisRoutes(app: Express) {
     } catch (error) {
       console.error('選擇廣告帳戶錯誤:', error);
       res.status(500).json({ error: '選擇廣告帳戶失敗' });
+    }
+  });
+
+  // 開始 Facebook 廣告診斷分析 (不需要JWT認證)
+  app.post('/api/diagnosis/analyze', async (req, res) => {
+    try {
+      const calculationData = req.body;
+      const accessToken = req.cookies.facebook_access_token;
+      const selectedAccount = req.cookies.facebook_selected_account;
+
+      if (!accessToken || !selectedAccount) {
+        return res.status(401).json({ error: '請先連接 Facebook 廣告帳戶' });
+      }
+
+      console.log(`[FACEBOOK_ANALYZE] Starting analysis for account ${selectedAccount}`);
+
+      // 使用 metaAccountService 獲取真實廣告數據並生成診斷報告
+      const metaData = await metaAccountService.getAdAccountData(accessToken, selectedAccount);
+      
+      // 計算診斷數據
+      const diagnosisData = metaAccountService.calculateAccountDiagnosisData(
+        calculationData,
+        metaData
+      );
+
+      // 生成 AI 診斷報告
+      const report = await metaAccountService.generateAccountDiagnosisReport(
+        metaData.accountName,
+        diagnosisData,
+        metaData
+      );
+
+      // 存儲診斷報告
+      const savedReport = await storage.saveAdDiagnosisReport(
+        'anonymous_user', // 因為沒有 JWT 認證，使用匿名用戶
+        metaData.accountName,
+        report.healthScore,
+        JSON.stringify(report.recommendations),
+        JSON.stringify({
+          targetOrders: diagnosisData.targetRevenue / calculationData.targetAov,
+          actualOrders: metaData.purchases,
+          targetBudget: calculationData.targetRevenue / calculationData.targetRoas,
+          actualBudget: metaData.spend,
+          targetTraffic: (calculationData.targetRevenue / calculationData.targetAov) / (calculationData.targetConversionRate / 100),
+          actualTraffic: metaData.clicks,
+          targetRoas: calculationData.targetRoas,
+          actualRoas: metaData.purchaseValue > 0 ? metaData.purchaseValue / metaData.spend : 0
+        })
+      );
+
+      res.json({
+        success: true,
+        reportId: savedReport.id,
+        healthScore: report.healthScore,
+        recommendations: report.recommendations
+      });
+    } catch (error) {
+      console.error('診斷分析錯誤:', error);
+      res.status(500).json({ error: '診斷分析失敗' });
     }
   });
 
