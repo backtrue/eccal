@@ -61,7 +61,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       currentPath.includes(path)
     );
     const isCalculatorPage = currentPath === '/calculator' || currentPath.startsWith('/calculator/');
-    const hasAuthSuccess = urlParams.has('auth_success');
+    const hasAuthSuccess = urlParams.has('auth_success') || urlParams.has('facebook_auth_success');
     
     // Only check auth in these specific scenarios:
     const shouldCheckAuth = 

@@ -82,8 +82,8 @@ export function FacebookConnectionSection({
         description: "無法獲取 Facebook 廣告帳戶列表",
         variant: "destructive",
       });
-      // 如果沒有 token，回到連接步驟
-      setConnectionStep('connect');
+      // 如果沒有 token，回到授權步驟
+      setConnectionStep('auth');
     }
   };
 
