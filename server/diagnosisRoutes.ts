@@ -1,5 +1,5 @@
 import { Express } from 'express';
-import { requireJWTAuth } from './jwtAuth';
+import { requireJWTAuth, jwtUtils } from './jwtAuth';
 import { storage } from './storage';
 import { metaAccountService } from './metaAccountService';
 import { db } from './db';
@@ -750,15 +750,33 @@ export function setupDiagnosisRoutes(app: Express) {
 
       console.log(`[FACEBOOK_CALLBACK] Token exchange successful`);
 
-      // 暫時將 access token 存儲在 session/cookie 中
-      res.cookie('facebook_access_token', tokenData.access_token, {
+      // 獲取用戶基本信息
+      const userInfoResponse = await fetch(`https://graph.facebook.com/me?access_token=${tokenData.access_token}&fields=id,name,email,picture`);
+      const userData = await userInfoResponse.json();
+
+      // 創建臨時 JWT token 包含 Facebook access token
+      const tempUserData = {
+        id: `facebook_${userData.id}`,
+        email: userData.email || `facebook_${userData.id}@temp.com`,
+        firstName: userData.name || 'Facebook User',
+        lastName: '',
+        profileImageUrl: userData.picture?.data?.url || null,
+        metaAccessToken: tokenData.access_token,
+        metaAccountId: null
+      };
+
+      // 生成 JWT token
+      const jwtToken = jwtUtils.generateToken(tempUserData);
+      
+      // 設置 JWT cookie
+      res.cookie('auth_token', jwtToken, {
         httpOnly: true,
         secure: true,
         sameSite: 'strict',
-        maxAge: 2 * 60 * 60 * 1000 // 2 hours
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
 
-      console.log(`[FACEBOOK_CALLBACK] Token saved in cookie, redirecting to calculator`);
+      console.log(`[FACEBOOK_CALLBACK] JWT token created for user ${tempUserData.id}, redirecting to calculator`);
       
       // 重定向回計算器頁面
       res.redirect('/calculator?facebook_auth_success=true');
@@ -768,29 +786,31 @@ export function setupDiagnosisRoutes(app: Express) {
     }
   });
 
-  // 檢查 Facebook token 是否存在 (不需要認證)
-  app.get('/api/diagnosis/facebook-token-check', async (req, res) => {
+  // 檢查 Facebook token 是否存在 (使用 JWT)
+  app.get('/api/diagnosis/facebook-token-check', requireJWTAuth, async (req: any, res) => {
     try {
-      const token = req.cookies.facebook_access_token;
+      const user = req.user;
+      const hasToken = !!(user?.metaAccessToken);
       res.json({ 
-        hasToken: !!token,
-        token: token || null
+        hasToken,
+        token: hasToken ? 'exists' : null
       });
     } catch (error) {
       res.status(500).json({ error: '檢查 token 失敗' });
     }
   });
 
-  // 獲取 Facebook 廣告帳戶列表 (使用 cookie 中的 token)
-  app.get('/api/diagnosis/facebook-accounts-list', async (req, res) => {
+  // 獲取 Facebook 廣告帳戶列表 (使用 JWT 中的 token)
+  app.get('/api/diagnosis/facebook-accounts-list', requireJWTAuth, async (req: any, res) => {
     try {
-      const accessToken = req.cookies.facebook_access_token;
+      const user = req.user;
+      const accessToken = user?.metaAccessToken;
       
       if (!accessToken) {
         return res.status(401).json({ error: '請先授權 Facebook 帳戶' });
       }
 
-      console.log(`[FACEBOOK_ACCOUNTS] Fetching accounts with token`);
+      console.log(`[FACEBOOK_ACCOUNTS] Fetching accounts with JWT token`);
 
       // 調用 Facebook API 獲取廣告帳戶
       const response = await fetch(`https://graph.facebook.com/v19.0/me/adaccounts?` +
@@ -824,29 +844,38 @@ export function setupDiagnosisRoutes(app: Express) {
     }
   });
 
-  // 選擇 Facebook 廣告帳戶 (不需要JWT認證)
-  app.post('/api/diagnosis/facebook-select-account', async (req, res) => {
+  // 選擇 Facebook 廣告帳戶 (使用 JWT 認證)
+  app.post('/api/diagnosis/facebook-select-account', requireJWTAuth, async (req: any, res) => {
     try {
       const { accountId } = req.body;
+      const user = req.user;
 
       if (!accountId) {
         return res.status(400).json({ error: '請選擇廣告帳戶' });
       }
 
-      const accessToken = req.cookies.facebook_access_token;
-      if (!accessToken) {
+      if (!user?.metaAccessToken) {
         return res.status(401).json({ error: '請先授權 Facebook 帳戶' });
       }
 
-      // 將選擇的帳戶 ID 存儲在 cookie 中
-      res.cookie('facebook_selected_account', accountId, {
+      // 更新 JWT token 中的選擇帳戶
+      const updatedUserData = {
+        ...user,
+        metaAccountId: accountId
+      };
+
+      // 生成新的 JWT token
+      const jwtToken = jwtUtils.generateToken(updatedUserData);
+      
+      // 設置更新後的 JWT cookie
+      res.cookie('auth_token', jwtToken, {
         httpOnly: true,
         secure: true,
         sameSite: 'strict',
-        maxAge: 2 * 60 * 60 * 1000 // 2 hours
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
 
-      console.log(`[FACEBOOK_SELECT] Account ${accountId} selected`);
+      console.log(`[FACEBOOK_SELECT] Account ${accountId} selected for user ${user.id}`);
 
       res.json({
         success: true,
@@ -859,15 +888,16 @@ export function setupDiagnosisRoutes(app: Express) {
     }
   });
 
-  // 開始 Facebook 廣告診斷分析 (不需要JWT認證)
-  app.post('/api/diagnosis/analyze', async (req, res) => {
+  // 開始 Facebook 廣告診斷分析 (使用 JWT 認證)
+  app.post('/api/diagnosis/analyze', requireJWTAuth, async (req: any, res) => {
     try {
       const calculationData = req.body;
-      const accessToken = req.cookies.facebook_access_token;
-      const selectedAccount = req.cookies.facebook_selected_account;
+      const user = req.user;
+      const accessToken = user?.metaAccessToken;
+      const selectedAccount = user?.metaAccountId;
 
       if (!accessToken || !selectedAccount) {
-        return res.status(401).json({ error: '請先連接 Facebook 廣告帳戶' });
+        return res.status(401).json({ error: '請先連接 Facebook 廣告帳戶並選擇帳戶' });
       }
 
       console.log(`[FACEBOOK_ANALYZE] Starting analysis for account ${selectedAccount}`);
@@ -889,12 +919,12 @@ export function setupDiagnosisRoutes(app: Express) {
       );
 
       // 存儲診斷報告
-      const savedReport = await storage.saveAdDiagnosisReport(
-        'anonymous_user', // 因為沒有 JWT 認證，使用匿名用戶
-        metaData.accountName,
-        report.healthScore,
-        JSON.stringify(report.recommendations),
-        JSON.stringify({
+      const savedReport = await storage.createAdDiagnosisReport({
+        userId: user.id,
+        accountName: metaData.accountName,
+        healthScore: parseInt(report.healthScore) || 0,
+        recommendations: JSON.stringify(report.recommendations),
+        metrics: JSON.stringify({
           targetOrders: diagnosisData.targetRevenue / calculationData.targetAov,
           actualOrders: metaData.purchases,
           targetBudget: calculationData.targetRevenue / calculationData.targetRoas,
@@ -904,12 +934,12 @@ export function setupDiagnosisRoutes(app: Express) {
           targetRoas: calculationData.targetRoas,
           actualRoas: metaData.purchaseValue > 0 ? metaData.purchaseValue / metaData.spend : 0
         })
-      );
+      });
 
       res.json({
         success: true,
         reportId: savedReport.id,
-        healthScore: report.healthScore,
+        healthScore: parseInt(report.healthScore) || 0,
         recommendations: report.recommendations
       });
     } catch (error) {
