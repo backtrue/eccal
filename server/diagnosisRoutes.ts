@@ -663,6 +663,97 @@ export function setupDiagnosisRoutes(app: Express) {
     }
   });
 
+  // 檢查 Facebook 連接狀態
+  app.get('/api/diagnosis/facebook-connection', requireJWTAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      const connected = !!(user?.metaAccessToken && user?.metaAdAccountId);
+      
+      res.json({
+        connected,
+        accountId: user?.metaAdAccountId || null,
+        accountName: user?.metaAdAccountId ? `廣告帳戶 ${user.metaAdAccountId}` : null
+      });
+    } catch (error) {
+      console.error('檢查 Facebook 連接狀態錯誤:', error);
+      res.status(500).json({ error: '檢查連接狀態失敗' });
+    }
+  });
+
+  // 獲取 Facebook OAuth 授權 URL
+  app.get('/api/diagnosis/facebook-auth-url', requireJWTAuth, async (req: any, res) => {
+    try {
+      const baseUrl = req.protocol === 'https' ? `https://${req.get('host')}` : `https://${req.get('host')}`;
+      const redirectUri = `${baseUrl}/api/diagnosis/facebook-callback`;
+      
+      const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?` +
+        `client_id=${process.env.FACEBOOK_APP_ID}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `scope=ads_read,ads_management&` +
+        `response_type=code&` +
+        `state=${req.user.id}`;
+
+      res.json({ authUrl });
+    } catch (error) {
+      console.error('生成 Facebook 授權 URL 錯誤:', error);
+      res.status(500).json({ error: '生成授權連結失敗' });
+    }
+  });
+
+  // 獲取用戶的 Facebook 廣告帳戶列表
+  app.get('/api/diagnosis/facebook-accounts', requireJWTAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user?.metaAccessToken) {
+        return res.status(401).json({ error: '請先授權 Facebook 帳戶' });
+      }
+
+      // 模擬廣告帳戶列表 (實際實現需要調用 Facebook API)
+      const accounts = [
+        { id: 'act_123456789', name: '我的廣告帳戶' },
+        { id: 'act_987654321', name: '電商推廣帳戶' }
+      ];
+
+      res.json({ accounts });
+    } catch (error) {
+      console.error('獲取 Facebook 廣告帳戶錯誤:', error);
+      res.status(500).json({ error: '獲取廣告帳戶失敗' });
+    }
+  });
+
+  // 選擇 Facebook 廣告帳戶
+  app.post('/api/diagnosis/select-account', requireJWTAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { accountId } = req.body;
+
+      if (!accountId) {
+        return res.status(400).json({ error: '請選擇廣告帳戶' });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user?.metaAccessToken) {
+        return res.status(401).json({ error: '請先授權 Facebook 帳戶' });
+      }
+
+      // 更新用戶的廣告帳戶 ID
+      await storage.updateMetaTokens(userId, user.metaAccessToken, accountId);
+
+      res.json({
+        success: true,
+        message: '廣告帳戶選擇成功',
+        accountId
+      });
+    } catch (error) {
+      console.error('選擇廣告帳戶錯誤:', error);
+      res.status(500).json({ error: '選擇廣告帳戶失敗' });
+    }
+  });
+
   // Meta OAuth 模擬端點 (實際部署時需要真實 OAuth 流程)
   app.post('/api/diagnosis/connect-meta', requireJWTAuth, async (req: any, res) => {
     try {

@@ -16,6 +16,7 @@ import GoogleLoginButton from "@/components/GoogleLoginButton";
 import { useAuth } from "@/hooks/useAuth";
 import { useAnalyticsProperties, useAnalyticsData } from "@/hooks/useAnalyticsData";
 import { useFacebookConnection, useFacebookDiagnosis } from "@/hooks/useFacebookDiagnosis";
+import { FacebookConnectionSection } from "@/components/FacebookConnectionSection";
 import { getTranslations, type Locale } from "@/lib/i18n";
 import { trackEvent } from "@/lib/analytics";
 import { trackCalculatorUsage, trackMetaEvent } from "@/lib/meta-pixel";
@@ -352,54 +353,19 @@ export default function Calculator({ locale }: CalculatorProps) {
                 {/* Facebook Diagnosis Section */}
                 {isAuthenticated && (
                   <div className="mt-8 pt-6 border-t">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <Facebook className="h-5 w-5 text-blue-600" />
-                        Facebook 廣告健檢
-                      </h3>
-                      {(fbConnection as any)?.connected ? (
-                        <Badge variant="default" className="bg-green-100 text-green-800">
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          已連接
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="border-orange-200 text-orange-600">
-                          <AlertCircle className="h-3 w-3 mr-1" />
-                          未連接
-                        </Badge>
-                      )}
+                    <div className="flex items-center gap-2 mb-4">
+                      <Facebook className="h-5 w-5 text-blue-600" />
+                      <h3 className="text-lg font-semibold">Facebook 廣告健檢</h3>
                     </div>
                     
-                    <p className="text-gray-600 text-sm mb-4">
-                      基於您的計算結果，我們將分析 Facebook 廣告帳戶的四大核心指標：
-                    </p>
-                    
-                    <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <span>訂單數對比</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                        <span>預算效率</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span>流量表現</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                        <span>ROAS 達成率</span>
-                      </div>
-                    </div>
-                    
-                    <Button 
-                      onClick={handleDiagnosis}
-                      disabled={diagnosisMutation.isPending}
-                      className="w-full"
-                    >
-                      {diagnosisMutation.isPending ? '分析中...' : '開始廣告健檢'}
-                    </Button>
+                    <FacebookConnectionSection
+                      calculationData={form.getValues('targetRevenue') ? {
+                        targetRevenue: form.getValues('targetRevenue'),
+                        targetAov: form.getValues('averageOrderValue'),
+                        targetConversionRate: form.getValues('conversionRate'),
+                        cpc: 5 // 預設 CPC
+                      } : undefined}
+                    />
                   </div>
                 )}
               </CardContent>
