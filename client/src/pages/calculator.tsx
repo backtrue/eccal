@@ -70,6 +70,12 @@ export default function Calculator({ locale }: CalculatorProps) {
   // Facebook diagnosis hooks
   const { data: fbConnection } = useFacebookConnection(isAuthenticated);
   const diagnosisMutation = useFacebookDiagnosis();
+  
+  // 檢查 Facebook 是否已連接
+  const isFacebookConnected = (fbConnection as any)?.connected || user?.metaAccessToken;
+  
+  // 只有在 Google 和 Facebook 都登入時才隱藏登入區塊
+  const shouldShowLoginSection = !isAuthenticated || !isFacebookConnected;
 
   const form = useForm<CalculatorFormData>({
     resolver: zodResolver(createCalculatorSchema(t)),
@@ -169,18 +175,35 @@ export default function Calculator({ locale }: CalculatorProps) {
         <div className="grid gap-8">
           
           {/* Login Section */}
-          {!isAuthenticated && (
+          {shouldShowLoginSection && (
             <Card className="border-blue-200 bg-blue-50">
               <CardContent className="p-6 text-center">
                 <h2 className="text-xl font-semibold text-blue-900 mb-3">
-                  登入以使用進階功能
+                  連接帳戶以使用完整功能
                 </h2>
                 <p className="text-blue-700 mb-4">
-                  連接 Google Analytics 自動填入數據，並進行 Facebook 廣告診斷
+                  需要同時連接 Google Analytics 和 Facebook 廣告帳戶才能使用所有功能
                 </p>
+                
+                {/* 登入狀態指示器 */}
+                <div className="flex justify-center gap-6 mb-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full ${isAuthenticated ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                    <span className={isAuthenticated ? 'text-green-700' : 'text-gray-500'}>
+                      Google {isAuthenticated ? '已連接' : '未連接'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full ${isFacebookConnected ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                    <span className={isFacebookConnected ? 'text-green-700' : 'text-gray-500'}>
+                      Facebook {isFacebookConnected ? '已連接' : '未連接'}
+                    </span>
+                  </div>
+                </div>
+                
                 <div className="flex gap-3 justify-center">
-                  <GoogleLoginButton />
-                  <FacebookLoginButton />
+                  {!isAuthenticated && <GoogleLoginButton />}
+                  {!isFacebookConnected && <FacebookLoginButton />}
                 </div>
               </CardContent>
             </Card>
