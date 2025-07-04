@@ -761,7 +761,7 @@ export function setupDiagnosisRoutes(app: Express) {
       console.log(`[FACEBOOK_CALLBACK] Token saved in cookie, redirecting to calculator`);
       
       // 重定向回計算器頁面
-      res.redirect('/calculator?facebook_connected=true');
+      res.redirect('/calculator?facebook_auth_success=true');
     } catch (error) {
       console.error('Facebook OAuth 回調錯誤:', error);
       res.status(500).send('授權處理失敗');

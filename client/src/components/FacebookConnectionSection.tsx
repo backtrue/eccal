@@ -36,7 +36,10 @@ export function FacebookConnectionSection({
   // 檢查 Facebook 連接成功回調
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('facebook_connected') === 'true') {
+    const facebookConnected = urlParams.get('facebook_connected') === 'true';
+    const facebookAuthSuccess = urlParams.get('facebook_auth_success') === 'true';
+    
+    if (facebookConnected || facebookAuthSuccess) {
       // 清除 URL 參數
       window.history.replaceState({}, '', window.location.pathname);
       
