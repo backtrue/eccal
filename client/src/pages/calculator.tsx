@@ -15,6 +15,7 @@ import NavigationBar from "@/components/NavigationBar";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
 import { useAuth } from "@/hooks/useAuth";
 import { useAnalyticsProperties, useAnalyticsData } from "@/hooks/useAnalyticsData";
+import { useFacebookConnection, useFacebookDiagnosis } from "@/hooks/useFacebookDiagnosis";
 import { getTranslations, type Locale } from "@/lib/i18n";
 import { trackEvent } from "@/lib/analytics";
 import { trackCalculatorUsage, trackMetaEvent } from "@/lib/meta-pixel";
