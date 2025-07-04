@@ -10,12 +10,18 @@ export default function FacebookLoginButton({ className }: FacebookLoginButtonPr
   const { refetch: getFacebookAuthUrl, isLoading } = useFacebookAuthUrl();
 
   const handleFacebookLogin = async () => {
+    console.log('Facebook 登入按鈕被點擊');
     try {
       const result = await getFacebookAuthUrl();
+      console.log('Facebook Auth URL 結果:', result);
       if (result.data && typeof result.data === 'string') {
+        console.log('重定向到:', result.data);
         window.location.href = result.data;
       } else if (result.data && typeof result.data === 'object' && (result.data as any).authUrl) {
+        console.log('重定向到:', (result.data as any).authUrl);
         window.location.href = (result.data as any).authUrl;
+      } else {
+        console.error('未收到有效的授權 URL:', result.data);
       }
     } catch (error) {
       console.error('Facebook 登入失敗:', error);
