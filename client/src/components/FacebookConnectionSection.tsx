@@ -36,27 +36,37 @@ export function FacebookConnectionSection({
   // 檢查 Facebook 連接成功回調
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const facebookConnected = urlParams.get('facebook_connected') === 'true';
     const facebookAuthSuccess = urlParams.get('facebook_auth_success') === 'true';
     
-    if (facebookConnected || facebookAuthSuccess) {
+    if (facebookAuthSuccess) {
       // 清除 URL 參數
       window.history.replaceState({}, '', window.location.pathname);
       
-      // 設置為帳戶選擇步驟並獲取帳戶列表
-      setConnectionStep('select');
-      fetchFacebookAccounts();
-      
       toast({
         title: "Facebook 授權成功",
-        description: "正在獲取您的廣告帳戶...",
+        description: "請選擇要分析的廣告帳戶",
       });
+      
+      // 只有在確認授權成功後才進入選擇步驟
+      setConnectionStep('select');
+      // 延遲獲取帳戶列表，確保授權完成
+      setTimeout(() => {
+        fetchFacebookAccounts();
+      }, 500);
     }
   }, []);
 
   // 獲取 Facebook 廣告帳戶列表
   const fetchFacebookAccounts = async () => {
     try {
+      // 先檢查是否有 token
+      const tokenResponse = await fetch('/api/diagnosis/facebook-token-check');
+      const tokenData = await tokenResponse.json();
+      
+      if (!tokenData.hasToken) {
+        throw new Error('請先完成 Facebook 授權');
+      }
+      
       const response = await fetch('/api/diagnosis/facebook-accounts-list');
       const data = await response.json();
       
@@ -72,7 +82,8 @@ export function FacebookConnectionSection({
         description: "無法獲取 Facebook 廣告帳戶列表",
         variant: "destructive",
       });
-      setConnectionStep('auth');
+      // 如果沒有 token，回到連接步驟
+      setConnectionStep('connect');
     }
   };
 
