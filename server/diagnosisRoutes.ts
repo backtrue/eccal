@@ -7,14 +7,14 @@ import { adDiagnosisReports } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
 export function setupDiagnosisRoutes(app: Express) {
-  
+
   // 診斷系統配置檢查端點
   app.get('/api/diagnosis/config', (req, res) => {
     try {
       const hasOpenAIKey = !!(process.env.OPENAI_API_KEY);
       const hasFacebookAppId = !!(process.env.FACEBOOK_APP_ID);
       const hasFacebookAppSecret = !!(process.env.FACEBOOK_APP_SECRET);
-      
+
       res.json({
         status: 'ok',
         openai: hasOpenAIKey ? 'configured' : 'missing',
@@ -34,12 +34,12 @@ export function setupDiagnosisRoutes(app: Express) {
       });
     }
   });
-  
+
   // Facebook 資料刪除回呼端點 (符合 Facebook 政策要求)
   app.post('/auth/facebook/data-deletion', async (req, res) => {
     try {
       const { signed_request } = req.body;
-      
+
       if (!signed_request) {
         return res.status(400).json({ error: 'Missing signed_request' });
       }
@@ -51,7 +51,7 @@ export function setupDiagnosisRoutes(app: Express) {
       );
 
       const userId = decodedPayload.user_id;
-      
+
       if (userId) {
         // 清除用戶的 Facebook 認證資訊
         try {
@@ -64,7 +64,8 @@ export function setupDiagnosisRoutes(app: Express) {
       }
 
       // 返回確認回應 (Facebook 要求的格式)
-      const baseUrl = process.env.REPLIT_DOMAINS || 'http://localhost:5000';
+      const host = req.get('host') || 'localhost:5000';
+      const baseUrl = host.includes('localhost') ? `http://${host}` : `https://${host}`;
       res.json({
         url: `${baseUrl}/data-deletion-status/${userId || 'unknown'}`,
         confirmation_code: `DEL_${Date.now()}_${userId || 'unknown'}`
@@ -90,7 +91,7 @@ export function setupDiagnosisRoutes(app: Express) {
   app.post('/auth/facebook/deauthorize', async (req, res) => {
     try {
       const { signed_request } = req.body;
-      
+
       if (!signed_request) {
         return res.status(400).json({ error: 'Missing signed_request' });
       }
@@ -102,7 +103,7 @@ export function setupDiagnosisRoutes(app: Express) {
       );
 
       const userId = decodedPayload.user_id;
-      
+
       if (userId) {
         // 清除用戶的 Facebook 認證資訊
         try {
@@ -132,7 +133,7 @@ export function setupDiagnosisRoutes(app: Express) {
     try {
       const hasAppId = !!process.env.FACEBOOK_APP_ID;
       const hasAppSecret = !!process.env.FACEBOOK_APP_SECRET;
-      
+
       res.json({
         success: hasAppId && hasAppSecret,
         message: hasAppId && hasAppSecret 
@@ -152,7 +153,7 @@ export function setupDiagnosisRoutes(app: Express) {
   app.get('/api/diagnosis/facebook-auth-url', requireJWTAuth, (req: any, res) => {
     try {
       const appId = process.env.FACEBOOK_APP_ID;
-      
+
       if (!appId) {
         console.error('Facebook App ID not found in environment variables');
         return res.status(500).json({
@@ -160,23 +161,23 @@ export function setupDiagnosisRoutes(app: Express) {
           message: 'Facebook App ID 未設定'
         });
       }
-      
+
       const redirectUri = `${req.protocol}://${req.get('host')}/api/diagnosis/facebook-callback`;
       const userId = req.user.id;
-      
+
       console.log('生成 Facebook OAuth URL:', {
         appId: appId.substring(0, 5) + '***',
         redirectUri,
         userId: userId?.substring(0, 8) + '***'
       });
-      
+
       const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?` +
         `client_id=${appId}&` +
         `redirect_uri=${encodeURIComponent(redirectUri)}&` +
         `scope=ads_read,ads_management&` +
         `response_type=code&` +
         `state=${userId}`;
-      
+
       res.json({ authUrl });
     } catch (error) {
       console.error('生成 Facebook 授權 URL 錯誤:', error);
@@ -191,7 +192,7 @@ export function setupDiagnosisRoutes(app: Express) {
   app.get('/api/diagnosis/facebook-callback', async (req, res) => {
     try {
       const { code, state: userId } = req.query;
-      
+
       if (!code) {
         return res.redirect('/calculator?error=facebook_auth_denied');
       }
@@ -199,7 +200,7 @@ export function setupDiagnosisRoutes(app: Express) {
       // 交換 access token
       const tokenUrl = 'https://graph.facebook.com/v19.0/oauth/access_token';
       const redirectUri = `${req.protocol}://${req.get('host')}/api/diagnosis/facebook-callback`;
-      
+
       const tokenResponse = await fetch(tokenUrl, {
         method: 'POST',
         headers: {
@@ -214,14 +215,14 @@ export function setupDiagnosisRoutes(app: Express) {
       });
 
       const tokenData = await tokenResponse.json();
-      
+
       if (tokenData.access_token) {
         // 獲取廣告帳戶資訊
         const accountsResponse = await fetch(
           `https://graph.facebook.com/v19.0/me/adaccounts?fields=id,name,account_status&access_token=${tokenData.access_token}`
         );
         const accountsData = await accountsResponse.json();
-        
+
         // 存儲用戶的 Facebook 認證資訊（暫時不選擇廣告帳戶）
         if (userId) {
           await storage.updateMetaTokens(
@@ -229,24 +230,24 @@ export function setupDiagnosisRoutes(app: Express) {
             tokenData.access_token,
             null // null 表示尚未選擇廣告帳戶
           );
-          
+
           // 儲存可用的廣告帳戶列表到臨時儲存
           const accountsList = accountsData.data?.map((account: any) => ({
             id: account.id,
             name: account.name,
             status: account.account_status
           })) || [];
-          
+
           // 暫存廣告帳戶列表 (這裡可以使用 session 或其他方式)
           // 為了簡化，我們先跳轉到選擇頁面
         }
-        
+
         res.redirect('/calculator?facebook_auth_success=true');
       } else {
         console.error('Facebook token exchange failed:', tokenData);
         res.redirect('/calculator?error=token_exchange_failed');
       }
-      
+
     } catch (error) {
       console.error('Facebook OAuth callback error:', error);
       res.redirect('/calculator?error=oauth_callback_failed');
@@ -258,9 +259,9 @@ export function setupDiagnosisRoutes(app: Express) {
     try {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
-      
+
       let adAccountName = '';
-      
+
       // 如果有 access token 和 account ID，嘗試獲取帳戶名稱
       if (user?.metaAccessToken && user?.metaAdAccountId) {
         try {
@@ -272,7 +273,7 @@ export function setupDiagnosisRoutes(app: Express) {
           adAccountName = user.metaAdAccountId;
         }
       }
-      
+
       res.json({
         connected: !!(user?.metaAccessToken),
         adAccountId: user?.metaAdAccountId,
@@ -293,7 +294,7 @@ export function setupDiagnosisRoutes(app: Express) {
     try {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
-      
+
       if (!user?.metaAccessToken) {
         return res.status(400).json({
           error: 'facebook_not_connected',
@@ -305,13 +306,13 @@ export function setupDiagnosisRoutes(app: Express) {
       const accountsResponse = await fetch(
         `https://graph.facebook.com/v19.0/me/adaccounts?fields=id,name,account_status,currency&access_token=${user.metaAccessToken}`
       );
-      
+
       if (!accountsResponse.ok) {
         throw new Error(`Facebook API 錯誤: ${accountsResponse.status}`);
       }
-      
+
       const accountsData = await accountsResponse.json();
-      
+
       const accounts = accountsData.data?.map((account: any) => ({
         id: account.id,
         name: account.name,
@@ -334,7 +335,7 @@ export function setupDiagnosisRoutes(app: Express) {
     try {
       const userId = req.user.id;
       const { adAccountId } = req.body;
-      
+
       if (!adAccountId) {
         return res.status(400).json({
           error: 'missing_account_id',
@@ -354,7 +355,7 @@ export function setupDiagnosisRoutes(app: Express) {
       const accountResponse = await fetch(
         `https://graph.facebook.com/v19.0/${adAccountId}?fields=id,name,account_status&access_token=${user.metaAccessToken}`
       );
-      
+
       if (!accountResponse.ok) {
         return res.status(400).json({
           error: 'invalid_account',
@@ -486,10 +487,10 @@ export function setupDiagnosisRoutes(app: Express) {
         const now = new Date();
         const timeDiff = now.getTime() - createdAt.getTime();
         const tenMinutes = 10 * 60 * 1000; // 10 分鐘
-        
+
         if (timeDiff > tenMinutes) {
           console.log(`[DIAGNOSIS] 報告 ${reportId} 處理超時，重新觸發處理...`);
-          
+
           // 獲取用戶資料以重新處理
           const user = await storage.getUser(userId);
           if (user?.metaAccessToken && user?.metaAdAccountId) {
@@ -500,7 +501,7 @@ export function setupDiagnosisRoutes(app: Express) {
               targetConversionRate: 0.02,
               cpc: 5
             };
-            
+
             // 重新觸發背景處理
             Promise.race([
               processAccountDiagnosis(
@@ -623,7 +624,7 @@ export function setupDiagnosisRoutes(app: Express) {
 
       // 執行刪除操作
       const success = await storage.deleteAdDiagnosisReport(reportId, userId);
-      
+
       if (success) {
         console.log(`[DIAGNOSIS] 成功刪除診斷報告: ${reportId}`);
         res.json({
@@ -676,33 +677,33 @@ async function processAccountDiagnosis(
   }
 ) {
   console.log(`[DIAGNOSIS] 開始處理帳戶診斷 - reportId: ${reportId}, adAccountId: ${adAccountId}`);
-  
+
   try {
     // 1. 獲取 Meta 廣告帳戶數據
     console.log(`[DIAGNOSIS] 步驟1: 獲取 Meta 廣告帳戶數據...`);
     const accountData = await metaAccountService.getAdAccountData(accessToken, adAccountId);
     console.log(`[DIAGNOSIS] 步驟1 完成: 帳戶名稱 ${accountData.accountName}, 花費 ${accountData.spend}`);
-    
+
     // 2. 計算診斷數據
     console.log(`[DIAGNOSIS] 步驟2: 計算診斷數據...`);
     const diagnosisData = metaAccountService.calculateAccountDiagnosisData(targetData, accountData);
     console.log(`[DIAGNOSIS] 步驟2 完成: 健康分數計算中...`);
-    
+
     // 3. 生成 AI 診斷報告
     console.log(`[DIAGNOSIS] 步驟3: 生成 AI 診斷報告...`);
     const aiReport = await metaAccountService.generateAccountDiagnosisReport(accountData.accountName, diagnosisData, accountData);
     console.log(`[DIAGNOSIS] 步驟3 完成: AI 報告生成完成 (${aiReport.length} 字符)`);
-    
+
     // 4. 計算健康分數
     console.log(`[DIAGNOSIS] 步驟4: 計算健康分數...`);
     const healthScore = calculateAccountHealthScore(diagnosisData);
     console.log(`[DIAGNOSIS] 步驟4 完成: 健康分數 ${healthScore}`);
-    
+
     // 5. 更新報告
     console.log(`[DIAGNOSIS] 步驟5: 更新報告...`);
     await updateAccountDiagnosisReport(reportId, accountData, diagnosisData, aiReport, healthScore);
     console.log(`[DIAGNOSIS] 診斷處理完成 - reportId: ${reportId}`);
-    
+
   } catch (error) {
     console.error(`[DIAGNOSIS] 處理帳戶診斷時發生錯誤 - reportId: ${reportId}:`, error);
     console.error(`[DIAGNOSIS] 錯誤詳情:`, {
@@ -710,7 +711,7 @@ async function processAccountDiagnosis(
       stack: error instanceof Error ? error.stack : 'No stack trace',
       name: error instanceof Error ? error.name : 'Unknown Error'
     });
-    
+
     // 更新報告狀態為失敗
     const errorMessage = error instanceof Error ? error.message : '未知錯誤';
     await updateDiagnosisReportStatus(reportId, 'failed', `帳戶診斷處理失敗: ${errorMessage}`);
@@ -762,31 +763,31 @@ async function updateDiagnosisReportStatus(reportId: string, status: string, mes
 // 計算帳戶健康分數
 function calculateAccountHealthScore(diagnosisData: any): number {
   let score = 0;
-  
+
   // 流量達成率 (25分)
   if (diagnosisData.trafficAchievementRate >= 80) score += 25;
   else if (diagnosisData.trafficAchievementRate >= 60) score += 20;
   else if (diagnosisData.trafficAchievementRate >= 40) score += 15;
   else score += 5;
-  
+
   // CTR 表現 (25分)
   if (diagnosisData.actualCtr >= 3) score += 25;
   else if (diagnosisData.actualCtr >= 2) score += 20;
   else if (diagnosisData.actualCtr >= 1) score += 15;
   else score += 5;
-  
+
   // ROAS 表現 (25分)
   if (diagnosisData.actualRoas >= diagnosisData.targetRoas) score += 25;
   else if (diagnosisData.actualRoas >= diagnosisData.targetRoas * 0.8) score += 20;
   else if (diagnosisData.actualRoas >= diagnosisData.targetRoas * 0.6) score += 15;
   else score += 5;
-  
+
   // 轉換率表現 (25分)
   if (diagnosisData.overallConversionRate >= diagnosisData.targetConversionRate) score += 25;
   else if (diagnosisData.overallConversionRate >= diagnosisData.targetConversionRate * 0.8) score += 20;
   else if (diagnosisData.overallConversionRate >= diagnosisData.targetConversionRate * 0.6) score += 15;
   else score += 5;
-  
+
   return Math.min(score, 100);
 }
 
@@ -795,7 +796,7 @@ export function setupFacebookDataDeletion(app: Express) {
   app.post('/auth/facebook/data-deletion', async (req, res) => {
     try {
       const { signed_request } = req.body;
-      
+
       if (!signed_request) {
         return res.status(400).json({ error: 'Missing signed_request' });
       }
@@ -807,7 +808,7 @@ export function setupFacebookDataDeletion(app: Express) {
       );
 
       const userId = decodedPayload.user_id;
-      
+
       if (userId) {
         // 清除用戶的 Facebook 認證資訊
         // 注意：我們不刪除用戶帳戶，只清除 Facebook 相關數據
@@ -848,9 +849,9 @@ export function setupFacebookDataDeletion(app: Express) {
     try {
       const { id } = req.params;
       const userId = req.user.id;
-      
+
       const report = await storage.getDiagnosisReport(id, userId);
-      
+
       if (!report) {
         return res.status(404).json({ error: 'Report not found' });
       }
