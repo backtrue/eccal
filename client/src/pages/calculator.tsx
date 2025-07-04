@@ -168,7 +168,7 @@ export default function Calculator({ locale }: CalculatorProps) {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="grid gap-8">
           
-          {/* Google Login Section */}
+          {/* Login Section */}
           {!isAuthenticated && (
             <Card className="border-blue-200 bg-blue-50">
               <CardContent className="p-6 text-center">
@@ -178,7 +178,10 @@ export default function Calculator({ locale }: CalculatorProps) {
                 <p className="text-blue-700 mb-4">
                   連接 Google Analytics 自動填入數據，並進行 Facebook 廣告診斷
                 </p>
-                <GoogleLoginButton />
+                <div className="flex gap-3 justify-center">
+                  <GoogleLoginButton />
+                  <FacebookLoginButton />
+                </div>
               </CardContent>
             </Card>
           )}
@@ -195,37 +198,43 @@ export default function Calculator({ locale }: CalculatorProps) {
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   
-                  {/* GA Property Selection */}
-                  {isAuthenticated && properties && (properties as any[])?.length > 0 && (
+                  {/* Account Selection Section */}
+                  {isAuthenticated && (
                     <div className="space-y-4">
-                      <div className="flex items-center gap-4">
-                        <div className="flex-1">
-                          <label className="text-sm font-medium text-gray-700 mb-2 block">
-                            選擇 GA 資源（選填）
-                          </label>
-                          <Select value={selectedProperty} onValueChange={setSelectedProperty}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="選擇 Google Analytics 資源" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {(properties as any[])?.map((property: any) => (
-                                <SelectItem key={property.id} value={property.id}>
-                                  {property.displayName || property.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                      {/* GA Property Selection */}
+                      {properties && Array.isArray(properties) && properties.length > 0 && (
+                        <div className="flex items-center gap-4">
+                          <div className="flex-1">
+                            <label className="text-sm font-medium text-gray-700 mb-2 block">
+                              選擇 GA 資源（選填）
+                            </label>
+                            <Select value={selectedProperty} onValueChange={setSelectedProperty}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="選擇 Google Analytics 資源" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {properties.map((property: any) => (
+                                  <SelectItem key={property.id} value={property.id}>
+                                    {property.displayName || property.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <Button 
+                            type="button"
+                            variant="outline"
+                            onClick={handleLoadGaData}
+                            disabled={!selectedProperty || loadingGaData}
+                            className="mt-6"
+                          >
+                            {loadingGaData ? <RefreshCw className="h-4 w-4 animate-spin" /> : '載入數據'}
+                          </Button>
                         </div>
-                        <Button 
-                          type="button"
-                          variant="outline"
-                          onClick={handleLoadGaData}
-                          disabled={!selectedProperty || loadingGaData}
-                          className="mt-6"
-                        >
-                          {loadingGaData ? <RefreshCw className="h-4 w-4 animate-spin" /> : '載入數據'}
-                        </Button>
-                      </div>
+                      )}
+                      
+                      {/* Facebook Account Selection */}
+                      <FacebookAccountSelector />
                     </div>
                   )}
 
@@ -352,21 +361,51 @@ export default function Calculator({ locale }: CalculatorProps) {
                 </div>
 
                 {/* Facebook Diagnosis Section */}
-                {isAuthenticated && (
+                {isAuthenticated && results && (
                   <div className="mt-8 pt-6 border-t">
                     <div className="flex items-center gap-2 mb-4">
                       <Facebook className="h-5 w-5 text-blue-600" />
                       <h3 className="text-lg font-semibold">Facebook 廣告健檢</h3>
                     </div>
                     
-                    <FacebookConnectionSection
-                      calculationData={form.getValues('targetRevenue') ? {
-                        targetRevenue: form.getValues('targetRevenue'),
-                        targetAov: form.getValues('averageOrderValue'),
-                        targetConversionRate: form.getValues('conversionRate'),
-                        cpc: 5 // 預設 CPC
-                      } : undefined}
-                    />
+                    <div className="text-center py-6">
+                      <p className="text-gray-600 mb-4">
+                        連接 Facebook 廣告帳戶後，點擊下方按鈕開始診斷分析
+                      </p>
+                      <Button 
+                        onClick={handleDiagnosis}
+                        disabled={diagnosisMutation.isPending}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        {diagnosisMutation.isPending ? (
+                          <>
+                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                            分析中...
+                          </>
+                        ) : (
+                          '開始 Facebook 廣告診斷'
+                        )}
+                      </Button>
+                    </div>
+
+                    {/* Diagnosis Results */}
+                    {diagnosisMutation.data && (
+                      <div className="mt-6 p-6 bg-gray-50 rounded-lg">
+                        <h4 className="font-semibold text-gray-900 mb-3">診斷結果</h4>
+                        <div className="space-y-2 text-sm text-gray-600">
+                          <p>帳戶: {diagnosisMutation.data.accountName}</p>
+                          <p>健康分數: {diagnosisMutation.data.healthScore}/100</p>
+                          <div className="mt-4">
+                            <h5 className="font-medium mb-2">建議:</h5>
+                            <ul className="list-disc list-inside space-y-1">
+                              {diagnosisMutation.data.recommendations?.map((rec: string, index: number) => (
+                                <li key={index}>{rec}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>

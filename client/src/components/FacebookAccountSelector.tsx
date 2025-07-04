@@ -17,7 +17,7 @@ export default function FacebookAccountSelector({ onAccountSelected }: FacebookA
   const { mutate: selectAccount } = useSelectFacebookAccount();
 
   // 檢查是否已連接 Facebook
-  const isConnected = connectionData?.connected || user?.metaAccessToken;
+  const isConnected = (connectionData as any)?.connected || user?.metaAccessToken;
 
   // 處理帳戶選擇
   const handleAccountSelect = (accountId: string) => {
@@ -59,8 +59,8 @@ export default function FacebookAccountSelector({ onAccountSelected }: FacebookA
         <SelectContent>
           {accountsLoading ? (
             <SelectItem value="loading" disabled>載入中...</SelectItem>
-          ) : accounts && accounts.length > 0 ? (
-            accounts.map((account: any) => (
+          ) : accounts && (accounts as any[]).length > 0 ? (
+            (accounts as any[]).map((account: any) => (
               <SelectItem key={account.id} value={account.id}>
                 {account.name} ({account.id})
               </SelectItem>
