@@ -109,10 +109,10 @@ export default function FbAudit({ locale }: FbAuditProps) {
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                   <div className="text-sm text-gray-600 mb-1">日均花費</div>
                   <div className="text-2xl font-bold text-blue-600 mb-1">
-                    NT$ {checkMutation.data?.data?.actualMetrics?.dailySpend?.toLocaleString() || '0'}
+                    NT$ {(checkMutation.data as any)?.data?.actualMetrics?.dailySpend?.toLocaleString() || '0'}
                   </div>
                   <div className="text-xs text-gray-500">
-                    目標: NT$ {checkMutation.data?.data?.comparisons?.find((c: any) => c.metric === 'dailySpend')?.target?.toLocaleString() || '0'}
+                    目標: NT$ {(checkMutation.data as any)?.data?.comparisons?.find((c: any) => c.metric === 'dailySpend')?.target?.toLocaleString() || '0'}
                   </div>
                 </div>
 
@@ -120,10 +120,10 @@ export default function FbAudit({ locale }: FbAuditProps) {
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                   <div className="text-sm text-gray-600 mb-1">總購買數</div>
                   <div className="text-2xl font-bold text-green-600 mb-1">
-                    {checkMutation.data?.data?.actualMetrics?.purchases || 0}
+                    {(checkMutation.data as any)?.data?.actualMetrics?.purchases || 0}
                   </div>
                   <div className="text-xs text-gray-500">
-                    目標: {checkMutation.data?.data?.comparisons?.find((c: any) => c.metric === 'purchases')?.target || 0}
+                    目標: {(checkMutation.data as any)?.data?.comparisons?.find((c: any) => c.metric === 'purchases')?.target || 0}
                   </div>
                 </div>
 
@@ -131,10 +131,10 @@ export default function FbAudit({ locale }: FbAuditProps) {
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                   <div className="text-sm text-gray-600 mb-1">ROAS</div>
                   <div className="text-2xl font-bold text-purple-600 mb-1">
-                    {checkMutation.data?.data?.actualMetrics?.roas?.toFixed(1) || '0.0'}x
+                    {(checkMutation.data as any)?.data?.actualMetrics?.roas?.toFixed(1) || '0.0'}x
                   </div>
                   <div className="text-xs text-gray-500">
-                    目標: {checkMutation.data?.data?.comparisons?.find((c: any) => c.metric === 'roas')?.target?.toFixed(1) || '0.0'}x
+                    目標: {(checkMutation.data as any)?.data?.comparisons?.find((c: any) => c.metric === 'roas')?.target?.toFixed(1) || '0.0'}x
                   </div>
                 </div>
 
@@ -142,10 +142,10 @@ export default function FbAudit({ locale }: FbAuditProps) {
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                   <div className="text-sm text-gray-600 mb-1">連結點擊率</div>
                   <div className="text-2xl font-bold text-orange-600 mb-1">
-                    {checkMutation.data?.data?.actualMetrics?.ctr?.toFixed(2) || '0.00'}%
+                    {(checkMutation.data as any)?.data?.actualMetrics?.ctr?.toFixed(2) || '0.00'}%
                   </div>
                   <div className="text-xs text-gray-500">
-                    目標: {checkMutation.data?.data?.comparisons?.find((c: any) => c.metric === 'ctr')?.target?.toFixed(2) || '0.00'}%
+                    目標: {(checkMutation.data as any)?.data?.comparisons?.find((c: any) => c.metric === 'ctr')?.target?.toFixed(2) || '0.00'}%
                   </div>
                 </div>
               </div>
@@ -154,7 +154,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
 
           {/* 詳細指標分析 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {(checkMutation.data?.data?.comparisons || []).map((comparison: any, index: number) => {
+            {((checkMutation.data as any)?.data?.comparisons || []).map((comparison: any, index: number) => {
               const metricNames = {
                 dailySpend: '日均花費',
                 purchases: '購買數',

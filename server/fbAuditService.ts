@@ -184,6 +184,19 @@ export class FbAuditService {
    * 從 Facebook actions 數組中提取特定動作的值
    */
   private extractActionValue(actions: any[], actionType: string): string | number {
+    // 支援多種購買事件類型
+    if (actionType === 'purchase') {
+      const purchaseTypes = ['purchase', 'onsite_web_app_purchase', 'onsite_conversion.purchase'];
+      for (const type of purchaseTypes) {
+        const action = actions.find(a => a.action_type === type);
+        if (action) {
+          console.log(`Found purchase action: ${type} = ${action.value}`);
+          return action.value;
+        }
+      }
+      return 0;
+    }
+    
     const action = actions.find(a => a.action_type === actionType);
     return action ? action.value : 0;
   }
