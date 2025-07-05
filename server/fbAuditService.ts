@@ -108,17 +108,25 @@ export class FbAuditService {
       const since = startDate.toISOString().split('T')[0];
       const until = endDate.toISOString().split('T')[0];
 
-      // 按照用戶指示：只拉取需要的欄位
+      // 確保廣告帳戶 ID 格式正確，避免重複 act_ 前綴
+      const accountId = adAccountId.startsWith('act_') ? adAccountId : `act_${adAccountId}`;
+      
+      // 只拉取必要欄位，並且只要 purchase 動作
       const fields = [
         'spend',                    // 花費
-        'actions',                  // 動作數據（包含 purchase）
+        'actions',                  // 只取 purchase 動作
         'outbound_clicks_ctr',      // 外連點擊率
         'purchase_roas'             // 購買 ROAS
       ].join(',');
-
-      // 確保廣告帳戶 ID 格式正確，避免重複 act_ 前綴
-      const accountId = adAccountId.startsWith('act_') ? adAccountId : `act_${adAccountId}`;
-      const url = `${this.baseUrl}/${accountId}/insights?fields=${fields}&time_range={"since":"${since}","until":"${until}"}&access_token=${accessToken}`;
+      
+      // 使用 filtering 參數只拉取 purchase action_type
+      const filtering = encodeURIComponent(JSON.stringify([{
+        "field": "action_type",
+        "operator": "IN", 
+        "value": ["purchase"]
+      }]));
+      
+      const url = `${this.baseUrl}/${accountId}/insights?fields=${fields}&filtering=${filtering}&time_range={"since":"${since}","until":"${until}"}&access_token=${accessToken}`;
       
       console.log('Facebook API URL:', url);
       console.log('Ad Account ID:', adAccountId);
