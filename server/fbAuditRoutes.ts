@@ -52,6 +52,11 @@ export function setupFbAuditRoutes(app: Express) {
     try {
       const user = (req as any).user;
       
+      console.log('載入預算計劃 - 用戶資料:', {
+        userId: user.id,
+        email: user.email
+      });
+      
       const plans = await db.query.planResults.findMany({
         where: eq(planResults.userId, user.id),
         orderBy: (planResults, { desc }) => [desc(planResults.createdAt)],
@@ -63,6 +68,11 @@ export function setupFbAuditRoutes(app: Express) {
           requiredOrders: true,
           createdAt: true
         }
+      });
+
+      console.log('找到的預算計劃:', {
+        plansCount: plans.length,
+        plans: plans.map(p => ({ id: p.id, name: p.planName, roas: p.targetRoas }))
       });
 
       res.json({ 

@@ -19,6 +19,7 @@ export function useFbAuditPlans(enabled = true) {
     enabled: enabled,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    select: (data: any) => data?.data || [], // 提取 API 回應中的 data 欄位
   });
 }
 
