@@ -241,9 +241,36 @@ export default function Calculator({ locale }: CalculatorProps) {
                   {/* Facebook Ad Account Selection */}
                   {isFacebookConnected && (
                     <div className="p-4 bg-white rounded-lg border">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Facebook 廣告帳戶
-                      </label>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-sm font-medium text-gray-700">
+                          Facebook 廣告帳戶
+                        </label>
+                        <Button 
+                          type="button"
+                          variant="outline" 
+                          size="sm"
+                          onClick={async () => {
+                            try {
+                              const response = await fetch('/api/diagnosis/facebook-permissions', {
+                                credentials: 'include'
+                              });
+                              const data = await response.json();
+                              console.log('Facebook 權限診斷:', data);
+                              alert(`Facebook 權限狀況:\n\n` +
+                                `Token 有效: ${data.summary?.tokenValid ? '是' : '否'}\n` +
+                                `廣告權限: ${data.summary?.adsPermissionsGranted ? '已授權' : '未授權'}\n` +
+                                `可存取廣告帳戶: ${data.summary?.totalAdAccounts || 0} 個\n\n` +
+                                `權限清單: ${data.permissions?.map((p: any) => `${p.permission}:${p.status}`).join(', ') || '無'}`
+                              );
+                            } catch (error) {
+                              console.error('權限檢查失敗:', error);
+                              alert('權限檢查失敗，請查看控制台');
+                            }
+                          }}
+                        >
+                          檢查權限
+                        </Button>
+                      </div>
                       <FacebookAccountSelector />
                     </div>
                   )}

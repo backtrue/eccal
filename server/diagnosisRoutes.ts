@@ -732,6 +732,79 @@ export function setupDiagnosisRoutes(app: Express) {
     }
   });
 
+  // 診斷 Facebook 權限和廣告帳戶存取
+  app.get('/api/diagnosis/facebook-permissions', requireJWTAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user?.metaAccessToken) {
+        return res.json({
+          success: false,
+          message: '未找到 Facebook access token',
+          permissions: [],
+          adAccounts: []
+        });
+      }
+
+      console.log(`[FACEBOOK_PERMISSIONS] 檢查用戶 ${userId} 的 Facebook 權限`);
+
+      // 檢查 access token 權限
+      const permissionsResponse = await fetch(
+        `https://graph.facebook.com/v19.0/me/permissions?access_token=${user.metaAccessToken}`
+      );
+      
+      const permissionsData = await permissionsResponse.json();
+      
+      // 檢查 access token 詳細信息
+      const tokenInfoResponse = await fetch(
+        `https://graph.facebook.com/v19.0/me?fields=id,name,email&access_token=${user.metaAccessToken}`
+      );
+      
+      const tokenInfoData = await tokenInfoResponse.json();
+      
+      // 嘗試獲取廣告帳戶
+      const adAccountsResponse = await fetch(
+        `https://graph.facebook.com/v19.0/me/adaccounts?fields=id,name,account_status,business&access_token=${user.metaAccessToken}`
+      );
+      
+      const adAccountsData = await adAccountsResponse.json();
+      
+      const hasAdsPermissions = permissionsData.data?.some((p: any) => 
+        ['ads_read', 'ads_management'].includes(p.permission) && p.status === 'granted'
+      );
+
+      console.log(`[FACEBOOK_PERMISSIONS] 結果:`, {
+        hasToken: true,
+        hasAdsPermissions,
+        adAccountsCount: adAccountsData.data?.length || 0,
+        permissions: permissionsData.data?.map((p: any) => `${p.permission}:${p.status}`)
+      });
+      
+      res.json({
+        success: true,
+        tokenInfo: tokenInfoData,
+        permissions: permissionsData.data || [],
+        adAccounts: adAccountsData.data || [],
+        hasAdsPermissions,
+        summary: {
+          tokenValid: !tokenInfoData.error,
+          adsPermissionsGranted: hasAdsPermissions,
+          adAccountsAccessible: (adAccountsData.data?.length || 0) > 0,
+          totalAdAccounts: adAccountsData.data?.length || 0
+        }
+      });
+      
+    } catch (error) {
+      console.error('Facebook 權限檢查錯誤:', error);
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        message: 'Facebook 權限檢查失敗'
+      });
+    }
+  });
+
   // 獲取 Facebook OAuth 授權 URL (不需要JWT認證)
   app.get('/api/diagnosis/facebook-auth-url', async (req: any, res) => {
     try {
