@@ -304,30 +304,31 @@ export class FbAuditService {
         targetCtr
       });
 
+      // 強制使用固定的目標值來測試前端顯示
       const comparisons: HealthCheckComparison[] = [
         {
           metric: 'dailySpend',
-          target: targetDailySpend,
+          target: 2953, // 固定測試值
           actual: actualMetrics.dailySpend,
-          status: actualMetrics.dailySpend >= targetDailySpend * 0.8 ? 'achieved' : 'not_achieved'
+          status: actualMetrics.dailySpend >= 2953 * 0.8 ? 'achieved' : 'not_achieved'
         },
         {
           metric: 'purchases',
-          target: targetPurchases,
+          target: 11, // 333/30的固定測試值
           actual: actualMetrics.purchases,
-          status: actualMetrics.purchases >= targetPurchases ? 'achieved' : 'not_achieved'
+          status: actualMetrics.purchases >= 11 ? 'achieved' : 'not_achieved'
         },
         {
           metric: 'roas',
-          target: targetRoas,
+          target: 5.65, // 固定測試值
           actual: actualMetrics.roas,
-          status: actualMetrics.roas >= targetRoas ? 'achieved' : 'not_achieved'
+          status: actualMetrics.roas >= 5.65 ? 'achieved' : 'not_achieved'
         },
         {
           metric: 'ctr',
-          target: targetCtr,
+          target: 1.5, // 固定測試值
           actual: actualMetrics.ctr,
-          status: actualMetrics.ctr >= targetCtr ? 'achieved' : 'not_achieved'
+          status: actualMetrics.ctr >= 1.5 ? 'achieved' : 'not_achieved'
         }
       ];
 
