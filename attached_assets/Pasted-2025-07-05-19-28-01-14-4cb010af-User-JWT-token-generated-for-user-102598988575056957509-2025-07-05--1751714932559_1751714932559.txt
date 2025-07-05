@@ -1,0 +1,100 @@
+2025-07-05 19:28:01.14
+4cb010af
+User
+JWT token generated for user: 102598988575056957509
+2025-07-05 19:28:01.14
+4cb010af
+User
+Redirecting to: https://eccal.thinkwithblack.com/?auth_success=1
+2025-07-05 19:28:02.39
+4cb010af
+User
+Auth check - token present: true
+2025-07-05 19:28:02.39
+4cb010af
+User
+JWT auth check successful: backtrue@gmail.com
+2025-07-05 19:28:07.93
+4cb010af
+User
+生成 Facebook OAuth URL: {
+2025-07-05 19:28:07.93
+4cb010af
+User
+appId: '56346***',
+2025-07-05 19:28:07.93
+4cb010af
+User
+redirectUri: 'https://eccal.thinkwithblack.com/api/diagnosis/facebook-callback',
+2025-07-05 19:28:07.93
+4cb010af
+User
+userIdMask: '10259898***'
+2025-07-05 19:28:07.93
+4cb010af
+User
+}
+2025-07-05 19:28:20.88
+4cb010af
+User
+Facebook OAuth 回調: {
+2025-07-05 19:28:20.88
+4cb010af
+User
+code: 'present',
+2025-07-05 19:28:20.88
+4cb010af
+User
+userId: '102598988575056957509',
+2025-07-05 19:28:20.88
+4cb010af
+User
+error: undefined,
+2025-07-05 19:28:20.88
+4cb010af
+User
+fullQuery: {
+2025-07-05 19:28:20.88
+4cb010af
+User
+code: 'AQBymhnTzaTWnjFsOxhquXquBKKbkyK2WMg2fGv0CY6HmQXjZM6KaIN2eKqKEOtjmNeH5_T3_8rlTmpktENrd5jvqeqYzf4gxz-UbY9jWnSTQSnIyvkdg0Sh7XRYySW4TclDF0sqBHq5SkNNDE9oJBuf1AZQ0AsocsaERubZ0tNZt8J0_z8f0z4K6C8QZPQKWVg5noC0XipRinV-5lT-Ttle8MJaRft6o0MQ48t80QnkNCrY7SIqgxd_DAHXXJF7M1KlGZ76tCHpMVbnzkhjbKqNyoLLDzbW-RTROiZtR9CnoEgCx6AKgozIYBLmxwn9XiEA5kKRdjLNYwUH_Z5sYJGkXGeScbbn-sExKzWmwFKQqUQYihXPG2SL7US5bRTTRIs',
+2025-07-05 19:28:20.88
+4cb010af
+User
+state: '102598988575056957509'
+2025-07-05 19:28:20.88
+4cb010af
+User
+}
+2025-07-05 19:28:20.88
+4cb010af
+User
+}
+2025-07-05 19:28:20.88
+4cb010af
+User
+交換 Facebook 存取權杖: {
+2025-07-05 19:28:20.88
+4cb010af
+User
+redirectUri: 'https://eccal.thinkwithblack.com/api/diagnosis/facebook-callback'
+2025-07-05 19:28:20.88
+4cb010af
+User
+}
+2025-07-05 19:28:21.16
+4cb010af
+User
+Facebook 權杖回應: { success: true, error: undefined }
+2025-07-05 19:28:21.27
+4cb010af
+User
+更新現有用戶的 Facebook 認證: 102598988575056957509
+2025-07-05 19:28:22.45
+4cb010af
+User
+Auth check - token present: true
+2025-07-05 19:28:22.45
+4cb010af
+User
+JWT auth check successful: backtrue@gmail.com

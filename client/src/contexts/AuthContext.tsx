@@ -82,19 +82,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
       currentPath.includes(path)
     );
     const isCalculatorPage = currentPath === '/calculator' || currentPath.startsWith('/calculator/');
+    const isFbAuditPage = currentPath === '/fbaudit' || currentPath.includes('/fbaudit');
     const hasAuthSuccess = urlParams.has('auth_success') || urlParams.has('facebook_auth_success');
     
     // Only check auth in these specific scenarios:
     const shouldCheckAuth = 
       hasAuthSuccess ||  // Just logged in
       isProtectedPage ||                // On protected page
-      isCalculatorPage;                 // On calculator page (for diagnosis feature)
+      isCalculatorPage ||               // On calculator page (for diagnosis feature)
+      isFbAuditPage;                   // On FB audit page (needs auth for account access)
     
     console.log('Auth check decision:', { 
       currentPath,
       hasAuthSuccess, 
       isProtectedPage,
       isCalculatorPage,
+      isFbAuditPage,
       shouldCheckAuth,
       fullURL: window.location.href
     });
