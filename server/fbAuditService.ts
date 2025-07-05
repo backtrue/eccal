@@ -133,6 +133,7 @@ export class FbAuditService {
 
       const data = await response.json();
       console.log('Facebook API raw data:', JSON.stringify(data, null, 2));
+      console.log('Facebook API response headers:', Object.fromEntries(response.headers));
       
       if (!data.data || data.data.length === 0) {
         console.log('No Facebook data available for date range:', { since, until });
@@ -198,17 +199,22 @@ export class FbAuditService {
    * 計算健檢指標
    */
   calculateMetrics(adData: FbAdAccountData): HealthCheckMetrics {
+    console.log('calculateMetrics 輸入資料:', adData);
+    
     const dailySpend = adData.spend / 28; // 28天平均
     const purchases = adData.purchases;
     const roas = adData.roas; // 直接使用 Facebook API 的 purchase_roas
     const ctr = adData.ctr; // 直接使用 Facebook API 的 outbound_clicks_ctr
 
-    return {
+    const result = {
       dailySpend: Math.round(dailySpend * 100) / 100,
       purchases,
       roas: Math.round(roas * 100) / 100,
       ctr: Math.round(ctr * 100) / 100 // API 已經是百分比格式
     };
+    
+    console.log('calculateMetrics 計算結果:', result);
+    return result;
   }
 
   /**
@@ -279,6 +285,7 @@ export class FbAuditService {
         }
       }
 
+      console.log('compareWithTargets 最終比較結果:', comparisons);
       return comparisons;
     } catch (error) {
       console.error('Error comparing with targets:', error);

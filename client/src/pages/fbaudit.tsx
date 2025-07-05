@@ -154,7 +154,12 @@ export default function FbAudit({ locale }: FbAuditProps) {
 
           {/* 詳細指標分析 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {((checkMutation.data as any)?.data?.comparisons || []).map((comparison: any, index: number) => {
+            {(() => {
+              const comparisons = (checkMutation.data as any)?.data?.comparisons || [];
+              console.log('前端 comparisons 資料:', comparisons);
+              console.log('前端 actualMetrics 資料:', (checkMutation.data as any)?.data?.actualMetrics);
+              return comparisons;
+            })().map((comparison: any, index: number) => {
               const metricNames = {
                 dailySpend: '日均花費',
                 purchases: '購買數',
