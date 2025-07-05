@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Calculator as CalcIcon, TrendingUp, Target, ShoppingCart, BarChart3, RefreshCw } from "lucide-react";
+import { Calculator as CalcIcon, TrendingUp, Target, ShoppingCart, BarChart3, RefreshCw, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import Footer from "@/components/Footer";
 import NavigationBar from "@/components/NavigationBar";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
+import SavePlanDialog from "@/components/SavePlanDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useAnalyticsProperties, useAnalyticsData } from "@/hooks/useAnalyticsData";
 import { getTranslations, type Locale } from "@/lib/i18n";
@@ -54,6 +55,7 @@ export default function Calculator({ locale }: CalculatorProps) {
   const [results, setResults] = useState<CalculationResults | null>(null);
   const [selectedProperty, setSelectedProperty] = useState<string>('');
   const [loadingGaData, setLoadingGaData] = useState(false);
+  const [formData, setFormData] = useState<any>(null); // 儲存表單數據
   const { isAuthenticated, user } = useAuth();
   
   // GA Analytics hooks
@@ -112,6 +114,18 @@ export default function Calculator({ locale }: CalculatorProps) {
     };
 
     setResults(calculationResults);
+    
+    // 儲存表單數據以便稍後儲存計劃
+    const selectedGaProperty = Array.isArray(properties) ? properties.find((p: any) => p.id === selectedProperty) : null;
+    setFormData({
+      targetRevenue: data.targetRevenue!,
+      averageOrderValue: data.averageOrderValue!,
+      conversionRate: data.conversionRate!,
+      results: calculationResults,
+      gaPropertyId: selectedProperty || undefined,
+      gaPropertyName: selectedGaProperty?.displayName || undefined,
+      dataSource: selectedProperty ? 'google_analytics' : 'manual',
+    });
 
     // 追蹤計算事件
     trackEvent('calculator_calculation', 'Calculator');
@@ -308,8 +322,16 @@ export default function Calculator({ locale }: CalculatorProps) {
         {/* 計算結果 */}
         {results && (
           <Card className="mb-8 border-green-200">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-green-800">計算結果</CardTitle>
+              {isAuthenticated && formData && (
+                <SavePlanDialog calculationData={formData}>
+                  <Button variant="outline" size="sm">
+                    <Save className="w-4 h-4 mr-2" />
+                    儲存計劃
+                  </Button>
+                </SavePlanDialog>
+              )}
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

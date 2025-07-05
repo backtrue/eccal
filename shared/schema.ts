@@ -196,14 +196,47 @@ export const campaignTemplates = pgTable("campaign_templates", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Saved projects for other tools (keeping for backward compatibility)
+// Saved projects for PDCA cycle - Plan phase results stored here
 export const savedProjects = pgTable("saved_projects", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId: varchar("user_id").notNull().references(() => users.id),
   projectName: varchar("project_name").notNull(),
-  projectType: varchar("project_type").notNull(), // e.g., "budget_calculator", etc.
+  projectType: varchar("project_type").notNull(), // e.g., "budget_calculator", "campaign_planner", etc.
   projectData: jsonb("project_data").notNull(), // flexible JSON storage for project-specific data
   lastCalculationResult: jsonb("last_calculation_result"), // store last calculation results
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// PDCA Plan Results - Calculator outcomes for future Check/Act phases
+export const planResults = pgTable("plan_results", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  planName: varchar("plan_name").notNull(), // e.g., "10月預算", "Q4廣告計畫"
+  
+  // Original Input Data
+  targetRevenue: decimal("target_revenue", { precision: 15, scale: 2 }).notNull(),
+  averageOrderValue: decimal("average_order_value", { precision: 10, scale: 2 }).notNull(),
+  conversionRate: decimal("conversion_rate", { precision: 5, scale: 4 }).notNull(),
+  cpc: decimal("cpc", { precision: 6, scale: 2 }).notNull(),
+  
+  // Calculated Results
+  requiredOrders: integer("required_orders").notNull(),
+  monthlyTraffic: integer("monthly_traffic").notNull(),
+  dailyTraffic: integer("daily_traffic").notNull(),
+  monthlyAdBudget: decimal("monthly_ad_budget", { precision: 12, scale: 2 }).notNull(),
+  dailyAdBudget: decimal("daily_ad_budget", { precision: 10, scale: 2 }).notNull(),
+  targetRoas: decimal("target_roas", { precision: 5, scale: 2 }).notNull(),
+  
+  // Data Source Info
+  gaPropertyId: varchar("ga_property_id"), // Google Analytics property used
+  gaPropertyName: varchar("ga_property_name"),
+  dataSource: varchar("data_source").default("manual").notNull(), // "manual", "google_analytics"
+  
+  // PDCA Integration
+  pdcaPhase: varchar("pdca_phase").default("plan").notNull(), // "plan", "check", "act"
+  isActive: boolean("is_active").default(true).notNull(), // for current active plan
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -248,6 +281,10 @@ export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type InsertUserMetrics = typeof userMetrics.$inferInsert;
 export type UserMetrics = typeof userMetrics.$inferSelect;
+
+// Plan Results types for PDCA integration
+export type InsertPlanResult = typeof planResults.$inferInsert;
+export type PlanResult = typeof planResults.$inferSelect;
 export type UserCredits = typeof userCredits.$inferSelect;
 export type InsertUserCredits = typeof userCredits.$inferInsert;
 export type CreditTransaction = typeof creditTransactions.$inferSelect;

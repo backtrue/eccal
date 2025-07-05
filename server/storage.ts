@@ -17,6 +17,9 @@ import {
   savedProjects,
   type SavedProject,
   type InsertSavedProject,
+  planResults,
+  type PlanResult,
+  type InsertPlanResult,
   adDiagnosisReports,
   type AdDiagnosisReport,
   type InsertAdDiagnosisReport,
@@ -677,6 +680,72 @@ export class DatabaseStorage implements IStorage {
       .delete(savedProjects)
       .where(and(eq(savedProjects.id, projectId), eq(savedProjects.userId, userId)));
     return (result.rowCount || 0) > 0;
+  }
+
+  // PDCA Plan Results operations
+  async savePlanResult(planData: InsertPlanResult): Promise<PlanResult> {
+    const [result] = await db
+      .insert(planResults)
+      .values(planData)
+      .returning();
+    return result;
+  }
+
+  async getUserPlanResults(userId: string): Promise<PlanResult[]> {
+    return await db
+      .select()
+      .from(planResults)
+      .where(eq(planResults.userId, userId))
+      .orderBy(desc(planResults.createdAt));
+  }
+
+  async getPlanResult(planId: string, userId: string): Promise<PlanResult | undefined> {
+    const [result] = await db
+      .select()
+      .from(planResults)
+      .where(and(eq(planResults.id, planId), eq(planResults.userId, userId)));
+    return result;
+  }
+
+  async updatePlanResult(planId: string, userId: string, updates: Partial<InsertPlanResult>): Promise<PlanResult> {
+    const [result] = await db
+      .update(planResults)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(planResults.id, planId), eq(planResults.userId, userId)))
+      .returning();
+    return result;
+  }
+
+  async deletePlanResult(planId: string, userId: string): Promise<boolean> {
+    const result = await db
+      .delete(planResults)
+      .where(and(eq(planResults.id, planId), eq(planResults.userId, userId)));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async setActivePlan(planId: string, userId: string): Promise<void> {
+    // 首先將所有其他計劃設為非活躍
+    await db
+      .update(planResults)
+      .set({ isActive: false })
+      .where(eq(planResults.userId, userId));
+    
+    // 然後設定指定計劃為活躍
+    await db
+      .update(planResults)
+      .set({ isActive: true })
+      .where(and(eq(planResults.id, planId), eq(planResults.userId, userId)));
+  }
+
+  async getActivePlan(userId: string): Promise<PlanResult | undefined> {
+    const [result] = await db
+      .select()
+      .from(planResults)
+      .where(and(eq(planResults.userId, userId), eq(planResults.isActive, true)));
+    return result;
   }
 
   // Admin operations for management dashboard

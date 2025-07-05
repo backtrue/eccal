@@ -618,6 +618,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // PDCA Plan Results API routes
+  app.post('/api/plan-results', requireJWTAuth, async (req: any, res) => {
+    try {
+      const { planName, targetRevenue, averageOrderValue, conversionRate, cpc, requiredOrders, monthlyTraffic, dailyTraffic, monthlyAdBudget, dailyAdBudget, targetRoas, gaPropertyId, gaPropertyName, dataSource } = req.body;
+      
+      const planData = {
+        userId: req.user!.id,
+        planName,
+        targetRevenue: targetRevenue.toString(),
+        averageOrderValue: averageOrderValue.toString(),
+        conversionRate: conversionRate.toString(),
+        cpc: cpc.toString(),
+        requiredOrders,
+        monthlyTraffic,
+        dailyTraffic,
+        monthlyAdBudget: monthlyAdBudget.toString(),
+        dailyAdBudget: dailyAdBudget.toString(),
+        targetRoas: targetRoas.toString(),
+        gaPropertyId: gaPropertyId || null,
+        gaPropertyName: gaPropertyName || null,
+        dataSource: dataSource || 'manual',
+        pdcaPhase: 'plan',
+        isActive: false,
+      };
+
+      const savedPlan = await storage.savePlanResult(planData);
+      res.json({ success: true, data: savedPlan });
+    } catch (error) {
+      console.error('儲存計劃結果失敗:', error);
+      res.status(500).json({ success: false, message: '儲存失敗' });
+    }
+  });
+
+  app.get('/api/plan-results', requireJWTAuth, async (req: any, res) => {
+    try {
+      const plans = await storage.getUserPlanResults(req.user.id);
+      res.json({ success: true, data: plans });
+    } catch (error) {
+      console.error('獲取計劃列表失敗:', error);
+      res.status(500).json({ success: false, message: '獲取失敗' });
+    }
+  });
+
+  app.get('/api/plan-results/:planId', requireJWTAuth, async (req: any, res) => {
+    try {
+      const { planId } = req.params;
+      const plan = await storage.getPlanResult(planId, req.user.id);
+      
+      if (!plan) {
+        return res.status(404).json({ success: false, message: '找不到該計劃' });
+      }
+
+      res.json({ success: true, data: plan });
+    } catch (error) {
+      console.error('獲取計劃詳情失敗:', error);
+      res.status(500).json({ success: false, message: '獲取失敗' });
+    }
+  });
+
+  app.put('/api/plan-results/:planId/set-active', requireJWTAuth, async (req: any, res) => {
+    try {
+      const { planId } = req.params;
+      await storage.setActivePlan(planId, req.user.id);
+      res.json({ success: true, message: '已設為目前計劃' });
+    } catch (error) {
+      console.error('設定活躍計劃失敗:', error);
+      res.status(500).json({ success: false, message: '設定失敗' });
+    }
+  });
+
+  app.delete('/api/plan-results/:planId', requireJWTAuth, async (req: any, res) => {
+    try {
+      const { planId } = req.params;
+      const deleted = await storage.deletePlanResult(planId, req.user.id);
+      
+      if (!deleted) {
+        return res.status(404).json({ success: false, message: '找不到該計劃' });
+      }
+
+      res.json({ success: true, message: '刪除成功' });
+    } catch (error) {
+      console.error('刪除計劃失敗:', error);
+      res.status(500).json({ success: false, message: '刪除失敗' });
+    }
+  });
+
   // Test referral system endpoint
   app.post('/api/admin/test-referral', requireJWTAuth, async (req: any, res) => {
     try {
