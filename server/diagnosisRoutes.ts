@@ -206,12 +206,12 @@ export function setupDiagnosisRoutes(app: Express) {
 
       if (error) {
         console.error('Facebook OAuth 錯誤:', error);
-        return res.redirect('/calculator?error=facebook_auth_error');
+        return res.redirect('/fbaudit?error=facebook_auth_error');
       }
 
       if (!code) {
         console.error('Facebook OAuth 缺少授權碼');
-        return res.redirect('/calculator?error=facebook_auth_denied');
+        return res.redirect('/fbaudit?error=facebook_auth_denied');
       }
 
       // 交換 access token
@@ -287,15 +287,15 @@ export function setupDiagnosisRoutes(app: Express) {
           console.log('更新現有用戶的 Facebook 認證:', userId);
         }
 
-        res.redirect('/calculator?facebook_auth_success=true');
+        res.redirect('/fbaudit?facebook_auth_success=true');
       } else {
         console.error('Facebook token exchange failed:', tokenData);
-        res.redirect('/calculator?error=token_exchange_failed');
+        res.redirect('/fbaudit?error=token_exchange_failed');
       }
 
     } catch (error) {
       console.error('Facebook OAuth callback error:', error);
-      res.redirect('/calculator?error=oauth_callback_failed');
+      res.redirect('/fbaudit?error=oauth_callback_failed');
     }
   });
 
@@ -897,7 +897,7 @@ export function setupDiagnosisRoutes(app: Express) {
       console.log(`[FACEBOOK_CALLBACK] JWT token created for user ${tempUserData.id}, redirecting to calculator`);
       
       // 重定向回計算器頁面
-      res.redirect('/calculator?facebook_auth_success=true');
+      res.redirect('/fbaudit?facebook_auth_success=true');
     } catch (error) {
       console.error('Facebook OAuth 回調錯誤:', error);
       res.status(500).send('授權處理失敗');
