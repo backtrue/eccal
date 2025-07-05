@@ -295,31 +295,31 @@ export class FbAuditService {
         targetCtr
       });
 
-      // 強制使用固定的目標值來測試前端顯示
+      // 使用真實的資料庫目標值
       const comparisons: HealthCheckComparison[] = [
         {
           metric: 'dailySpend',
-          target: 2953, // 固定測試值
+          target: targetDailySpend,
           actual: actualMetrics.dailySpend,
-          status: actualMetrics.dailySpend >= 2953 * 0.8 ? 'achieved' : 'not_achieved'
+          status: actualMetrics.dailySpend >= targetDailySpend * 0.8 ? 'achieved' : 'not_achieved'
         },
         {
           metric: 'purchases',
-          target: 11, // 333/30的固定測試值
+          target: targetPurchases,
           actual: actualMetrics.purchases,
-          status: actualMetrics.purchases >= 11 ? 'achieved' : 'not_achieved'
+          status: actualMetrics.purchases >= targetPurchases ? 'achieved' : 'not_achieved'
         },
         {
           metric: 'roas',
-          target: 5.65, // 固定測試值
+          target: targetRoas,
           actual: actualMetrics.roas,
-          status: actualMetrics.roas >= 5.65 ? 'achieved' : 'not_achieved'
+          status: actualMetrics.roas >= targetRoas ? 'achieved' : 'not_achieved'
         },
         {
           metric: 'ctr',
-          target: 1.5, // 固定測試值
+          target: targetCtr,
           actual: actualMetrics.ctr,
-          status: actualMetrics.ctr >= 1.5 ? 'achieved' : 'not_achieved'
+          status: actualMetrics.ctr >= targetCtr ? 'achieved' : 'not_achieved'
         }
       ];
 
