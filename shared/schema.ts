@@ -563,9 +563,14 @@ export const fbHealthChecks = pgTable('fb_health_checks', {
 export const industryTypes = pgTable('industry_types', {
   id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
   name: text('name').notNull(),
-  nameEn: text('name_en').notNull(),
-  averageRoas: text('average_roas').notNull(),
-  averageCtr: text('average_ctr').notNull(),
+  description: text('description'),
+  targetRoas: numeric('target_roas', { precision: 10, scale: 2 }),
+  targetCtr: numeric('target_ctr', { precision: 5, scale: 2 }),
+  targetCpa: numeric('target_cpa', { precision: 10, scale: 2 }),
+  targetDailySpend: numeric('target_daily_spend', { precision: 10, scale: 2 }),
+  nameEn: text('name_en'),
+  averageRoas: text('average_roas'),
+  averageCtr: text('average_ctr'),
   createdAt: timestamp('created_at').defaultNow(),
 });
 
