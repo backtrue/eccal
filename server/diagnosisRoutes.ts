@@ -279,12 +279,28 @@ export function setupDiagnosisRoutes(app: Express) {
           console.log('為新用戶創建 JWT 認證:', user.id);
         } else {
           // 更新現有用戶的 Facebook 認證（保持原有的 Google JWT 身份）
+          console.log('開始更新現有用戶的 Facebook token:', {
+            userId: userId,
+            tokenLength: tokenData.access_token?.length,
+            tokenPrefix: tokenData.access_token?.substring(0, 20) + '...'
+          });
+          
           await storage.updateMetaTokens(
             userId as string, 
             tokenData.access_token,
             null
           );
-          console.log('更新現有用戶的 Facebook 認證:', userId);
+          
+          console.log('Facebook token 更新完成:', userId);
+          
+          // 驗證 token 是否真的保存成功
+          const updatedUser = await storage.getUser(userId as string);
+          console.log('驗證用戶資料更新:', {
+            userId: updatedUser?.id,
+            hasMetaToken: !!updatedUser?.metaAccessToken,
+            metaTokenPrefix: updatedUser?.metaAccessToken?.substring(0, 20) + '...' || null
+          });
+          
           // 不需要重新生成 JWT，保持原有的 Google 認證身份
         }
 
