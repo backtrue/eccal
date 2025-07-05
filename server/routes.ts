@@ -9,6 +9,7 @@ import { eq, sql } from "drizzle-orm";
 import { brevoService } from "./brevoService";
 import { setupCampaignPlannerRoutes } from "./campaignPlannerRoutes";
 import { setupDiagnosisRoutes } from "./diagnosisRoutes";
+import { setupFbAuditRoutes } from "./fbAuditRoutes";
 import multer from "multer";
 import fs from "fs";
 import path from "path";
@@ -19,6 +20,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Setup Facebook Ad Diagnosis routes
   setupDiagnosisRoutes(app);
+  
+  // Setup Facebook Ad Audit routes
+  setupFbAuditRoutes(app);
 
   // Critical: Handle root path for Replit port monitoring
   app.get('/api/ping', (req, res) => {

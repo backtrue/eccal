@@ -515,3 +515,71 @@ export type KnowledgeDocument = typeof knowledgeDocuments.$inferSelect;
 export type InsertKnowledgeDocument = typeof knowledgeDocuments.$inferInsert;
 export type KnowledgeSearchIndex = typeof knowledgeSearchIndex.$inferSelect;
 export type InsertKnowledgeSearchIndex = typeof knowledgeSearchIndex.$inferInsert;
+
+// FB 廣告健檢系統相關表格
+export const fbHealthChecks = pgTable('fb_health_checks', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text('user_id').notNull().references(() => users.id),
+  adAccountId: text('ad_account_id').notNull(),
+  adAccountName: text('ad_account_name').notNull(),
+  planResultId: text('plan_result_id').references(() => planResults.id),
+  industryType: text('industry_type').notNull(),
+  
+  // 實際數據 (過去28天)
+  actualDailySpend: text('actual_daily_spend').notNull(),
+  actualPurchases: integer('actual_purchases').notNull(),
+  actualRoas: text('actual_roas').notNull(),
+  actualCtr: text('actual_ctr').notNull(),
+  actualImpressions: integer('actual_impressions').notNull(),
+  actualClicks: integer('actual_clicks').notNull(),
+  actualPurchaseValue: text('actual_purchase_value').notNull(),
+  
+  // 目標數據 (來自預算計劃)
+  targetDailySpend: text('target_daily_spend').notNull(),
+  targetPurchases: integer('target_purchases').notNull(),
+  targetRoas: text('target_roas').notNull(),
+  targetCtr: text('target_ctr').notNull(),
+  
+  // 健檢結果
+  spendStatus: text('spend_status').notNull(), // 'achieved' | 'not_achieved'
+  purchaseStatus: text('purchase_status').notNull(),
+  roasStatus: text('roas_status').notNull(),
+  ctrStatus: text('ctr_status').notNull(),
+  
+  // AI 建議
+  spendAdvice: text('spend_advice'),
+  purchaseAdvice: text('purchase_advice'),
+  roasAdvice: text('roas_advice'),
+  ctrAdvice: text('ctr_advice'),
+  
+  // 元數據
+  dataStartDate: timestamp('data_start_date').notNull(),
+  dataEndDate: timestamp('data_end_date').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// 產業類型配置表
+export const industryTypes = pgTable('industry_types', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  nameEn: text('name_en').notNull(),
+  averageRoas: text('average_roas').notNull(),
+  averageCtr: text('average_ctr').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export type FbHealthCheck = typeof fbHealthChecks.$inferSelect;
+export type InsertFbHealthCheck = typeof fbHealthChecks.$inferInsert;
+export type IndustryType = typeof industryTypes.$inferSelect;
+export type InsertIndustryType = typeof industryTypes.$inferInsert;
+
+export const insertFbHealthCheckSchema = createInsertSchema(fbHealthChecks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertIndustryTypeSchema = createInsertSchema(industryTypes).omit({
+  createdAt: true,
+});
