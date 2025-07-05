@@ -22,6 +22,7 @@ import {
 import GoogleLoginButton from "@/components/GoogleLoginButton";
 import MembershipUpgrade from "@/components/MembershipUpgrade";
 import SavedProjectsListSimple from "@/components/SavedProjectsListSimple";
+import PlanResultsList from "@/components/PlanResultsList";
 import DiagnosisReportsSection from "@/components/DiagnosisReportsSection";
 import Footer from "@/components/Footer";
 
@@ -253,6 +254,7 @@ export default function Dashboard({ locale }: DashboardProps) {
 
         {/* Saved Projects Section */}
         <div className="mt-8">
+          <PlanResultsList />
           <SavedProjectsListSimple />
         </div>
       </div>
