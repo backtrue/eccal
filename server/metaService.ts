@@ -88,7 +88,7 @@ export class MetaService {
       const until = endDate.toISOString().split('T')[0];
       
       const insightsResponse = await fetch(
-        `${this.baseUrl}/${adAccountId}/insights?fields=impressions,clicks,spend,inline_link_clicks,actions,purchase_roas&time_range={'since':'${since}','until':'${until}'}&access_token=${token}`
+        `${this.baseUrl}/${adAccountId}/insights?fields=impressions,clicks,spend,inline_link_clicks,actions,purchase_roas,action_values,outbound_clicks_ctr,website_ctr,outbound_clicks&time_range={'since':'${since}','until':'${until}'}&access_token=${token}`
       );
       
       if (!insightsResponse.ok) {

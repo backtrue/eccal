@@ -108,13 +108,18 @@ export class FbAuditService {
       const since = startDate.toISOString().split('T')[0];
       const until = endDate.toISOString().split('T')[0];
 
-      // 使用最基本的欄位，確保能獲取到資料
+      // 請求完整的欄位，包含 ROAS 和 outbound clicks
       const fields = [
         'spend',
         'impressions',
         'clicks',
         'actions',
-        'action_values'
+        'action_values',
+        'outbound_clicks_ctr',
+        'purchase_roas',
+        'website_ctr',
+        'inline_link_clicks',
+        'outbound_clicks'
       ].join(',');
 
       // 確保廣告帳戶 ID 格式正確，避免重複 act_ 前綴
@@ -159,17 +164,35 @@ export class FbAuditService {
       const purchasesValue = this.extractActionValue(insights.actions || [], 'purchase');
       const purchases = typeof purchasesValue === 'string' ? parseInt(purchasesValue) : purchasesValue || 0;
 
-      // 手動計算 ROAS 和 CTR
+      // 優先使用 Facebook API 直接提供的指標
       const spend = parseFloat(insights.spend || '0');
       const impressions = parseFloat(insights.impressions || '0');
       const clicks = parseFloat(insights.clicks || '0');
       
-      // 計算 CTR = (clicks / impressions) * 100
-      const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+      // 優先使用 Facebook 提供的 outbound_clicks_ctr，否則計算 website_ctr 或一般 CTR
+      let ctr = 0;
+      if (insights.outbound_clicks_ctr && insights.outbound_clicks_ctr.length > 0) {
+        ctr = parseFloat(insights.outbound_clicks_ctr[0].value || '0');
+      } else if (insights.website_ctr && insights.website_ctr.length > 0) {
+        ctr = parseFloat(insights.website_ctr[0].value || '0');
+      } else if (insights.outbound_clicks) {
+        // 使用 outbound_clicks 計算 CTR
+        const outboundClicks = parseFloat(insights.outbound_clicks || '0');
+        ctr = impressions > 0 ? (outboundClicks / impressions) * 100 : 0;
+      } else {
+        // 最後才用一般點擊計算
+        ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+      }
       
-      // 計算 ROAS = 購買價值 / 廣告花費
-      const purchaseValue = parseFloat(this.extractActionValue(insights.action_values || [], 'purchase')?.toString() || '0');
-      const roas = spend > 0 ? purchaseValue / spend : 0;
+      // 優先使用 Facebook 提供的 purchase_roas，否則手動計算
+      let roas = 0;
+      if (insights.purchase_roas && insights.purchase_roas.length > 0) {
+        roas = parseFloat(insights.purchase_roas[0].value || '0');
+      } else {
+        // 手動計算 ROAS = 購買價值 / 廣告花費
+        const purchaseValue = parseFloat(this.extractActionValue(insights.action_values || [], 'purchase')?.toString() || '0');
+        roas = spend > 0 ? purchaseValue / spend : 0;
+      }
 
       // 調試資料
       console.log('Facebook API 原始資料和計算結果:', {

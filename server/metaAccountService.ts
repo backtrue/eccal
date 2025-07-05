@@ -127,7 +127,7 @@ export class MetaAccountService {
       const insightsParams = new URLSearchParams({
         access_token: accessToken,
         time_range: JSON.stringify({ since, until }),
-        fields: 'impressions,clicks,spend,actions,action_values,cpm,cpc,ctr',
+        fields: 'impressions,clicks,spend,actions,action_values,cpm,cpc,ctr,outbound_clicks_ctr,purchase_roas,website_ctr,inline_link_clicks,outbound_clicks',
         level: 'account'
       });
 
