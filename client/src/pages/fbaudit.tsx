@@ -38,7 +38,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
   const [currentStep, setCurrentStep] = useState(1);
 
   // 只有在用戶已認證且有 Facebook access token 時才載入帳戶
-  const shouldLoadAccounts = isAuthenticated && user?.metaAccessToken;
+  const shouldLoadAccounts = Boolean(isAuthenticated && user?.metaAccessToken);
   const { data: accounts, isLoading: accountsLoading } = useFbAuditAccounts(shouldLoadAccounts);
   const { data: plans, isLoading: plansLoading } = useFbAuditPlans(isAuthenticated);
   const { data: industries } = useFbAuditIndustries();
