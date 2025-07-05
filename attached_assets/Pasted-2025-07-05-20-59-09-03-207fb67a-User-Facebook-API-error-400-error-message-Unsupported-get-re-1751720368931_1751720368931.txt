@@ -1,0 +1,35 @@
+2025-07-05 20:59:09.03
+207fb67a
+User
+Facebook API error 400: {"error":{"message":"Unsupported get request. Object with ID 'act_act_1598333667146415' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https:\/\/developers.facebook.com\/docs\/graph-api","type":"GraphMethodException","code":100,"error_subcode":33,"fbtrace_id":"AYOzeXKlDTxpPFUHFXkglXD"}}
+2025-07-05 20:59:09.03
+207fb67a
+User
+Error fetching ad account data: Error: Facebook API error: 400 - {"error":{"message":"Unsupported get request. Object with ID 'act_act_1598333667146415' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https:\/\/developers.facebook.com\/docs\/graph-api","type":"GraphMethodException","code":100,"error_subcode":33,"fbtrace_id":"AYOzeXKlDTxpPFUHFXkglXD"}}
+2025-07-05 20:59:09.03
+207fb67a
+User
+at FbAuditService.getAdAccountData (file:///home/runner/workspace/dist/index.js:4134:15)
+2025-07-05 20:59:09.03
+207fb67a
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-07-05 20:59:09.03
+207fb67a
+User
+at async file:///home/runner/workspace/dist/index.js:4479:29
+2025-07-05 20:59:09.03
+207fb67a
+User
+Error performing health check: Error: Facebook API error: 400 - {"error":{"message":"Unsupported get request. Object with ID 'act_act_1598333667146415' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https:\/\/developers.facebook.com\/docs\/graph-api","type":"GraphMethodException","code":100,"error_subcode":33,"fbtrace_id":"AYOzeXKlDTxpPFUHFXkglXD"}}
+2025-07-05 20:59:09.03
+207fb67a
+User
+at FbAuditService.getAdAccountData (file:///home/runner/workspace/dist/index.js:4134:15)
+2025-07-05 20:59:09.03
+207fb67a
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-07-05 20:59:09.03
+207fb67a
+User

@@ -117,7 +117,9 @@ export class FbAuditService {
         'impressions'
       ].join(',');
 
-      const url = `${this.baseUrl}/act_${adAccountId}/insights?fields=${fields}&time_range={"since":"${since}","until":"${until}"}&access_token=${accessToken}`;
+      // 確保廣告帳戶 ID 格式正確，避免重複 act_ 前綴
+      const accountId = adAccountId.startsWith('act_') ? adAccountId : `act_${adAccountId}`;
+      const url = `${this.baseUrl}/${accountId}/insights?fields=${fields}&time_range={"since":"${since}","until":"${until}"}&access_token=${accessToken}`;
       
       console.log('Facebook API URL:', url);
       console.log('Ad Account ID:', adAccountId);
