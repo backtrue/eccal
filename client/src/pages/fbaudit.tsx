@@ -104,30 +104,49 @@ export default function FbAudit({ locale }: FbAuditProps) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">
-                    {checkMutation.data?.data?.summary?.achievedMetrics || 0}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* 日均花費 */}
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <div className="text-sm text-gray-600 mb-1">日均花費</div>
+                  <div className="text-2xl font-bold text-blue-600 mb-1">
+                    NT$ {checkMutation.data?.data?.actualMetrics?.dailySpend?.toLocaleString() || '0'}
                   </div>
-                  <div className="text-sm text-gray-600">已達標指標</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-red-600">
-                    {checkMutation.data?.data?.summary?.notAchievedMetrics || 0}
+                  <div className="text-xs text-gray-500">
+                    目標: NT$ {checkMutation.data?.data?.comparisons?.find((c: any) => c.metric === 'dailySpend')?.target?.toLocaleString() || '0'}
                   </div>
-                  <div className="text-sm text-gray-600">未達標指標</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">
+
+                {/* 總購買數 */}
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <div className="text-sm text-gray-600 mb-1">總購買數</div>
+                  <div className="text-2xl font-bold text-green-600 mb-1">
+                    {checkMutation.data?.data?.actualMetrics?.purchases || 0}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    目標: {checkMutation.data?.data?.comparisons?.find((c: any) => c.metric === 'purchases')?.target || 0}
+                  </div>
+                </div>
+
+                {/* ROAS */}
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <div className="text-sm text-gray-600 mb-1">ROAS</div>
+                  <div className="text-2xl font-bold text-purple-600 mb-1">
                     {checkMutation.data?.data?.actualMetrics?.roas?.toFixed(1) || '0.0'}x
                   </div>
-                  <div className="text-sm text-gray-600">實際 ROAS</div>
+                  <div className="text-xs text-gray-500">
+                    目標: {checkMutation.data?.data?.comparisons?.find((c: any) => c.metric === 'roas')?.target?.toFixed(1) || '0.0'}x
+                  </div>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">
+
+                {/* 連結點擊率 */}
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <div className="text-sm text-gray-600 mb-1">連結點擊率</div>
+                  <div className="text-2xl font-bold text-orange-600 mb-1">
                     {checkMutation.data?.data?.actualMetrics?.ctr?.toFixed(2) || '0.00'}%
                   </div>
-                  <div className="text-sm text-gray-600">實際 CTR</div>
+                  <div className="text-xs text-gray-500">
+                    目標: {checkMutation.data?.data?.comparisons?.find((c: any) => c.metric === 'ctr')?.target?.toFixed(2) || '0.00'}%
+                  </div>
                 </div>
               </div>
             </CardContent>
