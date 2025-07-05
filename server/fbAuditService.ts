@@ -150,56 +150,32 @@ export class FbAuditService {
       const insights = data.data[0];
       console.log('Facebook insights data:', insights);
       
-      // 提取購買數據
-      const purchasesValue = this.extractActionValue(insights.actions || [], 'purchase');
-      const purchases = typeof purchasesValue === 'string' ? parseInt(purchasesValue) : purchasesValue || 0;
-
-      // 優先使用 Facebook API 直接提供的指標
+      // 按照用戶指示：直接使用 Facebook API 的正確欄位
       const spend = parseFloat(insights.spend || '0');
-      const impressions = parseFloat(insights.impressions || '0');
-      const clicks = parseFloat(insights.clicks || '0');
       
-      // 優先使用 Facebook 提供的 outbound_clicks_ctr，否則計算 website_ctr 或一般 CTR
-      let ctr = 0;
-      if (insights.outbound_clicks_ctr && insights.outbound_clicks_ctr.length > 0) {
-        ctr = parseFloat(insights.outbound_clicks_ctr[0].value || '0');
-      } else if (insights.website_ctr && insights.website_ctr.length > 0) {
-        ctr = parseFloat(insights.website_ctr[0].value || '0');
-      } else if (insights.outbound_clicks) {
-        // 使用 outbound_clicks 計算 CTR
-        const outboundClicks = parseFloat(insights.outbound_clicks || '0');
-        ctr = impressions > 0 ? (outboundClicks / impressions) * 100 : 0;
-      } else {
-        // 最後才用一般點擊計算
-        ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
-      }
+      // 1. 購買數：直接抓 purchase 的次數
+      const purchasesValue = this.extractActionValue(insights.actions || [], 'purchase') || 0;
+      const purchases = typeof purchasesValue === 'string' ? parseInt(purchasesValue) : purchasesValue;
       
-      // 優先使用 Facebook 提供的 purchase_roas，否則手動計算
-      let roas = 0;
-      let purchaseValue = 0;
-      if (insights.purchase_roas && insights.purchase_roas.length > 0) {
-        roas = parseFloat(insights.purchase_roas[0].value || '0');
-      } else {
-        // 手動計算 ROAS = 購買價值 / 廣告花費
-        purchaseValue = parseFloat(this.extractActionValue(insights.action_values || [], 'purchase')?.toString() || '0');
-        roas = spend > 0 ? purchaseValue / spend : 0;
-      }
+      // 2. ROAS：直接使用 purchase_roas 欄位
+      const roas = parseFloat(insights.purchase_roas || '0');
+      
+      // 3. 點擊率：直接使用 outbound_clicks_ctr 欄位
+      const ctr = parseFloat(insights.outbound_clicks_ctr || '0');
 
       // 調試資料
       console.log('Facebook API 計算結果:', {
         spend,
-        impressions,
-        clicks,
         purchases,
         ctr,
         roas
       });
 
-      const result = {
+      const result: FbAdAccountData = {
         accountId: adAccountId,
         accountName: `Ad Account ${adAccountId}`,
         spend,
-        purchases,
+        purchases: Number(purchases), // 確保是數字類型
         roas,
         ctr,
         dateRange: { since, until }
@@ -227,12 +203,17 @@ export class FbAuditService {
   calculateMetrics(adData: FbAdAccountData): HealthCheckMetrics {
     console.log('calculateMetrics 輸入資料:', adData);
     
-    // 如果沒有真實數據，使用測試數據來檢驗前端顯示
+    // 按照用戶指示：直接使用 Facebook API 數據
+    const dailySpend = adData.spend / 28; // spend 除以 28 天
+    const purchases = adData.purchases;   // 直接使用 purchase 次數
+    const roas = adData.roas;            // 直接使用 purchase_roas
+    const ctr = adData.ctr;              // 直接使用 outbound_clicks_ctr
+
     const result = {
-      dailySpend: 2567,  // 日均花費
-      purchases: 100,    // 總購買數
-      roas: 1.44,       // ROAS
-      ctr: 2.15         // CTR %
+      dailySpend: Math.round(dailySpend * 100) / 100,  // 四捨五入到小數點後2位
+      purchases: Math.round(purchases),                 // 購買數為整數
+      roas: Math.round(roas * 100) / 100,              // ROAS 保留2位小數
+      ctr: Math.round(ctr * 100) / 100                 // CTR 保留2位小數
     };
     
     console.log('calculateMetrics 計算結果:', result);
