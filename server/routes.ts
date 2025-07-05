@@ -621,7 +621,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // PDCA Plan Results API routes
   app.post('/api/plan-results', requireJWTAuth, async (req: any, res) => {
     try {
-      const { planName, targetRevenue, averageOrderValue, conversionRate, cpc, requiredOrders, monthlyTraffic, dailyTraffic, monthlyAdBudget, dailyAdBudget, targetRoas, gaPropertyId, gaPropertyName, dataSource } = req.body;
+      console.log('Plan results POST request received');
+      console.log('Request body:', req.body);
+      console.log('User:', req.user);
+      
+      const { planName, targetRevenue, averageOrderValue, conversionRate, requiredOrders, monthlyTraffic, dailyTraffic, monthlyAdBudget, dailyAdBudget, targetRoas, gaPropertyId, gaPropertyName, dataSource } = req.body;
       
       const planData = {
         userId: req.user!.id,
@@ -629,7 +633,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         targetRevenue: targetRevenue.toString(),
         averageOrderValue: averageOrderValue.toString(),
         conversionRate: conversionRate.toString(),
-        cpc: cpc.toString(),
+        cpc: '5', // 固定值
         requiredOrders,
         monthlyTraffic,
         dailyTraffic,
@@ -643,11 +647,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isActive: false,
       };
 
+      console.log('Plan data to save:', planData);
       const savedPlan = await storage.savePlanResult(planData);
+      console.log('Plan saved successfully:', savedPlan);
       res.json({ success: true, data: savedPlan });
     } catch (error) {
       console.error('儲存計劃結果失敗:', error);
-      res.status(500).json({ success: false, message: '儲存失敗' });
+      console.error('Error stack:', error.stack);
+      res.status(500).json({ success: false, message: '儲存失敗', error: error.message });
     }
   });
 
