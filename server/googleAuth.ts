@@ -194,36 +194,8 @@ export function setupGoogleAuth(app: Express) {
     });
   });
 
-  // User auth status endpoint - 按照 PDF 建議實作受保護路由檢查
-  app.get('/api/auth/user', (req, res) => {
-    try {
-      // 添加調試信息
-      console.log('Auth check - Session ID:', (req.session as any)?.id);
-      console.log('Auth check - isAuthenticated():', req.isAuthenticated());
-      console.log('Auth check - req.user exists:', !!req.user);
-      console.log('Auth check - User ID:', req.user ? (req.user as any).id : 'none');
-
-      // 檢查 session 是否存在
-      if (!(req.session as any)?.id) {
-        console.log('Auth check failed: no session');
-        return res.status(401).json({ error: 'No session' });
-      }
-
-      // 使用 Passport 的 isAuthenticated() 方法檢查
-      if (req.isAuthenticated() && req.user) {
-        console.log('Auth check successful:', (req.user as any).email);
-        // 設置適當的 cache 標頭
-        res.set('Cache-Control', 'private, max-age=300'); // 5分鐘 cache
-        res.json(req.user);
-      } else {
-        console.log('Auth check failed: not authenticated');
-        res.status(401).json({ error: 'Not authenticated' });
-      }
-    } catch (error) {
-      console.error('Auth endpoint error:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  });
+  // JWT認證系統中的 /api/auth/user 端點在 jwtAuth.ts 中處理
+  // 這裡移除重複的 session 端點以避免衝突
 }
 
 // Middleware to check if user is authenticated

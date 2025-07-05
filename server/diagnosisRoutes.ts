@@ -256,16 +256,13 @@ export function setupDiagnosisRoutes(app: Express) {
 
           // 創建或更新用戶
           const user = await storage.upsertUser({
+            id: userInfo.id, // 使用 Facebook ID 作為用戶 ID
             email: userInfo.email || `${userInfo.id}@facebook.com`,
             firstName: userInfo.name?.split(' ')[0] || 'Facebook',
             lastName: userInfo.name?.split(' ').slice(1).join(' ') || 'User',
             profileImageUrl: `https://graph.facebook.com/${userInfo.id}/picture?type=large`,
-            googleId: null,
-            googleAccessToken: null,
-            googleRefreshToken: null,
-            tokenExpiresAt: null,
             metaAccessToken: tokenData.access_token,
-            metaAccountId: null
+            metaAdAccountId: null
           });
 
           // 生成 JWT 認證
