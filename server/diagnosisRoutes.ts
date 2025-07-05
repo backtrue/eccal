@@ -285,6 +285,22 @@ export function setupDiagnosisRoutes(app: Express) {
             null
           );
           console.log('更新現有用戶的 Facebook 認證:', userId);
+          
+          // 獲取更新後的用戶資料並生成新的 JWT
+          const updatedUser = await storage.getUser(userId as string);
+          if (updatedUser) {
+            const jwt = jwtUtils.generateToken(updatedUser);
+            
+            // 設定新的 JWT Cookie
+            res.cookie('auth_token', jwt, {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax',
+              maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            });
+            
+            console.log('為現有用戶更新 JWT 認證:', userId);
+          }
         }
 
         res.redirect('/fbaudit?facebook_auth_success=true');
