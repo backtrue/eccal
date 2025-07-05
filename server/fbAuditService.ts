@@ -111,8 +111,9 @@ export class FbAuditService {
       const fields = [
         'spend',
         'actions',
-        'purchase_roas',
-        'outbound_clicks_ctr'
+        'action_values',
+        'clicks',
+        'impressions'
       ].join(',');
 
       // 確保廣告帳戶 ID 格式正確，避免重複 act_ 前綴
@@ -155,13 +156,35 @@ export class FbAuditService {
       const purchasesValue = this.extractActionValue(insights.actions || [], 'purchase');
       const purchases = typeof purchasesValue === 'string' ? parseInt(purchasesValue) : purchasesValue || 0;
 
+      // 計算 ROAS：購買價值 / 廣告花費
+      const purchaseValue = this.extractActionValue(insights.action_values || [], 'purchase');
+      const spend = parseFloat(insights.spend || '0');
+      const roas = spend > 0 ? (parseFloat(purchaseValue?.toString() || '0') / spend) : 0;
+
+      // 計算 CTR：點擊數 / 曝光數 * 100
+      const clicks = parseFloat(insights.clicks || '0');
+      const impressions = parseFloat(insights.impressions || '0');
+      const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+
+      // 調試資料
+      console.log('計算 ROAS 和 CTR 的原始資料:', {
+        purchaseValue,
+        spend,
+        roas,
+        clicks,
+        impressions,
+        ctr,
+        action_values: insights.action_values,
+        actions: insights.actions
+      });
+
       const result = {
         accountId: adAccountId,
         accountName: `Ad Account ${adAccountId}`,
-        spend: parseFloat(insights.spend || '0'),
+        spend,
         purchases,
-        roas: parseFloat(insights.purchase_roas || '0'),
-        ctr: parseFloat(insights.outbound_clicks_ctr || '0'),
+        roas,
+        ctr,
         dateRange: { since, until }
       };
       
