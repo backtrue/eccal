@@ -134,6 +134,7 @@ export function setupFbAuditRoutes(app: Express) {
 
       // 計算實際指標
       const actualMetrics = fbAuditService.calculateMetrics(adAccountData);
+      console.log('Calculated actual metrics:', actualMetrics);
 
       // 與目標值比較並生成建議
       const comparisons = await fbAuditService.compareWithTargets(
@@ -141,6 +142,7 @@ export function setupFbAuditRoutes(app: Express) {
         planResultId,
         industryType
       );
+      console.log('Generated comparisons:', comparisons);
 
       // 儲存健檢結果
       const healthCheck = await fbAuditService.saveHealthCheck(

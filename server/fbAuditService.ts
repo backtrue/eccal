@@ -134,12 +134,25 @@ export class FbAuditService {
       }
 
       const data = await response.json();
+      console.log('Facebook API raw data:', JSON.stringify(data, null, 2));
       
       if (!data.data || data.data.length === 0) {
-        throw new Error('No data available for the specified date range');
+        console.log('No Facebook data available for date range:', { since, until });
+        // 返回空數據而不是拋出錯誤，讓健檢可以繼續
+        return {
+          accountId: adAccountId,
+          accountName: `Ad Account ${adAccountId}`,
+          spend: 0,
+          purchases: 0,
+          purchaseValue: 0,
+          clicks: 0,
+          impressions: 0,
+          dateRange: { since, until }
+        };
       }
 
       const insights = data.data[0];
+      console.log('Facebook insights data:', insights);
       
       // 提取購買數據
       const purchasesValue = this.extractActionValue(insights.actions || [], 'purchase');
@@ -148,7 +161,7 @@ export class FbAuditService {
       const purchaseValueRaw = this.extractActionValue(insights.action_values || [], 'purchase');
       const purchaseValue = parseFloat(typeof purchaseValueRaw === 'string' ? purchaseValueRaw : purchaseValueRaw?.toString() || '0');
 
-      return {
+      const result = {
         accountId: adAccountId,
         accountName: `Ad Account ${adAccountId}`,
         spend: parseFloat(insights.spend || '0'),
@@ -158,6 +171,9 @@ export class FbAuditService {
         impressions: parseInt(insights.impressions || '0'),
         dateRange: { since, until }
       };
+      
+      console.log('Processed ad account data:', result);
+      return result;
     } catch (error) {
       console.error('Error fetching ad account data:', error);
       throw error;
@@ -202,6 +218,9 @@ export class FbAuditService {
       const planResult = await db.query.planResults.findFirst({
         where: eq(planResults.id, planResultId)
       });
+      
+      console.log('Plan result query for ID:', planResultId);
+      console.log('Found plan result:', planResult);
 
       if (!planResult) {
         throw new Error('Plan result not found');
@@ -211,11 +230,9 @@ export class FbAuditService {
       const targetPurchases = Math.round(planResult.requiredOrders / 30); // 月訂單數轉換為日均
       const targetRoas = parseFloat(planResult.targetRoas);
       
-      // 獲取產業平均 CTR
-      const industry = await db.query.industryTypes.findFirst({
-        where: eq(industryTypes.id, industryType)
-      });
-      const targetCtr = industry ? parseFloat(industry.averageCtr) : 1.5; // 預設 1.5%
+      // 獲取產業平均 CTR (暫時使用預設值)
+      const targetCtr = 1.5; // 預設 1.5%
+      console.log('Using default CTR target:', targetCtr);
 
       const comparisons: HealthCheckComparison[] = [
         {
