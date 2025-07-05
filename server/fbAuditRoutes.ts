@@ -12,13 +12,22 @@ export function setupFbAuditRoutes(app: Express) {
     try {
       const user = (req as any).user;
       
+      console.log('FB帳戶API調用 - 用戶資料:', {
+        userId: user.id,
+        email: user.email,
+        hasMetaToken: !!user.metaAccessToken,
+        metaTokenPrefix: user.metaAccessToken ? user.metaAccessToken.substring(0, 20) + '...' : null
+      });
+      
       if (!user.metaAccessToken) {
+        console.log('錯誤：用戶沒有 Facebook access token');
         return res.status(400).json({ 
           success: false, 
           error: 'Facebook access token not found. Please connect your Facebook account first.' 
         });
       }
 
+      console.log('開始調用 Facebook Marketing API 獲取廣告帳戶');
       const accounts = await fbAuditService.getAdAccounts(user.metaAccessToken);
       
       res.json({ 
