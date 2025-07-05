@@ -107,25 +107,25 @@ export default function FbAudit({ locale }: FbAuditProps) {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">
-                    {checkMutation.data.data.summary.achievedMetrics}
+                    {checkMutation.data?.data?.summary?.achievedMetrics || 0}
                   </div>
                   <div className="text-sm text-gray-600">已達標指標</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-red-600">
-                    {checkMutation.data.data.summary.notAchievedMetrics}
+                    {checkMutation.data?.data?.summary?.notAchievedMetrics || 0}
                   </div>
                   <div className="text-sm text-gray-600">未達標指標</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-600">
-                    {checkMutation.data.data.actualMetrics.roas.toFixed(1)}x
+                    {checkMutation.data?.data?.actualMetrics?.roas?.toFixed(1) || '0.0'}x
                   </div>
                   <div className="text-sm text-gray-600">實際 ROAS</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-purple-600">
-                    {checkMutation.data.data.actualMetrics.ctr.toFixed(2)}%
+                    {checkMutation.data?.data?.actualMetrics?.ctr?.toFixed(2) || '0.00'}%
                   </div>
                   <div className="text-sm text-gray-600">實際 CTR</div>
                 </div>
@@ -135,7 +135,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
 
           {/* 詳細指標分析 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {checkMutation.data.data.comparisons.map((comparison: any, index: number) => {
+            {(checkMutation.data?.data?.comparisons || []).map((comparison: any, index: number) => {
               const metricNames = {
                 dailySpend: '日均花費',
                 purchases: '購買數',
