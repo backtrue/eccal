@@ -23,7 +23,7 @@ import GoogleLoginButton from "@/components/GoogleLoginButton";
 import MembershipUpgrade from "@/components/MembershipUpgrade";
 import SavedProjectsListSimple from "@/components/SavedProjectsListSimple";
 import PlanResultsList from "@/components/PlanResultsList";
-import DiagnosisReportsSection from "@/components/DiagnosisReportsSection";
+
 import Footer from "@/components/Footer";
 
 interface DashboardProps {
@@ -245,11 +245,6 @@ export default function Dashboard({ locale }: DashboardProps) {
               </div>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Diagnosis Reports Section */}
-        <div className="mt-8">
-          <DiagnosisReportsSection />
         </div>
 
         {/* Saved Projects Section */}
