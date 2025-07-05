@@ -425,7 +425,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
                     <SelectValue placeholder="請選擇您的產業類型" />
                   </SelectTrigger>
                   <SelectContent>
-                    {industries?.map((industry: any) => (
+                    {Array.isArray(industries) && industries.map((industry: any) => (
                       <SelectItem key={industry.id} value={industry.id}>
                         {industry.name} (平均 ROAS: {industry.averageRoas}x, 平均 CTR: {industry.averageCtr}%)
                       </SelectItem>

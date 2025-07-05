@@ -29,6 +29,7 @@ export function useFbAuditIndustries() {
     queryKey: ['/api/fbaudit/industries'],
     staleTime: 30 * 60 * 1000, // 30 分鐘，產業類型變化較少
     gcTime: 60 * 60 * 1000, // 1 小時
+    select: (data: any) => data?.data || [], // 提取 API 回應中的 data 欄位
   });
 }
 
