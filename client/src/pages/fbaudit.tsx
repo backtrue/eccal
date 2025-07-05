@@ -37,8 +37,8 @@ export default function FbAudit({ locale }: FbAuditProps) {
   const [showResults, setShowResults] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
-  const { data: accounts, isLoading: accountsLoading } = useFbAuditAccounts();
-  const { data: plans, isLoading: plansLoading } = useFbAuditPlans();
+  const { data: accounts, isLoading: accountsLoading } = useFbAuditAccounts(isAuthenticated);
+  const { data: plans, isLoading: plansLoading } = useFbAuditPlans(isAuthenticated);
   const { data: industries } = useFbAuditIndustries();
   const checkMutation = useFbAuditCheck();
 

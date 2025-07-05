@@ -2,18 +2,20 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
 // 獲取 Facebook 廣告帳號列表
-export function useFbAuditAccounts() {
+export function useFbAuditAccounts(enabled = true) {
   return useQuery({
     queryKey: ['/api/fbaudit/accounts'],
+    enabled: enabled,
     staleTime: 5 * 60 * 1000, // 5 分鐘
     gcTime: 10 * 60 * 1000, // 10 分鐘
   });
 }
 
 // 獲取預算計劃列表
-export function useFbAuditPlans() {
+export function useFbAuditPlans(enabled = true) {
   return useQuery({
     queryKey: ['/api/fbaudit/plans'],
+    enabled: enabled,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
