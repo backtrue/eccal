@@ -185,31 +185,23 @@ export class FbAuditService {
       
       // 優先使用 Facebook 提供的 purchase_roas，否則手動計算
       let roas = 0;
+      let purchaseValue = 0;
       if (insights.purchase_roas && insights.purchase_roas.length > 0) {
         roas = parseFloat(insights.purchase_roas[0].value || '0');
       } else {
         // 手動計算 ROAS = 購買價值 / 廣告花費
-        const purchaseValue = parseFloat(this.extractActionValue(insights.action_values || [], 'purchase')?.toString() || '0');
+        purchaseValue = parseFloat(this.extractActionValue(insights.action_values || [], 'purchase')?.toString() || '0');
         roas = spend > 0 ? purchaseValue / spend : 0;
       }
 
       // 調試資料
-      console.log('Facebook API 原始資料和計算結果:', {
-        原始資料: {
-          spend: insights.spend,
-          impressions: insights.impressions,
-          clicks: insights.clicks,
-          actions: insights.actions,
-          action_values: insights.action_values
-        },
-        計算結果: {
-          spend,
-          impressions,
-          clicks,
-          purchaseValue,
-          ctr,
-          roas
-        }
+      console.log('Facebook API 計算結果:', {
+        spend,
+        impressions,
+        clicks,
+        purchases,
+        ctr,
+        roas
       });
 
       const result = {
