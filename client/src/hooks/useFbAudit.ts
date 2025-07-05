@@ -43,7 +43,10 @@ export function useFbAuditCheck() {
       planResultId: string;
       industryType: string;
     }) => {
-      return await apiRequest('POST', '/api/fbaudit/check', data);
+      const response = await apiRequest('POST', '/api/fbaudit/check', data);
+      const result = await response.json();
+      console.log('API 回應結果:', result);
+      return result.data; // 返回 data 部分
     },
     onSuccess: () => {
       // 成功後刷新歷史記錄

@@ -129,12 +129,17 @@ export default function FbAudit({ locale }: FbAuditProps) {
                   <div className="text-sm text-gray-600 mb-1">日均花費</div>
                   <div className="text-2xl font-bold text-blue-600 mb-1">
                     NT$ {(() => {
-                      const dailySpend = (checkMutation.data as any)?.data?.actualMetrics?.dailySpend;
+                      const dailySpend = (checkMutation.data as any)?.actualMetrics?.dailySpend;
+                      console.log('dailySpend 解析:', dailySpend);
                       return (dailySpend && !isNaN(dailySpend)) ? dailySpend.toLocaleString() : '0';
                     })()}
                   </div>
                   <div className="text-xs text-gray-500">
-                    目標: NT$ {((checkMutation.data as any)?.data?.comparisons?.find((c: any) => c.metric === 'dailySpend')?.target || 0).toLocaleString()}
+                    目標: NT$ {(() => {
+                      const target = (checkMutation.data as any)?.comparisons?.find((c: any) => c.metric === 'dailySpend')?.target;
+                      console.log('dailySpend 目標:', target);
+                      return (target || 0).toLocaleString();
+                    })()}
                   </div>
                 </div>
 
