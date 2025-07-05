@@ -128,18 +128,10 @@ export default function FbAudit({ locale }: FbAuditProps) {
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                   <div className="text-sm text-gray-600 mb-1">日均花費</div>
                   <div className="text-2xl font-bold text-blue-600 mb-1">
-                    NT$ {(() => {
-                      const dailySpend = (checkMutation.data as any)?.actualMetrics?.dailySpend;
-                      console.log('dailySpend 解析:', dailySpend);
-                      return (dailySpend && !isNaN(dailySpend)) ? dailySpend.toLocaleString() : '0';
-                    })()}
+                    NT$ {(checkMutation.data as any)?.actualMetrics?.dailySpend?.toLocaleString() || '0'}
                   </div>
                   <div className="text-xs text-gray-500">
-                    目標: NT$ {(() => {
-                      const target = (checkMutation.data as any)?.comparisons?.find((c: any) => c.metric === 'dailySpend')?.target;
-                      console.log('dailySpend 目標:', target);
-                      return (target || 0).toLocaleString();
-                    })()}
+                    目標: NT$ {(checkMutation.data as any)?.comparisons?.find((c: any) => c.metric === 'dailySpend')?.target?.toLocaleString() || '0'}
                   </div>
                 </div>
 
@@ -147,10 +139,10 @@ export default function FbAudit({ locale }: FbAuditProps) {
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                   <div className="text-sm text-gray-600 mb-1">總購買數</div>
                   <div className="text-2xl font-bold text-green-600 mb-1">
-                    {(checkMutation.data as any)?.data?.actualMetrics?.purchases || 0}
+                    {(checkMutation.data as any)?.actualMetrics?.purchases || 0}
                   </div>
                   <div className="text-xs text-gray-500">
-                    目標: {(checkMutation.data as any)?.data?.comparisons?.find((c: any) => c.metric === 'purchases')?.target || 0}
+                    目標: {(checkMutation.data as any)?.comparisons?.find((c: any) => c.metric === 'purchases')?.target || 0}
                   </div>
                 </div>
 
@@ -158,13 +150,10 @@ export default function FbAudit({ locale }: FbAuditProps) {
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                   <div className="text-sm text-gray-600 mb-1">ROAS</div>
                   <div className="text-2xl font-bold text-purple-600 mb-1">
-                    {(() => {
-                      const roas = (checkMutation.data as any)?.data?.actualMetrics?.roas;
-                      return (roas && !isNaN(roas)) ? roas.toFixed(1) : '0.0';
-                    })()}x
+                    {(checkMutation.data as any)?.actualMetrics?.roas?.toFixed(1) || '0.0'}x
                   </div>
                   <div className="text-xs text-gray-500">
-                    目標: {((checkMutation.data as any)?.data?.comparisons?.find((c: any) => c.metric === 'roas')?.target || 0).toFixed(1)}x
+                    目標: {((checkMutation.data as any)?.comparisons?.find((c: any) => c.metric === 'roas')?.target || 0).toFixed(1)}x
                   </div>
                 </div>
 
@@ -172,10 +161,10 @@ export default function FbAudit({ locale }: FbAuditProps) {
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                   <div className="text-sm text-gray-600 mb-1">連結點擊率</div>
                   <div className="text-2xl font-bold text-orange-600 mb-1">
-                    {(checkMutation.data as any)?.data?.actualMetrics?.ctr?.toFixed(2) || '0.00'}%
+                    {(checkMutation.data as any)?.actualMetrics?.ctr?.toFixed(2) || '0.00'}%
                   </div>
                   <div className="text-xs text-gray-500">
-                    目標: {(checkMutation.data as any)?.data?.comparisons?.find((c: any) => c.metric === 'ctr')?.target?.toFixed(2) || '0.00'}%
+                    目標: {((checkMutation.data as any)?.comparisons?.find((c: any) => c.metric === 'ctr')?.target || 0).toFixed(2)}%
                   </div>
                 </div>
               </div>
@@ -184,12 +173,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
 
           {/* 詳細指標分析 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {(() => {
-              const comparisons = (checkMutation.data as any)?.data?.comparisons || [];
-              console.log('前端 comparisons 資料:', comparisons);
-              console.log('前端 actualMetrics 資料:', (checkMutation.data as any)?.data?.actualMetrics);
-              return comparisons;
-            })().map((comparison: any, index: number) => {
+            {((checkMutation.data as any)?.comparisons || []).map((comparison: any, index: number) => {
               const metricNames = {
                 dailySpend: '日均花費',
                 purchases: '購買數',
