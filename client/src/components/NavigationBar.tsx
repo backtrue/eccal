@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { getTranslations, type Locale } from "@/lib/i18n";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
 import LogoutButton from "@/components/LogoutButton";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
+import LanguageDropdown from "@/components/LanguageDropdown";
 import { useAuth } from "@/hooks/useAuth";
 
 interface NavigationBarProps {
@@ -41,6 +41,10 @@ export default function NavigationBar({ locale }: NavigationBarProps) {
               <Badge variant="outline" className="text-xs">PRO</Badge>
             </Link>
 
+            <Link href="/fbaudit" className="text-blue-600 hover:text-blue-800 transition-colors">
+              FB廣告健檢
+            </Link>
+
             {isAuthenticated && (
               <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 transition-colors">
                 儀表板
@@ -49,7 +53,7 @@ export default function NavigationBar({ locale }: NavigationBarProps) {
 
             {/* Language switcher and Auth buttons */}
             <div className="flex items-center space-x-2">
-              <LanguageSwitcher />
+              <LanguageDropdown />
               {isAuthenticated ? (
                 <LogoutButton />
               ) : (
@@ -83,6 +87,10 @@ export default function NavigationBar({ locale }: NavigationBarProps) {
                 <Badge variant="outline" className="text-xs">PRO</Badge>
               </Link>
 
+              <Link href="/fbaudit" className="text-blue-600 hover:text-blue-800 transition-colors">
+                FB廣告健檢
+              </Link>
+
               {isAuthenticated && (
                 <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 transition-colors">
                   儀表板
@@ -90,7 +98,7 @@ export default function NavigationBar({ locale }: NavigationBarProps) {
               )}
 
               <div className="pt-2 border-t flex flex-col space-y-2">
-                <LanguageSwitcher />
+                <LanguageDropdown />
                 {isAuthenticated ? (
                   <LogoutButton />
                 ) : (
