@@ -15,9 +15,8 @@ export interface FbAdAccountData {
   accountName: string;
   spend: number;
   purchases: number;
-  purchaseValue: number;
-  clicks: number;
-  impressions: number;
+  roas: number;
+  ctr: number;
   dateRange: {
     since: string;
     until: string;
@@ -112,9 +111,8 @@ export class FbAuditService {
       const fields = [
         'spend',
         'actions',
-        'action_values',
-        'clicks',
-        'impressions'
+        'purchase_roas',
+        'outbound_clicks_ctr'
       ].join(',');
 
       // 確保廣告帳戶 ID 格式正確，避免重複 act_ 前綴
@@ -144,9 +142,8 @@ export class FbAuditService {
           accountName: `Ad Account ${adAccountId}`,
           spend: 0,
           purchases: 0,
-          purchaseValue: 0,
-          clicks: 0,
-          impressions: 0,
+          roas: 0,
+          ctr: 0,
           dateRange: { since, until }
         };
       }
@@ -157,18 +154,14 @@ export class FbAuditService {
       // 提取購買數據
       const purchasesValue = this.extractActionValue(insights.actions || [], 'purchase');
       const purchases = typeof purchasesValue === 'string' ? parseInt(purchasesValue) : purchasesValue || 0;
-      
-      const purchaseValueRaw = this.extractActionValue(insights.action_values || [], 'purchase');
-      const purchaseValue = parseFloat(typeof purchaseValueRaw === 'string' ? purchaseValueRaw : purchaseValueRaw?.toString() || '0');
 
       const result = {
         accountId: adAccountId,
         accountName: `Ad Account ${adAccountId}`,
         spend: parseFloat(insights.spend || '0'),
         purchases,
-        purchaseValue,
-        clicks: parseInt(insights.clicks || '0'),
-        impressions: parseInt(insights.impressions || '0'),
+        roas: parseFloat(insights.purchase_roas || '0'),
+        ctr: parseFloat(insights.outbound_clicks_ctr || '0'),
         dateRange: { since, until }
       };
       
@@ -184,19 +177,6 @@ export class FbAuditService {
    * 從 Facebook actions 數組中提取特定動作的值
    */
   private extractActionValue(actions: any[], actionType: string): string | number {
-    // 支援多種購買事件類型
-    if (actionType === 'purchase') {
-      const purchaseTypes = ['purchase', 'onsite_web_app_purchase', 'onsite_conversion.purchase'];
-      for (const type of purchaseTypes) {
-        const action = actions.find(a => a.action_type === type);
-        if (action) {
-          console.log(`Found purchase action: ${type} = ${action.value}`);
-          return action.value;
-        }
-      }
-      return 0;
-    }
-    
     const action = actions.find(a => a.action_type === actionType);
     return action ? action.value : 0;
   }
@@ -207,14 +187,14 @@ export class FbAuditService {
   calculateMetrics(adData: FbAdAccountData): HealthCheckMetrics {
     const dailySpend = adData.spend / 28; // 28天平均
     const purchases = adData.purchases;
-    const roas = adData.purchaseValue > 0 ? adData.purchaseValue / adData.spend : 0;
-    const ctr = adData.impressions > 0 ? (adData.clicks / adData.impressions) * 100 : 0;
+    const roas = adData.roas; // 直接使用 Facebook API 的 purchase_roas
+    const ctr = adData.ctr; // 直接使用 Facebook API 的 outbound_clicks_ctr
 
     return {
       dailySpend: Math.round(dailySpend * 100) / 100,
       purchases,
       roas: Math.round(roas * 100) / 100,
-      ctr: Math.round(ctr * 10000) / 100 // 轉換為百分比，保留2位小數
+      ctr: Math.round(ctr * 100) / 100 // API 已經是百分比格式
     };
   }
 
@@ -355,9 +335,9 @@ export class FbAuditService {
         actualPurchases: metrics.purchases,
         actualRoas: metrics.roas.toString(),
         actualCtr: metrics.ctr.toString(),
-        actualImpressions: adAccountData.impressions,
-        actualClicks: adAccountData.clicks,
-        actualPurchaseValue: adAccountData.purchaseValue.toString(),
+        actualImpressions: 0, // 不再需要
+        actualClicks: 0, // 不再需要  
+        actualPurchaseValue: '0', // 不再需要
         
         // 目標數據
         targetDailySpend: comparisons.find(c => c.metric === 'dailySpend')?.target.toString() || '0',
