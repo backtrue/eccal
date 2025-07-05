@@ -109,7 +109,10 @@ export default function FbAudit({ locale }: FbAuditProps) {
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                   <div className="text-sm text-gray-600 mb-1">日均花費</div>
                   <div className="text-2xl font-bold text-blue-600 mb-1">
-                    NT$ {(checkMutation.data as any)?.data?.actualMetrics?.dailySpend?.toLocaleString() || '0'}
+                    NT$ {(() => {
+                      const dailySpend = (checkMutation.data as any)?.data?.actualMetrics?.dailySpend;
+                      return (dailySpend && !isNaN(dailySpend)) ? dailySpend.toLocaleString() : '0';
+                    })()}
                   </div>
                   <div className="text-xs text-gray-500">
                     目標: NT$ {(checkMutation.data as any)?.data?.comparisons?.find((c: any) => c.metric === 'dailySpend')?.target?.toLocaleString() || '0'}
@@ -131,7 +134,10 @@ export default function FbAudit({ locale }: FbAuditProps) {
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                   <div className="text-sm text-gray-600 mb-1">ROAS</div>
                   <div className="text-2xl font-bold text-purple-600 mb-1">
-                    {(checkMutation.data as any)?.data?.actualMetrics?.roas?.toFixed(1) || '0.0'}x
+                    {(() => {
+                      const roas = (checkMutation.data as any)?.data?.actualMetrics?.roas;
+                      return (roas && !isNaN(roas)) ? roas.toFixed(1) : '0.0';
+                    })()}x
                   </div>
                   <div className="text-xs text-gray-500">
                     目標: {(checkMutation.data as any)?.data?.comparisons?.find((c: any) => c.metric === 'roas')?.target?.toFixed(1) || '0.0'}x
@@ -203,9 +209,20 @@ export default function FbAudit({ locale }: FbAuditProps) {
                       <div>
                         <div className="text-sm text-gray-600">實際值</div>
                         <div className={`text-lg font-bold ${isAchieved ? 'text-green-600' : 'text-red-600'}`}>
-                          {comparison.metric === 'ctr' ? `${comparison.actual.toFixed(2)}%` : 
-                           comparison.metric === 'roas' ? `${comparison.actual.toFixed(1)}x` :
-                           comparison.actual.toLocaleString()}
+                          {(() => {
+                            const actual = comparison.actual;
+                            if (actual === undefined || actual === null || isNaN(actual)) {
+                              return '無資料';
+                            }
+                            
+                            if (comparison.metric === 'ctr') {
+                              return `${actual.toFixed(2)}%`;
+                            } else if (comparison.metric === 'roas') {
+                              return `${actual.toFixed(1)}x`;
+                            } else {
+                              return actual.toLocaleString();
+                            }
+                          })()}
                         </div>
                       </div>
                     </div>

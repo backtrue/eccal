@@ -177,6 +177,51 @@ export function setupFbAuditRoutes(app: Express) {
     }
   });
 
+  // 測試 Facebook API 原始資料端點
+  app.get('/api/fbaudit/test-api/:accountId', requireJWTAuth, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      const { accountId } = req.params;
+
+      if (!user.metaAccessToken) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Facebook access token not found' 
+        });
+      }
+
+      console.log('Testing Facebook API with account:', accountId);
+      console.log('Access token length:', user.metaAccessToken.length);
+
+      // 測試基本欄位
+      const testFields = ['spend', 'impressions', 'clicks', 'actions', 'action_values'];
+      const since = '2024-12-01';
+      const until = '2024-12-28';
+      
+      const formattedAccountId = accountId.startsWith('act_') ? accountId : `act_${accountId}`;
+      const url = `https://graph.facebook.com/v19.0/${formattedAccountId}/insights?fields=${testFields.join(',')}&time_range={"since":"${since}","until":"${until}"}&access_token=${user.metaAccessToken}`;
+      
+      console.log('Test API URL:', url);
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      console.log('Test API response:', JSON.stringify(data, null, 2));
+      
+      res.json({ 
+        success: true, 
+        url,
+        response: data
+      });
+    } catch (error) {
+      console.error('Error testing Facebook API:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to test API'
+      });
+    }
+  });
+
   // 獲取健檢歷史
   app.get('/api/fbaudit/history', requireJWTAuth, async (req: Request, res: Response) => {
     try {

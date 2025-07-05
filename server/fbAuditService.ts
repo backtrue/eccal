@@ -108,11 +108,13 @@ export class FbAuditService {
       const since = startDate.toISOString().split('T')[0];
       const until = endDate.toISOString().split('T')[0];
 
+      // 使用最基本的欄位，確保能獲取到資料
       const fields = [
         'spend',
+        'impressions',
+        'clicks',
         'actions',
-        'purchase_roas',
-        'outbound_clicks_ctr'
+        'action_values'
       ].join(',');
 
       // 確保廣告帳戶 ID 格式正確，避免重複 act_ 前綴
@@ -138,6 +140,7 @@ export class FbAuditService {
       if (!data.data || data.data.length === 0) {
         console.log('No Facebook data available for date range:', { since, until });
         // 返回空數據而不是拋出錯誤，讓健檢可以繼續
+        // 返回空數據而不是拋出錯誤，讓健檢可以繼續
         return {
           accountId: adAccountId,
           accountName: `Ad Account ${adAccountId}`,
@@ -156,23 +159,41 @@ export class FbAuditService {
       const purchasesValue = this.extractActionValue(insights.actions || [], 'purchase');
       const purchases = typeof purchasesValue === 'string' ? parseInt(purchasesValue) : purchasesValue || 0;
 
-      // 直接使用 Facebook API 提供的 ROAS 和 CTR 欄位
-      const roas = parseFloat(insights.purchase_roas || '0');
-      const ctr = parseFloat(insights.outbound_clicks_ctr || '0');
+      // 手動計算 ROAS 和 CTR
+      const spend = parseFloat(insights.spend || '0');
+      const impressions = parseFloat(insights.impressions || '0');
+      const clicks = parseFloat(insights.clicks || '0');
+      
+      // 計算 CTR = (clicks / impressions) * 100
+      const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+      
+      // 計算 ROAS = 購買價值 / 廣告花費
+      const purchaseValue = parseFloat(this.extractActionValue(insights.action_values || [], 'purchase')?.toString() || '0');
+      const roas = spend > 0 ? purchaseValue / spend : 0;
 
       // 調試資料
-      console.log('Facebook API 原始 ROAS 和 CTR 資料:', {
-        purchase_roas: insights.purchase_roas,
-        outbound_clicks_ctr: insights.outbound_clicks_ctr,
-        roas,
-        ctr,
-        spend: insights.spend
+      console.log('Facebook API 原始資料和計算結果:', {
+        原始資料: {
+          spend: insights.spend,
+          impressions: insights.impressions,
+          clicks: insights.clicks,
+          actions: insights.actions,
+          action_values: insights.action_values
+        },
+        計算結果: {
+          spend,
+          impressions,
+          clicks,
+          purchaseValue,
+          ctr,
+          roas
+        }
       });
 
       const result = {
         accountId: adAccountId,
         accountName: `Ad Account ${adAccountId}`,
-        spend: parseFloat(insights.spend || '0'),
+        spend,
         purchases,
         roas,
         ctr,
