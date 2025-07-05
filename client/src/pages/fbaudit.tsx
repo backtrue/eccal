@@ -115,7 +115,12 @@ export default function FbAudit({ locale }: FbAuditProps) {
                     })()}
                   </div>
                   <div className="text-xs text-gray-500">
-                    目標: NT$ {(checkMutation.data as any)?.data?.comparisons?.find((c: any) => c.metric === 'dailySpend')?.target?.toLocaleString() || '0'}
+                    目標: NT$ {(() => {
+                      const targetComparison = (checkMutation.data as any)?.data?.comparisons?.find((c: any) => c.metric === 'dailySpend');
+                      const target = targetComparison?.target;
+                      console.log('Daily spend target:', target, 'comparison:', targetComparison);
+                      return (target && !isNaN(target)) ? target.toLocaleString() : '0';
+                    })()}
                   </div>
                 </div>
 
