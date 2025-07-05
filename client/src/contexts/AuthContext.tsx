@@ -5,6 +5,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   checkAuth: () => Promise<void>;
+  loginSource: 'google' | 'facebook' | null;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -12,6 +13,7 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: false,
   isAuthenticated: false,
   checkAuth: async () => {},
+  loginSource: null,
 });
 
 interface AuthProviderProps {
@@ -22,6 +24,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginSource, setLoginSource] = useState<'google' | 'facebook' | null>(null);
 
   // Manual auth check function (only called when needed)
   const checkAuth = async () => {
@@ -38,10 +41,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const userData = await response.json();
         setUser(userData);
         setIsAuthenticated(true);
-        console.log('Auth check successful:', userData.email || userData.name || 'User logged in');
+        
+        // 判斷登入來源
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('facebook_auth_success')) {
+          setLoginSource('facebook');
+          console.log('Facebook login successful:', userData.email || userData.name || 'User logged in');
+        } else if (urlParams.has('auth_success')) {
+          setLoginSource('google');
+          console.log('Google login successful:', userData.email || userData.name || 'User logged in');
+        } else {
+          // 基於用戶資料判斷登入來源
+          if (userData.metaAccessToken) {
+            setLoginSource('facebook');
+          } else {
+            setLoginSource('google');
+          }
+          console.log('Auth check successful:', userData.email || userData.name || 'User logged in');
+        }
       } else {
         setUser(null);
         setIsAuthenticated(false);
+        setLoginSource(null);
         console.log('Auth check failed: User not authenticated');
       }
     } catch (error) {
@@ -109,6 +130,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         isLoading,
         isAuthenticated,
         checkAuth,
+        loginSource,
       }}
     >
       {children}

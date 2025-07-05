@@ -58,7 +58,7 @@ export default function Calculator({ locale }: CalculatorProps) {
   const [results, setResults] = useState<CalculationResults | null>(null);
   const [selectedProperty, setSelectedProperty] = useState<string>('');
   const [loadingGaData, setLoadingGaData] = useState(false);
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, loginSource } = useAuth();
   
   // GA Analytics hooks
   const { data: properties } = useAnalyticsProperties(isAuthenticated);
@@ -71,8 +71,9 @@ export default function Calculator({ locale }: CalculatorProps) {
   const { data: fbConnection } = useFacebookConnection(isAuthenticated);
   const diagnosisMutation = useFacebookDiagnosis();
   
-  // 檢查 Facebook 是否已連接（通過 JWT 用戶或 Facebook 連接狀態）
-  const isFacebookConnected = user?.metaAccessToken || (fbConnection as any)?.connected;
+  // 檢查各平台連接狀態
+  const isGoogleConnected = isAuthenticated && (loginSource === 'google' || user?.googleAccessToken);
+  const isFacebookConnected = isAuthenticated && (loginSource === 'facebook' || user?.metaAccessToken);
   
   // 只有在 Google 和 Facebook 都登入時才隱藏登入區塊
   // Connection section always shows to display status and account selection
@@ -189,15 +190,15 @@ export default function Calculator({ locale }: CalculatorProps) {
                 {/* Google Connection */}
                 <div className="flex items-center justify-between p-4 bg-white rounded-lg border">
                   <div className="flex items-center gap-3">
-                    <div className={`w-4 h-4 rounded-full ${isAuthenticated ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                    <div className={`w-4 h-4 rounded-full ${isGoogleConnected ? 'bg-green-500' : 'bg-gray-300'}`}></div>
                     <div>
                       <div className="font-medium text-gray-900">Google Analytics</div>
-                      <div className={`text-sm ${isAuthenticated ? 'text-green-600' : 'text-gray-500'}`}>
-                        {isAuthenticated ? '已連接' : '未連接'}
+                      <div className={`text-sm ${isGoogleConnected ? 'text-green-600' : 'text-gray-500'}`}>
+                        {isGoogleConnected ? '已連接' : '未連接'}
                       </div>
                     </div>
                   </div>
-                  {!isAuthenticated && <GoogleLoginButton />}
+                  {!isGoogleConnected && <GoogleLoginButton />}
                 </div>
 
                 {/* Facebook Connection */}
@@ -216,12 +217,12 @@ export default function Calculator({ locale }: CalculatorProps) {
               </div>
 
               {/* Account Selection */}
-              {(isAuthenticated || isFacebookConnected) && (
+              {(isGoogleConnected || isFacebookConnected) && (
                 <div className="space-y-4">
                   <h3 className="font-medium text-gray-900">選擇要使用的帳戶</h3>
                   
                   {/* Google Analytics Property Selection */}
-                  {isAuthenticated && (
+                  {isGoogleConnected && (
                     <div className="p-4 bg-white rounded-lg border">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Google Analytics 資源
