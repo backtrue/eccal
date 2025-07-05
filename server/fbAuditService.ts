@@ -282,21 +282,25 @@ export class FbAuditService {
         throw new Error('Plan result not found');
       }
 
-      const targetDailySpend = parseFloat(planResult.dailyAdBudget);
+      const targetDailySpend = parseFloat(planResult.dailyAdBudget.toString());
       const targetPurchases = Math.round(planResult.requiredOrders / 30); // 月訂單數轉換為日均
-      const targetRoas = parseFloat(planResult.targetRoas);
+      const targetRoas = parseFloat(planResult.targetRoas.toString());
       const targetCtr = 1.5; // 預設 1.5%
       
       console.log('=== 目標值詳細資訊 ===');
       console.log('原始 planResult 資料:', {
         dailyAdBudget: planResult.dailyAdBudget,
+        dailyAdBudgetType: typeof planResult.dailyAdBudget,
         requiredOrders: planResult.requiredOrders,
-        targetRoas: planResult.targetRoas
+        targetRoas: planResult.targetRoas,
+        targetRoasType: typeof planResult.targetRoas
       });
       console.log('計算後的目標值:', {
         targetDailySpend,
+        targetDailySpendType: typeof targetDailySpend,
         targetPurchases,
         targetRoas,
+        targetRoasType: typeof targetRoas,
         targetCtr
       });
 

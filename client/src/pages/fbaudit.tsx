@@ -86,6 +86,10 @@ export default function FbAudit({ locale }: FbAuditProps) {
   }
 
   if (showResults && checkMutation.data) {
+    // 添加調試輸出以檢查完整的響應資料
+    console.log('=== 前端接收到的完整資料 ===');
+    console.log('checkMutation.data:', JSON.stringify(checkMutation.data, null, 2));
+    
     return (
       <div className="min-h-screen bg-gray-50">
         <NavigationBar locale={locale} />
