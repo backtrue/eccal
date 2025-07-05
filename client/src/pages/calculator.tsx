@@ -71,11 +71,11 @@ export default function Calculator({ locale }: CalculatorProps) {
   const { data: fbConnection } = useFacebookConnection(isAuthenticated);
   const diagnosisMutation = useFacebookDiagnosis();
   
-  // 檢查 Facebook 是否已連接
-  const isFacebookConnected = (fbConnection as any)?.connected || user?.metaAccessToken;
+  // 檢查 Facebook 是否已連接（通過 JWT 用戶或 Facebook 連接狀態）
+  const isFacebookConnected = user?.metaAccessToken || (fbConnection as any)?.connected;
   
   // 只有在 Google 和 Facebook 都登入時才隱藏登入區塊
-  const shouldShowLoginSection = !isAuthenticated || !isFacebookConnected;
+  // Connection section always shows to display status and account selection
 
   const form = useForm<CalculatorFormData>({
     resolver: zodResolver(createCalculatorSchema(t)),
@@ -174,40 +174,82 @@ export default function Calculator({ locale }: CalculatorProps) {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="grid gap-8">
           
-          {/* Login Section */}
-          {shouldShowLoginSection && (
-            <Card className="border-blue-200 bg-blue-50">
-              <CardContent className="p-6 text-center">
-                <h2 className="text-xl font-semibold text-blue-900 mb-3">
-                  連接帳戶以使用完整功能
-                </h2>
-                <p className="text-blue-700 mb-4">
-                  需要同時連接 Google Analytics 和 Facebook 廣告帳戶才能使用所有功能
-                </p>
-                
-                {/* 登入狀態指示器 */}
-                <div className="flex justify-center gap-6 mb-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded-full ${isAuthenticated ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                    <span className={isAuthenticated ? 'text-green-700' : 'text-gray-500'}>
-                      Google {isAuthenticated ? '已連接' : '未連接'}
-                    </span>
+          {/* Account Connection Section */}
+          <Card className="border-blue-200 bg-blue-50">
+            <CardContent className="p-6">
+              <h2 className="text-xl font-semibold text-blue-900 mb-3 text-center">
+                連接帳戶以使用完整功能
+              </h2>
+              <p className="text-blue-700 mb-6 text-center">
+                需要同時連接 Google Analytics 和 Facebook 廣告帳戶才能使用所有功能
+              </p>
+              
+              {/* Platform Connection Status */}
+              <div className="grid md:grid-cols-2 gap-4 mb-6">
+                {/* Google Connection */}
+                <div className="flex items-center justify-between p-4 bg-white rounded-lg border">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-4 h-4 rounded-full ${isAuthenticated ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                    <div>
+                      <div className="font-medium text-gray-900">Google Analytics</div>
+                      <div className={`text-sm ${isAuthenticated ? 'text-green-600' : 'text-gray-500'}`}>
+                        {isAuthenticated ? '已連接' : '未連接'}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded-full ${isFacebookConnected ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                    <span className={isFacebookConnected ? 'text-green-700' : 'text-gray-500'}>
-                      Facebook {isFacebookConnected ? '已連接' : '未連接'}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="flex gap-3 justify-center">
                   {!isAuthenticated && <GoogleLoginButton />}
+                </div>
+
+                {/* Facebook Connection */}
+                <div className="flex items-center justify-between p-4 bg-white rounded-lg border">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-4 h-4 rounded-full ${isFacebookConnected ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                    <div>
+                      <div className="font-medium text-gray-900">Facebook 廣告</div>
+                      <div className={`text-sm ${isFacebookConnected ? 'text-green-600' : 'text-gray-500'}`}>
+                        {isFacebookConnected ? '已連接' : '未連接'}
+                      </div>
+                    </div>
+                  </div>
                   {!isFacebookConnected && <FacebookLoginButton />}
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              </div>
+
+              {/* Account Selection */}
+              {(isAuthenticated || isFacebookConnected) && (
+                <div className="space-y-4">
+                  <h3 className="font-medium text-gray-900">選擇要使用的帳戶</h3>
+                  
+                  {/* Google Analytics Property Selection */}
+                  {isAuthenticated && (
+                    <div className="p-4 bg-white rounded-lg border">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Google Analytics 資源
+                      </label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="選擇 Google Analytics 資源" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="default">請先載入 GA 資源</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {/* Facebook Ad Account Selection */}
+                  {isFacebookConnected && (
+                    <div className="p-4 bg-white rounded-lg border">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Facebook 廣告帳戶
+                      </label>
+                      <FacebookAccountSelector />
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Calculator Form */}
           <Card>
