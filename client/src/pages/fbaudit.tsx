@@ -50,15 +50,24 @@ export default function FbAudit({ locale }: FbAuditProps) {
     }
 
     try {
+      console.log('開始執行健檢...', {
+        selectedAccount,
+        selectedPlan,
+        selectedIndustry
+      });
+      
       const result = await checkMutation.mutateAsync({
         adAccountId: selectedAccount,
         planResultId: selectedPlan,
         industryType: selectedIndustry
       });
 
+      console.log('健檢成功完成:', result);
       setShowResults(true);
     } catch (error) {
       console.error('Audit failed:', error);
+      // 即使失敗也要有清楚的錯誤顯示
+      alert('健檢執行失敗，請檢查控制台錯誤信息');
     }
   };
 
@@ -84,6 +93,14 @@ export default function FbAudit({ locale }: FbAuditProps) {
       </div>
     );
   }
+
+  // 調試前端狀態
+  console.log('前端狀態檢查:', {
+    showResults,
+    hasData: !!checkMutation.data,
+    mutationStatus: checkMutation.status,
+    isLoading: checkMutation.isPending
+  });
 
   if (showResults && checkMutation.data) {
     console.log('健檢結果數據:', checkMutation.data);
