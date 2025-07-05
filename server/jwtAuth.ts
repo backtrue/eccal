@@ -75,14 +75,30 @@ export const jwtUtils = {
 };
 
 // JWT 中間件
-export function jwtMiddleware(req: Request, res: Response, next: NextFunction) {
+export async function jwtMiddleware(req: Request, res: Response, next: NextFunction) {
   const token = jwtUtils.extractTokenFromRequest(req);
   
   if (token) {
-    const user = jwtUtils.verifyToken(token);
-    if (user) {
-      (req as any).user = user;
-      (req as any).isAuthenticated = () => true;
+    const jwtUser = jwtUtils.verifyToken(token);
+    if (jwtUser) {
+      // 從資料庫重新載入最新的用戶資料（包括 Facebook access token）
+      try {
+        const { storage } = await import('./storage');
+        const fullUser = await storage.getUser(jwtUser.id);
+        if (fullUser) {
+          (req as any).user = fullUser;
+          (req as any).isAuthenticated = () => true;
+        } else {
+          // 如果資料庫中找不到用戶，使用 JWT 中的基本資料
+          (req as any).user = jwtUser;
+          (req as any).isAuthenticated = () => true;
+        }
+      } catch (error) {
+        console.error('Error loading user from database:', error);
+        // 發生錯誤時，使用 JWT 中的基本資料
+        (req as any).user = jwtUser;
+        (req as any).isAuthenticated = () => true;
+      }
     }
   }
 

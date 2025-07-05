@@ -37,7 +37,9 @@ export default function FbAudit({ locale }: FbAuditProps) {
   const [showResults, setShowResults] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
-  const { data: accounts, isLoading: accountsLoading } = useFbAuditAccounts(isAuthenticated);
+  // 只有在用戶已認證且有 Facebook access token 時才載入帳戶
+  const shouldLoadAccounts = isAuthenticated && user?.metaAccessToken;
+  const { data: accounts, isLoading: accountsLoading } = useFbAuditAccounts(shouldLoadAccounts);
   const { data: plans, isLoading: plansLoading } = useFbAuditPlans(isAuthenticated);
   const { data: industries } = useFbAuditIndustries();
   const checkMutation = useFbAuditCheck();
