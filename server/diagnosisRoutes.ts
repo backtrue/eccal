@@ -871,6 +871,14 @@ export function setupDiagnosisRoutes(app: Express) {
       // 獲取用戶基本信息
       const userInfoResponse = await fetch(`https://graph.facebook.com/me?access_token=${tokenData.access_token}&fields=id,name,email,picture`);
       const userData = await userInfoResponse.json();
+      
+      console.log(`[FACEBOOK_CALLBACK] User data:`, userData);
+
+      // 測試廣告帳號權限
+      const testAccountsResponse = await fetch(`https://graph.facebook.com/v19.0/me/adaccounts?fields=id,name,account_status&access_token=${tokenData.access_token}`);
+      const testAccountsData = await testAccountsResponse.json();
+      
+      console.log(`[FACEBOOK_CALLBACK] Ad accounts test:`, testAccountsData);
 
       // 創建臨時 JWT token 包含 Facebook access token
       const tempUserData = {
@@ -882,6 +890,8 @@ export function setupDiagnosisRoutes(app: Express) {
         metaAccessToken: tokenData.access_token,
         metaAccountId: null
       };
+      
+      console.log(`[FACEBOOK_CALLBACK] Creating JWT with access token length:`, tokenData.access_token.length);
 
       // 生成 JWT token
       const jwtToken = jwtUtils.generateToken(tempUserData);
