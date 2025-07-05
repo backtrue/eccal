@@ -158,13 +158,29 @@ export class FbAuditService {
       console.log('Purchase action found:', purchaseAction);
       console.log('Final purchases count:', purchases);
       
-      // 2. ROAS：直接使用 purchase_roas 欄位
-      const roas = parseFloat(insights.purchase_roas || '0');
-      console.log('ROAS value:', roas);
+      // 2. ROAS：purchase_roas 可能是陣列格式
+      let roas = 0;
+      if (insights.purchase_roas) {
+        if (Array.isArray(insights.purchase_roas)) {
+          roas = insights.purchase_roas.length > 0 ? parseFloat(insights.purchase_roas[0].value || '0') : 0;
+        } else {
+          roas = parseFloat(insights.purchase_roas || '0');
+        }
+      }
+      console.log('ROAS raw:', insights.purchase_roas);
+      console.log('ROAS parsed:', roas);
       
-      // 3. 點擊率：直接使用 outbound_clicks_ctr 欄位  
-      const ctr = parseFloat(insights.outbound_clicks_ctr || '0');
-      console.log('CTR value:', ctr);
+      // 3. 點擊率：outbound_clicks_ctr 可能是陣列格式
+      let ctr = 0;
+      if (insights.outbound_clicks_ctr) {
+        if (Array.isArray(insights.outbound_clicks_ctr)) {
+          ctr = insights.outbound_clicks_ctr.length > 0 ? parseFloat(insights.outbound_clicks_ctr[0].value || '0') : 0;
+        } else {
+          ctr = parseFloat(insights.outbound_clicks_ctr || '0');
+        }
+      }
+      console.log('CTR raw:', insights.outbound_clicks_ctr);
+      console.log('CTR parsed:', ctr);
 
       // 調試資料
       console.log('Facebook API 計算結果:', {
