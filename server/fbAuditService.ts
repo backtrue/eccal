@@ -55,20 +55,42 @@ export class FbAuditService {
   async getAdAccounts(accessToken: string): Promise<Array<{id: string, name: string}>> {
     try {
       const url = `${this.baseUrl}/me/adaccounts?fields=id,name,account_status&access_token=${accessToken}`;
+      console.log('Facebook API 請求 URL:', url.replace(accessToken, accessToken.substring(0, 20) + '...'));
+      
       const response = await fetch(url);
       
+      console.log('Facebook API 回應狀態:', response.status);
+      
       if (!response.ok) {
-        throw new Error(`Facebook API error: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Facebook API 錯誤詳情:', errorText);
+        throw new Error(`Facebook API error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('Facebook API 原始回應:', {
+        dataExists: !!data.data,
+        totalAccounts: data.data?.length || 0,
+        accounts: data.data?.map((acc: any) => ({
+          id: acc.id,
+          name: acc.name,
+          status: acc.account_status
+        })) || []
+      });
       
-      return data.data
+      const activeAccounts = data.data
         .filter((account: any) => account.account_status === 1) // 只返回啟用的帳號
         .map((account: any) => ({
           id: account.id,
           name: account.name
         }));
+        
+      console.log('過濾後的啟用帳戶:', {
+        activeCount: activeAccounts.length,
+        accounts: activeAccounts
+      });
+      
+      return activeAccounts;
     } catch (error) {
       console.error('Error fetching ad accounts:', error);
       throw error;

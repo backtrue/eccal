@@ -29,6 +29,10 @@ export function setupFbAuditRoutes(app: Express) {
 
       console.log('開始調用 Facebook Marketing API 獲取廣告帳戶');
       const accounts = await fbAuditService.getAdAccounts(user.metaAccessToken);
+      console.log('Facebook API 返回結果:', {
+        accountsCount: accounts?.length || 0,
+        accounts: accounts
+      });
       
       res.json({ 
         success: true, 
