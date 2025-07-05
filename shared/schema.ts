@@ -561,7 +561,7 @@ export const fbHealthChecks = pgTable('fb_health_checks', {
 
 // 產業類型配置表
 export const industryTypes = pgTable('industry_types', {
-  id: text('id').primaryKey(),
+  id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
   name: text('name').notNull(),
   nameEn: text('name_en').notNull(),
   averageRoas: text('average_roas').notNull(),
