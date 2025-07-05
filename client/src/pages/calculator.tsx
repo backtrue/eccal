@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Calculator as CalcIcon, TrendingUp, Target, ShoppingCart, BarChart3, Facebook, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
+import { Calculator as CalcIcon, TrendingUp, Target, ShoppingCart, BarChart3, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,11 +13,8 @@ import { Progress } from "@/components/ui/progress";
 import Footer from "@/components/Footer";
 import NavigationBar from "@/components/NavigationBar";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
-import FacebookLoginButton from "@/components/FacebookLoginButton";
-import FacebookAccountSelector from "@/components/FacebookAccountSelector";
 import { useAuth } from "@/hooks/useAuth";
 import { useAnalyticsProperties, useAnalyticsData } from "@/hooks/useAnalyticsData";
-import { useFacebookConnection, useFacebookDiagnosis } from "@/hooks/useFacebookDiagnosis";
 import { getTranslations, type Locale } from "@/lib/i18n";
 import { trackEvent } from "@/lib/analytics";
 import { trackCalculatorUsage, trackMetaEvent } from "@/lib/meta-pixel";
@@ -58,7 +55,7 @@ export default function Calculator({ locale }: CalculatorProps) {
   const [results, setResults] = useState<CalculationResults | null>(null);
   const [selectedProperty, setSelectedProperty] = useState<string>('');
   const [loadingGaData, setLoadingGaData] = useState(false);
-  const { isAuthenticated, user, loginSource } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   
   // GA Analytics hooks
   const { data: properties } = useAnalyticsProperties(isAuthenticated);
@@ -66,17 +63,6 @@ export default function Calculator({ locale }: CalculatorProps) {
     selectedProperty, 
     { enabled: false } // 不自動載入，需手動觸發
   );
-  
-  // Facebook diagnosis hooks
-  const { data: fbConnection } = useFacebookConnection(isAuthenticated);
-  const diagnosisMutation = useFacebookDiagnosis();
-  
-  // 檢查各平台連接狀態
-  const isGoogleConnected = isAuthenticated && (loginSource === 'google' || user?.googleAccessToken);
-  const isFacebookConnected = isAuthenticated && (loginSource === 'facebook' || user?.metaAccessToken);
-  
-  // 只有在 Google 和 Facebook 都登入時才隱藏登入區塊
-  // Connection section always shows to display status and account selection
 
   const form = useForm<CalculatorFormData>({
     resolver: zodResolver(createCalculatorSchema(t)),

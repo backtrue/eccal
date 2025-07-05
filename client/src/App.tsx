@@ -11,7 +11,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 
 // Import pages
 import Home from "./pages/home";
-import Calculator from "./pages/calculator";
+import Calculator from "./pages/calculator-simple";
 import Privacy from "./pages/privacy-policy";
 import Terms from "./pages/terms-of-service";
 import NotFound from "./pages/not-found";
