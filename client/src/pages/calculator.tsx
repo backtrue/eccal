@@ -249,23 +249,8 @@ export default function Calculator({ locale }: CalculatorProps) {
                           type="button"
                           variant="outline" 
                           size="sm"
-                          onClick={async () => {
-                            try {
-                              const response = await fetch('/api/diagnosis/facebook-permissions', {
-                                credentials: 'include'
-                              });
-                              const data = await response.json();
-                              console.log('Facebook 權限診斷:', data);
-                              alert(`Facebook 權限狀況:\n\n` +
-                                `Token 有效: ${data.summary?.tokenValid ? '是' : '否'}\n` +
-                                `廣告權限: ${data.summary?.adsPermissionsGranted ? '已授權' : '未授權'}\n` +
-                                `可存取廣告帳戶: ${data.summary?.totalAdAccounts || 0} 個\n\n` +
-                                `權限清單: ${data.permissions?.map((p: any) => `${p.permission}:${p.status}`).join(', ') || '無'}`
-                              );
-                            } catch (error) {
-                              console.error('權限檢查失敗:', error);
-                              alert('權限檢查失敗，請查看控制台');
-                            }
+                          onClick={() => {
+                            window.open('/facebook-permissions', '_blank');
                           }}
                         >
                           檢查權限

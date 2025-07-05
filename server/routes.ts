@@ -39,6 +39,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/analytics/properties', requireJWTAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      // 只有 Google 用戶才能查詢 GA 屬性
+      if (!user || !user.googleAccessToken) {
+        return res.json([]);
+      }
+      
       const properties = await analyticsService.getUserAnalyticsProperties(userId);
       res.json(properties || []);
     } catch (error) {

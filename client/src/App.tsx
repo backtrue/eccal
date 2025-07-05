@@ -24,6 +24,7 @@ import AdminDashboard from "./pages/admin-dashboard-simple";
 import DiagnosisReport from "./pages/diagnosis-report";
 import DiagnosisReportDetail from "./pages/diagnosis-report-detail";
 import AuthDebug from "./pages/auth-debug";
+import FacebookPermissions from "./pages/facebook-permissions";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 
 // Error Boundary Component
@@ -118,6 +119,7 @@ function Router() {
         </ProtectedAdminRoute>
       )} />
       <Route path="/brevo-sync" component={() => <BrevoSync />} />
+      <Route path="/facebook-permissions" component={() => <FacebookPermissions />} />
       <Route path="/privacy" component={() => <Privacy locale={locale} />} />
       <Route path="/terms" component={() => <Terms locale={locale} />} />
       

@@ -1,0 +1,112 @@
+2025-07-05 14:53:19.44
+1dd90e98
+User
+生成 Facebook OAuth URL: {
+2025-07-05 14:53:19.44
+1dd90e98
+User
+appId: '56346***',
+2025-07-05 14:53:19.44
+1dd90e98
+User
+redirectUri: 'https://eccal.thinkwithblack.com/api/diagnosis/facebook-callback',
+2025-07-05 14:53:19.44
+1dd90e98
+User
+userIdMask: 'anonymou***'
+2025-07-05 14:53:19.44
+1dd90e98
+User
+}
+2025-07-05 14:53:24.10
+1dd90e98
+User
+Facebook OAuth 回調: {
+2025-07-05 14:53:24.10
+1dd90e98
+User
+code: 'present',
+2025-07-05 14:53:24.10
+1dd90e98
+User
+userId: 'anonymous',
+2025-07-05 14:53:24.10
+1dd90e98
+User
+error: undefined,
+2025-07-05 14:53:24.10
+1dd90e98
+User
+fullQuery: {
+2025-07-05 14:53:24.10
+1dd90e98
+User
+code: 'AQDS_V3nkc3glRkH5QPsb_d1YqP14YwvhxqvlbsI2PMhrzIQfDjIeLyyoosJDQ3ncbnTR6HnkJJhiBe97vLsNpScaODP0xAfF7S6lXYkIvTEcpQ0bd3nfxsCYEig_HE-K8-j3sTmqjuUSWvid1TPheSssBA3TubssHvXqETfvLfvmWjAykCcO_Ad8Mr84pAZR32IRAYuUg1IUfhgjaHxVLK_9OQ6ilSaF4t9dPfJST3g0z7DIYb0haicyPfzzAEGakvuUIplf0UaIuwgi71UB1tD9XoAtTZOdYI7yBsgb_HNqgYYcULoN9r_U662LYZciupBuhu7kZMetqexdknxNCw7zZoc1mOSrjCtexkNagq6IBPq_JW0mobpr77PtoWKaqw',
+2025-07-05 14:53:24.10
+1dd90e98
+User
+state: 'anonymous'
+2025-07-05 14:53:24.10
+1dd90e98
+User
+}
+2025-07-05 14:53:24.10
+1dd90e98
+User
+}
+2025-07-05 14:53:24.10
+1dd90e98
+User
+交換 Facebook 存取權杖: {
+2025-07-05 14:53:24.10
+1dd90e98
+User
+redirectUri: 'https://eccal.thinkwithblack.com/api/diagnosis/facebook-callback'
+2025-07-05 14:53:24.10
+1dd90e98
+User
+}
+2025-07-05 14:53:24.31
+1dd90e98
+User
+Facebook 權杖回應: { success: true, error: undefined }
+2025-07-05 14:53:24.57
+1dd90e98
+User
+Facebook 用戶資訊: { id: '10210470623075987', name: '邱煜庭', email: undefined }
+2025-07-05 14:53:24.63
+1dd90e98
+User
+為新用戶創建 JWT 認證: 10210470623075987
+2025-07-05 14:53:25.87
+1dd90e98
+User
+Auth check - token present: true
+2025-07-05 14:53:25.87
+1dd90e98
+User
+JWT auth check successful: 10210470623075987@facebook.com
+2025-07-05 14:53:26.07
+1dd90e98
+User
+Fetching Analytics properties for user: 10210470623075987
+2025-07-05 14:53:26.09
+1dd90e98
+User
+Error fetching Analytics properties: Error: User not found or no access token
+2025-07-05 14:53:26.09
+1dd90e98
+User
+at GoogleAnalyticsService.getUserAnalyticsProperties (file:///home/runner/workspace/dist/index.js:1942:15)
+2025-07-05 14:53:26.09
+1dd90e98
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-07-05 14:53:26.09
+1dd90e98
+User
+at async file:///home/runner/workspace/dist/index.js:3886:26
+2025-07-05 14:53:26.09
+1dd90e98
+User
+Error details: {}
