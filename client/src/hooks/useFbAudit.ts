@@ -8,6 +8,7 @@ export function useFbAuditAccounts(enabled = true) {
     enabled: enabled,
     staleTime: 5 * 60 * 1000, // 5 分鐘
     gcTime: 10 * 60 * 1000, // 10 分鐘
+    select: (data: any) => data?.data || [], // 提取 API 回應中的 data 欄位
   });
 }
 
