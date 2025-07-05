@@ -117,12 +117,18 @@ export class FbAuditService {
         'impressions'
       ].join(',');
 
-      const url = `${this.baseUrl}/act_${adAccountId}/insights?fields=${fields}&time_range={'since':'${since}','until':'${until}'}&access_token=${accessToken}`;
+      const url = `${this.baseUrl}/act_${adAccountId}/insights?fields=${fields}&time_range={"since":"${since}","until":"${until}"}&access_token=${accessToken}`;
+      
+      console.log('Facebook API URL:', url);
+      console.log('Ad Account ID:', adAccountId);
+      console.log('Access Token length:', accessToken.length);
       
       const response = await fetch(url);
       
       if (!response.ok) {
-        throw new Error(`Facebook API error: ${response.status}`);
+        const errorText = await response.text();
+        console.error(`Facebook API error ${response.status}:`, errorText);
+        throw new Error(`Facebook API error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
