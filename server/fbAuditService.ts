@@ -108,18 +108,12 @@ export class FbAuditService {
       const since = startDate.toISOString().split('T')[0];
       const until = endDate.toISOString().split('T')[0];
 
-      // 請求完整的欄位，包含 ROAS 和 outbound clicks
+      // 按照用戶指示：只拉取需要的欄位
       const fields = [
-        'spend',
-        'impressions',
-        'clicks',
-        'actions',
-        'action_values',
-        'outbound_clicks_ctr',
-        'purchase_roas',
-        'website_ctr',
-        'inline_link_clicks',
-        'outbound_clicks'
+        'spend',                    // 花費
+        'actions',                  // 動作數據（包含 purchase）
+        'outbound_clicks_ctr',      // 外連點擊率
+        'purchase_roas'             // 購買 ROAS
       ].join(',');
 
       // 確保廣告帳戶 ID 格式正確，避免重複 act_ 前綴
@@ -148,20 +142,29 @@ export class FbAuditService {
       }
 
       const insights = data.data[0];
-      console.log('Facebook insights data:', insights);
+      console.log('=== Facebook API 原始數據 ===');
+      console.log('完整 insights:', JSON.stringify(insights, null, 2));
+      console.log('actions 陣列:', insights.actions);
+      console.log('purchase_roas:', insights.purchase_roas);
+      console.log('outbound_clicks_ctr:', insights.outbound_clicks_ctr);
+      console.log('spend:', insights.spend);
       
       // 按照用戶指示：直接使用 Facebook API 的正確欄位
       const spend = parseFloat(insights.spend || '0');
       
-      // 1. 購買數：直接抓 purchase 的次數
-      const purchasesValue = this.extractActionValue(insights.actions || [], 'purchase') || 0;
-      const purchases = typeof purchasesValue === 'string' ? parseInt(purchasesValue) : purchasesValue;
+      // 1. 購買數：從 actions 陣列找 action_type = 'purchase'
+      const purchaseAction = insights.actions?.find((action: any) => action.action_type === 'purchase');
+      const purchases = purchaseAction ? parseInt(purchaseAction.value) : 0;
+      console.log('Purchase action found:', purchaseAction);
+      console.log('Final purchases count:', purchases);
       
       // 2. ROAS：直接使用 purchase_roas 欄位
       const roas = parseFloat(insights.purchase_roas || '0');
+      console.log('ROAS value:', roas);
       
-      // 3. 點擊率：直接使用 outbound_clicks_ctr 欄位
+      // 3. 點擊率：直接使用 outbound_clicks_ctr 欄位  
       const ctr = parseFloat(insights.outbound_clicks_ctr || '0');
+      console.log('CTR value:', ctr);
 
       // 調試資料
       console.log('Facebook API 計算結果:', {
