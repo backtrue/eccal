@@ -131,7 +131,12 @@ export default function FbAudit({ locale }: FbAuditProps) {
                     {(checkMutation.data as any)?.data?.actualMetrics?.purchases || 0}
                   </div>
                   <div className="text-xs text-gray-500">
-                    目標: {(checkMutation.data as any)?.data?.comparisons?.find((c: any) => c.metric === 'purchases')?.target || 0}
+                    目標: {(() => {
+                      const targetComparison = (checkMutation.data as any)?.data?.comparisons?.find((c: any) => c.metric === 'purchases');
+                      const target = targetComparison?.target;
+                      console.log('Purchases target:', target, 'comparison:', targetComparison);
+                      return target || 0;
+                    })()}
                   </div>
                 </div>
 
@@ -145,7 +150,12 @@ export default function FbAudit({ locale }: FbAuditProps) {
                     })()}x
                   </div>
                   <div className="text-xs text-gray-500">
-                    目標: {(checkMutation.data as any)?.data?.comparisons?.find((c: any) => c.metric === 'roas')?.target?.toFixed(1) || '0.0'}x
+                    目標: {(() => {
+                      const targetComparison = (checkMutation.data as any)?.data?.comparisons?.find((c: any) => c.metric === 'roas');
+                      const target = targetComparison?.target;
+                      console.log('ROAS target:', target, 'comparison:', targetComparison);
+                      return (target && !isNaN(target)) ? target.toFixed(1) : '0.0';
+                    })()}x
                   </div>
                 </div>
 

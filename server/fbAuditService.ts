@@ -285,10 +285,20 @@ export class FbAuditService {
       const targetDailySpend = parseFloat(planResult.dailyAdBudget);
       const targetPurchases = Math.round(planResult.requiredOrders / 30); // 月訂單數轉換為日均
       const targetRoas = parseFloat(planResult.targetRoas);
-      
-      // 獲取產業平均 CTR (暫時使用預設值)
       const targetCtr = 1.5; // 預設 1.5%
-      console.log('Using default CTR target:', targetCtr);
+      
+      console.log('=== 目標值詳細資訊 ===');
+      console.log('原始 planResult 資料:', {
+        dailyAdBudget: planResult.dailyAdBudget,
+        requiredOrders: planResult.requiredOrders,
+        targetRoas: planResult.targetRoas
+      });
+      console.log('計算後的目標值:', {
+        targetDailySpend,
+        targetPurchases,
+        targetRoas,
+        targetCtr
+      });
 
       const comparisons: HealthCheckComparison[] = [
         {
