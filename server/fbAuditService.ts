@@ -166,29 +166,33 @@ export class FbAuditService {
       console.log('Purchase action found:', purchaseAction);
       console.log('Final purchases count:', purchases);
       
-      // 2. ROAS：purchase_roas 可能是陣列格式
+      // 2. ROAS：確保正確解析 purchase_roas，避免 NaN
       let roas = 0;
-      if (insights.purchase_roas) {
-        if (Array.isArray(insights.purchase_roas)) {
-          roas = insights.purchase_roas.length > 0 ? parseFloat(insights.purchase_roas[0].value || '0') : 0;
-        } else {
-          roas = parseFloat(insights.purchase_roas || '0');
-        }
-      }
-      console.log('ROAS raw:', insights.purchase_roas);
-      console.log('ROAS parsed:', roas);
+      console.log('ROAS 原始數據類型和值:', typeof insights.purchase_roas, insights.purchase_roas);
       
-      // 3. 點擊率：outbound_clicks_ctr 可能是陣列格式
-      let ctr = 0;
-      if (insights.outbound_clicks_ctr) {
-        if (Array.isArray(insights.outbound_clicks_ctr)) {
-          ctr = insights.outbound_clicks_ctr.length > 0 ? parseFloat(insights.outbound_clicks_ctr[0].value || '0') : 0;
-        } else {
-          ctr = parseFloat(insights.outbound_clicks_ctr || '0');
+      if (insights.purchase_roas !== undefined && insights.purchase_roas !== null) {
+        if (Array.isArray(insights.purchase_roas) && insights.purchase_roas.length > 0) {
+          const roasValue = insights.purchase_roas[0]?.value;
+          roas = !isNaN(parseFloat(roasValue)) ? parseFloat(roasValue) : 0;
+        } else if (typeof insights.purchase_roas === 'string' || typeof insights.purchase_roas === 'number') {
+          roas = !isNaN(parseFloat(insights.purchase_roas.toString())) ? parseFloat(insights.purchase_roas.toString()) : 0;
         }
       }
-      console.log('CTR raw:', insights.outbound_clicks_ctr);
-      console.log('CTR parsed:', ctr);
+      console.log('ROAS 最終值:', roas);
+      
+      // 3. CTR：確保正確解析 outbound_clicks_ctr，避免 NaN
+      let ctr = 0;
+      console.log('CTR 原始數據類型和值:', typeof insights.outbound_clicks_ctr, insights.outbound_clicks_ctr);
+      
+      if (insights.outbound_clicks_ctr !== undefined && insights.outbound_clicks_ctr !== null) {
+        if (Array.isArray(insights.outbound_clicks_ctr) && insights.outbound_clicks_ctr.length > 0) {
+          const ctrValue = insights.outbound_clicks_ctr[0]?.value;
+          ctr = !isNaN(parseFloat(ctrValue)) ? parseFloat(ctrValue) : 0;
+        } else if (typeof insights.outbound_clicks_ctr === 'string' || typeof insights.outbound_clicks_ctr === 'number') {
+          ctr = !isNaN(parseFloat(insights.outbound_clicks_ctr.toString())) ? parseFloat(insights.outbound_clicks_ctr.toString()) : 0;
+        }
+      }
+      console.log('CTR 最終值:', ctr);
 
       // 調試資料
       console.log('Facebook API 計算結果:', {
