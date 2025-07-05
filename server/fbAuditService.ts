@@ -111,15 +111,13 @@ export class FbAuditService {
       // 確保廣告帳戶 ID 格式正確，避免重複 act_ 前綴
       const accountId = adAccountId.startsWith('act_') ? adAccountId : `act_${adAccountId}`;
       
-      // 拉取所有 ROAS 相關欄位，確保數據完整
+      // 只拉取 purchase 相關欄位
       const fields = [
-        'spend',                        // 花費
-        'actions',                      // 只取 purchase 動作
-        'action_values',                // 購買價值數據
-        'outbound_clicks_ctr',          // 外連點擊率
-        'purchase_roas',                // 一般購買 ROAS
-        'website_purchase_roas',        // 網站購買 ROAS  
-        'mobile_app_purchase_roas'      // 行動應用程式購買 ROAS
+        'spend',                    // 花費
+        'actions',                  // 只取 purchase 動作
+        'action_values',            // 購買價值數據（用於手動計算 ROAS）
+        'outbound_clicks_ctr',      // 外連點擊率
+        'purchase_roas'             // 購買 ROAS
       ].join(',');
       
       // 使用 filtering 參數只拉取 purchase action_type
@@ -169,49 +167,36 @@ export class FbAuditService {
       console.log('Purchase action found:', purchaseAction);
       console.log('Final purchases count:', purchases);
       
-      // 2. ROAS：優先順序 website_purchase_roas > mobile_app_purchase_roas > purchase_roas
+      // 2. ROAS：只使用 purchase_roas 欄位
       let roas = 0;
-      console.log('所有 ROAS 欄位:', {
-        purchase_roas: insights.purchase_roas,
-        website_purchase_roas: insights.website_purchase_roas,
-        mobile_app_purchase_roas: insights.mobile_app_purchase_roas
-      });
+      console.log('purchase_roas 原始數據:', insights.purchase_roas);
       
-      // 嘗試多種 ROAS 欄位
-      const roasFields = ['website_purchase_roas', 'mobile_app_purchase_roas', 'purchase_roas'];
-      
-      for (const field of roasFields) {
-        const roasData = insights[field];
-        if (roasData !== undefined && roasData !== null) {
-          if (Array.isArray(roasData) && roasData.length > 0) {
-            const roasValue = roasData[0]?.value;
-            if (!isNaN(parseFloat(roasValue))) {
-              roas = parseFloat(roasValue);
-              console.log(`使用 ${field} 欄位，ROAS 值:`, roas);
-              break;
-            }
-          } else if (typeof roasData === 'string' || typeof roasData === 'number') {
-            if (!isNaN(parseFloat(roasData.toString()))) {
-              roas = parseFloat(roasData.toString());
-              console.log(`使用 ${field} 欄位，ROAS 值:`, roas);
-              break;
-            }
+      if (insights.purchase_roas !== undefined && insights.purchase_roas !== null) {
+        if (Array.isArray(insights.purchase_roas) && insights.purchase_roas.length > 0) {
+          const roasValue = insights.purchase_roas[0]?.value;
+          if (!isNaN(parseFloat(roasValue))) {
+            roas = parseFloat(roasValue);
+          }
+        } else if (typeof insights.purchase_roas === 'string' || typeof insights.purchase_roas === 'number') {
+          if (!isNaN(parseFloat(insights.purchase_roas.toString()))) {
+            roas = parseFloat(insights.purchase_roas.toString());
           }
         }
       }
       
-      // 如果沒有 ROAS 欄位，手動計算：購買價值 / 廣告花費
+      // 如果 purchase_roas 沒有數據，手動計算：購買價值 / 廣告花費
       if (roas === 0 && spend > 0) {
-        const purchaseValue = this.extractActionValue(insights.action_values || [], 'purchase') || 
-                             this.extractActionValue(insights.action_values || [], 'offsite_conversion.fb_pixel_purchase') ||
-                             this.extractActionValue(insights.action_values || [], 'mobile_app_purchase');
-        if (purchaseValue && purchaseValue > 0) {
-          roas = parseFloat(purchaseValue.toString()) / spend;
-          console.log('手動計算 ROAS:', { purchaseValue, spend, roas });
+        const purchaseValue = this.extractActionValue(insights.action_values || [], 'purchase');
+        if (purchaseValue) {
+          const purchaseValueNum = parseFloat(purchaseValue.toString());
+          if (!isNaN(purchaseValueNum) && purchaseValueNum > 0) {
+            roas = purchaseValueNum / spend;
+            console.log('手動計算 ROAS:', { purchaseValue: purchaseValueNum, spend, roas });
+          }
         }
       }
       
-      console.log('ROAS 最終值:', roas);
+      console.log('purchase_roas 最終值:', roas);
       
       // 3. CTR：確保正確解析 outbound_clicks_ctr，避免 NaN
       let ctr = 0;
