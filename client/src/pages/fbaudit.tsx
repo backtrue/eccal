@@ -23,6 +23,7 @@ import {
   Lightbulb
 } from "lucide-react";
 import { useFbAuditAccounts, useFbAuditPlans, useFbAuditIndustries, useFbAuditCheck } from "@/hooks/useFbAudit";
+import { useFbAuditStream } from "@/hooks/useFbAuditStream";
 import type { Locale } from "@/lib/i18n";
 
 interface FbAuditProps {
@@ -43,6 +44,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
   const { data: plans, isLoading: plansLoading } = useFbAuditPlans(isAuthenticated);
   const { data: industries } = useFbAuditIndustries();
   const checkMutation = useFbAuditCheck();
+  const streamAudit = useFbAuditStream();
 
   const handleStartAudit = async () => {
     if (!selectedAccount || !selectedPlan || !selectedIndustry) {
@@ -69,6 +71,20 @@ export default function FbAudit({ locale }: FbAuditProps) {
       // 即使失敗也要有清楚的錯誤顯示
       alert('健檢執行失敗，請檢查控制台錯誤信息');
     }
+  };
+
+  const handleStartStreamingAudit = async () => {
+    if (!selectedAccount || !selectedPlan || !selectedIndustry) {
+      return;
+    }
+
+    setShowResults(true);
+    streamAudit.reset();
+    await streamAudit.startStreamingHealthCheck(
+      selectedAccount,
+      selectedPlan,
+      selectedIndustry
+    );
   };
 
   const isConnected = user?.metaAccessToken;
@@ -102,8 +118,12 @@ export default function FbAudit({ locale }: FbAuditProps) {
     isLoading: checkMutation.isPending
   });
 
-  if (showResults && checkMutation.data) {
-    console.log('健檢結果數據:', checkMutation.data);
+  // 顯示流式結果頁面
+  if (showResults && (streamAudit.status !== 'idle' || checkMutation.data)) {
+    const isStreaming = streamAudit.status !== 'idle';
+    const comparisons = isStreaming ? streamAudit.comparisons : (checkMutation.data as any)?.comparisons || [];
+    
+    console.log('健檢結果數據:', { isStreaming, comparisons, streamStatus: streamAudit.status });
     
     return (
       <div className="min-h-screen bg-gray-50">
@@ -484,12 +504,32 @@ export default function FbAudit({ locale }: FbAuditProps) {
                 </Select>
                 
                 {selectedIndustry && (
-                  <div className="text-center pt-4">
+                  <div className="text-center pt-4 space-y-3">
+                    <Button 
+                      onClick={handleStartStreamingAudit}
+                      disabled={!canStartAudit || streamAudit.status === 'loading'}
+                      size="lg"
+                      className="px-8 w-full bg-blue-600 hover:bg-blue-700"
+                    >
+                      {streamAudit.status === 'loading' ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          實時分析中...
+                        </>
+                      ) : (
+                        <>
+                          <BarChart3 className="w-4 h-4 mr-2" />
+                          開始健檢 (實時顯示)
+                        </>
+                      )}
+                    </Button>
+                    
                     <Button 
                       onClick={handleStartAudit}
                       disabled={!canStartAudit || checkMutation.isPending}
+                      variant="outline"
                       size="lg"
-                      className="px-8"
+                      className="px-8 w-full"
                     >
                       {checkMutation.isPending ? (
                         <>
@@ -498,8 +538,8 @@ export default function FbAudit({ locale }: FbAuditProps) {
                         </>
                       ) : (
                         <>
-                          <BarChart3 className="w-4 h-4 mr-2" />
-                          開始健檢
+                          <Target className="w-4 h-4 mr-2" />
+                          傳統健檢模式
                         </>
                       )}
                     </Button>

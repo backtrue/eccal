@@ -106,6 +106,96 @@ export function setupFbAuditRoutes(app: Express) {
     }
   });
 
+  // 流式廣告健檢 (Server-Sent Events)
+  app.post('/api/fbaudit/check-stream', requireJWTAuth, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      const { adAccountId, planResultId, industryType } = req.body;
+
+      if (!user.metaAccessToken) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Facebook access token not found' 
+        });
+      }
+
+      if (!adAccountId || !planResultId || !industryType) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Missing required parameters' 
+        });
+      }
+
+      // 設置 SSE headers
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Cache-Control'
+      });
+
+      // 發送初始狀態
+      res.write(`data: ${JSON.stringify({ type: 'status', message: '開始獲取廣告數據...' })}\n\n`);
+
+      // 獲取廣告帳號數據
+      const adAccountData = await fbAuditService.getAdAccountData(
+        user.metaAccessToken, 
+        adAccountId
+      );
+
+      res.write(`data: ${JSON.stringify({ type: 'status', message: '計算實際指標...' })}\n\n`);
+
+      // 計算實際指標
+      const actualMetrics = fbAuditService.calculateMetrics(adAccountData);
+
+      res.write(`data: ${JSON.stringify({ type: 'status', message: '準備比較目標值...' })}\n\n`);
+
+      // 獲取目標值並逐個生成建議
+      const comparisons = await fbAuditService.compareWithTargetsStreaming(
+        actualMetrics,
+        planResultId,
+        industryType,
+        user.metaAccessToken,
+        adAccountId,
+        (progress) => {
+          // 發送進度更新
+          res.write(`data: ${JSON.stringify(progress)}\n\n`);
+        }
+      );
+
+      // 儲存健檢結果
+      const healthCheck = await fbAuditService.saveHealthCheck(
+        user.id,
+        adAccountData,
+        actualMetrics,
+        comparisons,
+        planResultId,
+        industryType
+      );
+
+      // 發送最終結果
+      res.write(`data: ${JSON.stringify({ 
+        type: 'complete', 
+        data: {
+          healthCheckId: healthCheck.id,
+          adAccountData,
+          actualMetrics,
+          comparisons
+        }
+      })}\n\n`);
+
+      res.end();
+    } catch (error) {
+      console.error('Error in streaming health check:', error);
+      res.write(`data: ${JSON.stringify({ 
+        type: 'error', 
+        error: error instanceof Error ? error.message : 'Failed to perform health check'
+      })}\n\n`);
+      res.end();
+    }
+  });
+
   // 執行廣告健檢
   app.post('/api/fbaudit/check', requireJWTAuth, async (req: Request, res: Response) => {
     try {

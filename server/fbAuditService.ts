@@ -270,6 +270,112 @@ export class FbAuditService {
   }
 
   /**
+   * 流式比較實際值與目標值 (逐個生成AI建議)
+   */
+  async compareWithTargetsStreaming(
+    actualMetrics: HealthCheckMetrics,
+    planResultId: string,
+    industryType: string,
+    accessToken?: string,
+    adAccountId?: string,
+    onProgress?: (progress: any) => void
+  ): Promise<HealthCheckComparison[]> {
+    try {
+      // 從預算計劃獲取目標值
+      const planResult = await db.query.planResults.findFirst({
+        where: eq(planResults.id, planResultId)
+      });
+      
+      if (!planResult) {
+        throw new Error('Plan result not found');
+      }
+
+      const targetDailySpend = parseFloat(planResult.dailyAdBudget.toString());
+      const targetPurchases = Math.round(planResult.requiredOrders / 30);
+      const targetRoas = parseFloat(planResult.targetRoas.toString());
+      const targetCtr = 1.5;
+
+      // 建立初始比較結果
+      const comparisons: HealthCheckComparison[] = [
+        {
+          metric: 'dailySpend',
+          target: targetDailySpend,
+          actual: actualMetrics.dailySpend,
+          status: actualMetrics.dailySpend >= targetDailySpend ? 'achieved' : 'not_achieved'
+        },
+        {
+          metric: 'purchases',
+          target: targetPurchases,
+          actual: actualMetrics.purchases,
+          status: actualMetrics.purchases >= targetPurchases ? 'achieved' : 'not_achieved'
+        },
+        {
+          metric: 'roas',
+          target: targetRoas,
+          actual: actualMetrics.roas,
+          status: actualMetrics.roas >= targetRoas ? 'achieved' : 'not_achieved'
+        },
+        {
+          metric: 'ctr',
+          target: targetCtr,
+          actual: actualMetrics.ctr,
+          status: actualMetrics.ctr >= targetCtr ? 'achieved' : 'not_achieved'
+        }
+      ];
+
+      // 先發送基本比較結果
+      onProgress?.({
+        type: 'comparisons',
+        data: comparisons
+      });
+
+      // 逐個為未達標指標生成 AI 建議
+      for (const comparison of comparisons) {
+        if (comparison.status === 'not_achieved') {
+          onProgress?.({
+            type: 'generating',
+            metric: comparison.metric,
+            message: `正在生成 ${comparison.metric} 的 AI 建議...`
+          });
+
+          if (comparison.metric === 'dailySpend') {
+            comparison.advice = await this.generateDailySpendAdvice(
+              comparison.target,
+              comparison.actual
+            );
+          } else if (comparison.metric === 'purchases' && accessToken && adAccountId) {
+            comparison.advice = await this.generatePurchaseAdvice(
+              accessToken,
+              adAccountId,
+              comparison.target,
+              comparison.actual
+            );
+          } else {
+            comparison.advice = await this.generateAIAdvice(
+              comparison.metric,
+              comparison.target,
+              comparison.actual,
+              industryType
+            );
+          }
+
+          // 發送更新後的比較結果
+          onProgress?.({
+            type: 'advice_complete',
+            metric: comparison.metric,
+            advice: comparison.advice
+          });
+        }
+      }
+
+      return comparisons;
+    } catch (error) {
+      console.error('Error in streaming comparison:', error);
+      throw error;
+    }
+  }
+
+  /**
    * 比較實際值與目標值
    */
   async compareWithTargets(
