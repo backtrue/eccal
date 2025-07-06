@@ -522,7 +522,11 @@ ${adSetRecommendation}
         temperature: 0.7,
       });
 
-      const result = response.choices[0].message.content || '暫無建議';
+      let result = response.choices[0].message.content || '暫無建議';
+      
+      // 移除 markdown 代碼塊標記
+      result = result.replace(/```html\s*/g, '').replace(/```\s*$/g, '').trim();
+      
       console.log('=== ChatGPT 購買數建議生成完成 ===');
       console.log('建議內容長度:', result.length);
       
@@ -583,7 +587,11 @@ ${adSetRecommendation}
         temperature: 0.7,
       });
 
-      const result = response.choices[0].message.content || '暫無建議';
+      let result = response.choices[0].message.content || '暫無建議';
+      
+      // 移除 markdown 代碼塊標記
+      result = result.replace(/```html\s*/g, '').replace(/```\s*$/g, '').trim();
+      
       console.log('=== ChatGPT 日均花費建議生成完成 ===');
       console.log('建議內容長度:', result.length);
       
