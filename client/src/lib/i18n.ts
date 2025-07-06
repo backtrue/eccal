@@ -79,6 +79,39 @@ export interface TranslationData {
   insufficientCredits: string;
   upgradeSuccess: string;
   upgradeError: string;
+  
+  // Facebook Audit
+  fbAuditTitle: string;
+  fbAuditDescription: string;
+  fbAuditSubtitle: string;
+  fbAuditStep1: string;
+  fbAuditStep2: string;
+  fbAuditStep3: string;
+  fbAuditStep4: string;
+  connectFacebook: string;
+  selectAdAccount: string;
+  selectCampaignPlan: string;
+  selectIndustry: string;
+  startHealthCheck: string;
+  healthCheckProgress: string;
+  healthCheckComplete: string;
+  healthCheckResults: string;
+  aiRecommendations: string;
+  overallScore: string;
+  analysisResults: string;
+  achieved: string;
+  notAchieved: string;
+  needsImprovement: string;
+  excellent: string;
+  good: string;
+  poor: string;
+  ratingQuestion: string;
+  ratingLow: string;
+  ratingMedium: string;
+  ratingHigh: string;
+  commentPlaceholder: string;
+  submitRating: string;
+  thankYouMessage: string;
 }
 
 const translations: Record<Locale, TranslationData> = {
@@ -162,6 +195,39 @@ const translations: Record<Locale, TranslationData> = {
     
     // Footer
     blog: '部落格',
+    
+    // Facebook Audit
+    fbAuditTitle: 'Facebook 廣告健檢',
+    fbAuditDescription: '專業的 Facebook 廣告成效分析工具，由小黑老師 AI 提供智能診斷建議',
+    fbAuditSubtitle: '透過 AI 智能分析，為您的 Facebook 廣告提供專業健檢服務',
+    fbAuditStep1: '步驟 1：連接 Facebook',
+    fbAuditStep2: '步驟 2：選擇廣告帳戶',
+    fbAuditStep3: '步驟 3：選擇活動計劃',
+    fbAuditStep4: '步驟 4：選擇行業類型',
+    connectFacebook: '連接 Facebook',
+    selectAdAccount: '選擇廣告帳戶',
+    selectCampaignPlan: '選擇活動計劃',
+    selectIndustry: '選擇行業類型',
+    startHealthCheck: '開始健檢',
+    healthCheckProgress: '健檢進行中...',
+    healthCheckComplete: '健檢完成',
+    healthCheckResults: '健檢結果',
+    aiRecommendations: '小黑老師 AI 建議',
+    overallScore: '整體評分',
+    analysisResults: '分析結果',
+    achieved: '達成',
+    notAchieved: '未達成',
+    needsImprovement: '需要改善',
+    excellent: '優秀',
+    good: '良好',
+    poor: '待改善',
+    ratingQuestion: '你覺得這個 AI 建議工具，你會推薦給你的朋友使用嗎？',
+    ratingLow: '一定不會',
+    ratingMedium: '可能',
+    ratingHigh: '非常可能',
+    commentPlaceholder: '您的寶貴意見（選填）',
+    submitRating: '提交評分',
+    thankYouMessage: '感謝您的評分！您的意見對我們非常重要。',
   },
   
   'en': {
@@ -244,6 +310,39 @@ const translations: Record<Locale, TranslationData> = {
     
     // Footer
     blog: 'Blog',
+    
+    // Facebook Audit
+    fbAuditTitle: 'Facebook Ads Health Check',
+    fbAuditDescription: 'Professional Facebook ads performance analysis tool with AI-powered diagnostic recommendations by Teacher Black',
+    fbAuditSubtitle: 'Get professional health check service for your Facebook ads through AI intelligent analysis',
+    fbAuditStep1: 'Step 1: Connect Facebook',
+    fbAuditStep2: 'Step 2: Select Ad Account',
+    fbAuditStep3: 'Step 3: Select Campaign Plan',
+    fbAuditStep4: 'Step 4: Select Industry Type',
+    connectFacebook: 'Connect Facebook',
+    selectAdAccount: 'Select Ad Account',
+    selectCampaignPlan: 'Select Campaign Plan',
+    selectIndustry: 'Select Industry Type',
+    startHealthCheck: 'Start Health Check',
+    healthCheckProgress: 'Health Check in Progress...',
+    healthCheckComplete: 'Health Check Complete',
+    healthCheckResults: 'Health Check Results',
+    aiRecommendations: 'Teacher Black AI Recommendations',
+    overallScore: 'Overall Score',
+    analysisResults: 'Analysis Results',
+    achieved: 'Achieved',
+    notAchieved: 'Not Achieved',
+    needsImprovement: 'Needs Improvement',
+    excellent: 'Excellent',
+    good: 'Good',
+    poor: 'Needs Improvement',
+    ratingQuestion: 'Would you recommend this AI recommendation tool to your friends?',
+    ratingLow: 'Definitely not',
+    ratingMedium: 'Maybe',
+    ratingHigh: 'Very likely',
+    commentPlaceholder: 'Your valuable feedback (optional)',
+    submitRating: 'Submit Rating',
+    thankYouMessage: 'Thank you for your rating! Your feedback is very important to us.',
   },
   
   'ja': {
@@ -326,6 +425,39 @@ const translations: Record<Locale, TranslationData> = {
     
     // Footer
     blog: 'ブログ',
+    
+    // Facebook Audit
+    fbAuditTitle: 'Facebook広告健康診断',
+    fbAuditDescription: '小黒先生AIによる知能診断とアドバイス付きのプロフェッショナルなFacebook広告パフォーマンス分析ツール',
+    fbAuditSubtitle: 'AI知能分析によって、Facebook広告の専門的なヘルスチェックサービスを提供',
+    fbAuditStep1: 'ステップ1：Facebook接続',
+    fbAuditStep2: 'ステップ2：広告アカウント選択',
+    fbAuditStep3: 'ステップ3：キャンペーンプラン選択',
+    fbAuditStep4: 'ステップ4：業界タイプ選択',
+    connectFacebook: 'Facebook接続',
+    selectAdAccount: '広告アカウント選択',
+    selectCampaignPlan: 'キャンペーンプラン選択',
+    selectIndustry: '業界タイプ選択',
+    startHealthCheck: 'ヘルスチェック開始',
+    healthCheckProgress: 'ヘルスチェック実行中...',
+    healthCheckComplete: 'ヘルスチェック完了',
+    healthCheckResults: 'ヘルスチェック結果',
+    aiRecommendations: '小黒先生AIレコメンデーション',
+    overallScore: '総合スコア',
+    analysisResults: '分析結果',
+    achieved: '達成',
+    notAchieved: '未達成',
+    needsImprovement: '改善が必要',
+    excellent: '優秀',
+    good: '良好',
+    poor: '改善が必要',
+    ratingQuestion: 'このAI推薦ツールを友達に推薦しますか？',
+    ratingLow: '絶対にしない',
+    ratingMedium: 'たぶん',
+    ratingHigh: '非常に可能性が高い',
+    commentPlaceholder: '貴重なご意見（任意）',
+    submitRating: '評価を送信',
+    thankYouMessage: '評価をありがとうございます！あなたのフィードバックは私たちにとって非常に重要です。',
   },
 };
 

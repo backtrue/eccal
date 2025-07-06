@@ -26,12 +26,14 @@ import { useFbAuditAccounts, useFbAuditPlans, useFbAuditIndustries, useFbAuditCh
 import { useFbAuditStream } from "@/hooks/useFbAuditStream";
 import { NPSRating } from "@/components/NPSRating";
 import type { Locale } from "@/lib/i18n";
+import { getTranslations } from "@/lib/i18n";
 
 interface FbAuditProps {
   locale: Locale;
 }
 
 export default function FbAudit({ locale }: FbAuditProps) {
+  const t = getTranslations(locale);
   const { user, isAuthenticated } = useAuth();
   const [selectedAccount, setSelectedAccount] = useState<string>("");
   const [selectedPlan, setSelectedPlan] = useState<string>("");
@@ -99,10 +101,10 @@ export default function FbAudit({ locale }: FbAuditProps) {
         <div className="container mx-auto p-6 max-w-4xl">
           <div className="text-center py-20">
             <Facebook className="w-16 h-16 text-blue-600 mx-auto mb-6" />
-            <h1 className="text-3xl font-bold mb-4">FB 廣告健檢</h1>
-            <p className="text-gray-600 mb-8">請先登入以使用廣告健檢功能</p>
+            <h1 className="text-3xl font-bold mb-4">{t.fbAuditTitle}</h1>
+            <p className="text-gray-600 mb-8">{locale === 'zh-TW' ? '請先登入以使用廣告健檢功能' : locale === 'en' ? 'Please login to use the ad health check feature' : 'まず広告健康診断機能をご利用するためにログインしてください'}</p>
             <Button size="lg" onClick={() => window.location.href = '/api/auth/google'}>
-              使用 Google 登入
+              {t.loginWithGoogle}
             </Button>
           </div>
         </div>
@@ -127,8 +129,8 @@ export default function FbAudit({ locale }: FbAuditProps) {
         <NavigationBar locale={locale} />
         <div className="container mx-auto p-6 max-w-6xl">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">廣告健檢報告</h1>
-            <p className="text-gray-600">基於過去 28 天的廣告數據分析</p>
+            <h1 className="text-3xl font-bold mb-2">{t.healthCheckResults}</h1>
+            <p className="text-gray-600">{locale === 'zh-TW' ? '基於過去 28 天的廣告數據分析' : locale === 'en' ? 'Based on advertising data analysis from the past 28 days' : '過去28日間の広告データ分析に基づいて'}</p>
           </div>
 
           {/* 健檢結果概覽 */}
@@ -136,7 +138,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="w-5 h-5" />
-                健檢結果概覽
+                {t.overallScore}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -257,7 +259,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
                         <div className="flex items-start gap-2">
                           <Lightbulb className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
                           <div>
-                            <div className="font-medium text-yellow-800 mb-1">AI 優化建議</div>
+                            <div className="font-medium text-yellow-800 mb-1">{t.aiRecommendations}</div>
                             <div 
                               className="text-yellow-700 text-sm leading-relaxed"
                               dangerouslySetInnerHTML={{ __html: comparison.advice }}
@@ -276,6 +278,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
           {(checkMutation.data as any)?.healthCheckId && (
             <NPSRating 
               healthCheckId={(checkMutation.data as any).healthCheckId}
+              locale={locale}
               onRatingSubmitted={() => {
                 console.log('NPS 評分已提交');
               }}
@@ -295,10 +298,10 @@ export default function FbAudit({ locale }: FbAuditProps) {
               variant="outline"
               className="mr-4"
             >
-              重新健檢
+              {locale === 'zh-TW' ? '重新健檢' : locale === 'en' ? 'Run Health Check Again' : 'ヘルスチェックを再実行'}
             </Button>
             <Button onClick={() => window.location.href = '/dashboard'}>
-              回到儀表板
+              {locale === 'zh-TW' ? '回到儀表板' : locale === 'en' ? 'Back to Dashboard' : 'ダッシュボードに戻る'}
             </Button>
           </div>
         </div>
@@ -315,9 +318,9 @@ export default function FbAudit({ locale }: FbAuditProps) {
         {/* 頁面標題 */}
         <div className="text-center mb-12">
           <Facebook className="w-16 h-16 text-blue-600 mx-auto mb-6" />
-          <h1 className="text-4xl font-bold mb-4">FB 廣告健檢</h1>
+          <h1 className="text-4xl font-bold mb-4">{t.fbAuditTitle}</h1>
           <p className="text-xl text-gray-600 mb-6">
-            快速診斷您的 Facebook 廣告成效，獲得 AI 優化建議
+            {t.fbAuditDescription}
           </p>
           
           {/* 安全提示 */}
@@ -346,10 +349,10 @@ export default function FbAudit({ locale }: FbAuditProps) {
             ))}
           </div>
           <div className="text-center text-sm text-gray-600">
-            {currentStep === 1 && '連接 Facebook 廣告帳號'}
-            {currentStep === 2 && '選擇廣告帳號'}
-            {currentStep === 3 && '選擇預算計劃'}
-            {currentStep === 4 && '選擇產業類型'}
+            {currentStep === 1 && t.fbAuditStep1}
+            {currentStep === 2 && t.fbAuditStep2}
+            {currentStep === 3 && t.fbAuditStep3}
+            {currentStep === 4 && t.fbAuditStep4}
           </div>
         </div>
 
@@ -359,23 +362,23 @@ export default function FbAudit({ locale }: FbAuditProps) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Facebook className="w-5 h-5" />
-                步驟 1: 連接 Facebook 廣告帳號
+                {t.fbAuditStep1}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {!isConnected ? (
                 <div className="text-center py-8">
                   <p className="text-gray-600 mb-6">
-                    請先連接您的 Facebook 帳號以獲取廣告數據
+                    {locale === 'zh-TW' ? '請先連接您的 Facebook 帳號以獲取廣告數據' : locale === 'en' ? 'Please connect your Facebook account to get ad data' : 'Facebookアカウントを接続して広告データを取得してください'}
                   </p>
                   <FacebookLoginButton />
                 </div>
               ) : (
                 <div className="text-center py-8">
                   <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-4" />
-                  <p className="text-green-600 font-medium mb-4">Facebook 帳號已連接</p>
+                  <p className="text-green-600 font-medium mb-4">{locale === 'zh-TW' ? 'Facebook 帳號已連接' : locale === 'en' ? 'Facebook account connected' : 'Facebookアカウントが接続されました'}</p>
                   <Button onClick={() => setCurrentStep(2)}>
-                    下一步：選擇廣告帳號
+                    {locale === 'zh-TW' ? '下一步：選擇廣告帳號' : locale === 'en' ? 'Next: Select Ad Account' : '次のステップ：広告アカウント選択'}
                   </Button>
                 </div>
               )}
@@ -389,7 +392,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="w-5 h-5" />
-                步驟 2: 選擇要健檢的廣告帳號
+                {t.fbAuditStep2}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -402,7 +405,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
                 <div className="space-y-4">
                   <Select value={selectedAccount} onValueChange={setSelectedAccount}>
                     <SelectTrigger>
-                      <SelectValue placeholder="請選擇要健檢的廣告帳號" />
+                      <SelectValue placeholder={t.selectAdAccount} />
                     </SelectTrigger>
                     <SelectContent>
                       {accounts.map((account: any) => (
@@ -416,7 +419,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
                   {selectedAccount && (
                     <div className="text-center pt-4">
                       <Button onClick={() => setCurrentStep(3)}>
-                        下一步：選擇預算計劃
+                        {locale === 'zh-TW' ? '下一步：選擇預算計劃' : locale === 'en' ? 'Next: Select Campaign Plan' : '次のステップ：キャンペーンプラン選択'}
                       </Button>
                     </div>
                   )}
@@ -438,7 +441,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="w-5 h-5" />
-                步驟 3: 選擇預算計劃
+                {t.fbAuditStep3}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -451,7 +454,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
                 <div className="space-y-4">
                   <Select value={selectedPlan} onValueChange={setSelectedPlan}>
                     <SelectTrigger>
-                      <SelectValue placeholder="請選擇要對比的預算計劃" />
+                      <SelectValue placeholder={t.selectCampaignPlan} />
                     </SelectTrigger>
                     <SelectContent>
                       {plans.map((plan: any) => (
@@ -465,7 +468,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
                   {selectedPlan && (
                     <div className="text-center pt-4">
                       <Button onClick={() => setCurrentStep(4)}>
-                        下一步：選擇產業類型
+                        {locale === 'zh-TW' ? '下一步：選擇產業類型' : locale === 'en' ? 'Next: Select Industry Type' : '次のステップ：業界タイプ選択'}
                       </Button>
                     </div>
                   )}
@@ -473,12 +476,12 @@ export default function FbAudit({ locale }: FbAuditProps) {
               ) : (
                 <div className="text-center py-8">
                   <AlertTriangle className="w-12 h-12 text-blue-600 mx-auto mb-4" />
-                  <p className="text-blue-600 font-medium mb-4">尚未建立預算計劃</p>
+                  <p className="text-blue-600 font-medium mb-4">{locale === 'zh-TW' ? '尚未建立預算計劃' : locale === 'en' ? 'No campaign plan created yet' : 'キャンペーンプランがまだ作成されていません'}</p>
                   <p className="text-gray-600 mb-6">
-                    需要先建立預算計劃才能進行健檢對比
+                    {locale === 'zh-TW' ? '需要先建立預算計劃才能進行健檢對比' : locale === 'en' ? 'Need to create a campaign plan first for health check comparison' : 'ヘルスチェック比較のためにまずキャンペーンプランを作成する必要があります'}
                   </p>
                   <Button onClick={() => window.location.href = '/calculator'}>
-                    前往建立預算計劃
+                    {locale === 'zh-TW' ? '前往建立預算計劃' : locale === 'en' ? 'Go to Create Campaign Plan' : 'キャンペーンプラン作成へ'}
                   </Button>
                 </div>
               )}
@@ -492,14 +495,14 @@ export default function FbAudit({ locale }: FbAuditProps) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="w-5 h-5" />
-                步驟 4: 選擇產業類型
+                {t.fbAuditStep4}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <Select value={selectedIndustry} onValueChange={setSelectedIndustry}>
                   <SelectTrigger>
-                    <SelectValue placeholder="請選擇您的產業類型" />
+                    <SelectValue placeholder={t.selectIndustry} />
                   </SelectTrigger>
                   <SelectContent>
                     {Array.isArray(industries) && industries.map((industry: any) => (
@@ -526,7 +529,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
                       ) : (
                         <>
                           <BarChart3 className="w-4 h-4 mr-2" />
-                          開始健檢
+                          {t.startHealthCheck}
                         </>
                       )}
                     </Button>
