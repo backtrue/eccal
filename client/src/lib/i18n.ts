@@ -80,6 +80,40 @@ export interface TranslationData {
   upgradeSuccess: string;
   upgradeError: string;
   
+  // Calculator Page Additional
+  connectAccountTitle: string;
+  connectAccountDescription: string;
+  googleAnalytics: string;
+  facebookAds: string;
+  connected: string;
+  notConnected: string;
+  targetRevenuePlaceholder: string;
+  aovPlaceholder: string;
+  conversionRatePlaceholder: string;
+  targetMonthlyRevenue: string;
+  targetMonthlyRevenueUnit: string;
+  averageOrderValueUnit: string;
+  conversionRateUnit: string;
+  calculateBudget: string;
+  calculationResults: string;
+  monthlyRequiredOrders: string;
+  ordersUnit: string;
+  dailyApprox: string;
+  monthlyRequiredTraffic: string;
+  visitorsUnit: string;
+  suggestedDailyBudget: string;
+  monthlyBudgetApprox: string;
+  suggestedTargetRoas: string;
+  roasDescription: string;
+  facebookDiagnosis: string;
+  diagnosisDescription: string;
+  startFacebookDiagnosis: string;
+  analyzing: string;
+  diagnosisResults: string;
+  account: string;
+  healthScore: string;
+  recommendations: string;
+  
   // Facebook Audit
   fbAuditTitle: string;
   fbAuditDescription: string;
@@ -228,6 +262,40 @@ const translations: Record<Locale, TranslationData> = {
     commentPlaceholder: '您的寶貴意見（選填）',
     submitRating: '提交評分',
     thankYouMessage: '感謝您的評分！您的意見對我們非常重要。',
+    
+    // Calculator Page Additional
+    connectAccountTitle: '連接帳戶以使用完整功能',
+    connectAccountDescription: '需要同時連接 Google Analytics 和 Facebook 廣告帳戶才能使用所有功能',
+    googleAnalytics: 'Google Analytics',
+    facebookAds: 'Facebook 廣告',
+    connected: '已連接',
+    notConnected: '未連接',
+    targetRevenuePlaceholder: '例如：300000',
+    aovPlaceholder: '例如：1500',
+    conversionRatePlaceholder: '例如：2.5',
+    targetMonthlyRevenue: '目標月營收',
+    targetMonthlyRevenueUnit: '元',
+    averageOrderValueUnit: '元',
+    conversionRateUnit: '%',
+    calculateBudget: '計算預算',
+    calculationResults: '計算結果',
+    monthlyRequiredOrders: '每月所需訂單數',
+    ordersUnit: '筆',
+    dailyApprox: '每日約',
+    monthlyRequiredTraffic: '每月所需流量',
+    visitorsUnit: '人次',
+    suggestedDailyBudget: '建議日廣告預算',
+    monthlyBudgetApprox: '月預算約',
+    suggestedTargetRoas: '建議目標 ROAS',
+    roasDescription: '每投入 1 元廣告費，應產生 {roas} 元營收',
+    facebookDiagnosis: 'Facebook 廣告健檢',
+    diagnosisDescription: '連接 Facebook 廣告帳戶後，點擊下方按鈕開始診斷分析',
+    startFacebookDiagnosis: '開始 Facebook 廣告診斷',
+    analyzing: '分析中...',
+    diagnosisResults: '診斷結果',
+    account: '帳戶',
+    healthScore: '健康分數',
+    recommendations: '建議',
   },
   
   'en': {
@@ -343,6 +411,40 @@ const translations: Record<Locale, TranslationData> = {
     commentPlaceholder: 'Your valuable feedback (optional)',
     submitRating: 'Submit Rating',
     thankYouMessage: 'Thank you for your rating! Your feedback is very important to us.',
+    
+    // Calculator Page Additional
+    connectAccountTitle: 'Connect Accounts for Full Features',
+    connectAccountDescription: 'Connect both Google Analytics and Facebook Ad accounts to access all features',
+    googleAnalytics: 'Google Analytics',
+    facebookAds: 'Facebook Ads',
+    connected: 'Connected',
+    notConnected: 'Not Connected',
+    targetRevenuePlaceholder: 'e.g., 10000',
+    aovPlaceholder: 'e.g., 50',
+    conversionRatePlaceholder: 'e.g., 2.5',
+    targetMonthlyRevenue: 'Target Monthly Revenue',
+    targetMonthlyRevenueUnit: 'USD',
+    averageOrderValueUnit: 'USD',
+    conversionRateUnit: '%',
+    calculateBudget: 'Calculate Budget',
+    calculationResults: 'Calculation Results',
+    monthlyRequiredOrders: 'Monthly Required Orders',
+    ordersUnit: 'orders',
+    dailyApprox: 'Daily approx.',
+    monthlyRequiredTraffic: 'Monthly Required Traffic',
+    visitorsUnit: 'visitors',
+    suggestedDailyBudget: 'Suggested Daily Budget',
+    monthlyBudgetApprox: 'Monthly budget approx.',
+    suggestedTargetRoas: 'Suggested Target ROAS',
+    roasDescription: 'For every $1 spent on ads, should generate ${roas} in revenue',
+    facebookDiagnosis: 'Facebook Ad Health Check',
+    diagnosisDescription: 'After connecting Facebook Ad account, click the button below to start diagnostic analysis',
+    startFacebookDiagnosis: 'Start Facebook Ad Diagnosis',
+    analyzing: 'Analyzing...',
+    diagnosisResults: 'Diagnosis Results',
+    account: 'Account',
+    healthScore: 'Health Score',
+    recommendations: 'Recommendations',
   },
   
   'ja': {
@@ -458,6 +560,40 @@ const translations: Record<Locale, TranslationData> = {
     commentPlaceholder: '貴重なご意見（任意）',
     submitRating: '評価を送信',
     thankYouMessage: '評価をありがとうございます！あなたのフィードバックは私たちにとって非常に重要です。',
+    
+    // Calculator Page Additional
+    connectAccountTitle: '完全な機能を使用するためにアカウントを接続',
+    connectAccountDescription: 'すべての機能にアクセスするにはGoogle AnalyticsとFacebook広告アカウントの両方を接続する必要があります',
+    googleAnalytics: 'Google Analytics',
+    facebookAds: 'Facebook広告',
+    connected: '接続済み',
+    notConnected: '未接続',
+    targetRevenuePlaceholder: '例：1000000',
+    aovPlaceholder: '例：6000',
+    conversionRatePlaceholder: '例：2.5',
+    targetMonthlyRevenue: '目標月間売上',
+    targetMonthlyRevenueUnit: '円',
+    averageOrderValueUnit: '円',
+    conversionRateUnit: '%',
+    calculateBudget: '予算計算',
+    calculationResults: '計算結果',
+    monthlyRequiredOrders: '月間必要注文数',
+    ordersUnit: '件',
+    dailyApprox: '日次約',
+    monthlyRequiredTraffic: '月間必要トラフィック',
+    visitorsUnit: '訪問者',
+    suggestedDailyBudget: '推奨日次予算',
+    monthlyBudgetApprox: '月次予算約',
+    suggestedTargetRoas: '推奨目標ROAS',
+    roasDescription: '広告費1円あたり{roas}円の収益を生み出す必要があります',
+    facebookDiagnosis: 'Facebook広告健康診断',
+    diagnosisDescription: 'Facebook広告アカウント接続後、下のボタンをクリックして診断分析を開始',
+    startFacebookDiagnosis: 'Facebook広告診断開始',
+    analyzing: '分析中...',
+    diagnosisResults: '診断結果',
+    account: 'アカウント',
+    healthScore: '健康スコア',
+    recommendations: '推奨事項',
   },
 };
 

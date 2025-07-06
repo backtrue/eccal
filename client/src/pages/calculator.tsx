@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Calculator as CalcIcon, TrendingUp, Target, ShoppingCart, BarChart3, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
+import { Facebook } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,18 +20,18 @@ import { getTranslations, type Locale } from "@/lib/i18n";
 import { trackEvent } from "@/lib/analytics";
 import { trackCalculatorUsage, trackMetaEvent } from "@/lib/meta-pixel";
 
-const createCalculatorSchema = (t: any) => z.object({
+const createCalculatorSchema = (locale: Locale) => z.object({
   targetRevenue: z.preprocess(
     (a) => (a === '' ? undefined : a),
-    z.number({ invalid_type_error: "目標營業額必須是數字" }).positive("目標營業額必須大於 0")
+    z.number({ invalid_type_error: locale === 'zh-TW' ? "目標營業額必須是數字" : locale === 'en' ? "Target revenue must be a number" : "目標売上は数値である必要があります" }).positive(locale === 'zh-TW' ? "目標營業額必須大於 0" : locale === 'en' ? "Target revenue must be greater than 0" : "目標売上は0より大きい必要があります")
   ),
   averageOrderValue: z.preprocess(
     (a) => (a === '' ? undefined : a),
-    z.number({ invalid_type_error: "客單價必須是數字" }).positive("客單價必須大於 0")
+    z.number({ invalid_type_error: locale === 'zh-TW' ? "客單價必須是數字" : locale === 'en' ? "Average order value must be a number" : "平均注文額は数値である必要があります" }).positive(locale === 'zh-TW' ? "客單價必須大於 0" : locale === 'en' ? "Average order value must be greater than 0" : "平均注文額は0より大きい必要があります")
   ),
   conversionRate: z.preprocess(
     (a) => (a === '' ? undefined : a),
-    z.number({ invalid_type_error: "轉換率必須是數字" }).positive("轉換率必須大於 0").max(100, "轉換率不能超過 100%")
+    z.number({ invalid_type_error: locale === 'zh-TW' ? "轉換率必須是數字" : locale === 'en' ? "Conversion rate must be a number" : "コンバージョン率は数値である必要があります" }).positive(locale === 'zh-TW' ? "轉換率必須大於 0" : locale === 'en' ? "Conversion rate must be greater than 0" : "コンバージョン率は0より大きい必要があります").max(100, locale === 'zh-TW' ? "轉換率不能超過 100%" : locale === 'en' ? "Conversion rate cannot exceed 100%" : "コンバージョン率は100%を超えることはできません")
   ),
   selectedGaProperty: z.string().optional(),
 });
@@ -65,7 +66,7 @@ export default function Calculator({ locale }: CalculatorProps) {
   );
 
   const form = useForm<CalculatorFormData>({
-    resolver: zodResolver(createCalculatorSchema(t)),
+    resolver: zodResolver(createCalculatorSchema(locale)),
     defaultValues: {
       targetRevenue: undefined,
       averageOrderValue: undefined,
@@ -136,7 +137,12 @@ export default function Calculator({ locale }: CalculatorProps) {
   };
 
   const formatNumber = (num: number) => {
-    return num.toLocaleString('zh-TW');
+    const localeMap = {
+      'zh-TW': 'zh-TW',
+      'en': 'en-US', 
+      'ja': 'ja-JP'
+    };
+    return num.toLocaleString(localeMap[locale]);
   };
 
   return (
@@ -151,9 +157,9 @@ export default function Calculator({ locale }: CalculatorProps) {
               <div className="bg-blue-600 p-3 rounded-lg">
                 <CalcIcon className="text-white w-8 h-8" />
               </div>
-              <h1 className="text-3xl font-bold text-gray-900">廣告預算計算機</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{t.calculator}</h1>
             </div>
-            <p className="text-lg text-gray-600">設定目標營收，AI 智能分析廣告成效</p>
+            <p className="text-lg text-gray-600">{t.calculatorDescription}</p>
           </div>
         </div>
       </div>
@@ -165,10 +171,10 @@ export default function Calculator({ locale }: CalculatorProps) {
           <Card className="border-blue-200 bg-blue-50">
             <CardContent className="p-6">
               <h2 className="text-xl font-semibold text-blue-900 mb-3 text-center">
-                連接帳戶以使用完整功能
+                {t.connectAccountTitle}
               </h2>
               <p className="text-blue-700 mb-6 text-center">
-                需要同時連接 Google Analytics 和 Facebook 廣告帳戶才能使用所有功能
+                {t.connectAccountDescription}
               </p>
               
               {/* Platform Connection Status */}
@@ -178,9 +184,9 @@ export default function Calculator({ locale }: CalculatorProps) {
                   <div className="flex items-center gap-3">
                     <div className={`w-4 h-4 rounded-full ${isGoogleConnected ? 'bg-green-500' : 'bg-gray-300'}`}></div>
                     <div>
-                      <div className="font-medium text-gray-900">Google Analytics</div>
+                      <div className="font-medium text-gray-900">{t.googleAnalytics}</div>
                       <div className={`text-sm ${isGoogleConnected ? 'text-green-600' : 'text-gray-500'}`}>
-                        {isGoogleConnected ? '已連接' : '未連接'}
+                        {isGoogleConnected ? t.connected : t.notConnected}
                       </div>
                     </div>
                   </div>
@@ -192,9 +198,9 @@ export default function Calculator({ locale }: CalculatorProps) {
                   <div className="flex items-center gap-3">
                     <div className={`w-4 h-4 rounded-full ${isFacebookConnected ? 'bg-green-500' : 'bg-gray-300'}`}></div>
                     <div>
-                      <div className="font-medium text-gray-900">Facebook 廣告</div>
+                      <div className="font-medium text-gray-900">{t.facebookAds}</div>
                       <div className={`text-sm ${isFacebookConnected ? 'text-green-600' : 'text-gray-500'}`}>
-                        {isFacebookConnected ? '已連接' : '未連接'}
+                        {isFacebookConnected ? t.connected : t.notConnected}
                       </div>
                     </div>
                   </div>
@@ -310,12 +316,12 @@ export default function Calculator({ locale }: CalculatorProps) {
                       <FormItem>
                         <FormLabel className="flex items-center gap-2">
                           <TrendingUp className="h-4 w-4" />
-                          目標月營收 (元)
+                          {t.targetMonthlyRevenue} ({t.targetMonthlyRevenueUnit})
                         </FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
-                            placeholder="例如：300000" 
+                            placeholder={t.targetRevenuePlaceholder} 
                             {...field}
                             onChange={(e) => {
                               const value = e.target.value;
@@ -335,12 +341,12 @@ export default function Calculator({ locale }: CalculatorProps) {
                       <FormItem>
                         <FormLabel className="flex items-center gap-2">
                           <ShoppingCart className="h-4 w-4" />
-                          平均訂單價值 (元)
+                          {t.averageOrderValue} ({t.averageOrderValueUnit})
                         </FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
-                            placeholder="例如：1500" 
+                            placeholder={t.aovPlaceholder} 
                             {...field}
                             onChange={(e) => {
                               const value = e.target.value;
@@ -360,13 +366,13 @@ export default function Calculator({ locale }: CalculatorProps) {
                       <FormItem>
                         <FormLabel className="flex items-center gap-2">
                           <BarChart3 className="h-4 w-4" />
-                          轉換率 (%)
+                          {t.conversionRate} ({t.conversionRateUnit})
                         </FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
                             step="0.01"
-                            placeholder="例如：2.5" 
+                            placeholder={t.conversionRatePlaceholder} 
                             {...field}
                             onChange={(e) => {
                               const value = e.target.value;
@@ -380,7 +386,7 @@ export default function Calculator({ locale }: CalculatorProps) {
                   />
 
                   <Button type="submit" className="w-full" size="lg">
-                    計算預算
+                    {t.calculateBudget}
                   </Button>
                 </form>
               </Form>
@@ -391,35 +397,35 @@ export default function Calculator({ locale }: CalculatorProps) {
           {results && (
             <Card>
               <CardHeader>
-                <CardTitle>計算結果</CardTitle>
+                <CardTitle>{t.calculationResults}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div className="bg-blue-50 p-4 rounded-lg">
-                      <h3 className="font-semibold text-blue-900 mb-2">每月所需訂單數</h3>
-                      <p className="text-2xl font-bold text-blue-600">{formatNumber(results.requiredOrders)} 筆</p>
-                      <p className="text-sm text-blue-700">每日約 {formatNumber(Math.round(results.requiredOrders / 30))} 筆</p>
+                      <h3 className="font-semibold text-blue-900 mb-2">{t.monthlyRequiredOrders}</h3>
+                      <p className="text-2xl font-bold text-blue-600">{formatNumber(results.requiredOrders)} {t.ordersUnit}</p>
+                      <p className="text-sm text-blue-700">{t.dailyApprox} {formatNumber(Math.round(results.requiredOrders / 30))} {t.ordersUnit}</p>
                     </div>
                     
                     <div className="bg-green-50 p-4 rounded-lg">
-                      <h3 className="font-semibold text-green-900 mb-2">每月所需流量</h3>
-                      <p className="text-2xl font-bold text-green-600">{formatNumber(results.monthlyTraffic)} 人次</p>
-                      <p className="text-sm text-green-700">每日約 {formatNumber(results.dailyTraffic)} 人次</p>
+                      <h3 className="font-semibold text-green-900 mb-2">{t.monthlyRequiredTraffic}</h3>
+                      <p className="text-2xl font-bold text-green-600">{formatNumber(results.monthlyTraffic)} {t.visitorsUnit}</p>
+                      <p className="text-sm text-green-700">{t.dailyApprox} {formatNumber(results.dailyTraffic)} {t.visitorsUnit}</p>
                     </div>
                   </div>
                   
                   <div className="space-y-4">
                     <div className="bg-purple-50 p-4 rounded-lg">
-                      <h3 className="font-semibold text-purple-900 mb-2">建議日廣告預算</h3>
-                      <p className="text-2xl font-bold text-purple-600">NT$ {formatNumber(results.dailyAdBudget)}</p>
-                      <p className="text-sm text-purple-700">月預算約 NT$ {formatNumber(results.monthlyAdBudget)}</p>
+                      <h3 className="font-semibold text-purple-900 mb-2">{t.suggestedDailyBudget}</h3>
+                      <p className="text-2xl font-bold text-purple-600">{t.currency === 'USD' ? '$' : t.currency === 'JPY' ? '¥' : 'NT$'} {formatNumber(results.dailyAdBudget)}</p>
+                      <p className="text-sm text-purple-700">{t.monthlyBudgetApprox} {t.currency === 'USD' ? '$' : t.currency === 'JPY' ? '¥' : 'NT$'} {formatNumber(results.monthlyAdBudget)}</p>
                     </div>
                     
                     <div className="bg-orange-50 p-4 rounded-lg">
-                      <h3 className="font-semibold text-orange-900 mb-2">建議目標 ROAS</h3>
+                      <h3 className="font-semibold text-orange-900 mb-2">{t.suggestedTargetRoas}</h3>
                       <p className="text-2xl font-bold text-orange-600">{results.targetRoas.toFixed(1)}x</p>
-                      <p className="text-sm text-orange-700">每投入 1 元廣告費，應產生 {results.targetRoas.toFixed(1)} 元營收</p>
+                      <p className="text-sm text-orange-700">{t.roasDescription.replace('{roas}', results.targetRoas.toFixed(1))}</p>
                     </div>
                   </div>
                 </div>
@@ -429,12 +435,12 @@ export default function Calculator({ locale }: CalculatorProps) {
                   <div className="mt-8 pt-6 border-t">
                     <div className="flex items-center gap-2 mb-4">
                       <Facebook className="h-5 w-5 text-blue-600" />
-                      <h3 className="text-lg font-semibold">Facebook 廣告健檢</h3>
+                      <h3 className="text-lg font-semibold">{t.facebookDiagnosis}</h3>
                     </div>
                     
                     <div className="text-center py-6">
                       <p className="text-gray-600 mb-4">
-                        連接 Facebook 廣告帳戶後，點擊下方按鈕開始診斷分析
+                        {t.diagnosisDescription}
                       </p>
                       <Button 
                         onClick={handleDiagnosis}
@@ -444,10 +450,10 @@ export default function Calculator({ locale }: CalculatorProps) {
                         {diagnosisMutation.isPending ? (
                           <>
                             <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                            分析中...
+                            {t.analyzing}
                           </>
                         ) : (
-                          '開始 Facebook 廣告診斷'
+                          t.startFacebookDiagnosis
                         )}
                       </Button>
                     </div>
@@ -455,12 +461,12 @@ export default function Calculator({ locale }: CalculatorProps) {
                     {/* Diagnosis Results */}
                     {diagnosisMutation.data && (
                       <div className="mt-6 p-6 bg-gray-50 rounded-lg">
-                        <h4 className="font-semibold text-gray-900 mb-3">診斷結果</h4>
+                        <h4 className="font-semibold text-gray-900 mb-3">{t.diagnosisResults}</h4>
                         <div className="space-y-2 text-sm text-gray-600">
-                          <p>帳戶: {diagnosisMutation.data.accountName}</p>
-                          <p>健康分數: {diagnosisMutation.data.healthScore}/100</p>
+                          <p>{t.account}: {diagnosisMutation.data.accountName}</p>
+                          <p>{t.healthScore}: {diagnosisMutation.data.healthScore}/100</p>
                           <div className="mt-4">
-                            <h5 className="font-medium mb-2">建議:</h5>
+                            <h5 className="font-medium mb-2">{t.recommendations}:</h5>
                             <ul className="list-disc list-inside space-y-1">
                               {diagnosisMutation.data.recommendations?.map((rec: string, index: number) => (
                                 <li key={index}>{rec}</li>
