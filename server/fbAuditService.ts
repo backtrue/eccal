@@ -451,8 +451,13 @@ export class FbAuditService {
       ];
 
       // 為未達標指標生成 AI 建議
+      console.log('開始為未達標指標生成 AI 建議...');
       for (const comparison of comparisons) {
+        console.log(`檢查指標: ${comparison.metric}, 狀態: ${comparison.status}, 目標: ${comparison.target}, 實際: ${comparison.actual}`);
+        
         if (comparison.status === 'not_achieved') {
+          console.log(`指標 ${comparison.metric} 未達標，開始生成建議...`);
+          
           if (comparison.metric === 'dailySpend') {
             comparison.advice = await this.generateDailySpendAdvice(
               comparison.target,
@@ -476,12 +481,14 @@ export class FbAuditService {
             );
           } else if (comparison.metric === 'ctr' && accessToken && adAccountId) {
             // CTR 未達標時調用新的 CTR 建議函數
+            console.log('開始生成 CTR 建議，參數:', { accessToken: accessToken?.length, adAccountId, target: comparison.target, actual: comparison.actual });
             comparison.advice = await this.generateCTRAdvice(
               accessToken,
               adAccountId,
               comparison.target,
               comparison.actual
             );
+            console.log('CTR 建議生成完成，長度:', comparison.advice?.length);
           } else {
             comparison.advice = await this.generateAIAdvice(
               comparison.metric,
@@ -796,36 +803,52 @@ ${adSetRecommendation}
 
       console.log(`找到 ${data.data.length} 筆原始廣告數據`);
 
-      // 簡化處理邏輯：找曝光超過500的最高CTR廣告
-      const processedData = data.data
-        .filter((item: any) => item.ad_name && item.ad_name !== '(not set)')
-        .map((item: any) => {
-          // 解析購買數
-          let purchases = 0;
-          if (item.actions && Array.isArray(item.actions)) {
-            const purchaseAction = item.actions.find((action: any) => action.action_type === 'purchase');
-            if (purchaseAction && purchaseAction.value) {
-              purchases = parseInt(purchaseAction.value);
-            }
+      // 第一步：檢查有廣告名稱的數據
+      const withNames = data.data.filter((item: any) => item.ad_name && item.ad_name !== '(not set)');
+      console.log(`有廣告名稱的數據：${withNames.length} 筆`);
+
+      // 第二步：處理數據
+      const mapped = withNames.map((item: any) => {
+        // 解析購買數
+        let purchases = 0;
+        if (item.actions && Array.isArray(item.actions)) {
+          const purchaseAction = item.actions.find((action: any) => action.action_type === 'purchase');
+          if (purchaseAction && purchaseAction.value) {
+            purchases = parseInt(purchaseAction.value);
           }
-          
-          const ctr = parseFloat(item.ctr || '0');
-          const outboundCtr = parseFloat(item.outbound_clicks_ctr || '0');
-          const spend = parseFloat(item.spend || '0');
-          const impressions = parseInt(item.impressions || '0');
-          
-          return {
-            adName: item.ad_name,
-            ctr,
-            outboundCtr,
-            purchases,
-            spend,
-            impressions
-          };
-        })
-        .filter((item: any) => item.impressions >= 500 && item.ctr > 0) // 曝光超過500且有CTR
-        .sort((a: any, b: any) => b.ctr - a.ctr) // 按CTR從高到低排序
-        .slice(0, 3); // 取前三名
+        }
+        
+        const ctr = parseFloat(item.ctr || '0');
+        const outboundCtr = parseFloat(item.outbound_clicks_ctr || '0');
+        const spend = parseFloat(item.spend || '0');
+        const impressions = parseInt(item.impressions || '0');
+        
+        return {
+          adName: item.ad_name,
+          ctr,
+          outboundCtr,
+          purchases,
+          spend,
+          impressions
+        };
+      });
+
+      // 第三步：檢查曝光和CTR條件
+      const withImpressions = mapped.filter((item: any) => item.impressions >= 500);
+      console.log(`曝光 >= 500 的廣告：${withImpressions.length} 筆`);
+      
+      const withCtr = mapped.filter((item: any) => item.ctr > 0);
+      console.log(`有 CTR 的廣告：${withCtr.length} 筆`);
+      
+      const qualified = mapped.filter((item: any) => item.impressions >= 500 && item.ctr > 0);
+      console.log(`符合條件（曝光>=500 且 CTR>0）的廣告：${qualified.length} 筆`);
+
+      // 第四步：排序並取前三名
+      const processedData = qualified
+        .sort((a: any, b: any) => b.ctr - a.ctr)
+        .slice(0, 3);
+        
+      console.log(`排序後取前3名：${processedData.length} 筆`);
 
       console.log('處理後的 Hero Post 數據:', processedData);
       console.log(`最終篩選出 ${processedData.length} 個 Hero Post`);
@@ -833,37 +856,43 @@ ${adSetRecommendation}
       // 如果沒有找到 Hero Post，記錄詳細原因並嘗試降低門檻
       if (processedData.length === 0) {
         console.log('沒有找到符合條件的 Hero Post，嘗試降低門檻...');
-        console.log('- 原始數據數量:', data.data.length);
-        console.log('- 有廣告名稱的數量:', data.data.filter((item: any) => item.ad_name && item.ad_name !== '(not set)').length);
-        console.log('- 曝光超過500的數量:', data.data.filter((item: any) => parseInt(item.impressions || '0') >= 500).length);
-        console.log('- 有CTR的數量:', data.data.filter((item: any) => parseFloat(item.ctr || '0') > 0).length);
+        console.log('原始數據樣本（前5筆）:');
+        data.data.slice(0, 5).forEach((item: any, index: number) => {
+          console.log(`樣本 ${index + 1}:`, {
+            ad_name: item.ad_name,
+            ctr: item.ctr,
+            impressions: item.impressions,
+            spend: item.spend
+          });
+        });
         
         // 降低門檻：只要有CTR且曝光超過100即可
-        const fallbackData = data.data
-          .filter((item: any) => item.ad_name && item.ad_name !== '(not set)')
-          .map((item: any) => {
-            let purchases = 0;
-            if (item.actions && Array.isArray(item.actions)) {
-              const purchaseAction = item.actions.find((action: any) => action.action_type === 'purchase');
-              if (purchaseAction && purchaseAction.value) {
-                purchases = parseInt(purchaseAction.value);
-              }
-            }
-            
-            return {
-              adName: item.ad_name,
-              ctr: parseFloat(item.ctr || '0'),
-              outboundCtr: parseFloat(item.outbound_clicks_ctr || '0'),
-              purchases,
-              spend: parseFloat(item.spend || '0'),
-              impressions: parseInt(item.impressions || '0')
-            };
-          })
-          .filter((item: any) => item.impressions >= 100 && item.ctr > 0) // 降低門檻到100曝光
+        console.log('嘗試降低門檻到曝光 >= 100...');
+        const fallbackData = mapped
+          .filter((item: any) => item.impressions >= 100 && item.ctr > 0)
           .sort((a: any, b: any) => b.ctr - a.ctr)
           .slice(0, 3);
           
-        console.log(`降低門檻後找到 ${fallbackData.length} 個 Hero Post`);
+        console.log(`降低門檻（曝光>=100）後找到 ${fallbackData.length} 個 Hero Post`);
+        
+        // 如果還是找不到，再次降低門檻
+        if (fallbackData.length === 0) {
+          console.log('嘗試降低門檻到曝光 >= 10...');
+          const veryLowThreshold = mapped
+            .filter((item: any) => item.impressions >= 10 && item.ctr > 0)
+            .sort((a: any, b: any) => b.ctr - a.ctr)
+            .slice(0, 3);
+          console.log(`極低門檻（曝光>=10）後找到 ${veryLowThreshold.length} 個 Hero Post`);
+          
+          if (veryLowThreshold.length > 0) {
+            veryLowThreshold.forEach((item: any, index: number) => {
+              console.log(`低門檻 Hero Post ${index + 1}:`, item);
+            });
+          }
+          
+          return veryLowThreshold;
+        }
+        
         return fallbackData;
       }
       
@@ -946,14 +975,18 @@ ${adSetRecommendation}
    */
   async generateCTRAdvice(accessToken: string, adAccountId: string, target: number, actual: number): Promise<string> {
     try {
-      console.log('=== ChatGPT CTR 建議生成開始 ===');
-      console.log('目標 CTR:', target);
-      console.log('實際 CTR:', actual);
+      console.log('=== CTR 建議生成開始 ===');
+      console.log('目標 CTR:', target, '%');
+      console.log('實際 CTR:', actual, '%');
+      console.log('廣告帳戶ID:', adAccountId);
+      console.log('Access Token 長度:', accessToken ? accessToken.length : 'undefined');
       
       // 獲取前三名 Hero Post
+      console.log('開始查找 Hero Post...');
       const heroPosts = await this.getHeroPosts(accessToken, adAccountId);
       
-      console.log('前三名 Hero Post:', heroPosts);
+      console.log('Hero Post 查找結果:', heroPosts);
+      console.log('Hero Post 數量:', heroPosts.length);
       
       let heroPostRecommendation = '';
       if (heroPosts.length > 0) {
