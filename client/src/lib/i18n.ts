@@ -146,6 +146,38 @@ export interface TranslationData {
   commentPlaceholder: string;
   submitRating: string;
   thankYouMessage: string;
+  
+  // Additional FB Audit translations
+  connectFacebookPrompt: string;
+  facebookConnected: string;
+  nextSelectAccount: string;
+  selectAccountPrompt: string;
+  noAccountsFound: string;
+  nextSelectPlan: string;
+  selectPlanPrompt: string;
+  noPlansFound: string;
+  nextSelectIndustry: string;
+  selectIndustryPrompt: string;
+  runHealthCheck: string;
+  runStreamHealthCheck: string;
+  fetchingData: string;
+  analyzingMetrics: string;
+  generatingRecommendations: string;
+  processingComplete: string;
+  healthCheckRunning: string;
+  currentProgress: string;
+  waitingResults: string;
+  runAgain: string;
+  backToDashboard: string;
+  metric: string;
+  target: string;
+  actual: string;
+  status: string;
+  recommendation: string;
+  loadingAccounts: string;
+  loadingPlans: string;
+  pleaseSelect: string;
+  createPlanFirst: string;
 }
 
 const translations: Record<Locale, TranslationData> = {
@@ -594,6 +626,38 @@ const translations: Record<Locale, TranslationData> = {
     account: 'アカウント',
     healthScore: '健康スコア',
     recommendations: '推奨事項',
+    
+    // Additional FB Audit translations
+    connectFacebookPrompt: 'Facebookアカウントを接続して広告データを取得してください',
+    facebookConnected: 'Facebookアカウントが接続されました',
+    nextSelectAccount: '次のステップ：広告アカウント選択',
+    selectAccountPrompt: '分析したい広告アカウントを選択してください：',
+    noAccountsFound: '利用可能な広告アカウントが見つかりません',
+    nextSelectPlan: '次のステップ：キャンペーンプラン選択',
+    selectPlanPrompt: '予算プランを選択してください（過去に計算した予算計算結果から選択）：',
+    noPlansFound: '利用可能なキャンペーンプランが見つかりません。まず予算計算機を使用してプランを作成してください。',
+    nextSelectIndustry: '次のステップ：業界タイプ選択',
+    selectIndustryPrompt: 'あなたのビジネスの業界タイプを選択してください：',
+    runHealthCheck: 'ヘルスチェック実行',
+    runStreamHealthCheck: 'ストリーミングヘルスチェック実行',
+    fetchingData: 'Facebook広告データを取得中...',
+    analyzingMetrics: '指標を分析中...',
+    generatingRecommendations: 'AI推奨事項を生成中...',
+    processingComplete: '処理完了',
+    healthCheckRunning: 'ヘルスチェック実行中',
+    currentProgress: '現在の進行状況',
+    waitingResults: '結果をお待ちください...',
+    runAgain: 'ヘルスチェックを再実行',
+    backToDashboard: 'ダッシュボードに戻る',
+    metric: '指標',
+    target: '目標',
+    actual: '実際',
+    status: 'ステータス',
+    recommendation: '推奨事項',
+    loadingAccounts: '広告アカウントを読み込み中...',
+    loadingPlans: 'プランを読み込み中...',
+    pleaseSelect: '選択してください',
+    createPlanFirst: 'まずプランを作成',
   },
 };
 

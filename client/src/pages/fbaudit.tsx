@@ -300,10 +300,10 @@ export default function FbAudit({ locale }: FbAuditProps) {
               variant="outline"
               className="mr-4"
             >
-              {locale === 'zh-TW' ? '重新健檢' : locale === 'en' ? 'Run Health Check Again' : 'ヘルスチェックを再実行'}
+{t.runAgain}
             </Button>
             <Button onClick={() => window.location.href = '/dashboard'}>
-              {locale === 'zh-TW' ? '回到儀表板' : locale === 'en' ? 'Back to Dashboard' : 'ダッシュボードに戻る'}
+{t.backToDashboard}
             </Button>
           </div>
         </div>
@@ -371,16 +371,16 @@ export default function FbAudit({ locale }: FbAuditProps) {
               {!isConnected ? (
                 <div className="text-center py-8">
                   <p className="text-gray-600 mb-6">
-                    {locale === 'zh-TW' ? '請先連接您的 Facebook 帳號以獲取廣告數據' : locale === 'en' ? 'Please connect your Facebook account to get ad data' : 'Facebookアカウントを接続して広告データを取得してください'}
+                    {t.connectFacebookPrompt}
                   </p>
                   <FacebookLoginButton />
                 </div>
               ) : (
                 <div className="text-center py-8">
                   <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-4" />
-                  <p className="text-green-600 font-medium mb-4">{locale === 'zh-TW' ? 'Facebook 帳號已連接' : locale === 'en' ? 'Facebook account connected' : 'Facebookアカウントが接続されました'}</p>
+                  <p className="text-green-600 font-medium mb-4">{t.facebookConnected}</p>
                   <Button onClick={() => setCurrentStep(2)}>
-                    {locale === 'zh-TW' ? '下一步：選擇廣告帳號' : locale === 'en' ? 'Next: Select Ad Account' : '次のステップ：広告アカウント選択'}
+                    {t.nextSelectAccount}
                   </Button>
                 </div>
               )}
