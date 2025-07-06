@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useFbAuditAccounts, useFbAuditPlans, useFbAuditIndustries, useFbAuditCheck } from "@/hooks/useFbAudit";
 import { useFbAuditStream } from "@/hooks/useFbAuditStream";
+import { NPSRating } from "@/components/NPSRating";
 import type { Locale } from "@/lib/i18n";
 
 interface FbAuditProps {
@@ -270,6 +271,16 @@ export default function FbAudit({ locale }: FbAuditProps) {
               );
             })}
           </div>
+
+          {/* NPS 評分組件 */}
+          {(checkMutation.data as any)?.healthCheckId && (
+            <NPSRating 
+              healthCheckId={(checkMutation.data as any).healthCheckId}
+              onRatingSubmitted={() => {
+                console.log('NPS 評分已提交');
+              }}
+            />
+          )}
 
           {/* 操作按鈕 */}
           <div className="text-center">

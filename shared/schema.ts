@@ -552,6 +552,11 @@ export const fbHealthChecks = pgTable('fb_health_checks', {
   roasAdvice: text('roas_advice'),
   ctrAdvice: text('ctr_advice'),
   
+  // NPS 評分功能
+  npsScore: integer('nps_score'), // 1-10 分，null 表示未評分
+  npsComment: text('nps_comment'), // 選填的評分意見
+  npsSubmittedAt: timestamp('nps_submitted_at'), // 評分時間
+  
   // 元數據
   dataStartDate: timestamp('data_start_date').notNull(),
   dataEndDate: timestamp('data_end_date').notNull(),

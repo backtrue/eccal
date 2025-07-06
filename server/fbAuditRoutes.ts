@@ -418,6 +418,71 @@ export function setupFbAuditRoutes(app: Express) {
     }
   });
 
+  // 提交健檢 NPS 評分
+  app.put('/api/fbaudit/check/:id/rating', requireJWTAuth, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { npsScore, npsComment } = req.body;
+      const userId = req.user.id;
+
+      console.log('=== 提交 NPS 評分 ===');
+      console.log('健檢 ID:', id);
+      console.log('用戶 ID:', userId);
+      console.log('評分:', npsScore);
+      console.log('評論:', npsComment);
+
+      // 驗證評分範圍
+      if (!npsScore || npsScore < 1 || npsScore > 10) {
+        return res.status(400).json({
+          success: false,
+          error: 'NPS 評分必須是 1-10 之間的整數'
+        });
+      }
+
+      // 更新健檢記錄的評分
+      const result = await db
+        .update(fbHealthChecks)
+        .set({
+          npsScore: parseInt(npsScore),
+          npsComment: npsComment || null,
+          npsSubmittedAt: new Date(),
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            eq(fbHealthChecks.id, id),
+            eq(fbHealthChecks.userId, userId)
+          )
+        )
+        .returning({ id: fbHealthChecks.id });
+
+      if (result.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: '找不到該健檢記錄或無權限修改'
+        });
+      }
+
+      console.log('NPS 評分提交成功');
+      
+      res.json({
+        success: true,
+        message: 'NPS 評分提交成功',
+        data: {
+          healthCheckId: id,
+          npsScore: parseInt(npsScore),
+          npsComment: npsComment || null
+        }
+      });
+    } catch (error) {
+      console.error('提交 NPS 評分錯誤:', error);
+      res.status(500).json({
+        success: false,
+        error: '提交評分失敗，請稍後再試'
+      });
+    }
+  });
+
   // 測試 Hero Post 查找功能
   app.get('/api/fbaudit/test-hero-posts/:accountId', requireJWTAuth, async (req: Request, res: Response) => {
     try {
