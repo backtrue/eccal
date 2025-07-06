@@ -374,77 +374,48 @@ export class FbAuditService {
   }
 
   /**
-   * 生成日均花費建議 (使用 Gemini 2.5 Pro)
+   * 生成日均花費建議 (使用 ChatGPT 4o mini)
    */
   private async generateDailySpendAdvice(target: number, actual: number): Promise<string> {
     try {
-      console.log('=== Gemini API 調用開始 ===');
+      console.log('=== ChatGPT 日均花費建議生成開始 ===');
       console.log('目標花費:', target);
       console.log('實際花費:', actual);
-      console.log('GEMINI_API_KEY 存在:', !!process.env.GEMINI_API_KEY);
       
       const prompt = `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。目前的廣告活動『日均花費』目標為 ${target.toLocaleString()} 元，實際花費為 ${actual.toLocaleString()} 元，尚未完全達到預算目標。請基於『成交的基礎是足夠的流量，流量的基礎是足夠的預算花費』這個核心邏輯，提供明確的廣告操作建議，確保預算能順利花出，以爭取最大的曝光與流量機會。
 
-請使用 HTML 格式輸出，模仿小黑老師的語調，包含：
-1. 開頭問候和現狀分析
-2. 核心邏輯說明
-3. 3個具體建議，每個建議用 <h4> 標題 + <p> 內容
-4. 結尾鼓勵語`;
+請使用以下格式回答，用小黑老師的親切語調：
 
-      console.log('Gemini prompt:', prompt.substring(0, 200) + '...');
+<div style="background: #f8f9fa; padding: 16px; border-left: 4px solid #007bff; margin: 16px 0;">
+<h3 style="color: #007bff; margin-top: 0;">小黑老師的建議</h3>
+<p>同學，我看了一下你的「日均花費」，目標 ${target.toLocaleString()} 元，實際只花了 ${actual.toLocaleString()} 元...</p>
 
-      // 使用 Gemini 2.5 Pro
-      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=' + process.env.GEMINI_API_KEY, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1000
-          }
-        })
+<h4 style="color: #495057; margin-top: 20px;">🎯 檢查受眾規模</h4>
+<p style="margin-bottom: 16px;">你設定的受眾池是不是太小了？建議適度放寬興趣、行為標籤，或使用類似受眾來擴大觸及範圍。</p>
+
+<h4 style="color: #495057;">💰 提高出價策略</h4>
+<p style="margin-bottom: 16px;">如果使用手動出價可能太低，建議改用「最低成本」出價策略，讓系統自動找到最有效率的花費方式。</p>
+
+<h4 style="color: #495057;">🔄 檢視素材疲勞度</h4>
+<p style="margin-bottom: 16px;">檢查廣告頻率是否超過 3，如果有廣告疲勞請立即更換新的素材，用新鮮感刺激點擊。</p>
+
+<p style="margin-top: 20px; font-weight: bold; color: #007bff;">記住，預算是你獲取流量的彈藥，彈藥沒打完，就別輕易斷定戰場的勝敗。</p>
+</div>`;
+
+      const response = await this.openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 800,
+        temperature: 0.7,
       });
 
-      console.log('Gemini response status:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Gemini API 錯誤:', response.status, errorText);
-        return `Gemini API 錯誤 (${response.status}): ${errorText}`;
-      }
-
-      const data = await response.json();
-      console.log('Gemini 完整回應:', JSON.stringify(data, null, 2));
-      
-      // 檢查多種可能的回應結構
-      let result = '';
-      if (data.candidates && data.candidates[0]) {
-        const candidate = data.candidates[0];
-        console.log('Candidate 結構:', JSON.stringify(candidate, null, 2));
-        
-        if (candidate.content && candidate.content.parts && candidate.content.parts[0]) {
-          result = candidate.content.parts[0].text;
-          console.log('找到 text 內容:', result ? '有內容' : '無內容');
-        } else {
-          console.log('content.parts 結構不符預期');
-        }
-      } else {
-        console.log('candidates 結構不符預期');
-      }
-      
-      if (!result) {
-        result = '暫無建議';
-        console.log('使用預設建議內容');
-      }
-      
-      console.log('=== Gemini API 調用完成 ===');
-      console.log('最終建議內容長度:', result.length);
-      console.log('建議內容預覽:', result.substring(0, 300));
+      const result = response.choices[0].message.content || '暫無建議';
+      console.log('=== ChatGPT 日均花費建議生成完成 ===');
+      console.log('建議內容長度:', result.length);
       
       return result;
     } catch (error) {
-      console.error('Gemini API 調用錯誤:', error);
+      console.error('ChatGPT 日均花費建議生成錯誤:', error);
       return '無法生成建議，請稍後再試';
     }
   }
