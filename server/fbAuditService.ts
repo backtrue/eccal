@@ -111,15 +111,15 @@ export class FbAuditService {
       // 確保廣告帳戶 ID 格式正確，避免重複 act_ 前綴
       const accountId = adAccountId.startsWith('act_') ? adAccountId : `act_${adAccountId}`;
       
-      // 只拉取診斷所需的核心欄位，避免拉取過多不必要的 action types
+      // 使用 actions 但透過 action_breakdowns 限制只拉取 purchase 相關數據
       const fields = [
         'spend',                    // 花費
-        'purchase',                 // 購買數（直接欄位）
-        'purchase_roas',            // 購買 ROAS（直接欄位）
+        'actions',                  // 行動數據（只拉取 purchase）
+        'action_values',            // 行動價值（只拉取 purchase_roas）
         'outbound_clicks_ctr'       // 外連點擊率
       ].join(',');
       
-      const url = `${this.baseUrl}/${accountId}/insights?fields=${fields}&time_range={"since":"${since}","until":"${until}"}&access_token=${accessToken}`;
+      const url = `${this.baseUrl}/${accountId}/insights?fields=${fields}&action_breakdowns=action_type&filtering=[{"field":"action_type","operator":"IN","value":["purchase"]}]&time_range={"since":"${since}","until":"${until}"}&access_token=${accessToken}`;
       
       console.log('Facebook API URL:', url);
       console.log('Ad Account ID:', adAccountId);
@@ -150,13 +150,29 @@ export class FbAuditService {
       console.log('outbound_clicks_ctr:', insights.outbound_clicks_ctr);
       console.log('spend:', insights.spend);
       
-      // 直接使用欄位值，不再解析複雜的 actions 陣列
+      // 使用篩選後的 actions 陣列解析購買數據
       const spend = parseFloat(insights.spend || '0');
-      const purchases = parseInt(insights.purchase || '0');
-      let roas = parseFloat(insights.purchase_roas || '0');
       
-      console.log('Parsed purchases (直接欄位):', purchases);
-      console.log('Parsed ROAS (直接欄位):', roas);
+      // 從篩選後的 actions 陣列中解析購買數
+      let purchases = 0;
+      if (insights.actions && Array.isArray(insights.actions)) {
+        const purchaseAction = insights.actions.find((action: any) => action.action_type === 'purchase');
+        if (purchaseAction && purchaseAction.value) {
+          purchases = parseInt(purchaseAction.value);
+        }
+      }
+      
+      // 從篩選後的 action_values 陣列中解析 ROAS
+      let roas = 0;
+      if (insights.action_values && Array.isArray(insights.action_values)) {
+        const roasAction = insights.action_values.find((action: any) => action.action_type === 'purchase_roas');
+        if (roasAction && roasAction.value) {
+          roas = parseFloat(roasAction.value);
+        }
+      }
+      
+      console.log('Parsed purchases (篩選後的 actions):', purchases);
+      console.log('Parsed ROAS (篩選後的 action_values):', roas);
       
       // 如果 ROAS 沒有數據，手動計算：購買價值 / 廣告花費
       if (roas === 0 && spend > 0) {
@@ -519,11 +535,10 @@ export class FbAuditService {
         'adset_id',
         'adset_name', 
         'spend',
-        'purchase',           // 直接欄位，避免拉取完整 actions 陣列
-        'view_content'        // 直接欄位
+        'actions'             // 限制 actions 只包含 purchase 和 view_content
       ].join(',');
       
-      const url = `${this.baseUrl}/${accountId}/insights?fields=${fields}&level=adset&time_range={"since":"${since}","until":"${until}"}&access_token=${accessToken}`;
+      const url = `${this.baseUrl}/${accountId}/insights?fields=${fields}&level=adset&action_breakdowns=action_type&filtering=[{"field":"action_type","operator":"IN","value":["purchase","view_content"]}]&time_range={"since":"${since}","until":"${until}"}&access_token=${accessToken}`;
       
       console.log('=== 獲取廣告組合數據 ===');
       console.log('API URL:', url.replace(accessToken, accessToken.substring(0, 20) + '...'));
@@ -547,9 +562,21 @@ export class FbAuditService {
       const adSetData = data.data
         .filter((item: any) => item.adset_name && item.adset_name !== '(not set)') // 過濾有效廣告組合
         .map((item: any) => {
-          // 直接使用欄位值，不再解析複雜的 actions 陣列
-          const purchases = parseInt(item.purchase || '0');
-          const viewContent = parseInt(item.view_content || '0');
+          // 從篩選後的 actions 陣列中解析購買數和內容瀏覽數
+          let purchases = 0;
+          let viewContent = 0;
+          
+          if (item.actions && Array.isArray(item.actions)) {
+            const purchaseAction = item.actions.find((action: any) => action.action_type === 'purchase');
+            if (purchaseAction && purchaseAction.value) {
+              purchases = parseInt(purchaseAction.value);
+            }
+            
+            const viewContentAction = item.actions.find((action: any) => action.action_type === 'view_content');
+            if (viewContentAction && viewContentAction.value) {
+              viewContent = parseInt(viewContentAction.value);
+            }
+          }
           
           // 計算轉換率 (purchase/view_content)
           const conversionRate = viewContent > 0 ? (purchases / viewContent) * 100 : 0;
@@ -665,12 +692,13 @@ ${adSetRecommendation}
       const since = startDate.toISOString().split('T')[0];
       const until = endDate.toISOString().split('T')[0];
       
-      // 優化 ROAS 查詢，只拉取必要欄位，避免拉取完整 actions 陣列
+      // ROAS 查詢，限制 actions 只包含 purchase
       const roasUrl = `${this.baseUrl}/${accountId}/insights?` +
         `level=adset&` +
-        `fields=adset_name,website_purchase_roas,purchase,spend&` +
+        `fields=adset_name,website_purchase_roas,actions,spend&` +
+        `action_breakdowns=action_type&` +
+        `filtering=[{"field":"action_type","operator":"IN","value":["purchase"]},{"field":"adset.effective_status","operator":"IN","value":["ACTIVE"]}]&` +
         `time_range={"since":"${since}","until":"${until}"}&` +
-        `filtering=[{"field":"adset.effective_status","operator":"IN","value":["ACTIVE"]}]&` +
         `limit=100&` +
         `access_token=${accessToken}`;
 
@@ -691,12 +719,18 @@ ${adSetRecommendation}
         return [];
       }
 
-      // 處理並排序數據（優化後，使用直接欄位）
+      // 處理並排序數據（使用篩選後的 actions 陣列）
       const processedData = data.data
         .filter((item: any) => item.website_purchase_roas && parseFloat(item.website_purchase_roas || '0') > 0)
         .map((item: any) => {
-          // 直接使用 purchase 欄位，不再解析 actions 陣列
-          const purchases = parseInt(item.purchase || '0');
+          // 從篩選後的 actions 陣列中解析購買數
+          let purchases = 0;
+          if (item.actions && Array.isArray(item.actions)) {
+            const purchaseAction = item.actions.find((action: any) => action.action_type === 'purchase');
+            if (purchaseAction && purchaseAction.value) {
+              purchases = parseInt(purchaseAction.value);
+            }
+          }
           
           return {
             adSetName: item.adset_name,
@@ -740,10 +774,12 @@ ${adSetRecommendation}
       const since = startDate.toISOString().split('T')[0];
       const until = endDate.toISOString().split('T')[0];
       
-      // 獲取廣告層級數據（只拉取 Hero Post 需要的欄位，移除不必要的 actions）
+      // 獲取廣告層級數據（只拉取 Hero Post 需要的欄位，限制 actions 只包含 purchase）
       const heroUrl = `${this.baseUrl}/${accountId}/insights?` +
         `level=ad&` +
-        `fields=ad_name,ctr,outbound_clicks_ctr,spend,impressions,purchase&` +
+        `fields=ad_name,ctr,outbound_clicks_ctr,spend,impressions,actions&` +
+        `action_breakdowns=action_type&` +
+        `filtering=[{"field":"action_type","operator":"IN","value":["purchase"]}]&` +
         `time_range={"since":"${since}","until":"${until}"}&` +
         `limit=100&` +
         `access_token=${accessToken}`;
@@ -790,7 +826,15 @@ ${adSetRecommendation}
         
         const spend = parseFloat(item.spend || '0');
         const impressions = parseInt(item.impressions || '0');
-        const purchases = parseInt(item.purchase || '0');
+        
+        // 從篩選後的 actions 陣列中解析購買數
+        let purchases = 0;
+        if (item.actions && Array.isArray(item.actions)) {
+          const purchaseAction = item.actions.find((action: any) => action.action_type === 'purchase');
+          if (purchaseAction && purchaseAction.value) {
+            purchases = parseInt(purchaseAction.value);
+          }
+        }
         
         console.log(`廣告 ${item.ad_name} 數據解析:`, {
           ctr,
