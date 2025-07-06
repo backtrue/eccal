@@ -676,11 +676,19 @@ ${adSetRecommendation}
       // 確保廣告帳戶 ID 格式正確，避免重複 act_ 前綴
       const accountId = adAccountId.startsWith('act_') ? adAccountId : `act_${adAccountId}`;
       
+      // 計算日期範圍（過去7天）
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - 7);
+      
+      const since = startDate.toISOString().split('T')[0];
+      const until = endDate.toISOString().split('T')[0];
+      
       // 根據 PDF 文件，使用 website_purchase_roas 字段，需要通過 actions 獲取購買數據
       const roasUrl = `${this.baseUrl}/${accountId}/insights?` +
         `level=adset&` +
         `fields=adset_name,website_purchase_roas,actions,spend&` +
-        `time_range={"since":"7","until":"1"}&` +
+        `time_range={"since":"${since}","until":"${until}"}&` +
         `filtering=[{"field":"adset.effective_status","operator":"IN","value":["ACTIVE"]}]&` +
         `limit=100&` +
         `access_token=${accessToken}`;
