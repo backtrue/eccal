@@ -382,30 +382,44 @@ export class FbAuditService {
       console.log('目標花費:', target);
       console.log('實際花費:', actual);
       
-      const prompt = `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。目前的廣告活動『日均花費』目標為 ${target.toLocaleString()} 元，實際花費為 ${actual.toLocaleString()} 元，尚未完全達到預算目標。請基於『成交的基礎是足夠的流量，流量的基礎是足夠的預算花費』這個核心邏輯，提供明確的廣告操作建議，確保預算能順利花出，以爭取最大的曝光與流量機會。
+      const shortfall = target - actual;
+      
+      const prompt = `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請用親切、直接的語調，針對日均花費未達標的情況提供建議。
 
-請使用以下格式回答，用小黑老師的親切語調：
+參考這個範本格式，但不要完全照抄，要依據實際數據來調整：
 
-<div style="background: #f8f9fa; padding: 16px; border-left: 4px solid #007bff; margin: 16px 0;">
-<h3 style="color: #007bff; margin-top: 0;">小黑老師的建議</h3>
-<p>同學，我看了一下你的「日均花費」，目標 ${target.toLocaleString()} 元，實際只花了 ${actual.toLocaleString()} 元...</p>
+「看到你今天的日均目標是 ${target.toLocaleString()} 元，結果只花了 ${actual.toLocaleString()} 元，少了快 ${shortfall.toLocaleString()} 元，這種情況我最有感。
 
-<h4 style="color: #495057; margin-top: 20px;">🎯 檢查受眾規模</h4>
-<p style="margin-bottom: 16px;">你設定的受眾池是不是太小了？建議適度放寬興趣、行為標籤，或使用類似受眾來擴大觸及範圍。</p>
+很多人以為「花不到錢」是好事，代表效率高，但其實完全不是。
+你要知道，成交的基礎是足夠的流量，而流量的基礎就是預算要花得出去。
+你今天沒花到，代表什麼？代表你的曝光量、點擊數、甚至進站流量，全都會少一截。
 
-<h4 style="color: #495057;">💰 提高出價策略</h4>
-<p style="margin-bottom: 16px;">如果使用手動出價可能太低，建議改用「最低成本」出價策略，讓系統自動找到最有效率的花費方式。</p>
+而最常見的三個「沒花完」原因是這些：
 
-<h4 style="color: #495057;">🔄 檢視素材疲勞度</h4>
-<p style="margin-bottom: 16px;">檢查廣告頻率是否超過 3，如果有廣告疲勞請立即更換新的素材，用新鮮感刺激點擊。</p>
+第一，你的受眾太窄，系統找不到人投，當然投不出去。
+第二，你的出價太低，尤其是用手動出價的時候，根本搶不到量。
+第三，素材吸引力不足，CTR 掉到 0.3% 以下，系統也不想幫你推。
 
-<p style="margin-top: 20px; font-weight: bold; color: #007bff;">記住，預算是你獲取流量的彈藥，彈藥沒打完，就別輕易斷定戰場的勝敗。</p>
-</div>`;
+那要怎麼處理？
+我會這樣拆：
+
+👉 如果是受眾太窄，就放寬條件，先看一下目前受眾潛在觸及數是不是低於 20 萬？加點興趣標籤或拉寬年齡帶。
+👉 如果是手動出價，記得檢查競價建議區間，不要硬壓在理想的CPA或CPC。你可以往中上值多加個 5～10%。
+👉 如果是素材問題，這時候就要回頭看連結點擊率了。低於 1% 基本就要換素材，或至少換圖片與標題文案嘗試不同版本組合。
+
+而最保險的做法，是先把廣告預算設成「每日花費上限」，不要用總預算分配，讓系統有機會「完整花完再來談效益」。
+
+記住，你今天花不完，等於漏水的水龍頭，前面流量進不來，後面的轉換根本沒得跑。
+所以別再等「花完再來看數據」，你得先讓錢跑出去，系統才會回你訊號。
+
+請務必記得：廣告不是省錢比賽，是搶曝光的戰爭。花不出去，就等於沒參加比賽。」
+
+請用類似的語調和架構，但要根據實際數據調整，保持小黑老師的親切直接風格。回答時直接輸出HTML格式，不要用markdown包裝。`;
 
       const response = await this.openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [{ role: "user", content: prompt }],
-        max_tokens: 800,
+        max_tokens: 1000,
         temperature: 0.7,
       });
 
