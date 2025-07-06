@@ -415,11 +415,32 @@ export class FbAuditService {
       }
 
       const data = await response.json();
-      console.log('Gemini 回應數據:', JSON.stringify(data, null, 2));
+      console.log('Gemini 完整回應:', JSON.stringify(data, null, 2));
       
-      const result = data.candidates?.[0]?.content?.parts?.[0]?.text || '暫無建議';
+      // 檢查多種可能的回應結構
+      let result = '';
+      if (data.candidates && data.candidates[0]) {
+        const candidate = data.candidates[0];
+        console.log('Candidate 結構:', JSON.stringify(candidate, null, 2));
+        
+        if (candidate.content && candidate.content.parts && candidate.content.parts[0]) {
+          result = candidate.content.parts[0].text;
+          console.log('找到 text 內容:', result ? '有內容' : '無內容');
+        } else {
+          console.log('content.parts 結構不符預期');
+        }
+      } else {
+        console.log('candidates 結構不符預期');
+      }
+      
+      if (!result) {
+        result = '暫無建議';
+        console.log('使用預設建議內容');
+      }
+      
       console.log('=== Gemini API 調用完成 ===');
-      console.log('建議內容:', result.substring(0, 200) + '...');
+      console.log('最終建議內容長度:', result.length);
+      console.log('建議內容預覽:', result.substring(0, 300));
       
       return result;
     } catch (error) {
