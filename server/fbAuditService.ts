@@ -153,7 +153,7 @@ export class FbAuditService {
       // 直接使用欄位值，不再解析複雜的 actions 陣列
       const spend = parseFloat(insights.spend || '0');
       const purchases = parseInt(insights.purchase || '0');
-      const roas = parseFloat(insights.purchase_roas || '0');
+      let roas = parseFloat(insights.purchase_roas || '0');
       
       console.log('Parsed purchases (直接欄位):', purchases);
       console.log('Parsed ROAS (直接欄位):', roas);
