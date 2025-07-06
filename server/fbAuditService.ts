@@ -519,8 +519,7 @@ export class FbAuditService {
         'adset_id',
         'adset_name', 
         'spend',
-        'actions',            // 需要從這裡解析 purchase 和 view_content
-        'video_views'         // 額外的瀏覽指標
+        'actions'             // 從這裡解析 purchase 和 view_content
       ].join(',');
       
       const url = `${this.baseUrl}/${accountId}/insights?fields=${fields}&level=adset&time_range={"since":"${since}","until":"${until}"}&access_token=${accessToken}`;
@@ -563,11 +562,6 @@ export class FbAuditService {
             if (viewContentAction && viewContentAction.value) {
               viewContent = parseInt(viewContentAction.value);
             }
-          }
-          
-          // 如果沒有 view_content，使用 video_views 作為替代
-          if (viewContent === 0) {
-            viewContent = parseInt(item.video_views || '0');
           }
           
           // 計算轉換率 (purchase/view_content)
