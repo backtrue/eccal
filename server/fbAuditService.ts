@@ -335,21 +335,24 @@ export class FbAuditService {
               comparison.target,
               comparison.actual,
               accessToken,
-              adAccountId
+              adAccountId,
+              locale
             );
           } else if (comparison.metric === 'purchases' && accessToken && adAccountId) {
             comparison.advice = await this.generatePurchaseAdvice(
               accessToken,
               adAccountId,
               comparison.target,
-              comparison.actual
+              comparison.actual,
+              locale
             );
           } else if (comparison.metric === 'roas' && accessToken && adAccountId) {
             comparison.advice = await this.generateROASAdvice(
               accessToken,
               adAccountId,
               comparison.target,
-              comparison.actual
+              comparison.actual,
+              locale
             );
           } else {
             comparison.advice = await this.generateAIAdvice(
@@ -468,7 +471,10 @@ export class FbAuditService {
           if (comparison.metric === 'dailySpend') {
             comparison.advice = await this.generateDailySpendAdvice(
               comparison.target,
-              comparison.actual
+              comparison.actual,
+              undefined,
+              undefined,
+              locale
             );
           } else if (comparison.metric === 'purchases' && accessToken && adAccountId) {
             // 購買數未達標時調用新的購買建議函數
@@ -476,7 +482,8 @@ export class FbAuditService {
               accessToken,
               adAccountId,
               comparison.target,
-              comparison.actual
+              comparison.actual,
+              locale
             );
           } else if (comparison.metric === 'roas' && accessToken && adAccountId) {
             // ROAS 未達標時調用新的 ROAS 建議函數
@@ -484,7 +491,8 @@ export class FbAuditService {
               accessToken,
               adAccountId,
               comparison.target,
-              comparison.actual
+              comparison.actual,
+              locale
             );
           } else if (comparison.metric === 'ctr' && accessToken && adAccountId) {
             // CTR 未達標時調用新的 CTR 建議函數
@@ -493,7 +501,8 @@ export class FbAuditService {
               accessToken,
               adAccountId,
               comparison.target,
-              comparison.actual
+              comparison.actual,
+              locale
             );
             console.log('CTR 建議生成完成，長度:', comparison.advice?.length);
           } else {
@@ -613,7 +622,7 @@ export class FbAuditService {
   /**
    * 生成購買數建議 (使用 ChatGPT 4o mini)
    */
-  async generatePurchaseAdvice(accessToken: string, adAccountId: string, target: number, actual: number): Promise<string> {
+  async generatePurchaseAdvice(accessToken: string, adAccountId: string, target: number, actual: number, locale: string = 'zh-TW'): Promise<string> {
     try {
       console.log('=== ChatGPT 購買數建議生成開始 ===');
       console.log('目標購買數:', target);
@@ -642,7 +651,35 @@ ${top3AdSets.map((adSet, index) =>
         adSetRecommendation = '目前沒有找到足夠的廣告組合數據，建議先確認廣告是否正常運行。';
       }
       
-      const prompt = `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對購買數指標提供結構化的優化建議。
+      // 多語言廣告組合推薦內容
+      const adSetRecommendations = {
+        'zh-TW': adSetRecommendation,
+        'en': top3AdSets.length > 0 ? `
+Based on the past 7 days of data analysis, here are your top 3 ad sets with the highest conversion rates:
+
+${top3AdSets.map((adSet, index) => 
+  `${index + 1}. 【${adSet.adSetName}】
+   - Conversion Rate: ${adSet.conversionRate.toFixed(2)}%
+   - Purchases: ${adSet.purchases} times
+   - Spend: ${adSet.spend.toLocaleString()} dollars`
+).join('\n\n')}
+
+I recommend immediately scaling up these high-performing ad sets since they have proven to drive conversions.` : 'Currently no sufficient ad set data found. Please verify if ads are running properly.',
+        'ja': top3AdSets.length > 0 ? `
+過去7日間のデータ分析に基づいて、コンバージョン率が最も高い上位3つの広告セットをご紹介します：
+
+${top3AdSets.map((adSet, index) => 
+  `${index + 1}. 【${adSet.adSetName}】
+   - コンバージョン率：${adSet.conversionRate.toFixed(2)}%
+   - 購入数：${adSet.purchases} 回
+   - 支出：${adSet.spend.toLocaleString()} 円`
+).join('\n\n')}
+
+これらの成果の良い広告セットは既にコンバージョンを証明しているため、すぐに予算を増やすことをお勧めします。` : '現在、十分な広告セットデータが見つかりません。広告が正常に動作しているかをご確認ください。'
+      };
+
+      const prompts = {
+        'zh-TW': `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對購買數指標提供結構化的優化建議。
 
 **數據概況：**
 - 目標購買數：${target} 次
@@ -658,12 +695,63 @@ ${top3AdSets.map((adSet, index) =>
 解釋購買數指標的重要性，以及如何透過「找出轉換率最高的廣告組合」來優化此指標。
 
 ## 3. 具體數據分析和建議
-${adSetRecommendation}
+${adSetRecommendations['zh-TW']}
 
 ## 4. 下一步建議
 針對找出的高轉換率廣告組合，提供具體的加碼日預算建議。
 
-請用小黑老師親切直接的語調，直接輸出HTML格式。每個章節用 <h3> 標籤包裝標題，內容用 <p> 和 <ul> 標籤。`;
+請用小黑老師親切直接的語調，直接輸出HTML格式。每個章節用 <h3> 標籤包裝標題，內容用 <p> 和 <ul> 標籤。`,
+
+        'en': `You are "Teacher Black", a professional Facebook e-commerce advertising expert with over 10 years of experience. Please provide structured optimization recommendations for the purchase metric.
+
+**Data Overview:**
+- Target Purchases: ${target} times
+- Actual Purchases: ${actual} times
+- Gap: ${target - actual} times
+
+Please output recommendations following this structure:
+
+## 1. Current Situation Analysis
+Analyze the gap between target vs actual performance and its impact on overall ad effectiveness.
+
+## 2. Core Strategy Explanation
+Explain the importance of the purchase metric and how to optimize it by "identifying the highest conversion rate ad sets."
+
+## 3. Specific Data Analysis and Recommendations
+${adSetRecommendations['en']}
+
+## 4. Next Step Recommendations
+Provide specific daily budget scaling recommendations for the identified high-conversion ad sets.
+
+Please use Teacher Black's friendly and direct tone, output directly in HTML format. Use <h3> tags for section titles, <p> and <ul> tags for content.`,
+
+        'ja': `あなたは10年以上の経験を持つFacebookeコマース広告の専門家「小黒先生」です。購入数指標に関する構造化された最適化提案を提供してください。
+
+**重要：必ず日本語で回答してください。中国語や英語は使用しないでください。**
+
+**データ概要：**
+- 目標購入数：${target} 回
+- 実際購入数：${actual} 回
+- ギャップ：${target - actual} 回
+
+以下の構造に従って提案を出力してください：
+
+## 1. 現状分析
+目標 vs 実際のパフォーマンスギャップを分析し、全体的な広告効果への影響を説明してください。
+
+## 2. 核心戦略説明
+購入数指標の重要性と、「最高コンバージョン率の広告セットを特定する」ことでこの指標を最適化する方法を説明してください。
+
+## 3. 具体的データ分析と提案
+${adSetRecommendations['ja']}
+
+## 4. 次のステップ提案
+特定された高コンバージョン広告セットに対する具体的な日次予算スケーリング提案を提供してください。
+
+小黒先生の親しみやすく直接的な口調で、HTML形式で直接出力してください。セクションタイトルには<h3>タグ、コンテンツには<p>と<ul>タグを使用してください。すべての内容を日本語で記述してください。`
+      };
+
+      const prompt = prompts[locale as keyof typeof prompts] || prompts['zh-TW'];
 
       const response = await this.openai.chat.completions.create({
         model: "gpt-4o-mini",
@@ -975,7 +1063,7 @@ ${adSetRecommendation}
   /**
    * 生成 ROAS 建議 (使用 ChatGPT 4o mini)
    */
-  async generateROASAdvice(accessToken: string, adAccountId: string, target: number, actual: number): Promise<string> {
+  async generateROASAdvice(accessToken: string, adAccountId: string, target: number, actual: number, locale: string = 'zh-TW'): Promise<string> {
     try {
       console.log('=== ChatGPT ROAS 建議生成開始 ===');
       console.log('目標 ROAS:', target);
@@ -1049,7 +1137,7 @@ ${adSetRecommendation}
   /**
    * 生成 CTR 建議 (使用 ChatGPT 4o mini)
    */
-  async generateCTRAdvice(accessToken: string, adAccountId: string, target: number, actual: number): Promise<string> {
+  async generateCTRAdvice(accessToken: string, adAccountId: string, target: number, actual: number, locale: string = 'zh-TW'): Promise<string> {
     try {
       console.log('=== CTR 建議生成開始 ===');
       console.log('目標 CTR:', target, '%');
@@ -1252,7 +1340,7 @@ ${heroPostRecommendation}
   /**
    * 生成日均花費建議 (使用 ChatGPT 4o mini)
    */
-  private async generateDailySpendAdvice(target: number, actual: number, accessToken: string, adAccountId: string): Promise<string> {
+  private async generateDailySpendAdvice(target: number, actual: number, accessToken?: string, adAccountId?: string, locale: string = 'zh-TW'): Promise<string> {
     try {
       console.log('=== ChatGPT 日均花費建議生成開始 ===');
       console.log('目標花費:', target);
@@ -1380,14 +1468,16 @@ Please provide 2-3 concise, actionable optimization suggestions in English. Keep
 
 Please output in HTML format using <ul> and <li> tags to organize the suggestion list.`,
 
-        'ja': `あなたは「小黒先生」という名前のプロフェッショナルなFacebookeコマース広告コンサルタントです。${industryType}業界において、この広告アカウントの「${metricNames['ja'][metric as keyof typeof metricNames['ja']]}」が目標を下回っています。
+        'ja': `私は「小黒先生」という名前のプロフェッショナルなFacebookeコマース広告コンサルタントです。${industryType}業界において、この広告アカウントの「${metricNames['ja'][metric as keyof typeof metricNames['ja']]}」が目標を下回っています。
 
 目標値：${target}
 実際値：${actual}
 
-日本語で、2-3つの簡潔で実行可能な最適化提案を提供してください。各提案は50文字以内にして、具体的なアクションプランを提供してください。
+**【重要指示】必ず日本語で回答してください。決して中国語や英語を使用しないでください。全ての文章を日本語で書いてください。**
 
-<ul>と<li>タグを使用してHTML形式で出力してください。`
+私は日本語で話すコンサルタントです。以下の形式で日本語のみを使用して、2-3つの簡潔で実行可能な最適化提案を提供します。各提案は50文字以内にして、具体的なアクションプランを日本語で提供します。
+
+<ul>と<li>タグを使用してHTML形式で出力します。すべての内容を必ず日本語で記述します。中国語は絶対に使用しません。`
       };
 
       const prompt = prompts[locale as keyof typeof prompts] || prompts['zh-TW'];
