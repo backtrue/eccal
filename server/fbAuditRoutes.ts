@@ -140,7 +140,9 @@ export function setupFbAuditRoutes(app: Express) {
       const comparisons = await fbAuditService.compareWithTargets(
         actualMetrics,
         planResultId,
-        industryType
+        industryType,
+        user.metaAccessToken,
+        adAccountId
       );
       console.log('Generated comparisons:', comparisons);
 

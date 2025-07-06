@@ -275,7 +275,9 @@ export class FbAuditService {
   async compareWithTargets(
     actualMetrics: HealthCheckMetrics,
     planResultId: string,
-    industryType: string
+    industryType: string,
+    accessToken?: string,
+    adAccountId?: string
   ): Promise<HealthCheckComparison[]> {
     try {
       // 從預算計劃獲取目標值
@@ -354,6 +356,14 @@ export class FbAuditService {
               comparison.target,
               comparison.actual
             );
+          } else if (comparison.metric === 'purchases' && accessToken && adAccountId) {
+            // 購買數未達標時調用新的購買建議函數
+            comparison.advice = await this.generatePurchaseAdvice(
+              accessToken,
+              adAccountId,
+              comparison.target,
+              comparison.actual
+            );
           } else {
             comparison.advice = await this.generateAIAdvice(
               comparison.metric,
@@ -370,6 +380,156 @@ export class FbAuditService {
     } catch (error) {
       console.error('Error comparing with targets:', error);
       throw error;
+    }
+  }
+
+  /**
+   * 獲取廣告組合數據 (過去7天，計算購買轉換率)
+   */
+  async getAdSetInsights(accessToken: string, adAccountId: string): Promise<Array<{
+    adSetId: string;
+    adSetName: string;
+    purchases: number;
+    viewContent: number;
+    conversionRate: number;
+    spend: number;
+  }>> {
+    try {
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - 7); // 過去7天
+
+      const since = startDate.toISOString().split('T')[0];
+      const until = endDate.toISOString().split('T')[0];
+
+      const accountId = adAccountId.startsWith('act_') ? adAccountId : `act_${adAccountId}`;
+      
+      // 獲取廣告組合數據
+      const fields = [
+        'adset_id',
+        'adset_name', 
+        'spend',
+        'actions'
+      ].join(',');
+      
+      const url = `${this.baseUrl}/${accountId}/insights?fields=${fields}&level=adset&time_range={"since":"${since}","until":"${until}"}&access_token=${accessToken}`;
+      
+      console.log('=== 獲取廣告組合數據 ===');
+      console.log('API URL:', url.replace(accessToken, accessToken.substring(0, 20) + '...'));
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`獲取廣告組合數據失敗 ${response.status}:`, errorText);
+        throw new Error(`Facebook API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('廣告組合原始數據:', JSON.stringify(data, null, 2));
+      
+      if (!data.data || data.data.length === 0) {
+        console.log('沒有找到廣告組合數據');
+        return [];
+      }
+
+      const adSetData = data.data
+        .filter((item: any) => item.adset_name && item.adset_name !== '(not set)') // 過濾有效廣告組合
+        .map((item: any) => {
+          // 計算購買數
+          const purchaseAction = item.actions?.find((action: any) => action.action_type === 'purchase');
+          const purchases = purchaseAction ? parseInt(purchaseAction.value) : 0;
+          
+          // 計算內容瀏覽數
+          const viewContentAction = item.actions?.find((action: any) => action.action_type === 'view_content');
+          const viewContent = viewContentAction ? parseInt(viewContentAction.value) : 0;
+          
+          // 計算轉換率 (purchase/view_content)
+          const conversionRate = viewContent > 0 ? (purchases / viewContent) * 100 : 0;
+          
+          return {
+            adSetId: item.adset_id,
+            adSetName: item.adset_name,
+            purchases,
+            viewContent,
+            conversionRate,
+            spend: parseFloat(item.spend || '0')
+          };
+        })
+        .filter((item: any) => item.viewContent > 0) // 只保留有內容瀏覽數的廣告組合
+        .sort((a: any, b: any) => b.conversionRate - a.conversionRate); // 按轉換率排序
+
+      console.log('處理後的廣告組合數據:', adSetData.slice(0, 3));
+      
+      return adSetData;
+    } catch (error) {
+      console.error('獲取廣告組合數據錯誤:', error);
+      return [];
+    }
+  }
+
+  /**
+   * 生成購買數建議 (使用 ChatGPT 4o mini)
+   */
+  async generatePurchaseAdvice(accessToken: string, adAccountId: string, target: number, actual: number): Promise<string> {
+    try {
+      console.log('=== ChatGPT 購買數建議生成開始 ===');
+      console.log('目標購買數:', target);
+      console.log('實際購買數:', actual);
+      
+      // 獲取前三名轉換率最高的廣告組合
+      const topAdSets = await this.getAdSetInsights(accessToken, adAccountId);
+      const top3AdSets = topAdSets.slice(0, 3);
+      
+      console.log('前三名廣告組合:', top3AdSets);
+      
+      let adSetRecommendation = '';
+      if (top3AdSets.length > 0) {
+        adSetRecommendation = `
+根據過去7天的數據分析，這是你轉換率最高的前三個廣告組合：
+
+${top3AdSets.map((adSet, index) => 
+  `${index + 1}. 【${adSet.adSetName}】
+   - 轉換率：${adSet.conversionRate.toFixed(2)}%
+   - 購買數：${adSet.purchases} 次
+   - 花費：${adSet.spend.toLocaleString()} 元`
+).join('\n\n')}
+
+我建議你立即對這些成效好的廣告組合進行加碼，因為它們已經證明能夠帶來轉換。`;
+      } else {
+        adSetRecommendation = '目前沒有找到足夠的廣告組合數據，建議先確認廣告是否正常運行。';
+      }
+      
+      const prompt = `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。目前的廣告活動『購買數』目標為 ${target} 次，實際達成了 ${actual} 次，成效有點落後。請基於『分析並加碼成效好的廣告組合』這個核心邏輯，提供下一步的操作建議，目的是複製成功經驗，趕快挽救頹勢。
+
+請用小黑老師親切直接的語調，參考以下結構：
+
+1. 開頭分析現況（目標vs實際）
+2. 核心策略說明（加碼成效好的廣告組合）
+3. 具體數據分析和建議（結合以下廣告組合數據）
+4. 操作步驟建議
+5. 結尾鼓勵
+
+廣告組合數據：
+${adSetRecommendation}
+
+請直接輸出HTML格式，保持小黑老師的專業和親切語調。`;
+
+      const response = await this.openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 1000,
+        temperature: 0.7,
+      });
+
+      const result = response.choices[0].message.content || '暫無建議';
+      console.log('=== ChatGPT 購買數建議生成完成 ===');
+      console.log('建議內容長度:', result.length);
+      
+      return result;
+    } catch (error) {
+      console.error('ChatGPT 購買數建議生成錯誤:', error);
+      return '無法生成購買數建議，請稍後再試';
     }
   }
 
