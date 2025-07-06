@@ -773,13 +773,32 @@ ${adSetRecommendation}
       const withNames = data.data.filter((item: any) => item.ad_name && item.ad_name !== '(not set)');
       console.log(`有廣告名稱的數據：${withNames.length} 筆`);
 
-      // 第二步：處理數據（簡化，不再解析複雜的 actions 陣列）
+      // 第二步：處理數據（修復 outbound_clicks_ctr 陣列解析）
       const mapped = withNames.map((item: any) => {
         const ctr = parseFloat(item.ctr || '0');
-        const outboundCtr = parseFloat(item.outbound_clicks_ctr || '0');
+        
+        // 修復：outbound_clicks_ctr 是陣列格式，需要提取 value
+        let outboundCtr = 0;
+        if (item.outbound_clicks_ctr && Array.isArray(item.outbound_clicks_ctr)) {
+          const outboundAction = item.outbound_clicks_ctr.find((action: any) => action.action_type === 'outbound_click');
+          if (outboundAction && outboundAction.value) {
+            outboundCtr = parseFloat(outboundAction.value);
+          }
+        } else if (item.outbound_clicks_ctr) {
+          outboundCtr = parseFloat(item.outbound_clicks_ctr);
+        }
+        
         const spend = parseFloat(item.spend || '0');
         const impressions = parseInt(item.impressions || '0');
-        const purchases = parseInt(item.purchase || '0'); // 直接使用 purchase 欄位
+        const purchases = parseInt(item.purchase || '0');
+        
+        console.log(`廣告 ${item.ad_name} 數據解析:`, {
+          ctr,
+          outboundCtr,
+          purchases,
+          spend,
+          impressions
+        });
         
         return {
           adName: item.ad_name,
@@ -979,28 +998,50 @@ ${heroPosts.map((hero, index) =>
       console.log('推薦內容長度:', heroPostRecommendation.length);
       console.log('推薦內容預覽:', heroPostRecommendation.substring(0, 200) + '...');
 
-      const messages = [
-        {
-          role: 'system',
-          content: '你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。專精於透過分析高連外點擊率廣告來優化整體廣告表現，請以專業且實用的語調提供廣告優化建議。'
-        },
-        {
-          role: 'user',
-          content: `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。目前的廣告『CTR』目標為${target.toFixed(2)}%，實際達成了${actual.toFixed(2)}%，成效有點落後。
+      // 確保 Hero Post 數據被正確整合到建議中
+      let baseAdvice = `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。目前的廣告『CTR』目標為${target.toFixed(2)}%，實際達成了${actual.toFixed(2)}%，成效有點落後。
 
-請基於『分析高CTR的廣告用來投放更多不同受眾』這個核心邏輯，提供下一步的操作建議，目的是找出我稱之為「Hero Post」的高效廣告，趕快挽救頹勢。
+請基於『分析高CTR的廣告用來投放更多不同受眾』這個核心邏輯，提供下一步的操作建議，目的是找出我稱之為「Hero Post」的高效廣告，趕快挽救頹勢。`;
+
+      // 如果有 Hero Post 數據，直接加入建議內容
+      if (heroPosts.length > 0) {
+        baseAdvice += `
 
 ${heroPostRecommendation}
 
-請針對以下核心策略提供具體建議：
-1. 如何利用 Hero Post 測試更多廣告組合
-2. 如何用 Hero Post 開發新的受眾群體
-3. 如何透過 ASC 放大 Hero Post 創造額外成效
-4. 如何分析 Hero Post 的成功要素並複製應用`
+🚀 基於以上 Hero Post 數據，請針對以下核心策略提供具體建議：
+1. 如何利用這些 Hero Post 測試更多廣告組合
+2. 如何用這些 Hero Post 開發新的受眾群體  
+3. 如何透過 ASC 放大這些 Hero Post 創造額外成效
+4. 如何分析這些 Hero Post 的成功要素並複製應用
+
+請提供具體的執行步驟和注意事項。`;
+      } else {
+        baseAdvice += `
+
+${heroPostRecommendation}
+
+請針對以下面向提供實用建議：
+1. 如何提升現有廣告的點擊率
+2. 創意和文案優化方向
+3. 受眾設定調整建議
+4. 預算分配策略`;
+      }
+
+      const messages = [
+        {
+          role: 'system',
+          content: '你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。專精於透過分析高連外點擊率廣告來優化整體廣告表現，請以專業且實用的語調提供廣告優化建議。直接輸出HTML格式，不要用markdown包裝。'
+        },
+        {
+          role: 'user',
+          content: baseAdvice
         }
       ];
 
       console.log('=== 發送 CTR 建議請求到 ChatGPT ===');
+      console.log('baseAdvice 完整內容:', baseAdvice);
+      console.log('baseAdvice 長度:', baseAdvice.length);
       console.log('請求內容:', JSON.stringify(messages, null, 2));
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
