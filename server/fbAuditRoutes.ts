@@ -417,4 +417,36 @@ export function setupFbAuditRoutes(app: Express) {
       });
     }
   });
+
+  // 測試 Hero Post 查找功能
+  app.get('/api/fbaudit/test-hero-posts/:accountId', requireJWTAuth, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      const { accountId } = req.params;
+      
+      if (!user.metaAccessToken) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Facebook access token not found' 
+        });
+      }
+
+      console.log('測試 Hero Post 查找，帳戶ID:', accountId);
+      const heroPosts = await fbAuditService.getHeroPosts(user.metaAccessToken, accountId);
+      
+      res.json({
+        success: true,
+        accountId,
+        heroPostsCount: heroPosts.length,
+        heroPosts
+      });
+    } catch (error) {
+      console.error('測試 Hero Post 錯誤:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Internal server error', 
+        details: error.message 
+      });
+    }
+  });
 }

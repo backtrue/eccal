@@ -753,6 +753,7 @@ ${adSetRecommendation}
     outboundCtr: number;
     purchases: number;
     spend: number;
+    impressions: number;
     heroScore: number;
   }>> {
     try {
@@ -767,12 +768,11 @@ ${adSetRecommendation}
       const since = startDate.toISOString().split('T')[0];
       const until = endDate.toISOString().split('T')[0];
       
-      // 獲取廣告層級數據
+      // 獲取廣告層級數據（移除狀態過濾，擴大查找範圍）
       const heroUrl = `${this.baseUrl}/${accountId}/insights?` +
         `level=ad&` +
         `fields=ad_name,ctr,outbound_clicks_ctr,actions,spend,clicks,impressions&` +
         `time_range={"since":"${since}","until":"${until}"}&` +
-        `filtering=[{"field":"ad.effective_status","operator":"IN","value":["ACTIVE"]}]&` +
         `limit=100&` +
         `access_token=${accessToken}`;
       
@@ -786,14 +786,18 @@ ${adSetRecommendation}
         return [];
       }
 
-      console.log('Hero Post 原始數據:', data);
+      console.log('Hero Post 原始數據:', JSON.stringify(data, null, 2));
 
       if (!data.data || data.data.length === 0) {
         console.log('沒有找到 Hero Post 數據');
+        console.log('API 回應狀態:', response.status);
+        console.log('API 回應頭:', response.headers);
         return [];
       }
 
-      // 處理並排序數據
+      console.log(`找到 ${data.data.length} 筆原始廣告數據`);
+
+      // 處理並排序數據（降低過濾條件）
       const processedData = data.data
         .filter((item: any) => item.ad_name && item.ad_name !== '(not set)')
         .map((item: any) => {
@@ -809,6 +813,7 @@ ${adSetRecommendation}
           const ctr = parseFloat(item.ctr || '0');
           const outboundCtr = parseFloat(item.outbound_clicks_ctr || '0');
           const spend = parseFloat(item.spend || '0');
+          const impressions = parseInt(item.impressions || '0');
           
           // 計算 Hero Score：CTR(30%) + 外連CTR(30%) + 購買數權重(40%)
           // 購買數權重：有購買 +2 分，每多一個購買 +0.5 分
@@ -821,14 +826,32 @@ ${adSetRecommendation}
             outboundCtr,
             purchases,
             spend,
+            impressions,
             heroScore
           };
         })
-        .filter((item: any) => item.ctr > 0 || item.outboundCtr > 0) // 至少要有一種 CTR 數據
-        .sort((a: any, b: any) => b.heroScore - a.heroScore) // 按 Hero Score 排序
+        .filter((item: any) => item.impressions > 0) // 只要有曝光即可
+        .sort((a: any, b: any) => {
+          // 優先按 Hero Score 排序，如果相同則按花費排序
+          if (b.heroScore !== a.heroScore) {
+            return b.heroScore - a.heroScore;
+          }
+          return b.spend - a.spend;
+        })
         .slice(0, 3); // 取前三名
 
       console.log('處理後的 Hero Post 數據:', processedData);
+      console.log(`最終篩選出 ${processedData.length} 個 Hero Post`);
+      
+      // 如果沒有找到 Hero Post，記錄詳細原因
+      if (processedData.length === 0) {
+        console.log('沒有找到 Hero Post 的原因分析：');
+        console.log('- 原始數據數量:', data.data.length);
+        console.log('- 有廣告名稱的數量:', data.data.filter((item: any) => item.ad_name && item.ad_name !== '(not set)').length);
+        console.log('- 有曝光的數量:', data.data.filter((item: any) => parseInt(item.impressions || '0') > 0).length);
+        console.log('前5筆原始數據樣本:', data.data.slice(0, 5));
+      }
+      
       return processedData;
 
     } catch (error) {
@@ -920,14 +943,15 @@ ${adSetRecommendation}
       let heroPostRecommendation = '';
       if (heroPosts.length > 0) {
         heroPostRecommendation = `
-根據過去7天的數據分析，這是你表現最佳的前三個 Hero Post 廣告：
+根據過去7天的數據分析，這是你表現最佳的前${heroPosts.length}個 Hero Post 廣告：
 
 ${heroPosts.map((hero, index) => 
   `${index + 1}. 【${hero.adName}】
    - CTR（全部）：${hero.ctr.toFixed(2)}%
    - CTR（連外）：${hero.outboundCtr.toFixed(2)}%
    - 購買轉換：${hero.purchases} 次
-   - 廣告花費：$${hero.spend.toFixed(2)}`
+   - 廣告花費：$${hero.spend.toFixed(2)}
+   - 曝光次數：${hero.impressions.toLocaleString()}`
 ).join('\n\n')}
 
 建議操作：
