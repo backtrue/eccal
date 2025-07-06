@@ -329,10 +329,12 @@ export class FbAuditService {
             message: `正在生成 ${comparison.metric} 的 AI 建議...`
           });
 
-          if (comparison.metric === 'dailySpend') {
+          if (comparison.metric === 'dailySpend' && accessToken && adAccountId) {
             comparison.advice = await this.generateDailySpendAdvice(
               comparison.target,
-              comparison.actual
+              comparison.actual,
+              accessToken,
+              adAccountId
             );
           } else if (comparison.metric === 'purchases' && accessToken && adAccountId) {
             comparison.advice = await this.generatePurchaseAdvice(
@@ -636,20 +638,28 @@ ${top3AdSets.map((adSet, index) =>
         adSetRecommendation = '目前沒有找到足夠的廣告組合數據，建議先確認廣告是否正常運行。';
       }
       
-      const prompt = `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。目前的廣告活動『購買數』目標為 ${target} 次，實際達成了 ${actual} 次，成效有點落後。請基於『分析並加碼成效好的廣告組合』這個核心邏輯，提供下一步的操作建議，目的是複製成功經驗，趕快挽救頹勢。
+      const prompt = `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對購買數指標提供結構化的優化建議。
 
-請用小黑老師親切直接的語調，參考以下結構：
+**數據概況：**
+- 目標購買數：${target} 次
+- 實際購買數：${actual} 次
+- 落差：${target - actual} 次
 
-1. 開頭分析現況（目標vs實際）
-2. 核心策略說明（加碼成效好的廣告組合）
-3. 具體數據分析和建議（結合以下廣告組合數據）
-4. 操作步驟建議
-5. 結尾鼓勵
+請按照以下結構輸出建議：
 
-廣告組合數據：
+## 1. 現況洞察
+分析目標 vs 實際的落差情況，以及對整體廣告成效的影響。
+
+## 2. 核心策略說明
+解釋購買數指標的重要性，以及如何透過「找出轉換率最高的廣告組合」來優化此指標。
+
+## 3. 具體數據分析和建議
 ${adSetRecommendation}
 
-請直接輸出HTML格式，保持小黑老師的專業和親切語調。`;
+## 4. 下一步建議
+針對找出的高轉換率廣告組合，提供具體的加碼日預算建議。
+
+請用小黑老師親切直接的語調，直接輸出HTML格式。每個章節用 <h3> 標籤包裝標題，內容用 <p> 和 <ul> 標籤。`;
 
       const response = await this.openai.chat.completions.create({
         model: "gpt-4o-mini",
@@ -955,20 +965,28 @@ ${topROASAdSets.map((adSet, index) =>
         adSetRecommendation = '目前沒有找到足夠的廣告組合 ROAS 數據，建議先確認廣告是否正常運行並有購買轉換數據。';
       }
       
-      const prompt = `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。目前的廣告活動『ROAS』目標為 ${target}x，實際達成了 ${actual.toFixed(2)}x，成效有點落後。請基於『分析並加碼成效好的廣告組合』這個核心邏輯，提供下一步的操作建議，目的是複製成功經驗，趕快挽救頹勢。
+      const prompt = `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對 ROAS 指標提供結構化的優化建議。
 
-請用小黑老師親切直接的語調，參考以下結構：
+**數據概況：**
+- 目標 ROAS：${target}x
+- 實際 ROAS：${actual.toFixed(2)}x
+- 落差：${(target - actual).toFixed(2)}x
 
-1. 開頭分析現況（目標vs實際）
-2. 核心策略說明（加碼成效好的廣告組合）
-3. 具體數據分析和建議（結合以下廣告組合數據）
-4. 操作步驟建議
-5. 結尾鼓勵
+請按照以下結構輸出建議：
 
-廣告組合數據：
+## 1. 現況洞察
+分析目標 vs 實際的落差情況，以及對整體廣告投資報酬率的影響。
+
+## 2. 核心策略說明
+解釋 ROAS 指標的重要性，以及如何透過「找出 ROAS 最高的廣告組合」來優化此指標。
+
+## 3. 具體數據分析和建議
 ${adSetRecommendation}
 
-請直接輸出HTML格式，保持小黑老師的專業和親切語調。`;
+## 4. 下一步建議
+針對找出的高 ROAS 廣告組合，提供具體的測試更多不同受眾的建議。
+
+請用小黑老師親切直接的語調，直接輸出HTML格式。每個章節用 <h3> 標籤包裝標題，內容用 <p> 和 <ul> 標籤。`;
 
       const response = await this.openai.chat.completions.create({
         model: "gpt-4o-mini",
@@ -1041,35 +1059,29 @@ ${heroPosts.map((hero, index) =>
       console.log('推薦內容長度:', heroPostRecommendation.length);
       console.log('推薦內容預覽:', heroPostRecommendation.substring(0, 200) + '...');
 
-      // 確保 Hero Post 數據被正確整合到建議中
-      let baseAdvice = `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。目前的廣告『CTR』目標為${target.toFixed(2)}%，實際達成了${actual.toFixed(2)}%，成效有點落後。
+      // 構建結構化的 CTR 建議提示
+      const prompt = `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對連結點擊率指標提供結構化的優化建議。
 
-請基於『分析高CTR的廣告用來投放更多不同受眾』這個核心邏輯，提供下一步的操作建議，目的是找出我稱之為「Hero Post」的高效廣告，趕快挽救頹勢。`;
+**數據概況：**
+- 目標 CTR：${target.toFixed(2)}%
+- 實際 CTR：${actual.toFixed(2)}%
+- 落差：${(target - actual).toFixed(2)}%
 
-      // 如果有 Hero Post 數據，直接加入建議內容
-      if (heroPosts.length > 0) {
-        baseAdvice += `
+請按照以下結構輸出建議：
 
+## 1. 現況洞察
+分析目標 vs 實際的落差情況，以及對整體廣告點擊成效的影響。
+
+## 2. 核心策略說明
+解釋連結點擊率指標的重要性，以及如何透過「找出連外點擊率最高的三個廣告（Hero Post）」來優化此指標。
+
+## 3. 具體數據分析和建議
 ${heroPostRecommendation}
 
-🚀 基於以上 Hero Post 數據，請針對以下核心策略提供具體建議：
-1. 如何利用這些 Hero Post 測試更多廣告組合
-2. 如何用這些 Hero Post 開發新的受眾群體  
-3. 如何透過 ASC 放大這些 Hero Post 創造額外成效
-4. 如何分析這些 Hero Post 的成功要素並複製應用
+## 4. 下一步建議
+針對找出的高 CTR 廣告（Hero Post），提供具體的類似受眾投放和擴大曝光觸及建議。
 
-請提供具體的執行步驟和注意事項。`;
-      } else {
-        baseAdvice += `
-
-${heroPostRecommendation}
-
-請針對以下面向提供實用建議：
-1. 如何提升現有廣告的點擊率
-2. 創意和文案優化方向
-3. 受眾設定調整建議
-4. 預算分配策略`;
-      }
+請用小黑老師親切直接的語調，直接輸出HTML格式。每個章節用 <h3> 標籤包裝標題，內容用 <p> 和 <ul> 標籤。`;
 
       const messages = [
         {
@@ -1078,13 +1090,13 @@ ${heroPostRecommendation}
         },
         {
           role: 'user',
-          content: baseAdvice
+          content: prompt
         }
       ];
 
       console.log('=== 發送 CTR 建議請求到 ChatGPT ===');
-      console.log('baseAdvice 完整內容:', baseAdvice);
-      console.log('baseAdvice 長度:', baseAdvice.length);
+      console.log('prompt 完整內容:', prompt);
+      console.log('prompt 長度:', prompt.length);
       console.log('請求內容:', JSON.stringify(messages, null, 2));
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -1131,9 +1143,78 @@ ${heroPostRecommendation}
   }
 
   /**
+   * 獲取預算沒花完的廣告活動 (過去7天)
+   */
+  async getUnderSpentCampaigns(accessToken: string, adAccountId: string): Promise<Array<{
+    campaignName: string;
+    budgetUsed: number;
+    dailyBudget: number;
+    utilizationRate: number;
+  }>> {
+    try {
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 7);
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() - 1);
+      
+      const since = startDate.toISOString().split('T')[0];
+      const until = endDate.toISOString().split('T')[0];
+      
+      const campaignUrl = `${this.baseUrl}/${adAccountId}/insights?` +
+        `level=campaign&` +
+        `fields=campaign_name,spend,daily_budget&` +
+        `time_range={"since":"${since}","until":"${until}"}&` +
+        `limit=50&` +
+        `access_token=${accessToken}`;
+      
+      console.log('獲取廣告活動預算使用數據 URL:', campaignUrl.replace(accessToken, accessToken.substring(0, 20) + '...'));
+      
+      const response = await fetch(campaignUrl);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        console.error('Facebook API 錯誤:', data);
+        return [];
+      }
+      
+      if (!data.data || data.data.length === 0) {
+        console.log('沒有找到廣告活動數據');
+        return [];
+      }
+      
+      // 計算預算使用率並找出沒花完的廣告活動
+      const underSpentCampaigns = data.data
+        .filter((item: any) => item.campaign_name && item.daily_budget && parseFloat(item.daily_budget) > 0)
+        .map((item: any) => {
+          const dailyBudget = parseFloat(item.daily_budget) / 100; // Facebook API 回傳的是分為單位
+          const totalSpend = parseFloat(item.spend || '0');
+          const avgDailySpend = totalSpend / 7; // 過去7天平均每日花費
+          const utilizationRate = (avgDailySpend / dailyBudget) * 100;
+          
+          return {
+            campaignName: item.campaign_name,
+            budgetUsed: avgDailySpend,
+            dailyBudget: dailyBudget,
+            utilizationRate: utilizationRate
+          };
+        })
+        .filter(campaign => campaign.utilizationRate < 90) // 使用率低於90%的算作沒花完
+        .sort((a, b) => a.utilizationRate - b.utilizationRate) // 按使用率從低到高排序
+        .slice(0, 3); // 只取前三個
+      
+      console.log('找到的預算沒花完廣告活動:', underSpentCampaigns);
+      return underSpentCampaigns;
+      
+    } catch (error) {
+      console.error('獲取廣告活動預算數據錯誤:', error);
+      return [];
+    }
+  }
+
+  /**
    * 生成日均花費建議 (使用 ChatGPT 4o mini)
    */
-  private async generateDailySpendAdvice(target: number, actual: number): Promise<string> {
+  private async generateDailySpendAdvice(target: number, actual: number, accessToken: string, adAccountId: string): Promise<string> {
     try {
       console.log('=== ChatGPT 日均花費建議生成開始 ===');
       console.log('目標花費:', target);
@@ -1141,37 +1222,50 @@ ${heroPostRecommendation}
       
       const shortfall = target - actual;
       
-      const prompt = `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請用親切、直接的語調，針對日均花費未達標的情況提供建議。
+      // 獲取預算沒花完的廣告活動數據
+      const underSpentCampaigns = await this.getUnderSpentCampaigns(accessToken, adAccountId);
+      
+      let campaignData = '';
+      if (underSpentCampaigns.length > 0) {
+        campaignData = `
+根據過去7天的數據分析，這是預算沒花完的前三個廣告活動：
 
-參考這個範本格式，但不要完全照抄，要依據實際數據來調整：
+${underSpentCampaigns.map((campaign, index) => 
+  `${index + 1}. 【${campaign.campaignName}】
+   - 日預算：${campaign.dailyBudget.toLocaleString()} 元
+   - 實際平均花費：${campaign.budgetUsed.toLocaleString()} 元
+   - 預算使用率：${campaign.utilizationRate.toFixed(1)}%`
+).join('\n\n')}
 
-「看到你今天的日均目標是 ${target.toLocaleString()} 元，結果只花了 ${actual.toLocaleString()} 元，少了快 ${shortfall.toLocaleString()} 元，這種情況我最有感。
+這些廣告活動的預算使用率偏低，需要優化受眾設定或出價策略來提升花費效率。`;
+      } else {
+        campaignData = '目前所有廣告活動的預算使用率都正常（超過90%），問題可能是整體廣告帳戶的日預算設定太少，建議增加總預算。';
+      }
+      
+      const prompt = `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對日均花費指標提供結構化的優化建議。
 
-很多人以為「花不到錢」是好事，代表效率高，但其實完全不是。
-你要知道，成交的基礎是足夠的流量，而流量的基礎就是預算要花得出去。
-你今天沒花到，代表什麼？代表你的曝光量、點擊數、甚至進站流量，全都會少一截。
+**數據概況：**
+- 目標日均花費：${target.toLocaleString()} 元
+- 實際日均花費：${actual.toLocaleString()} 元
+- 落差：${shortfall.toLocaleString()} 元
 
-而最常見的三個「沒花完」原因是這些：
+請按照以下結構輸出建議：
 
-第一，你的受眾太窄，系統找不到人投，當然投不出去。
-第二，你的出價太低，尤其是用手動出價的時候，根本搶不到量。
-第三，素材吸引力不足，CTR 掉到 0.3% 以下，系統也不想幫你推。
+## 1. 現況洞察
+分析目標 vs 實際的落差情況，以及對整體廣告曝光和流量的影響。
 
-那要怎麼處理？
-我會這樣拆：
+## 2. 核心策略說明
+解釋日均花費指標的重要性，以及如何透過「找出三個日預算沒有花完的廣告活動」來診斷問題。
 
-👉 如果是受眾太窄，就放寬條件，先看一下目前受眾潛在觸及數是不是低於 20 萬？加點興趣標籤或拉寬年齡帶。
-👉 如果是手動出價，記得檢查競價建議區間，不要硬壓在理想的CPA或CPC。你可以往中上值多加個 5～10%。
-👉 如果是素材問題，這時候就要回頭看連結點擊率了。低於 1% 基本就要換素材，或至少換圖片與標題文案嘗試不同版本組合。
+## 3. 具體數據分析和建議
+${campaignData}
 
-而最保險的做法，是先把廣告預算設成「每日花費上限」，不要用總預算分配，讓系統有機會「完整花完再來談效益」。
+## 4. 下一步建議
+${underSpentCampaigns.length > 0 ? 
+  '針對預算沒花完的廣告活動，提供增加受眾、調整出價等具體建議來有效花完預算。' : 
+  '由於所有廣告活動預算使用率正常，建議整體增加廣告帳戶的日預算設定。'}
 
-記住，你今天花不完，等於漏水的水龍頭，前面流量進不來，後面的轉換根本沒得跑。
-所以別再等「花完再來看數據」，你得先讓錢跑出去，系統才會回你訊號。
-
-請務必記得：廣告不是省錢比賽，是搶曝光的戰爭。花不出去，就等於沒參加比賽。」
-
-請用類似的語調和架構，但要根據實際數據調整，保持小黑老師的親切直接風格。回答時直接輸出HTML格式，不要用markdown包裝。`;
+請用小黑老師親切直接的語調，直接輸出HTML格式。每個章節用 <h3> 標籤包裝標題，內容用 <p> 和 <ul> 標籤。`;
 
       const response = await this.openai.chat.completions.create({
         model: "gpt-4o-mini",
