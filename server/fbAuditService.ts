@@ -833,19 +833,19 @@ ${adSetRecommendation}
         };
       });
 
-      // 第三步：檢查曝光和CTR條件
+      // 第三步：檢查曝光和連外CTR條件
       const withImpressions = mapped.filter((item: any) => item.impressions >= 500);
       console.log(`曝光 >= 500 的廣告：${withImpressions.length} 筆`);
       
-      const withCtr = mapped.filter((item: any) => item.ctr > 0);
-      console.log(`有 CTR 的廣告：${withCtr.length} 筆`);
+      const withOutboundCtr = mapped.filter((item: any) => item.outboundCtr > 0);
+      console.log(`有連外CTR的廣告：${withOutboundCtr.length} 筆`);
       
-      const qualified = mapped.filter((item: any) => item.impressions >= 500 && item.ctr > 0);
-      console.log(`符合條件（曝光>=500 且 CTR>0）的廣告：${qualified.length} 筆`);
+      const qualified = mapped.filter((item: any) => item.impressions >= 500 && item.outboundCtr > 0);
+      console.log(`符合條件（曝光>=500 且 連外CTR>0）的廣告：${qualified.length} 筆`);
 
-      // 第四步：排序並取前三名
+      // 第四步：按連外點擊率排序並取前三名
       const processedData = qualified
-        .sort((a: any, b: any) => b.ctr - a.ctr)
+        .sort((a: any, b: any) => b.outboundCtr - a.outboundCtr)
         .slice(0, 3);
         
       console.log(`排序後取前3名：${processedData.length} 筆`);
@@ -866,11 +866,11 @@ ${adSetRecommendation}
           });
         });
         
-        // 降低門檻：只要有CTR且曝光超過100即可
+        // 降低門檻：只要有連外CTR且曝光超過100即可
         console.log('嘗試降低門檻到曝光 >= 100...');
         const fallbackData = mapped
-          .filter((item: any) => item.impressions >= 100 && item.ctr > 0)
-          .sort((a: any, b: any) => b.ctr - a.ctr)
+          .filter((item: any) => item.impressions >= 100 && item.outboundCtr > 0)
+          .sort((a: any, b: any) => b.outboundCtr - a.outboundCtr)
           .slice(0, 3);
           
         console.log(`降低門檻（曝光>=100）後找到 ${fallbackData.length} 個 Hero Post`);
@@ -879,8 +879,8 @@ ${adSetRecommendation}
         if (fallbackData.length === 0) {
           console.log('嘗試降低門檻到曝光 >= 10...');
           const veryLowThreshold = mapped
-            .filter((item: any) => item.impressions >= 10 && item.ctr > 0)
-            .sort((a: any, b: any) => b.ctr - a.ctr)
+            .filter((item: any) => item.impressions >= 10 && item.outboundCtr > 0)
+            .sort((a: any, b: any) => b.outboundCtr - a.outboundCtr)
             .slice(0, 3);
           console.log(`極低門檻（曝光>=10）後找到 ${veryLowThreshold.length} 個 Hero Post`);
           
@@ -991,45 +991,45 @@ ${adSetRecommendation}
       let heroPostRecommendation = '';
       if (heroPosts.length > 0) {
         heroPostRecommendation = `
-根據過去7天的數據分析，這是你 CTR 表現最佳的前${heroPosts.length}個 Hero Post 廣告：
+✨ 根據過去7天的數據分析，發現你的 ${heroPosts.length} 個 Hero Post 廣告（高連外點擊率）：
 
 ${heroPosts.map((hero, index) => 
-  `${index + 1}. 【${hero.adName}】
-   - CTR（全部）：${hero.ctr.toFixed(2)}%
-   - CTR（連外）：${hero.outboundCtr.toFixed(2)}%
-   - 購買轉換：${hero.purchases} 次
-   - 廣告花費：$${hero.spend.toFixed(2)}
-   - 曝光次數：${hero.impressions.toLocaleString()}`
+  `🎯 Hero Post ${index + 1}：【${hero.adName}】
+   📊 連外點擊率：${hero.outboundCtr.toFixed(2)}%（表現優異！）
+   🎯 整體點擊率：${hero.ctr.toFixed(2)}%
+   🛒 購買轉換：${hero.purchases} 次
+   💰 廣告花費：$${hero.spend.toFixed(2)}
+   👁️ 曝光次數：${hero.impressions.toLocaleString()}`
 ).join('\n\n')}
 
-建議操作：
-1. 針對這些高 CTR 廣告進行預算加碼，擴大觸及範圍
-2. 複製這些高 CTR 廣告的創意元素到新廣告中
-3. 利用 ASC（廣告組合簡化）功能，讓 Facebook 自動優化並放大這些高效廣告
-4. 分析這些廣告的共同特點（標題、圖片、受眾），提升整體帳戶 CTR
+🚀 立即行動建議：
+1. 【加碼投放】：對這些 Hero Post 增加預算，擴大受眾觸及
+2. 【創意複製】：分析這些廣告的創意元素，套用到新廣告中
+3. 【ASC 放大】：使用廣告組合簡化功能，讓 Facebook 自動放大這些高效廣告
+4. 【受眾測試】：拿這些 Hero Post 去測試更多不同的受眾組合
 `;
       } else {
-        heroPostRecommendation = '目前無法找到高 CTR 的 Hero Post（過去7天曝光超過500且CTR表現突出），建議先優化現有廣告的創意和受眾設定以提升點擊率。';
+        heroPostRecommendation = '❌ 目前無法找到高連外點擊率的 Hero Post（過去7天曝光超過500且連外CTR表現突出），建議先優化現有廣告的創意和受眾設定。';
       }
 
       const messages = [
         {
           role: 'system',
-          content: '你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。專精於提升廣告點擊率(CTR)，請以專業且實用的語調提供廣告優化建議。'
+          content: '你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。專精於透過分析高連外點擊率廣告來優化整體廣告表現，請以專業且實用的語調提供廣告優化建議。'
         },
         {
           role: 'user',
-          content: `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。目前的廣告『CTR』目標為${target.toFixed(2)}%，實際達成了${actual.toFixed(2)}%，成效落後需要改善。
+          content: `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。目前的廣告『CTR』目標為${target.toFixed(2)}%，實際達成了${actual.toFixed(2)}%，成效有點落後。
 
-請基於『找出高 CTR 廣告並加碼投資』的核心策略，提供具體的 CTR 優化建議：
+請基於『分析高CTR的廣告用來投放更多不同受眾』這個核心邏輯，提供下一步的操作建議，目的是找出我稱之為「Hero Post」的高效廣告，趕快挽救頹勢。
 
 ${heroPostRecommendation}
 
-請針對以下面向提供實用建議：
-1. 如何提升現有廣告的點擊率
-2. 創意和文案優化方向
-3. 受眾設定調整建議
-4. 預算分配策略`
+請針對以下核心策略提供具體建議：
+1. 如何利用 Hero Post 測試更多廣告組合
+2. 如何用 Hero Post 開發新的受眾群體
+3. 如何透過 ASC 放大 Hero Post 創造額外成效
+4. 如何分析 Hero Post 的成功要素並複製應用`
         }
       ];
 
