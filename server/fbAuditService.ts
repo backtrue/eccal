@@ -378,6 +378,11 @@ export class FbAuditService {
    */
   private async generateDailySpendAdvice(target: number, actual: number): Promise<string> {
     try {
+      console.log('=== Gemini API 調用開始 ===');
+      console.log('目標花費:', target);
+      console.log('實際花費:', actual);
+      console.log('GEMINI_API_KEY 存在:', !!process.env.GEMINI_API_KEY);
+      
       const prompt = `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。目前的廣告活動『日均花費』目標為 ${target.toLocaleString()} 元，實際花費為 ${actual.toLocaleString()} 元，尚未完全達到預算目標。請基於『成交的基礎是足夠的流量，流量的基礎是足夠的預算花費』這個核心邏輯，提供明確的廣告操作建議，確保預算能順利花出，以爭取最大的曝光與流量機會。
 
 請使用 HTML 格式輸出，模仿小黑老師的語調，包含：
@@ -385,6 +390,8 @@ export class FbAuditService {
 2. 核心邏輯說明
 3. 3個具體建議，每個建議用 <h4> 標題 + <p> 內容
 4. 結尾鼓勵語`;
+
+      console.log('Gemini prompt:', prompt.substring(0, 200) + '...');
 
       // 使用 Gemini 2.5 Pro
       const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=' + process.env.GEMINI_API_KEY, {
@@ -399,10 +406,24 @@ export class FbAuditService {
         })
       });
 
+      console.log('Gemini response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Gemini API 錯誤:', response.status, errorText);
+        return `Gemini API 錯誤 (${response.status}): ${errorText}`;
+      }
+
       const data = await response.json();
-      return data.candidates?.[0]?.content?.parts?.[0]?.text || '暫無建議';
+      console.log('Gemini 回應數據:', JSON.stringify(data, null, 2));
+      
+      const result = data.candidates?.[0]?.content?.parts?.[0]?.text || '暫無建議';
+      console.log('=== Gemini API 調用完成 ===');
+      console.log('建議內容:', result.substring(0, 200) + '...');
+      
+      return result;
     } catch (error) {
-      console.error('Error generating daily spend advice:', error);
+      console.error('Gemini API 調用錯誤:', error);
       return '無法生成建議，請稍後再試';
     }
   }
