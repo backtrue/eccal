@@ -324,7 +324,7 @@ export class FbAuditService {
           metric: 'dailySpend',
           target: targetDailySpend,
           actual: actualMetrics.dailySpend,
-          status: actualMetrics.dailySpend >= targetDailySpend * 0.8 ? 'achieved' : 'not_achieved'
+          status: actualMetrics.dailySpend >= targetDailySpend ? 'achieved' : 'not_achieved'
         },
         {
           metric: 'purchases',
