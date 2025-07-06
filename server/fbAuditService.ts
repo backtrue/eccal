@@ -350,6 +350,13 @@ export class FbAuditService {
               comparison.target,
               comparison.actual
             );
+          } else if (comparison.metric === 'roas' && accessToken && adAccountId) {
+            comparison.advice = await this.generateROASAdvice(
+              accessToken,
+              adAccountId,
+              comparison.target,
+              comparison.actual
+            );
           } else {
             comparison.advice = await this.generateAIAdvice(
               comparison.metric,
@@ -465,6 +472,14 @@ export class FbAuditService {
           } else if (comparison.metric === 'purchases' && accessToken && adAccountId) {
             // 購買數未達標時調用新的購買建議函數
             comparison.advice = await this.generatePurchaseAdvice(
+              accessToken,
+              adAccountId,
+              comparison.target,
+              comparison.actual
+            );
+          } else if (comparison.metric === 'roas' && accessToken && adAccountId) {
+            // ROAS 未達標時調用新的 ROAS 建議函數
+            comparison.advice = await this.generateROASAdvice(
               accessToken,
               adAccountId,
               comparison.target,
@@ -640,6 +655,129 @@ ${adSetRecommendation}
     } catch (error) {
       console.error('ChatGPT 購買數建議生成錯誤:', error);
       return '無法生成購買數建議，請稍後再試';
+    }
+  }
+
+  /**
+   * 獲取 ROAS 最高的廣告組合數據 (過去7天)
+   */
+  async getTopROASAdSets(accessToken: string, adAccountId: string): Promise<Array<{
+    adSetName: string;
+    roas: number;
+    purchases: number;
+    spend: number;
+  }>> {
+    try {
+      // 根據 PDF 文件，使用 website_purchase_roas 字段
+      const roasUrl = `${this.baseUrl}/act_${adAccountId}/insights?` +
+        `level=adset&` +
+        `fields=adset_name,website_purchase_roas,purchases,spend&` +
+        `time_range={"since":"7","until":"1"}&` +
+        `filtering=[{"field":"adset.effective_status","operator":"IN","value":["ACTIVE"]}]&` +
+        `limit=100&` +
+        `access_token=${accessToken}`;
+
+      console.log('獲取 ROAS 廣告組合數據 URL:', roasUrl);
+
+      const response = await fetch(roasUrl);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        console.error('Facebook API 錯誤:', data);
+        return [];
+      }
+
+      console.log('ROAS 廣告組合原始數據:', data);
+
+      if (!data.data || data.data.length === 0) {
+        console.log('沒有找到 ROAS 廣告組合數據');
+        return [];
+      }
+
+      // 處理並排序數據
+      const processedData = data.data
+        .filter((item: any) => item.website_purchase_roas && parseFloat(item.website_purchase_roas[0]?.value || '0') > 0)
+        .map((item: any) => ({
+          adSetName: item.adset_name,
+          roas: parseFloat(item.website_purchase_roas[0]?.value || '0'),
+          purchases: parseInt(item.purchases || '0'),
+          spend: parseFloat(item.spend || '0')
+        }))
+        .sort((a, b) => b.roas - a.roas) // 按 ROAS 降序排列
+        .slice(0, 3); // 取前三名
+
+      console.log('處理後的 ROAS 廣告組合數據:', processedData);
+      return processedData;
+
+    } catch (error) {
+      console.error('獲取 ROAS 廣告組合數據錯誤:', error);
+      return [];
+    }
+  }
+
+  /**
+   * 生成 ROAS 建議 (使用 ChatGPT 4o mini)
+   */
+  async generateROASAdvice(accessToken: string, adAccountId: string, target: number, actual: number): Promise<string> {
+    try {
+      console.log('=== ChatGPT ROAS 建議生成開始 ===');
+      console.log('目標 ROAS:', target);
+      console.log('實際 ROAS:', actual);
+      
+      // 獲取前三名 ROAS 最高的廣告組合
+      const topROASAdSets = await this.getTopROASAdSets(accessToken, adAccountId);
+      
+      console.log('前三名 ROAS 廣告組合:', topROASAdSets);
+      
+      let adSetRecommendation = '';
+      if (topROASAdSets.length > 0) {
+        adSetRecommendation = `
+根據過去7天的數據分析，這是你 ROAS 最高的前三個廣告組合：
+
+${topROASAdSets.map((adSet, index) => 
+  `${index + 1}. 【${adSet.adSetName}】
+   - ROAS：${adSet.roas.toFixed(2)}x
+   - 購買數：${adSet.purchases} 次
+   - 花費：${adSet.spend.toLocaleString()} 元`
+).join('\n\n')}
+
+我建議你立即對這些 ROAS 表現最好的廣告組合進行加碼，因為它們已經證明能夠帶來高投資報酬率。`;
+      } else {
+        adSetRecommendation = '目前沒有找到足夠的廣告組合 ROAS 數據，建議先確認廣告是否正常運行並有購買轉換數據。';
+      }
+      
+      const prompt = `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。目前的廣告活動『ROAS』目標為 ${target}x，實際達成了 ${actual.toFixed(2)}x，成效有點落後。請基於『分析並加碼成效好的廣告組合』這個核心邏輯，提供下一步的操作建議，目的是複製成功經驗，趕快挽救頹勢。
+
+請用小黑老師親切直接的語調，參考以下結構：
+
+1. 開頭分析現況（目標vs實際）
+2. 核心策略說明（加碼成效好的廣告組合）
+3. 具體數據分析和建議（結合以下廣告組合數據）
+4. 操作步驟建議
+5. 結尾鼓勵
+
+廣告組合數據：
+${adSetRecommendation}
+
+請直接輸出HTML格式，保持小黑老師的專業和親切語調。`;
+
+      const response = await this.openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 1000,
+      });
+
+      let advice = response.choices[0].message.content || '';
+      
+      // 清理 markdown 格式
+      advice = advice.replace(/```html/g, '').replace(/```/g, '');
+      
+      console.log('生成的 ROAS 建議:', advice);
+      return advice;
+
+    } catch (error) {
+      console.error('生成 ROAS 建議錯誤:', error);
+      return '無法生成 ROAS 建議，請稍後再試';
     }
   }
 
