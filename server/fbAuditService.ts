@@ -676,10 +676,10 @@ ${adSetRecommendation}
       // 確保廣告帳戶 ID 格式正確，避免重複 act_ 前綴
       const accountId = adAccountId.startsWith('act_') ? adAccountId : `act_${adAccountId}`;
       
-      // 根據 PDF 文件，使用 website_purchase_roas 字段
+      // 根據 PDF 文件，使用 website_purchase_roas 字段，需要通過 actions 獲取購買數據
       const roasUrl = `${this.baseUrl}/${accountId}/insights?` +
         `level=adset&` +
-        `fields=adset_name,website_purchase_roas,purchases,spend&` +
+        `fields=adset_name,website_purchase_roas,actions,spend&` +
         `time_range={"since":"7","until":"1"}&` +
         `filtering=[{"field":"adset.effective_status","operator":"IN","value":["ACTIVE"]}]&` +
         `limit=100&` +
@@ -705,12 +705,23 @@ ${adSetRecommendation}
       // 處理並排序數據
       const processedData = data.data
         .filter((item: any) => item.website_purchase_roas && parseFloat(item.website_purchase_roas[0]?.value || '0') > 0)
-        .map((item: any) => ({
-          adSetName: item.adset_name,
-          roas: parseFloat(item.website_purchase_roas[0]?.value || '0'),
-          purchases: parseInt(item.purchases || '0'),
-          spend: parseFloat(item.spend || '0')
-        }))
+        .map((item: any) => {
+          // 從 actions 陣列中解析購買數
+          let purchases = 0;
+          if (item.actions && Array.isArray(item.actions)) {
+            const purchaseAction = item.actions.find((action: any) => action.action_type === 'purchase');
+            if (purchaseAction && purchaseAction.value) {
+              purchases = parseInt(purchaseAction.value);
+            }
+          }
+          
+          return {
+            adSetName: item.adset_name,
+            roas: parseFloat(item.website_purchase_roas[0]?.value || '0'),
+            purchases,
+            spend: parseFloat(item.spend || '0')
+          };
+        })
         .sort((a, b) => b.roas - a.roas) // 按 ROAS 降序排列
         .slice(0, 3); // 取前三名
 
