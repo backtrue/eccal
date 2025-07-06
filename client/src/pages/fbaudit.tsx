@@ -118,12 +118,8 @@ export default function FbAudit({ locale }: FbAuditProps) {
     isLoading: checkMutation.isPending
   });
 
-  // 顯示流式結果頁面
-  if (showResults && (streamAudit.status !== 'idle' || checkMutation.data)) {
-    const isStreaming = streamAudit.status !== 'idle';
-    const comparisons = isStreaming ? streamAudit.comparisons : (checkMutation.data as any)?.comparisons || [];
-    
-    console.log('健檢結果數據:', { isStreaming, comparisons, streamStatus: streamAudit.status });
+  if (showResults && checkMutation.data) {
+    console.log('健檢結果數據:', checkMutation.data);
     
     return (
       <div className="min-h-screen bg-gray-50">
@@ -504,32 +500,12 @@ export default function FbAudit({ locale }: FbAuditProps) {
                 </Select>
                 
                 {selectedIndustry && (
-                  <div className="text-center pt-4 space-y-3">
-                    <Button 
-                      onClick={handleStartStreamingAudit}
-                      disabled={!canStartAudit || streamAudit.status === 'loading'}
-                      size="lg"
-                      className="px-8 w-full bg-blue-600 hover:bg-blue-700"
-                    >
-                      {streamAudit.status === 'loading' ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          實時分析中...
-                        </>
-                      ) : (
-                        <>
-                          <BarChart3 className="w-4 h-4 mr-2" />
-                          開始健檢 (實時顯示)
-                        </>
-                      )}
-                    </Button>
-                    
+                  <div className="text-center pt-4">
                     <Button 
                       onClick={handleStartAudit}
                       disabled={!canStartAudit || checkMutation.isPending}
-                      variant="outline"
                       size="lg"
-                      className="px-8 w-full"
+                      className="px-8"
                     >
                       {checkMutation.isPending ? (
                         <>
@@ -538,8 +514,8 @@ export default function FbAudit({ locale }: FbAuditProps) {
                         </>
                       ) : (
                         <>
-                          <Target className="w-4 h-4 mr-2" />
-                          傳統健檢模式
+                          <BarChart3 className="w-4 h-4 mr-2" />
+                          開始健檢
                         </>
                       )}
                     </Button>
