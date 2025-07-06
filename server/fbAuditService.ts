@@ -745,7 +745,7 @@ ${adSetRecommendation}
   }
 
   /**
-   * 獲取 Hero Post 廣告（CTR 全部高、CTR 連外高、有購買轉換最佳）
+   * 獲取 Hero Post 廣告（過去7天曝光超過500的最高CTR廣告）
    */
   async getHeroPosts(accessToken: string, adAccountId: string): Promise<Array<{
     adName: string;
@@ -754,7 +754,6 @@ ${adSetRecommendation}
     purchases: number;
     spend: number;
     impressions: number;
-    heroScore: number;
   }>> {
     try {
       // 確保廣告帳戶 ID 格式正確
@@ -797,7 +796,7 @@ ${adSetRecommendation}
 
       console.log(`找到 ${data.data.length} 筆原始廣告數據`);
 
-      // 處理並排序數據（降低過濾條件）
+      // 簡化處理邏輯：找曝光超過500的最高CTR廣告
       const processedData = data.data
         .filter((item: any) => item.ad_name && item.ad_name !== '(not set)')
         .map((item: any) => {
@@ -815,41 +814,57 @@ ${adSetRecommendation}
           const spend = parseFloat(item.spend || '0');
           const impressions = parseInt(item.impressions || '0');
           
-          // 計算 Hero Score：CTR(30%) + 外連CTR(30%) + 購買數權重(40%)
-          // 購買數權重：有購買 +2 分，每多一個購買 +0.5 分
-          const purchaseWeight = purchases > 0 ? 2 + (purchases * 0.5) : 0;
-          const heroScore = (ctr * 0.3) + (outboundCtr * 0.3) + purchaseWeight;
-          
           return {
             adName: item.ad_name,
             ctr,
             outboundCtr,
             purchases,
             spend,
-            impressions,
-            heroScore
+            impressions
           };
         })
-        .filter((item: any) => item.impressions > 0) // 只要有曝光即可
-        .sort((a: any, b: any) => {
-          // 優先按 Hero Score 排序，如果相同則按花費排序
-          if (b.heroScore !== a.heroScore) {
-            return b.heroScore - a.heroScore;
-          }
-          return b.spend - a.spend;
-        })
+        .filter((item: any) => item.impressions >= 500 && item.ctr > 0) // 曝光超過500且有CTR
+        .sort((a: any, b: any) => b.ctr - a.ctr) // 按CTR從高到低排序
         .slice(0, 3); // 取前三名
 
       console.log('處理後的 Hero Post 數據:', processedData);
       console.log(`最終篩選出 ${processedData.length} 個 Hero Post`);
       
-      // 如果沒有找到 Hero Post，記錄詳細原因
+      // 如果沒有找到 Hero Post，記錄詳細原因並嘗試降低門檻
       if (processedData.length === 0) {
-        console.log('沒有找到 Hero Post 的原因分析：');
+        console.log('沒有找到符合條件的 Hero Post，嘗試降低門檻...');
         console.log('- 原始數據數量:', data.data.length);
         console.log('- 有廣告名稱的數量:', data.data.filter((item: any) => item.ad_name && item.ad_name !== '(not set)').length);
-        console.log('- 有曝光的數量:', data.data.filter((item: any) => parseInt(item.impressions || '0') > 0).length);
-        console.log('前5筆原始數據樣本:', data.data.slice(0, 5));
+        console.log('- 曝光超過500的數量:', data.data.filter((item: any) => parseInt(item.impressions || '0') >= 500).length);
+        console.log('- 有CTR的數量:', data.data.filter((item: any) => parseFloat(item.ctr || '0') > 0).length);
+        
+        // 降低門檻：只要有CTR且曝光超過100即可
+        const fallbackData = data.data
+          .filter((item: any) => item.ad_name && item.ad_name !== '(not set)')
+          .map((item: any) => {
+            let purchases = 0;
+            if (item.actions && Array.isArray(item.actions)) {
+              const purchaseAction = item.actions.find((action: any) => action.action_type === 'purchase');
+              if (purchaseAction && purchaseAction.value) {
+                purchases = parseInt(purchaseAction.value);
+              }
+            }
+            
+            return {
+              adName: item.ad_name,
+              ctr: parseFloat(item.ctr || '0'),
+              outboundCtr: parseFloat(item.outbound_clicks_ctr || '0'),
+              purchases,
+              spend: parseFloat(item.spend || '0'),
+              impressions: parseInt(item.impressions || '0')
+            };
+          })
+          .filter((item: any) => item.impressions >= 100 && item.ctr > 0) // 降低門檻到100曝光
+          .sort((a: any, b: any) => b.ctr - a.ctr)
+          .slice(0, 3);
+          
+        console.log(`降低門檻後找到 ${fallbackData.length} 個 Hero Post`);
+        return fallbackData;
       }
       
       return processedData;
@@ -943,7 +958,7 @@ ${adSetRecommendation}
       let heroPostRecommendation = '';
       if (heroPosts.length > 0) {
         heroPostRecommendation = `
-根據過去7天的數據分析，這是你表現最佳的前${heroPosts.length}個 Hero Post 廣告：
+根據過去7天的數據分析，這是你 CTR 表現最佳的前${heroPosts.length}個 Hero Post 廣告：
 
 ${heroPosts.map((hero, index) => 
   `${index + 1}. 【${hero.adName}】
@@ -955,27 +970,33 @@ ${heroPosts.map((hero, index) =>
 ).join('\n\n')}
 
 建議操作：
-1. 針對這些 Hero Post 進行預算加碼，擴大觸及範圍
-2. 使用這些 Hero Post 測試更多廣告組合和受眾設定
-3. 利用 ASC（廣告組合簡化）功能，讓 Facebook 自動優化並放大這些 Hero Post 的成效
-4. 分析這些 Hero Post 的共同特點（創意元素、文案風格、視覺設計），應用到新廣告中
+1. 針對這些高 CTR 廣告進行預算加碼，擴大觸及範圍
+2. 複製這些高 CTR 廣告的創意元素到新廣告中
+3. 利用 ASC（廣告組合簡化）功能，讓 Facebook 自動優化並放大這些高效廣告
+4. 分析這些廣告的共同特點（標題、圖片、受眾），提升整體帳戶 CTR
 `;
       } else {
-        heroPostRecommendation = '目前無法找到表現突出的 Hero Post，建議先優化現有廣告的創意和受眾設定。';
+        heroPostRecommendation = '目前無法找到高 CTR 的 Hero Post（過去7天曝光超過500且CTR表現突出），建議先優化現有廣告的創意和受眾設定以提升點擊率。';
       }
 
       const messages = [
         {
           role: 'system',
-          content: '你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請以專業且實用的語調提供廣告優化建議。'
+          content: '你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。專精於提升廣告點擊率(CTR)，請以專業且實用的語調提供廣告優化建議。'
         },
         {
           role: 'user',
-          content: `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。目前的廣告『CTR』目標為${target.toFixed(2)}%，實際達成了${actual.toFixed(2)}%，成效有點落後。請基於『分析並加碼成效好的廣告組合』這個核心邏輯，提供下一步的操作建議，目的是找出 hero post，趕快挽救頹勢。
+          content: `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。目前的廣告『CTR』目標為${target.toFixed(2)}%，實際達成了${actual.toFixed(2)}%，成效落後需要改善。
+
+請基於『找出高 CTR 廣告並加碼投資』的核心策略，提供具體的 CTR 優化建議：
 
 ${heroPostRecommendation}
 
-請提供具體的優化策略和執行步驟。`
+請針對以下面向提供實用建議：
+1. 如何提升現有廣告的點擊率
+2. 創意和文案優化方向
+3. 受眾設定調整建議
+4. 預算分配策略`
         }
       ];
 
