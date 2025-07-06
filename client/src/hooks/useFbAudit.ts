@@ -42,6 +42,7 @@ export function useFbAuditCheck() {
       adAccountId: string;
       planResultId: string;
       industryType: string;
+      locale?: string;
     }) => {
       const response = await apiRequest('POST', '/api/fbaudit/check', data);
       const result = await response.json();

@@ -20,7 +20,8 @@ export function useFbAuditStream() {
   const startStreamingHealthCheck = useCallback(async (
     adAccountId: string,
     planResultId: string,
-    industryType: string
+    industryType: string,
+    locale: string = 'zh-TW'
   ) => {
     setState({
       status: 'loading',
@@ -44,7 +45,8 @@ export function useFbAuditStream() {
         body: JSON.stringify({
           adAccountId,
           planResultId,
-          industryType
+          industryType,
+          locale
         })
       });
 

@@ -64,7 +64,8 @@ export default function FbAudit({ locale }: FbAuditProps) {
       const result = await checkMutation.mutateAsync({
         adAccountId: selectedAccount,
         planResultId: selectedPlan,
-        industryType: selectedIndustry
+        industryType: selectedIndustry,
+        locale
       });
 
       console.log('健檢成功完成:', result);
@@ -86,7 +87,8 @@ export default function FbAudit({ locale }: FbAuditProps) {
     await streamAudit.startStreamingHealthCheck(
       selectedAccount,
       selectedPlan,
-      selectedIndustry
+      selectedIndustry,
+      locale
     );
   };
 

@@ -110,7 +110,7 @@ export function setupFbAuditRoutes(app: Express) {
   app.post('/api/fbaudit/check-stream', requireJWTAuth, async (req: Request, res: Response) => {
     try {
       const user = (req as any).user;
-      const { adAccountId, planResultId, industryType } = req.body;
+      const { adAccountId, planResultId, industryType, locale = 'zh-TW' } = req.body;
 
       if (!user.metaAccessToken) {
         return res.status(400).json({ 
@@ -158,6 +158,7 @@ export function setupFbAuditRoutes(app: Express) {
         industryType,
         user.metaAccessToken,
         adAccountId,
+        locale,
         (progress) => {
           // 發送進度更新
           res.write(`data: ${JSON.stringify(progress)}\n\n`);
@@ -200,7 +201,7 @@ export function setupFbAuditRoutes(app: Express) {
   app.post('/api/fbaudit/check', requireJWTAuth, async (req: Request, res: Response) => {
     try {
       const user = (req as any).user;
-      const { adAccountId, planResultId, industryType } = req.body;
+      const { adAccountId, planResultId, industryType, locale = 'zh-TW' } = req.body;
 
       if (!user.metaAccessToken) {
         return res.status(400).json({ 
@@ -232,7 +233,8 @@ export function setupFbAuditRoutes(app: Express) {
         planResultId,
         industryType,
         user.metaAccessToken,
-        adAccountId
+        adAccountId,
+        locale
       );
       console.log('Generated comparisons:', comparisons);
 

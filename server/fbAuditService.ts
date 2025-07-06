@@ -269,6 +269,7 @@ export class FbAuditService {
     industryType: string,
     accessToken?: string,
     adAccountId?: string,
+    locale: string = 'zh-TW',
     onProgress?: (progress: any) => void
   ): Promise<HealthCheckComparison[]> {
     try {
@@ -355,7 +356,8 @@ export class FbAuditService {
               comparison.metric,
               comparison.target,
               comparison.actual,
-              industryType
+              industryType,
+              locale
             );
           }
 
@@ -383,7 +385,8 @@ export class FbAuditService {
     planResultId: string,
     industryType: string,
     accessToken?: string,
-    adAccountId?: string
+    adAccountId?: string,
+    locale: string = 'zh-TW'
   ): Promise<HealthCheckComparison[]> {
     try {
       // 從預算計劃獲取目標值
@@ -498,7 +501,8 @@ export class FbAuditService {
               comparison.metric,
               comparison.target,
               comparison.actual,
-              industryType
+              industryType,
+              locale
             );
           }
         }
@@ -1330,24 +1334,63 @@ ${underSpentCampaigns.length > 0 ?
     metric: string,
     target: number,
     actual: number,
-    industryType: string
+    industryType: string,
+    locale: string = 'zh-TW'
   ): Promise<string> {
     try {
+      // 多語言指標名稱
       const metricNames = {
-        dailySpend: '日均花費',
-        purchases: '購買數',
-        roas: 'ROAS',
-        ctr: '連結點擊率'
+        'zh-TW': {
+          dailySpend: '日均花費',
+          purchases: '購買數',
+          roas: 'ROAS',
+          ctr: '連結點擊率'
+        },
+        'en': {
+          dailySpend: 'Daily Spend',
+          purchases: 'Purchases',
+          roas: 'ROAS',
+          ctr: 'Click Through Rate'
+        },
+        'ja': {
+          dailySpend: '日次支出',
+          purchases: '購入数',
+          roas: 'ROAS',
+          ctr: 'クリック率'
+        }
       };
 
-      const prompt = `你是一位專業的 Facebook 電商廣告顧問。針對 ${industryType} 產業，此廣告帳號的「${metricNames[metric as keyof typeof metricNames]}」未達標。
+      // 多語言 prompt
+      const prompts = {
+        'zh-TW': `你是一位專業的 Facebook 電商廣告顧問「小黑老師」。針對 ${industryType} 產業，此廣告帳號的「${metricNames['zh-TW'][metric as keyof typeof metricNames['zh-TW']]}」未達標。
 
 目標值：${target}
 實際值：${actual}
 
 請用繁體中文，提供 2-3 點簡潔、可執行的初步優化建議。每個建議控制在50字以內，直接提供具體行動方案。
 
-請使用 HTML 格式輸出，使用 <ul> 和 <li> 標籤來組織建議清單。`;
+請使用 HTML 格式輸出，使用 <ul> 和 <li> 標籤來組織建議清單。`,
+
+        'en': `You are a professional Facebook e-commerce advertising consultant named "Teacher Black". For the ${industryType} industry, this ad account's "${metricNames['en'][metric as keyof typeof metricNames['en']]}" is underperforming.
+
+Target value: ${target}
+Actual value: ${actual}
+
+Please provide 2-3 concise, actionable optimization suggestions in English. Keep each suggestion under 50 words and provide specific action plans.
+
+Please output in HTML format using <ul> and <li> tags to organize the suggestion list.`,
+
+        'ja': `あなたは「小黒先生」という名前のプロフェッショナルなFacebookeコマース広告コンサルタントです。${industryType}業界において、この広告アカウントの「${metricNames['ja'][metric as keyof typeof metricNames['ja']]}」が目標を下回っています。
+
+目標値：${target}
+実際値：${actual}
+
+日本語で、2-3つの簡潔で実行可能な最適化提案を提供してください。各提案は50文字以内にして、具体的なアクションプランを提供してください。
+
+<ul>と<li>タグを使用してHTML形式で出力してください。`
+      };
+
+      const prompt = prompts[locale as keyof typeof prompts] || prompts['zh-TW'];
 
       const response = await this.openai.chat.completions.create({
         model: "gpt-4o-mini", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
@@ -1356,10 +1399,25 @@ ${underSpentCampaigns.length > 0 ?
         temperature: 0.7,
       });
 
-      return response.choices[0].message.content || '暫無建議';
+      // 多語言錯誤處理
+      const errorMessages = {
+        'zh-TW': '暫無建議',
+        'en': 'No recommendations available',
+        'ja': '提案がありません'
+      };
+
+      return response.choices[0].message.content || errorMessages[locale as keyof typeof errorMessages] || errorMessages['zh-TW'];
     } catch (error) {
       console.error('Error generating AI advice:', error);
-      return '無法生成建議，請稍後再試';
+      
+      // 多語言錯誤訊息
+      const errorMessages = {
+        'zh-TW': '無法生成建議，請稍後再試',
+        'en': 'Unable to generate recommendations, please try again later',
+        'ja': '提案を生成できません。後でもう一度お試しください'
+      };
+      
+      return errorMessages[locale as keyof typeof errorMessages] || errorMessages['zh-TW'];
     }
   }
 
