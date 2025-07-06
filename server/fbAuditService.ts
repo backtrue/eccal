@@ -111,23 +111,15 @@ export class FbAuditService {
       // 確保廣告帳戶 ID 格式正確，避免重複 act_ 前綴
       const accountId = adAccountId.startsWith('act_') ? adAccountId : `act_${adAccountId}`;
       
-      // 只拉取 purchase 相關欄位
+      // 只拉取必要的欄位，避免不必要的 action_type 數據
       const fields = [
         'spend',                    // 花費
-        'actions',                  // 只取 purchase 動作
-        'action_values',            // 購買價值數據（用於手動計算 ROAS）
-        'outbound_clicks_ctr',      // 外連點擊率
-        'purchase_roas'             // 購買 ROAS
+        'purchase',                 // 購買次數（直接字段）
+        'purchase_roas',            // 購買 ROAS（直接字段）
+        'outbound_clicks_ctr'       // 外連點擊率
       ].join(',');
       
-      // 使用 filtering 參數只拉取 purchase action_type
-      const filtering = encodeURIComponent(JSON.stringify([{
-        "field": "action_type",
-        "operator": "IN", 
-        "value": ["purchase"]
-      }]));
-      
-      const url = `${this.baseUrl}/${accountId}/insights?fields=${fields}&filtering=${filtering}&time_range={"since":"${since}","until":"${until}"}&access_token=${accessToken}`;
+      const url = `${this.baseUrl}/${accountId}/insights?fields=${fields}&time_range={"since":"${since}","until":"${until}"}&access_token=${accessToken}`;
       
       console.log('Facebook API URL:', url);
       console.log('Ad Account ID:', adAccountId);
@@ -161,10 +153,9 @@ export class FbAuditService {
       // 按照用戶指示：直接使用 Facebook API 的正確欄位
       const spend = parseFloat(insights.spend || '0');
       
-      // 1. 購買數：從 actions 陣列找 action_type = 'purchase'
-      const purchaseAction = insights.actions?.find((action: any) => action.action_type === 'purchase');
-      const purchases = purchaseAction ? parseInt(purchaseAction.value) : 0;
-      console.log('Purchase action found:', purchaseAction);
+      // 1. 購買數：直接使用 purchase 欄位（無需解析 actions 陣列）
+      const purchases = parseInt(insights.purchase || '0');
+      console.log('Direct purchase field:', insights.purchase);
       console.log('Final purchases count:', purchases);
       
       // 2. ROAS：只使用 purchase_roas 欄位
@@ -525,12 +516,13 @@ export class FbAuditService {
 
       const accountId = adAccountId.startsWith('act_') ? adAccountId : `act_${adAccountId}`;
       
-      // 獲取廣告組合數據
+      // 獲取廣告組合數據 - 只拉取必要欄位
       const fields = [
         'adset_id',
         'adset_name', 
         'spend',
-        'actions'
+        'purchase',           // 直接購買數欄位
+        'video_views'         // 內容瀏覽數的替代指標
       ].join(',');
       
       const url = `${this.baseUrl}/${accountId}/insights?fields=${fields}&level=adset&time_range={"since":"${since}","until":"${until}"}&access_token=${accessToken}`;
@@ -557,15 +549,13 @@ export class FbAuditService {
       const adSetData = data.data
         .filter((item: any) => item.adset_name && item.adset_name !== '(not set)') // 過濾有效廣告組合
         .map((item: any) => {
-          // 計算購買數
-          const purchaseAction = item.actions?.find((action: any) => action.action_type === 'purchase');
-          const purchases = purchaseAction ? parseInt(purchaseAction.value) : 0;
+          // 直接使用 purchase 欄位
+          const purchases = parseInt(item.purchase || '0');
           
-          // 計算內容瀏覽數
-          const viewContentAction = item.actions?.find((action: any) => action.action_type === 'view_content');
-          const viewContent = viewContentAction ? parseInt(viewContentAction.value) : 0;
+          // 使用 video_views 作為瀏覽指標
+          const viewContent = parseInt(item.video_views || '0');
           
-          // 計算轉換率 (purchase/view_content)
+          // 計算轉換率 (purchase/video_views)
           const conversionRate = viewContent > 0 ? (purchases / viewContent) * 100 : 0;
           
           return {
@@ -577,7 +567,7 @@ export class FbAuditService {
             spend: parseFloat(item.spend || '0')
           };
         })
-        .filter((item: any) => item.viewContent > 0) // 只保留有內容瀏覽數的廣告組合
+        .filter((item: any) => item.viewContent > 0) // 只保留有瀏覽數的廣告組合
         .sort((a: any, b: any) => b.conversionRate - a.conversionRate); // 按轉換率排序
 
       console.log('處理後的廣告組合數據:', adSetData.slice(0, 3));
