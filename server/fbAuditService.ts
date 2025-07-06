@@ -658,8 +658,11 @@ ${adSetRecommendation}
     spend: number;
   }>> {
     try {
+      // 確保廣告帳戶 ID 格式正確，避免重複 act_ 前綴
+      const accountId = adAccountId.startsWith('act_') ? adAccountId : `act_${adAccountId}`;
+      
       // 根據 PDF 文件，使用 website_purchase_roas 字段
-      const roasUrl = `${this.baseUrl}/act_${adAccountId}/insights?` +
+      const roasUrl = `${this.baseUrl}/${accountId}/insights?` +
         `level=adset&` +
         `fields=adset_name,website_purchase_roas,purchases,spend&` +
         `time_range={"since":"7","until":"1"}&` +
