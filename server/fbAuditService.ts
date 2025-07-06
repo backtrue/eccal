@@ -474,6 +474,14 @@ export class FbAuditService {
               comparison.target,
               comparison.actual
             );
+          } else if (comparison.metric === 'ctr' && accessToken && adAccountId) {
+            // CTR 未達標時調用新的 CTR 建議函數
+            comparison.advice = await this.generateCTRAdvice(
+              accessToken,
+              adAccountId,
+              comparison.target,
+              comparison.actual
+            );
           } else {
             comparison.advice = await this.generateAIAdvice(
               comparison.metric,
@@ -737,6 +745,99 @@ ${adSetRecommendation}
   }
 
   /**
+   * 獲取 Hero Post 廣告（CTR 全部高、CTR 連外高、有購買轉換最佳）
+   */
+  async getHeroPosts(accessToken: string, adAccountId: string): Promise<Array<{
+    adName: string;
+    ctr: number;
+    outboundCtr: number;
+    purchases: number;
+    spend: number;
+    heroScore: number;
+  }>> {
+    try {
+      // 確保廣告帳戶 ID 格式正確
+      const accountId = adAccountId.startsWith('act_') ? adAccountId : `act_${adAccountId}`;
+      
+      // 計算日期範圍（過去7天）
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - 7);
+      
+      const since = startDate.toISOString().split('T')[0];
+      const until = endDate.toISOString().split('T')[0];
+      
+      // 獲取廣告層級數據
+      const heroUrl = `${this.baseUrl}/${accountId}/insights?` +
+        `level=ad&` +
+        `fields=ad_name,ctr,outbound_clicks_ctr,actions,spend,clicks,impressions&` +
+        `time_range={"since":"${since}","until":"${until}"}&` +
+        `filtering=[{"field":"ad.effective_status","operator":"IN","value":["ACTIVE"]}]&` +
+        `limit=100&` +
+        `access_token=${accessToken}`;
+      
+      console.log('獲取 Hero Post 數據 URL:', heroUrl.replace(accessToken, accessToken.substring(0, 20) + '...'));
+      
+      const response = await fetch(heroUrl);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        console.error('Facebook API 錯誤:', data);
+        return [];
+      }
+
+      console.log('Hero Post 原始數據:', data);
+
+      if (!data.data || data.data.length === 0) {
+        console.log('沒有找到 Hero Post 數據');
+        return [];
+      }
+
+      // 處理並排序數據
+      const processedData = data.data
+        .filter((item: any) => item.ad_name && item.ad_name !== '(not set)')
+        .map((item: any) => {
+          // 解析購買數
+          let purchases = 0;
+          if (item.actions && Array.isArray(item.actions)) {
+            const purchaseAction = item.actions.find((action: any) => action.action_type === 'purchase');
+            if (purchaseAction && purchaseAction.value) {
+              purchases = parseInt(purchaseAction.value);
+            }
+          }
+          
+          const ctr = parseFloat(item.ctr || '0');
+          const outboundCtr = parseFloat(item.outbound_clicks_ctr || '0');
+          const spend = parseFloat(item.spend || '0');
+          
+          // 計算 Hero Score：CTR(30%) + 外連CTR(30%) + 購買數權重(40%)
+          // 購買數權重：有購買 +2 分，每多一個購買 +0.5 分
+          const purchaseWeight = purchases > 0 ? 2 + (purchases * 0.5) : 0;
+          const heroScore = (ctr * 0.3) + (outboundCtr * 0.3) + purchaseWeight;
+          
+          return {
+            adName: item.ad_name,
+            ctr,
+            outboundCtr,
+            purchases,
+            spend,
+            heroScore
+          };
+        })
+        .filter((item: any) => item.ctr > 0 || item.outboundCtr > 0) // 至少要有一種 CTR 數據
+        .sort((a: any, b: any) => b.heroScore - a.heroScore) // 按 Hero Score 排序
+        .slice(0, 3); // 取前三名
+
+      console.log('處理後的 Hero Post 數據:', processedData);
+      return processedData;
+
+    } catch (error) {
+      console.error('獲取 Hero Post 數據錯誤:', error);
+      return [];
+    }
+  }
+
+  /**
    * 生成 ROAS 建議 (使用 ChatGPT 4o mini)
    */
   async generateROASAdvice(accessToken: string, adAccountId: string, target: number, actual: number): Promise<string> {
@@ -799,6 +900,91 @@ ${adSetRecommendation}
     } catch (error) {
       console.error('生成 ROAS 建議錯誤:', error);
       return '無法生成 ROAS 建議，請稍後再試';
+    }
+  }
+
+  /**
+   * 生成 CTR 建議 (使用 ChatGPT 4o mini)
+   */
+  async generateCTRAdvice(accessToken: string, adAccountId: string, target: number, actual: number): Promise<string> {
+    try {
+      console.log('=== ChatGPT CTR 建議生成開始 ===');
+      console.log('目標 CTR:', target);
+      console.log('實際 CTR:', actual);
+      
+      // 獲取前三名 Hero Post
+      const heroPosts = await this.getHeroPosts(accessToken, adAccountId);
+      
+      console.log('前三名 Hero Post:', heroPosts);
+      
+      let heroPostRecommendation = '';
+      if (heroPosts.length > 0) {
+        heroPostRecommendation = `
+根據過去7天的數據分析，這是你表現最佳的前三個 Hero Post 廣告：
+
+${heroPosts.map((hero, index) => 
+  `${index + 1}. 【${hero.adName}】
+   - CTR（全部）：${hero.ctr.toFixed(2)}%
+   - CTR（連外）：${hero.outboundCtr.toFixed(2)}%
+   - 購買轉換：${hero.purchases} 次
+   - 廣告花費：$${hero.spend.toFixed(2)}`
+).join('\n\n')}
+
+建議操作：
+1. 針對這些 Hero Post 進行預算加碼，擴大觸及範圍
+2. 使用這些 Hero Post 測試更多廣告組合和受眾設定
+3. 利用 ASC（廣告組合簡化）功能，讓 Facebook 自動優化並放大這些 Hero Post 的成效
+4. 分析這些 Hero Post 的共同特點（創意元素、文案風格、視覺設計），應用到新廣告中
+`;
+      } else {
+        heroPostRecommendation = '目前無法找到表現突出的 Hero Post，建議先優化現有廣告的創意和受眾設定。';
+      }
+
+      const messages = [
+        {
+          role: 'system',
+          content: '你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請以專業且實用的語調提供廣告優化建議。'
+        },
+        {
+          role: 'user',
+          content: `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。目前的廣告『CTR』目標為${target.toFixed(2)}%，實際達成了${actual.toFixed(2)}%，成效有點落後。請基於『分析並加碼成效好的廣告組合』這個核心邏輯，提供下一步的操作建議，目的是找出 hero post，趕快挽救頹勢。
+
+${heroPostRecommendation}
+
+請提供具體的優化策略和執行步驟。`
+        }
+      ];
+
+      console.log('發送 CTR 建議請求到 ChatGPT...');
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages,
+          max_tokens: 1000,
+          temperature: 0.7
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('ChatGPT API 錯誤:', response.status, errorText);
+        throw new Error(`ChatGPT API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('ChatGPT CTR 建議回應:', data);
+
+      return data.choices[0].message.content;
+
+    } catch (error) {
+      console.error('生成 CTR 建議錯誤:', error);
+      return '抱歉，無法生成 CTR 建議。請稍後再試。';
     }
   }
 
