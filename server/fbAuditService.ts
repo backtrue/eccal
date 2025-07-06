@@ -119,7 +119,8 @@ export class FbAuditService {
         'outbound_clicks_ctr'       // 外連點擊率
       ].join(',');
       
-      const url = `${this.baseUrl}/${accountId}/insights?fields=${fields}&action_breakdowns=action_type&filtering=[{"field":"action_type","operator":"IN","value":["purchase"]}]&time_range={"since":"${since}","until":"${until}"}&access_token=${accessToken}`;
+      // 簡化 API 調用，移除可能有問題的 filtering，改用後端篩選
+      const url = `${this.baseUrl}/${accountId}/insights?fields=${fields}&time_range={"since":"${since}","until":"${until}"}&access_token=${accessToken}`;
       
       console.log('Facebook API URL:', url);
       console.log('Ad Account ID:', adAccountId);
@@ -538,7 +539,8 @@ export class FbAuditService {
         'actions'             // 限制 actions 只包含 purchase 和 view_content
       ].join(',');
       
-      const url = `${this.baseUrl}/${accountId}/insights?fields=${fields}&level=adset&action_breakdowns=action_type&filtering=[{"field":"action_type","operator":"IN","value":["purchase","view_content"]}]&time_range={"since":"${since}","until":"${until}"}&access_token=${accessToken}`;
+      // 簡化購買建議 API 調用
+      const url = `${this.baseUrl}/${accountId}/insights?fields=${fields}&level=adset&time_range={"since":"${since}","until":"${until}"}&access_token=${accessToken}`;
       
       console.log('=== 獲取廣告組合數據 ===');
       console.log('API URL:', url.replace(accessToken, accessToken.substring(0, 20) + '...'));
@@ -652,7 +654,7 @@ ${adSetRecommendation}
       const response = await this.openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [{ role: "user", content: prompt }],
-        max_tokens: 1000,
+        max_tokens: 2000,  // 增加 token 限制確保完整輸出
         temperature: 0.7,
       });
 
@@ -692,12 +694,10 @@ ${adSetRecommendation}
       const since = startDate.toISOString().split('T')[0];
       const until = endDate.toISOString().split('T')[0];
       
-      // ROAS 查詢，限制 actions 只包含 purchase
+      // 簡化 ROAS 查詢，移除複雜的 filtering
       const roasUrl = `${this.baseUrl}/${accountId}/insights?` +
         `level=adset&` +
         `fields=adset_name,website_purchase_roas,actions,spend&` +
-        `action_breakdowns=action_type&` +
-        `filtering=[{"field":"action_type","operator":"IN","value":["purchase"]},{"field":"adset.effective_status","operator":"IN","value":["ACTIVE"]}]&` +
         `time_range={"since":"${since}","until":"${until}"}&` +
         `limit=100&` +
         `access_token=${accessToken}`;
@@ -775,11 +775,10 @@ ${adSetRecommendation}
       const until = endDate.toISOString().split('T')[0];
       
       // 獲取廣告層級數據（只拉取 Hero Post 需要的欄位，限制 actions 只包含 purchase）
+      // 簡化 Hero Post 查詢，移除複雜的 filtering
       const heroUrl = `${this.baseUrl}/${accountId}/insights?` +
         `level=ad&` +
         `fields=ad_name,ctr,outbound_clicks_ctr,spend,impressions,actions&` +
-        `action_breakdowns=action_type&` +
-        `filtering=[{"field":"action_type","operator":"IN","value":["purchase"]}]&` +
         `time_range={"since":"${since}","until":"${until}"}&` +
         `limit=100&` +
         `access_token=${accessToken}`;
@@ -974,7 +973,7 @@ ${adSetRecommendation}
       const response = await this.openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [{ role: "user", content: prompt }],
-        max_tokens: 1000,
+        max_tokens: 2000,  // 增加 token 限制確保完整輸出
       });
 
       let advice = response.choices[0].message.content || '';
@@ -1097,7 +1096,7 @@ ${heroPostRecommendation}
         body: JSON.stringify({
           model: 'gpt-4o-mini',
           messages,
-          max_tokens: 1000,
+          max_tokens: 2000,  // 增加 token 限制確保完整輸出
           temperature: 0.7
         })
       });
@@ -1177,7 +1176,7 @@ ${heroPostRecommendation}
       const response = await this.openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [{ role: "user", content: prompt }],
-        max_tokens: 1000,
+        max_tokens: 2000,  // 增加 token 限制確保完整輸出
         temperature: 0.7,
       });
 
