@@ -254,7 +254,7 @@ export class FbAuditService {
     
     // 按照用戶指示：直接使用 Facebook API 數據
     const dailySpend = adData.spend / 28; // spend 除以 28 天
-    const purchases = adData.purchases;   // 直接使用 purchase 次數
+    const purchases = adData.purchases / 28; // 改為日均購買數（總購買數 ÷ 28 天）
     const roas = adData.roas;            // 直接使用 purchase_roas
     const ctr = adData.ctr;              // 直接使用 outbound_clicks_ctr
 
@@ -324,7 +324,9 @@ export class FbAuditService {
           metric: 'dailySpend',
           target: targetDailySpend,
           actual: actualMetrics.dailySpend,
-          status: actualMetrics.dailySpend >= targetDailySpend * 0.8 ? 'achieved' : 'not_achieved'
+          status: actualMetrics.dailySpend >= targetDailySpend * 0.8 ? 'achieved' : 'not_achieved',
+          advice: actualMetrics.dailySpend < targetDailySpend * 0.8 ? 
+            '預算花費不足，建議針對成效好的廣告組合提高日預算' : undefined
         },
         {
           metric: 'purchases',
@@ -388,7 +390,9 @@ export class FbAuditService {
 目標值：${target}
 實際值：${actual}
 
-請用繁體中文，提供 2-3 點簡潔、可執行的初步優化建議。每個建議控制在50字以內，直接提供具體行動方案。`;
+請用繁體中文，提供 2-3 點簡潔、可執行的初步優化建議。每個建議控制在50字以內，直接提供具體行動方案。
+
+請使用 HTML 格式輸出，使用 <ul> 和 <li> 標籤來組織建議清單。`;
 
       const response = await this.openai.chat.completions.create({
         model: "gpt-4o-mini", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user

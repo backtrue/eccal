@@ -241,9 +241,10 @@ export default function FbAudit({ locale }: FbAuditProps) {
                           <Lightbulb className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
                           <div>
                             <div className="font-medium text-yellow-800 mb-1">AI 優化建議</div>
-                            <div className="text-yellow-700 text-sm leading-relaxed">
-                              {comparison.advice}
-                            </div>
+                            <div 
+                              className="text-yellow-700 text-sm leading-relaxed"
+                              dangerouslySetInnerHTML={{ __html: comparison.advice }}
+                            />
                           </div>
                         </div>
                       </div>
