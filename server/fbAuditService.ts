@@ -1033,7 +1033,8 @@ ${heroPostRecommendation}
         }
       ];
 
-      console.log('發送 CTR 建議請求到 ChatGPT...');
+      console.log('=== 發送 CTR 建議請求到 ChatGPT ===');
+      console.log('請求內容:', JSON.stringify(messages, null, 2));
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -1056,9 +1057,18 @@ ${heroPostRecommendation}
       }
 
       const data = await response.json();
-      console.log('ChatGPT CTR 建議回應:', data);
+      console.log('ChatGPT CTR 建議回應完整數據:', JSON.stringify(data, null, 2));
 
-      return data.choices[0].message.content;
+      let advice = data.choices[0].message.content || '';
+      
+      console.log('=== 最終 CTR 建議內容 ===');
+      console.log('建議長度:', advice.length);
+      console.log('建議內容:', advice);
+      console.log('是否包含 Hero Post 信息:', advice.includes('Hero Post') || advice.includes('CTR') || advice.includes('廣告'));
+      console.log('Hero Post 推薦內容長度:', heroPostRecommendation.length);
+      console.log('=== CTR 建議生成完成 ===');
+      
+      return advice;
 
     } catch (error) {
       console.error('生成 CTR 建議錯誤:', error);
