@@ -324,9 +324,7 @@ export class FbAuditService {
           metric: 'dailySpend',
           target: targetDailySpend,
           actual: actualMetrics.dailySpend,
-          status: actualMetrics.dailySpend >= targetDailySpend * 0.8 ? 'achieved' : 'not_achieved',
-          advice: actualMetrics.dailySpend < targetDailySpend * 0.8 ? 
-            '預算花費不足，建議針對成效好的廣告組合提高日預算' : undefined
+          status: actualMetrics.dailySpend >= targetDailySpend * 0.8 ? 'achieved' : 'not_achieved'
         },
         {
           metric: 'purchases',
@@ -351,12 +349,19 @@ export class FbAuditService {
       // 為未達標指標生成 AI 建議
       for (const comparison of comparisons) {
         if (comparison.status === 'not_achieved') {
-          comparison.advice = await this.generateAIAdvice(
-            comparison.metric,
-            comparison.target,
-            comparison.actual,
-            industryType
-          );
+          if (comparison.metric === 'dailySpend') {
+            comparison.advice = await this.generateDailySpendAdvice(
+              comparison.target,
+              comparison.actual
+            );
+          } else {
+            comparison.advice = await this.generateAIAdvice(
+              comparison.metric,
+              comparison.target,
+              comparison.actual,
+              industryType
+            );
+          }
         }
       }
 
@@ -365,6 +370,40 @@ export class FbAuditService {
     } catch (error) {
       console.error('Error comparing with targets:', error);
       throw error;
+    }
+  }
+
+  /**
+   * 生成日均花費建議 (使用 Gemini 2.5 Pro)
+   */
+  private async generateDailySpendAdvice(target: number, actual: number): Promise<string> {
+    try {
+      const prompt = `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。目前的廣告活動『日均花費』目標為 ${target.toLocaleString()} 元，實際花費為 ${actual.toLocaleString()} 元，尚未完全達到預算目標。請基於『成交的基礎是足夠的流量，流量的基礎是足夠的預算花費』這個核心邏輯，提供明確的廣告操作建議，確保預算能順利花出，以爭取最大的曝光與流量機會。
+
+請使用 HTML 格式輸出，模仿小黑老師的語調，包含：
+1. 開頭問候和現狀分析
+2. 核心邏輯說明
+3. 3個具體建議，每個建議用 <h4> 標題 + <p> 內容
+4. 結尾鼓勵語`;
+
+      // 使用 Gemini 2.5 Pro
+      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=' + process.env.GEMINI_API_KEY, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 1000
+          }
+        })
+      });
+
+      const data = await response.json();
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || '暫無建議';
+    } catch (error) {
+      console.error('Error generating daily spend advice:', error);
+      return '無法生成建議，請稍後再試';
     }
   }
 
