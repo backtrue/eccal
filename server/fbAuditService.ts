@@ -985,11 +985,15 @@ ${adSetRecommendation}
       console.log('開始查找 Hero Post...');
       const heroPosts = await this.getHeroPosts(accessToken, adAccountId);
       
-      console.log('Hero Post 查找結果:', heroPosts);
+      console.log('=== Hero Post 查找結果詳細分析 ===');
+      console.log('Hero Post 查找結果:', JSON.stringify(heroPosts, null, 2));
       console.log('Hero Post 數量:', heroPosts.length);
+      console.log('Hero Post 類型:', typeof heroPosts);
+      console.log('是否為陣列:', Array.isArray(heroPosts));
       
       let heroPostRecommendation = '';
       if (heroPosts.length > 0) {
+        console.log('✅ 找到 Hero Post，開始生成推薦內容...');
         heroPostRecommendation = `
 ✨ 根據過去7天的數據分析，發現你的 ${heroPosts.length} 個 Hero Post 廣告（高連外點擊率）：
 
@@ -1009,8 +1013,13 @@ ${heroPosts.map((hero, index) =>
 4. 【受眾測試】：拿這些 Hero Post 去測試更多不同的受眾組合
 `;
       } else {
+        console.log('❌ 沒有找到 Hero Post，使用備用建議...');
         heroPostRecommendation = '❌ 目前無法找到高連外點擊率的 Hero Post（過去7天曝光超過500且連外CTR表現突出），建議先優化現有廣告的創意和受眾設定。';
       }
+      
+      console.log('=== Hero Post 推薦內容 ===');
+      console.log('推薦內容長度:', heroPostRecommendation.length);
+      console.log('推薦內容預覽:', heroPostRecommendation.substring(0, 200) + '...');
 
       const messages = [
         {
@@ -1061,11 +1070,14 @@ ${heroPostRecommendation}
 
       let advice = data.choices[0].message.content || '';
       
-      console.log('=== 最終 CTR 建議內容 ===');
+      console.log('=== 最終 CTR 建議內容分析 ===');
       console.log('建議長度:', advice.length);
-      console.log('建議內容:', advice);
-      console.log('是否包含 Hero Post 信息:', advice.includes('Hero Post') || advice.includes('CTR') || advice.includes('廣告'));
+      console.log('建議內容完整版:', advice);
+      console.log('是否包含 Hero Post:', advice.includes('Hero Post'));
+      console.log('是否包含連外點擊率:', advice.includes('連外點擊率'));
+      console.log('是否包含廣告名稱:', advice.includes('【'));
       console.log('Hero Post 推薦內容長度:', heroPostRecommendation.length);
+      console.log('Hero Post 是否為空:', heroPostRecommendation.trim() === '');
       console.log('=== CTR 建議生成完成 ===');
       
       return advice;
