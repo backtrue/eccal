@@ -1,0 +1,112 @@
+2025-07-06 15:47:25.26
+894759db
+User
+=== ChatGPT ROAS 建議生成開始 ===
+2025-07-06 15:47:25.26
+894759db
+User
+目標 ROAS: 5.65
+2025-07-06 15:47:25.26
+894759db
+User
+實際 ROAS: 1.46
+2025-07-06 15:47:25.26
+894759db
+User
+獲取 ROAS 廣告組合數據 URL: https://graph.facebook.com/v19.0/act_1598333667146415/insights?level=adset&fields=adset_name,website_purchase_roas,actions,spend&time_range={"since":"2025-06-29","until":"2025-07-06"}&limit=100&access_token=EAAIAeNfWeDUBPD2Ik1RwbR6yAA8wdbOuPMZCxnYgZBqZBcxMgyHEhE61r5zcPY8k3aA4OFvHD8CNPMpZAkpYqDIW5hyqmri1orPD749hAZBO8QyxujOUqu6T2JmiUmzW6WgZCqZAZCHhcqByfGEPsdRi8fZB5HsSr73tn8zjHkchIvx4gnZBck4so7ZC67HdfaL9hbHUGdenAtlKn0ZAQp6mnmCTzhf6RWf7aH6716NiXnne0FIItHqwvhpTHrErLgZDZD
+2025-07-06 15:47:26.58
+894759db
+User
+},
+2025-07-06 15:47:26.58
+894759db
+User
+{
+2025-07-06 15:47:26.58
+894759db
+User
+adset_name: '（KOC/Jordan）N_麵食相關,25-45y/排30VC',
+2025-07-06 15:47:26.58
+894759db
+User
+actions: [Array],
+2025-07-06 15:47:26.58
+894759db
+User
+spend: '302',
+2025-07-06 15:47:26.58
+894759db
+User
+date_start: '2025-06-29',
+2025-07-06 15:47:26.58
+894759db
+User
+date_stop: '2025-07-06'
+2025-07-06 15:47:26.58
+894759db
+User
+},
+2025-07-06 15:47:26.58
+894759db
+User
+{
+2025-07-06 15:47:26.58
+894759db
+User
+adset_name: '（KOC/Jordan）N_速食相關,25-45y/排30VC',
+2025-07-06 15:47:26.58
+894759db
+User
+actions: [Array],
+2025-07-06 15:47:26.58
+894759db
+User
+spend: '868',
+2025-07-06 15:47:26.58
+894759db
+User
+date_start: '2025-06-29',
+2025-07-06 15:47:26.58
+894759db
+User
+date_stop: '2025-07-06'
+2025-07-06 15:47:26.58
+894759db
+User
+},
+2025-07-06 15:47:26.58
+894759db
+User
+{
+2025-07-06 15:47:26.58
+894759db
+User
+adset_name: '（2025.7月檔期）N_FB,IG粉專互動90天/排30VC',
+2025-07-06 15:47:26.58
+894759db
+User
+actions: [Array],
+2025-07-06 15:47:26.58
+894759db
+User
+spend: '2524',
+2025-07-06 15:47:26.58
+894759db
+User
+date_start: '2025-06-29',
+2025-07-06 15:47:26.58
+894759db
+User
+date_stop: '2025-07-06'
+2025-07-06 15:47:26.58
+894759db
+User
+},
+2025-07-06 15:47:26.58
+894759db
+User
+{
+2025-07-06 15:47:26.58
+894759db
+User
+adset_name: '（2025.7月檔期）N_餐點相關,23-54y/排30VC',

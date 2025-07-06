@@ -704,10 +704,10 @@ ${adSetRecommendation}
       const since = startDate.toISOString().split('T')[0];
       const until = endDate.toISOString().split('T')[0];
       
-      // 簡化 ROAS 查詢，移除複雜的 filtering
+      // 簡化 ROAS 查詢，移除複雜的 filtering，使用 purchase_roas 和 action_values
       const roasUrl = `${this.baseUrl}/${accountId}/insights?` +
         `level=adset&` +
-        `fields=adset_name,website_purchase_roas,actions,spend&` +
+        `fields=adset_name,purchase_roas,actions,action_values,spend&` +
         `time_range={"since":"${since}","until":"${until}"}&` +
         `limit=100&` +
         `access_token=${accessToken}`;
@@ -731,8 +731,37 @@ ${adSetRecommendation}
 
       // 處理並排序數據（使用篩選後的 actions 陣列）
       const processedData = data.data
-        .filter((item: any) => item.website_purchase_roas && parseFloat(item.website_purchase_roas || '0') > 0)
         .map((item: any) => {
+          console.log('處理廣告組合:', item.adset_name);
+          console.log('purchase_roas 原始值:', item.purchase_roas);
+          console.log('action_values 原始值:', item.action_values);
+          console.log('actions 原始值:', item.actions);
+          
+          // 處理 ROAS 值 - 支持多種格式
+          let roas = 0;
+          
+          // 首先嘗試 purchase_roas 字段
+          if (item.purchase_roas) {
+            if (Array.isArray(item.purchase_roas) && item.purchase_roas.length > 0) {
+              // 如果是陣列格式
+              roas = parseFloat(item.purchase_roas[0]?.value || '0');
+            } else if (typeof item.purchase_roas === 'string' || typeof item.purchase_roas === 'number') {
+              // 如果是直接數值
+              roas = parseFloat(item.purchase_roas.toString());
+            }
+          }
+          
+          // 如果 purchase_roas 沒有值，嘗試從 action_values 中計算
+          if (roas === 0 && item.action_values && item.actions) {
+            const purchaseValue = this.extractActionValue(item.action_values, 'purchase');
+            const spend = parseFloat(item.spend || '0');
+            
+            if (purchaseValue && spend > 0) {
+              roas = purchaseValue / spend;
+              console.log('從 action_values 計算 ROAS:', { purchaseValue, spend, roas });
+            }
+          }
+          
           // 從篩選後的 actions 陣列中解析購買數
           let purchases = 0;
           if (item.actions && Array.isArray(item.actions)) {
@@ -742,13 +771,18 @@ ${adSetRecommendation}
             }
           }
           
+          const spend = parseFloat(item.spend || '0');
+          
+          console.log('處理結果:', { adSetName: item.adset_name, roas, purchases, spend });
+          
           return {
             adSetName: item.adset_name,
-            roas: parseFloat(item.website_purchase_roas[0]?.value || '0'),
+            roas,
             purchases,
-            spend: parseFloat(item.spend || '0')
+            spend
           };
         })
+        .filter(item => item.roas > 0) // 過濾掉 ROAS 為 0 的項目
         .sort((a, b) => b.roas - a.roas) // 按 ROAS 降序排列
         .slice(0, 3); // 取前三名
 
