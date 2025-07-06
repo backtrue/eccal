@@ -178,6 +178,13 @@ export interface TranslationData {
   loadingPlans: string;
   pleaseSelect: string;
   createPlanFirst: string;
+  
+  // Security and analysis messages
+  securityNotice: string;
+  analyzingYourData: string;
+  analyzingDescription: string;
+  tipTitle: string;
+  tipMessage: string;
 }
 
 const translations: Record<Locale, TranslationData> = {
@@ -658,6 +665,13 @@ const translations: Record<Locale, TranslationData> = {
     loadingPlans: 'プランを読み込み中...',
     pleaseSelect: '選択してください',
     createPlanFirst: 'まずプランを作成',
+    
+    // Security and analysis messages
+    securityNotice: 'お客様の広告データの読み取りのみを行い、設定の変更は一切いたしません。データの安全性が最優先事項です。',
+    analyzingYourData: 'お客様の広告データを分析中',
+    analyzingDescription: '過去28日間の広告データを分析しておりますので、しばらくお待ちください...',
+    tipTitle: '💡 ヒント',
+    tipMessage: '広告クリエイティブのCTRが高いほど、通常CPCは低くなります。',
   },
 };
 

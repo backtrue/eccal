@@ -329,7 +329,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
           <Alert className="max-w-2xl mx-auto mb-8">
             <Shield className="h-4 w-4" />
             <AlertDescription>
-              我們僅會讀取您的廣告數據，絕不修改任何設定。您的數據安全是我們的首要考量。
+              {t.securityNotice}
             </AlertDescription>
           </Alert>
         </div>
@@ -549,13 +549,13 @@ export default function FbAudit({ locale }: FbAuditProps) {
               <div className="mb-6">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
               </div>
-              <h3 className="text-lg font-medium mb-2">正在分析您的廣告數據</h3>
-              <p className="text-gray-600 mb-6">正在為您分析過去 28 天的廣告數據，請稍候...</p>
+              <h3 className="text-lg font-medium mb-2">{t.analyzingYourData}</h3>
+              <p className="text-gray-600 mb-6">{t.analyzingDescription}</p>
               
               <div className="max-w-md mx-auto">
                 <Progress value={75} className="mb-2" />
                 <p className="text-sm text-gray-500">
-                  💡 小提示：廣告素材的 CTR 越高，通常 CPC 就越低，因為系統認為這是受歡迎的內容！
+                  {t.tipTitle}：{t.tipMessage}
                 </p>
               </div>
             </CardContent>
