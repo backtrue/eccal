@@ -111,11 +111,11 @@ export class FbAuditService {
       // 確保廣告帳戶 ID 格式正確，避免重複 act_ 前綴
       const accountId = adAccountId.startsWith('act_') ? adAccountId : `act_${adAccountId}`;
       
-      // 只拉取必要的欄位，避免不必要的 action_type 數據
+      // 需要使用 actions 陣列來獲取購買數據，因為 purchase 不是有效的直接欄位
       const fields = [
         'spend',                    // 花費
-        'purchase',                 // 購買次數（直接字段）
-        'purchase_roas',            // 購買 ROAS（直接字段）
+        'actions',                  // 行動數據（包含購買）
+        'action_values',            // 行動價值（包含購買 ROAS）
         'outbound_clicks_ctr'       // 外連點擊率
       ].join(',');
       
@@ -150,32 +150,30 @@ export class FbAuditService {
       console.log('outbound_clicks_ctr:', insights.outbound_clicks_ctr);
       console.log('spend:', insights.spend);
       
-      // 按照用戶指示：直接使用 Facebook API 的正確欄位
+      // 需要從 actions 陣列中解析購買數據
       const spend = parseFloat(insights.spend || '0');
       
-      // 1. 購買數：直接使用 purchase 欄位（無需解析 actions 陣列）
-      const purchases = parseInt(insights.purchase || '0');
-      console.log('Direct purchase field:', insights.purchase);
-      console.log('Final purchases count:', purchases);
-      
-      // 2. ROAS：只使用 purchase_roas 欄位
-      let roas = 0;
-      console.log('purchase_roas 原始數據:', insights.purchase_roas);
-      
-      if (insights.purchase_roas !== undefined && insights.purchase_roas !== null) {
-        if (Array.isArray(insights.purchase_roas) && insights.purchase_roas.length > 0) {
-          const roasValue = insights.purchase_roas[0]?.value;
-          if (!isNaN(parseFloat(roasValue))) {
-            roas = parseFloat(roasValue);
-          }
-        } else if (typeof insights.purchase_roas === 'string' || typeof insights.purchase_roas === 'number') {
-          if (!isNaN(parseFloat(insights.purchase_roas.toString()))) {
-            roas = parseFloat(insights.purchase_roas.toString());
-          }
+      // 1. 購買數：從 actions 陣列中查找 purchase 行動類型
+      let purchases = 0;
+      if (insights.actions && Array.isArray(insights.actions)) {
+        const purchaseAction = insights.actions.find((action: any) => action.action_type === 'purchase');
+        if (purchaseAction && purchaseAction.value) {
+          purchases = parseInt(purchaseAction.value);
         }
       }
+      console.log('Parsed purchases from actions:', purchases);
       
-      // 如果 purchase_roas 沒有數據，手動計算：購買價值 / 廣告花費
+      // 2. ROAS：從 action_values 陣列中查找 purchase_roas
+      let roas = 0;
+      if (insights.action_values && Array.isArray(insights.action_values)) {
+        const roasAction = insights.action_values.find((action: any) => action.action_type === 'purchase_roas');
+        if (roasAction && roasAction.value) {
+          roas = parseFloat(roasAction.value);
+        }
+      }
+      console.log('Parsed ROAS from action_values:', roas);
+      
+      // 如果 ROAS 沒有數據，手動計算：購買價值 / 廣告花費
       if (roas === 0 && spend > 0) {
         const purchaseValue = this.extractActionValue(insights.action_values || [], 'purchase');
         if (purchaseValue) {
@@ -521,8 +519,8 @@ export class FbAuditService {
         'adset_id',
         'adset_name', 
         'spend',
-        'purchase',           // 直接購買數欄位
-        'video_views'         // 內容瀏覽數的替代指標
+        'actions',            // 需要從這裡解析 purchase 和 view_content
+        'video_views'         // 額外的瀏覽指標
       ].join(',');
       
       const url = `${this.baseUrl}/${accountId}/insights?fields=${fields}&level=adset&time_range={"since":"${since}","until":"${until}"}&access_token=${accessToken}`;
@@ -549,13 +547,30 @@ export class FbAuditService {
       const adSetData = data.data
         .filter((item: any) => item.adset_name && item.adset_name !== '(not set)') // 過濾有效廣告組合
         .map((item: any) => {
-          // 直接使用 purchase 欄位
-          const purchases = parseInt(item.purchase || '0');
+          // 從 actions 陣列中解析購買數
+          let purchases = 0;
+          if (item.actions && Array.isArray(item.actions)) {
+            const purchaseAction = item.actions.find((action: any) => action.action_type === 'purchase');
+            if (purchaseAction && purchaseAction.value) {
+              purchases = parseInt(purchaseAction.value);
+            }
+          }
           
-          // 使用 video_views 作為瀏覽指標
-          const viewContent = parseInt(item.video_views || '0');
+          // 從 actions 陣列中解析內容瀏覽數
+          let viewContent = 0;
+          if (item.actions && Array.isArray(item.actions)) {
+            const viewContentAction = item.actions.find((action: any) => action.action_type === 'view_content');
+            if (viewContentAction && viewContentAction.value) {
+              viewContent = parseInt(viewContentAction.value);
+            }
+          }
           
-          // 計算轉換率 (purchase/video_views)
+          // 如果沒有 view_content，使用 video_views 作為替代
+          if (viewContent === 0) {
+            viewContent = parseInt(item.video_views || '0');
+          }
+          
+          // 計算轉換率 (purchase/view_content)
           const conversionRate = viewContent > 0 ? (purchases / viewContent) * 100 : 0;
           
           return {
