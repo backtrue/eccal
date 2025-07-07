@@ -111,6 +111,10 @@ export interface IStorage {
   upgradeToPro(userId: string, durationDays: number): Promise<User>;
   checkMembershipStatus(userId: string): Promise<{ level: "free" | "pro"; isActive: boolean; expiresAt?: Date }>;
 
+  // Stripe subscription operations
+  updateUserStripeInfo(userId: string, customerId: string, subscriptionId?: string, status?: string): Promise<User>;
+  updateUserSubscription(userId: string, subscriptionId: string, status: string): Promise<User>;
+
   // Campaign Planner usage tracking (legacy)
   incrementCampaignPlannerUsage(userId: string): Promise<User>;
   getCampaignPlannerUsage(userId: string): Promise<number>;
@@ -1765,6 +1769,29 @@ export class DatabaseStorage implements IStorage {
 
     if (status) {
       updates.subscriptionStatus = status;
+    }
+
+    const [user] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, userId))
+      .returning();
+    
+    return user;
+  }
+
+  async updateUserSubscription(userId: string, subscriptionId: string, status: string): Promise<User> {
+    const updates: any = {
+      stripeSubscriptionId: subscriptionId,
+      subscriptionStatus: status,
+      updatedAt: new Date(),
+    };
+
+    // When subscription is active, upgrade to Pro
+    if (status === 'active') {
+      updates.membershipLevel = 'pro';
+      // For recurring subscriptions, we don't set an expiration date
+      // The subscription will be managed by Stripe webhooks
     }
 
     const [user] = await db

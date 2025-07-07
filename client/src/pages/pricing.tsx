@@ -213,9 +213,9 @@ export default function Pricing({ locale }: PricingProps) {
                     </li>
                   ))}
                 </ul>
-                <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/checkout?plan=monthly&amount=${Math.round(pricingData.monthly.salePrice / 34)}`}>
+                <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/subscription-checkout?plan=monthly&priceId=price_0RiHY9YDQY3sAQESGLKwBfNm`}>
                   <Button className="w-full bg-blue-600 hover:bg-blue-700" size="lg">
-                    {locale === 'ja' ? '今すぐ始める' : locale === 'en' ? 'Get Started' : '立即開始'}
+                    {locale === 'ja' ? '月額サブスクリプション' : locale === 'en' ? 'Subscribe Monthly' : '月訂閱制'}
                   </Button>
                 </Link>
               </CardContent>
@@ -261,7 +261,7 @@ export default function Pricing({ locale }: PricingProps) {
                     </li>
                   ))}
                 </ul>
-                <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/checkout?plan=lifetime&amount=${Math.round(pricingData.lifetime.salePrice / 34)}`}>
+                <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/subscription-checkout?plan=lifetime&priceId=price_0RiHY9YDQY3sAQESlN1UPzu0`}>
                   <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white" size="lg">
                     {locale === 'ja' ? '今すぐ購入' : locale === 'en' ? 'Buy Now' : '立即購買'}
                   </Button>

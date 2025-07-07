@@ -31,6 +31,7 @@ import FbAuditHelp from "./pages/help/fbaudit-help";
 import CalculatorHelp from "./pages/help/calculator-help";
 import CampaignPlannerHelp from "./pages/help/campaign-planner-help";
 import Checkout from "./pages/checkout";
+import SubscriptionCheckout from "./pages/subscription-checkout";
 import PaymentSuccess from "./pages/payment-success";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 
@@ -120,6 +121,7 @@ function Router() {
       <Route path="/fbaudit" component={() => <FbAudit locale={locale} />} />
       <Route path="/pricing" component={() => <Pricing locale={locale} />} />
       <Route path="/checkout" component={() => <Checkout locale={locale} />} />
+      <Route path="/subscription-checkout" component={() => <SubscriptionCheckout locale={locale} />} />
       <Route path="/payment-success" component={() => <PaymentSuccess locale={locale} />} />
       <Route path="/help/fbaudit" component={() => <FbAuditHelp locale={locale} />} />
       <Route path="/help/calculator" component={() => <CalculatorHelp locale={locale} />} />
@@ -144,6 +146,7 @@ function Router() {
       <Route path="/en/fbaudit" component={() => <FbAudit locale="en" />} />
       <Route path="/en/pricing" component={() => <Pricing locale="en" />} />
       <Route path="/en/checkout" component={() => <Checkout locale="en" />} />
+      <Route path="/en/subscription-checkout" component={() => <SubscriptionCheckout locale="en" />} />
       <Route path="/en/payment-success" component={() => <PaymentSuccess locale="en" />} />
       <Route path="/en/help/fbaudit" component={() => <FbAuditHelp locale="en" />} />
       <Route path="/en/help/calculator" component={() => <CalculatorHelp locale="en" />} />
@@ -160,6 +163,7 @@ function Router() {
       <Route path="/jp/fbaudit" component={() => <FbAudit locale="ja" />} />
       <Route path="/jp/pricing" component={() => <Pricing locale="ja" />} />
       <Route path="/jp/checkout" component={() => <Checkout locale="ja" />} />
+      <Route path="/jp/subscription-checkout" component={() => <SubscriptionCheckout locale="ja" />} />
       <Route path="/jp/payment-success" component={() => <PaymentSuccess locale="ja" />} />
       <Route path="/jp/help/fbaudit" component={() => <FbAuditHelp locale="ja" />} />
       <Route path="/jp/help/calculator" component={() => <CalculatorHelp locale="ja" />} />

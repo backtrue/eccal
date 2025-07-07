@@ -2,6 +2,9 @@ import type { Express } from "express";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import { requireJWTAuth } from "./jwtAuth";
+import { db } from "./db";
+import { users } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 // Initialize Stripe with secret key
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -15,6 +18,71 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 });
 
 export function setupStripeRoutes(app: Express) {
+  // Initialize Stripe products and prices (admin only)
+  app.post("/api/stripe/init-products", async (req, res) => {
+    try {
+      // Create monthly subscription product
+      const monthlyProduct = await stripe.products.create({
+        name: '報數據 Pro 月訂閱',
+        description: '專業電商廣告分析平台 - 月訂閱',
+        metadata: {
+          type: 'monthly_subscription'
+        }
+      });
+
+      // Create monthly price (JPY 2,000)
+      const monthlyPrice = await stripe.prices.create({
+        unit_amount: 2000,
+        currency: 'jpy',
+        recurring: {
+          interval: 'month'
+        },
+        product: monthlyProduct.id,
+        metadata: {
+          type: 'monthly_pro'
+        }
+      });
+
+      // Create lifetime product
+      const lifetimeProduct = await stripe.products.create({
+        name: '報數據 Pro 終身訂閱',
+        description: '專業電商廣告分析平台 - 終身使用',
+        metadata: {
+          type: 'lifetime_subscription'
+        }
+      });
+
+      // Create lifetime price (JPY 17,250)
+      const lifetimePrice = await stripe.prices.create({
+        unit_amount: 17250,
+        currency: 'jpy',
+        product: lifetimeProduct.id,
+        metadata: {
+          type: 'lifetime_pro'
+        }
+      });
+
+      res.json({
+        success: true,
+        products: {
+          monthly: {
+            product: monthlyProduct.id,
+            price: monthlyPrice.id
+          },
+          lifetime: {
+            product: lifetimeProduct.id,
+            price: lifetimePrice.id
+          }
+        }
+      });
+    } catch (error: any) {
+      console.error('Error initializing Stripe products:', error);
+      res.status(500).json({ 
+        error: "Error initializing products: " + (error.message || 'Unknown error')
+      });
+    }
+  });
+
   // Create payment intent for one-time payments
   app.post("/api/stripe/create-payment-intent", requireJWTAuth, async (req, res) => {
     try {
@@ -87,11 +155,11 @@ export function setupStripeRoutes(app: Express) {
   // Create subscription for recurring payments
   app.post("/api/stripe/create-subscription", requireJWTAuth, async (req, res) => {
     try {
-      const { priceId } = req.body;
+      const { priceId, planType } = req.body;
       const userId = req.user.id;
 
-      if (!priceId) {
-        return res.status(400).json({ error: "Price ID is required" });
+      if (!priceId || !planType) {
+        return res.status(400).json({ error: "Price ID and plan type are required" });
       }
 
       const user = await storage.getUser(userId);
@@ -114,7 +182,7 @@ export function setupStripeRoutes(app: Express) {
       }
 
       // Create subscription
-      const subscription = await stripe.subscriptions.create({
+      const subscriptionData: any = {
         customer: customerId,
         items: [{
           price: priceId,
@@ -122,7 +190,22 @@ export function setupStripeRoutes(app: Express) {
         payment_behavior: 'default_incomplete',
         payment_settings: { save_default_payment_method: 'on_subscription' },
         expand: ['latest_invoice.payment_intent'],
-      });
+        metadata: {
+          userId: userId,
+          planType: planType,
+        },
+      };
+
+      // For lifetime plans, we don't need recurring billing
+      if (planType === 'lifetime') {
+        delete subscriptionData.payment_settings;
+        subscriptionData.payment_behavior = 'default_incomplete';
+      }
+
+      const subscription = await stripe.subscriptions.create(subscriptionData);
+
+      // Store subscription ID in user record
+      await storage.updateUserSubscription(userId, subscription.id, 'active');
 
       res.json({
         subscriptionId: subscription.id,
@@ -264,20 +347,19 @@ async function handleSubscriptionPaymentSuccess(invoice: any) {
   const subscriptionId = invoice.subscription;
   
   try {
-    // Find user by customer ID
-    const user = await storage.getUser(customerId);
-    if (!user) {
-      console.error('No user found for customer ID:', customerId);
+    // Get subscription details
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const userId = subscription.metadata?.userId;
+    
+    if (!userId) {
+      console.error('No userId in subscription metadata:', subscriptionId);
       return;
     }
 
-    // Update subscription info
-    await storage.updateUserStripeInfo(user.id, customerId, subscriptionId, 'active');
+    // Update user subscription status
+    await storage.updateUserSubscription(userId, subscriptionId, 'active');
     
-    // Extend Pro membership
-    await storage.upgradeToPro(user.id, 30); // Monthly renewal
-    
-    console.log(`Successfully processed subscription payment for user ${user.id}`);
+    console.log(`Subscription payment processed for user ${userId}`);
   } catch (error) {
     console.error('Error handling subscription payment:', error);
   }
@@ -285,20 +367,29 @@ async function handleSubscriptionPaymentSuccess(invoice: any) {
 
 // Handle subscription changes
 async function handleSubscriptionChange(subscription: any) {
-  const customerId = subscription.customer;
-  
   try {
-    // Find user by customer ID
-    const user = await storage.getUser(customerId);
-    if (!user) {
-      console.error('No user found for customer ID:', customerId);
+    const userId = subscription.metadata?.userId;
+    
+    if (!userId) {
+      console.error('No userId in subscription metadata:', subscription.id);
       return;
     }
 
     // Update subscription status
-    await storage.updateUserStripeInfo(user.id, customerId, subscription.id, subscription.status);
+    await storage.updateUserSubscription(userId, subscription.id, subscription.status);
     
-    console.log(`Updated subscription status for user ${user.id}: ${subscription.status}`);
+    // If subscription is canceled or past_due, downgrade user
+    if (subscription.status === 'canceled' || subscription.status === 'past_due') {
+      const [user] = await db.update(users).set({
+        membershipLevel: 'free',
+        membershipExpires: null,
+        updatedAt: new Date(),
+      }).where(eq(users.id, userId)).returning();
+      
+      console.log(`User ${userId} downgraded to free due to subscription status: ${subscription.status}`);
+    }
+    
+    console.log(`Updated subscription status for user ${userId}: ${subscription.status}`);
   } catch (error) {
     console.error('Error handling subscription change:', error);
   }
