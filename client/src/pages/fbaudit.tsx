@@ -507,11 +507,42 @@ export default function FbAudit({ locale }: FbAuditProps) {
                     <SelectValue placeholder={t.selectIndustry} />
                   </SelectTrigger>
                   <SelectContent>
-                    {Array.isArray(industries) && industries.map((industry: any) => (
-                      <SelectItem key={industry.id} value={industry.id}>
-                        {industry.name} (平均 ROAS: {industry.averageRoas}x, 平均 CTR: {industry.averageCtr}%)
-                      </SelectItem>
-                    ))}
+                    {Array.isArray(industries) && industries.map((industry: any) => {
+                      // 根據語言顯示產業名稱
+                      const getIndustryName = (industry: any, locale: string) => {
+                        if (locale === 'en') {
+                          return industry.nameEn || industry.name;
+                        } else if (locale === 'ja') {
+                          // 日文產業類型翻譯
+                          const jaTranslations: Record<string, string> = {
+                            '藝文娛樂': 'アート・エンターテイメント',
+                            '餐飲食品': '飲食・食品',
+                            '寵物用品': 'ペット用品',
+                            '購物、收藏品與禮品': 'ショッピング・コレクション・ギフト',
+                            '健康與健身': 'ヘルス・フィットネス',
+                            '美妝保養': '美容・スキンケア',
+                            '家居與園藝': 'ホーム・ガーデン',
+                            '家具': '家具',
+                            '服飾／時尚與珠寶': 'ファッション・ジュエリー',
+                            '工業與商業用品': '産業・商業用品',
+                            '其他': 'その他'
+                          };
+                          return jaTranslations[industry.name] || industry.name;
+                        } else {
+                          return industry.name;
+                        }
+                      };
+
+                      const displayName = getIndustryName(industry, locale);
+                      const roasText = locale === 'ja' ? '平均ROAS' : locale === 'en' ? 'Avg ROAS' : '平均 ROAS';
+                      const ctrText = locale === 'ja' ? '平均CTR' : locale === 'en' ? 'Avg CTR' : '平均 CTR';
+                      
+                      return (
+                        <SelectItem key={industry.id} value={industry.id}>
+                          {displayName} ({roasText}: {industry.averageRoas}x, {ctrText}: {industry.averageCtr}%)
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
                 

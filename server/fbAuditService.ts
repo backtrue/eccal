@@ -1610,23 +1610,26 @@ Please output in HTML format using <ul> and <li> tags to organize the suggestion
    */
   async initializeIndustryTypes(): Promise<void> {
     try {
-      const existingTypes = await this.getIndustryTypes();
+      // 先清空現有的產業類型
+      await db.delete(industryTypes);
       
-      if (existingTypes.length === 0) {
-        const defaultIndustries = [
-          { name: '服飾配件', nameEn: 'Fashion & Accessories', averageRoas: '3.5', averageCtr: '1.8' },
-          { name: '美妝保養', nameEn: 'Beauty & Skincare', averageRoas: '4.2', averageCtr: '2.1' },
-          { name: '食品飲料', nameEn: 'Food & Beverage', averageRoas: '3.8', averageCtr: '1.6' },
-          { name: '健康保健', nameEn: 'Health & Wellness', averageRoas: '4.5', averageCtr: '1.9' },
-          { name: '居家生活', nameEn: 'Home & Living', averageRoas: '3.2', averageCtr: '1.4' },
-          { name: '3C電子', nameEn: 'Electronics', averageRoas: '2.8', averageCtr: '1.2' },
-          { name: '運動休閒', nameEn: 'Sports & Recreation', averageRoas: '3.6', averageCtr: '1.7' },
-          { name: '母嬰用品', nameEn: 'Baby & Kids', averageRoas: '4.0', averageCtr: '2.0' }
-        ];
+      // 根據CSV數據更新產業類型
+      const ecommerceIndustries = [
+        { name: '藝文娛樂', nameEn: 'Arts & Entertainment', averageRoas: '3.2', averageCtr: '2.59' },
+        { name: '餐飲食品', nameEn: 'Food & Beverage', averageRoas: '3.8', averageCtr: '2.19' },
+        { name: '寵物用品', nameEn: 'Pet Supplies', averageRoas: '4.1', averageCtr: '1.87' },
+        { name: '購物、收藏品與禮品', nameEn: 'Shopping, Collectibles & Gifts', averageRoas: '3.5', averageCtr: '1.67' },
+        { name: '健康與健身', nameEn: 'Health & Fitness', averageRoas: '4.5', averageCtr: '1.61' },
+        { name: '美妝保養', nameEn: 'Beauty & Skincare', averageRoas: '4.2', averageCtr: '1.51' },
+        { name: '家居與園藝', nameEn: 'Home & Garden', averageRoas: '3.2', averageCtr: '1.26' },
+        { name: '家具', nameEn: 'Furniture', averageRoas: '2.8', averageCtr: '1.21' },
+        { name: '服飾／時尚與珠寶', nameEn: 'Fashion & Jewelry', averageRoas: '3.6', averageCtr: '1.14' },
+        { name: '工業與商業用品', nameEn: 'Industrial & Commercial Supplies', averageRoas: '2.5', averageCtr: '0.99' },
+        { name: '其他', nameEn: 'Others', averageRoas: '3.0', averageCtr: '1.57' }
+      ];
 
-        await db.insert(industryTypes).values(defaultIndustries);
-        console.log('Industry types initialized successfully');
-      }
+      await db.insert(industryTypes).values(ecommerceIndustries);
+      console.log('E-commerce industry types updated successfully with CTR data');
     } catch (error) {
       console.error('Error initializing industry types:', error);
       throw error;
