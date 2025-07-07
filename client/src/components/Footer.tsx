@@ -117,6 +117,26 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href={getCurrentLocale() === 'zh-TW' ? '/help/calculator' :
+                           getCurrentLocale() === 'en' ? '/en/help/calculator' :
+                           '/jp/help/calculator'} 
+                      className="text-gray-300 hover:text-white transition-colors">
+                  {getCurrentLocale() === 'zh-TW' ? '預算計算機說明' :
+                   getCurrentLocale() === 'en' ? 'Budget Calculator Guide' :
+                   '予算計算機説明'}
+                </Link>
+              </li>
+              <li>
+                <Link href={getCurrentLocale() === 'zh-TW' ? '/help/campaign-planner' :
+                           getCurrentLocale() === 'en' ? '/en/help/campaign-planner' :
+                           '/jp/help/campaign-planner'} 
+                      className="text-gray-300 hover:text-white transition-colors">
+                  {getCurrentLocale() === 'zh-TW' ? '活動規劃師說明' :
+                   getCurrentLocale() === 'en' ? 'Campaign Planner Guide' :
+                   'キャンペーンプランナー説明'}
+                </Link>
+              </li>
+              <li>
                 <Link href={getCurrentLocale() === 'zh-TW' ? '/help/fbaudit' :
                            getCurrentLocale() === 'en' ? '/en/help/fbaudit' :
                            '/jp/help/fbaudit'} 

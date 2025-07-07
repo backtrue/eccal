@@ -28,6 +28,8 @@ import FacebookPermissions from "./pages/facebook-permissions";
 import FbAudit from "./pages/fbaudit";
 import Pricing from "./pages/pricing";
 import FbAuditHelp from "./pages/help/fbaudit-help";
+import CalculatorHelp from "./pages/help/calculator-help";
+import CampaignPlannerHelp from "./pages/help/campaign-planner-help";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 
 // Error Boundary Component
@@ -116,6 +118,8 @@ function Router() {
       <Route path="/fbaudit" component={() => <FbAudit locale={locale} />} />
       <Route path="/pricing" component={() => <Pricing locale={locale} />} />
       <Route path="/help/fbaudit" component={() => <FbAuditHelp locale={locale} />} />
+      <Route path="/help/calculator" component={() => <CalculatorHelp locale={locale} />} />
+      <Route path="/help/campaign-planner" component={() => <CampaignPlannerHelp locale={locale} />} />
       <Route path="/dashboard" component={() => <Dashboard locale={locale} />} />
       <Route path="/project/:id" component={ProjectDetail} />
       <Route path="/diagnosis-report/:id" component={DiagnosisReportDetail} />
@@ -136,6 +140,8 @@ function Router() {
       <Route path="/en/fbaudit" component={() => <FbAudit locale="en" />} />
       <Route path="/en/pricing" component={() => <Pricing locale="en" />} />
       <Route path="/en/help/fbaudit" component={() => <FbAuditHelp locale="en" />} />
+      <Route path="/en/help/calculator" component={() => <CalculatorHelp locale="en" />} />
+      <Route path="/en/help/campaign-planner" component={() => <CampaignPlannerHelp locale="en" />} />
       <Route path="/en/dashboard" component={() => <Dashboard locale="en" />} />
       <Route path="/en/brevo-sync" component={() => <BrevoSync />} />
       <Route path="/en/privacy" component={() => <Privacy locale="en" />} />
@@ -148,6 +154,8 @@ function Router() {
       <Route path="/jp/fbaudit" component={() => <FbAudit locale="ja" />} />
       <Route path="/jp/pricing" component={() => <Pricing locale="ja" />} />
       <Route path="/jp/help/fbaudit" component={() => <FbAuditHelp locale="ja" />} />
+      <Route path="/jp/help/calculator" component={() => <CalculatorHelp locale="ja" />} />
+      <Route path="/jp/help/campaign-planner" component={() => <CampaignPlannerHelp locale="ja" />} />
       <Route path="/jp/dashboard" component={() => <Dashboard locale="ja" />} />
       <Route path="/jp/brevo-sync" component={() => <BrevoSync />} />
       <Route path="/jp/privacy" component={() => <Privacy locale="ja" />} />
