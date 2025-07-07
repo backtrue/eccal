@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { Link } from "wouter";
 import NavigationBar from "@/components/NavigationBar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -212,9 +213,11 @@ export default function Pricing({ locale }: PricingProps) {
                     </li>
                   ))}
                 </ul>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700" size="lg">
-                  {locale === 'ja' ? '今すぐ始める' : locale === 'en' ? 'Get Started' : '立即開始'}
-                </Button>
+                <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/checkout?plan=monthly&amount=${Math.round(pricingData.monthly.salePrice / 34)}`}>
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700" size="lg">
+                    {locale === 'ja' ? '今すぐ始める' : locale === 'en' ? 'Get Started' : '立即開始'}
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
@@ -258,9 +261,11 @@ export default function Pricing({ locale }: PricingProps) {
                     </li>
                   ))}
                 </ul>
-                <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white" size="lg">
-                  {locale === 'ja' ? '今すぐ購入' : locale === 'en' ? 'Buy Now' : '立即購買'}
-                </Button>
+                <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/checkout?plan=lifetime&amount=${Math.round(pricingData.lifetime.salePrice / 34)}`}>
+                  <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white" size="lg">
+                    {locale === 'ja' ? '今すぐ購入' : locale === 'en' ? 'Buy Now' : '立即購買'}
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </div>

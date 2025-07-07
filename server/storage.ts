@@ -36,6 +36,10 @@ import {
   campaignTemplates,
   type CampaignTemplate,
   type InsertCampaignTemplate,
+  // Stripe payments
+  stripePayments,
+  type StripePayment,
+  type InsertStripePayment,
   // Other imports
   seoSettings,
   type SeoSetting,
@@ -238,6 +242,14 @@ export interface IStorage {
   searchKnowledgeDocuments(query: string, tags?: string[]): Promise<KnowledgeDocument[]>;
   updateKnowledgeDocument(documentId: string, updates: Partial<InsertKnowledgeDocument>): Promise<KnowledgeDocument>;
   createSearchIndex(index: Omit<InsertKnowledgeSearchIndex, 'id' | 'createdAt'>): Promise<KnowledgeSearchIndex>;
+
+  // Stripe payment operations
+  createStripePayment(payment: InsertStripePayment): Promise<StripePayment>;
+  getStripePayment(id: string): Promise<StripePayment | undefined>;
+  getStripePaymentByIntentId(intentId: string): Promise<StripePayment | undefined>;
+  getUserStripePayments(userId: string): Promise<StripePayment[]>;
+  updateStripePayment(id: string, updates: Partial<StripePayment>): Promise<StripePayment>;
+  updateUserStripeInfo(userId: string, customerId: string, subscriptionId?: string, status?: string): Promise<User>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1691,6 +1703,77 @@ export class DatabaseStorage implements IStorage {
     };
 
     return summary;
+  }
+
+  // Stripe payment operations implementation
+  async createStripePayment(payment: InsertStripePayment): Promise<StripePayment> {
+    const [newPayment] = await db
+      .insert(stripePayments)
+      .values(payment)
+      .returning();
+    
+    return newPayment;
+  }
+
+  async getStripePayment(id: string): Promise<StripePayment | undefined> {
+    const [payment] = await db
+      .select()
+      .from(stripePayments)
+      .where(eq(stripePayments.id, id));
+    
+    return payment;
+  }
+
+  async getStripePaymentByIntentId(intentId: string): Promise<StripePayment | undefined> {
+    const [payment] = await db
+      .select()
+      .from(stripePayments)
+      .where(eq(stripePayments.stripePaymentIntentId, intentId));
+    
+    return payment;
+  }
+
+  async getUserStripePayments(userId: string): Promise<StripePayment[]> {
+    const payments = await db
+      .select()
+      .from(stripePayments)
+      .where(eq(stripePayments.userId, userId))
+      .orderBy(desc(stripePayments.createdAt));
+    
+    return payments;
+  }
+
+  async updateStripePayment(id: string, updates: Partial<StripePayment>): Promise<StripePayment> {
+    const [payment] = await db
+      .update(stripePayments)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(stripePayments.id, id))
+      .returning();
+    
+    return payment;
+  }
+
+  async updateUserStripeInfo(userId: string, customerId: string, subscriptionId?: string, status?: string): Promise<User> {
+    const updates: any = {
+      stripeCustomerId: customerId,
+      updatedAt: new Date(),
+    };
+
+    if (subscriptionId) {
+      updates.stripeSubscriptionId = subscriptionId;
+    }
+
+    if (status) {
+      updates.subscriptionStatus = status;
+    }
+
+    const [user] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, userId))
+      .returning();
+    
+    return user;
   }
 }
 

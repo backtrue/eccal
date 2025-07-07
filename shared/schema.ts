@@ -40,6 +40,10 @@ export const users = pgTable("users", {
   membershipLevel: varchar("membership_level", { length: 10 }).default("free").notNull(), // "free" or "pro"
   membershipExpires: timestamp("membership_expires"), // null for free, date for pro
   campaignPlannerUsage: integer("campaign_planner_usage").default(0).notNull(), // Track usage count
+  // Stripe Integration
+  stripeCustomerId: varchar("stripe_customer_id"), // Stripe customer ID
+  stripeSubscriptionId: varchar("stripe_subscription_id"), // Current subscription ID
+  subscriptionStatus: varchar("subscription_status"), // "active", "canceled", "incomplete", etc.
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -592,4 +596,30 @@ export const insertFbHealthCheckSchema = createInsertSchema(fbHealthChecks).omit
 
 export const insertIndustryTypeSchema = createInsertSchema(industryTypes).omit({
   createdAt: true,
+});
+
+// Stripe payments and subscriptions table
+export const stripePayments = pgTable("stripe_payments", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  stripePaymentIntentId: varchar("stripe_payment_intent_id").notNull().unique(),
+  stripeCustomerId: varchar("stripe_customer_id").notNull(),
+  stripeSubscriptionId: varchar("stripe_subscription_id"), // null for one-time payments
+  amount: integer("amount").notNull(), // amount in cents
+  currency: varchar("currency", { length: 3 }).default("usd").notNull(),
+  status: varchar("status").notNull(), // "succeeded", "pending", "failed", etc.
+  paymentType: varchar("payment_type").notNull(), // "monthly", "lifetime"
+  description: varchar("description"),
+  metadata: jsonb("metadata"), // additional payment info
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type StripePayment = typeof stripePayments.$inferSelect;
+export type InsertStripePayment = typeof stripePayments.$inferInsert;
+
+export const insertStripePaymentSchema = createInsertSchema(stripePayments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });

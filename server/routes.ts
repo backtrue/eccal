@@ -10,6 +10,7 @@ import { brevoService } from "./brevoService";
 import { setupCampaignPlannerRoutes } from "./campaignPlannerRoutes";
 import { setupDiagnosisRoutes } from "./diagnosisRoutes";
 import { setupFbAuditRoutes } from "./fbAuditRoutes";
+import { setupStripeRoutes } from "./stripeRoutes";
 import multer from "multer";
 import fs from "fs";
 import path from "path";
@@ -23,6 +24,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Setup Facebook Ad Audit routes
   setupFbAuditRoutes(app);
+  
+  // Setup Stripe Payment routes
+  setupStripeRoutes(app);
 
   // Critical: Handle root path for Replit port monitoring
   app.get('/api/ping', (req, res) => {

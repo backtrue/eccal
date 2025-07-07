@@ -30,6 +30,8 @@ import Pricing from "./pages/pricing";
 import FbAuditHelp from "./pages/help/fbaudit-help";
 import CalculatorHelp from "./pages/help/calculator-help";
 import CampaignPlannerHelp from "./pages/help/campaign-planner-help";
+import Checkout from "./pages/checkout";
+import PaymentSuccess from "./pages/payment-success";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 
 // Error Boundary Component
@@ -117,6 +119,8 @@ function Router() {
       <Route path="/campaign-planner" component={() => <CampaignPlannerV2 locale={locale} />} />
       <Route path="/fbaudit" component={() => <FbAudit locale={locale} />} />
       <Route path="/pricing" component={() => <Pricing locale={locale} />} />
+      <Route path="/checkout" component={() => <Checkout locale={locale} />} />
+      <Route path="/payment-success" component={() => <PaymentSuccess locale={locale} />} />
       <Route path="/help/fbaudit" component={() => <FbAuditHelp locale={locale} />} />
       <Route path="/help/calculator" component={() => <CalculatorHelp locale={locale} />} />
       <Route path="/help/campaign-planner" component={() => <CampaignPlannerHelp locale={locale} />} />
@@ -139,6 +143,8 @@ function Router() {
       <Route path="/en/campaign-planner" component={() => <CampaignPlannerV2 locale="en" />} />
       <Route path="/en/fbaudit" component={() => <FbAudit locale="en" />} />
       <Route path="/en/pricing" component={() => <Pricing locale="en" />} />
+      <Route path="/en/checkout" component={() => <Checkout locale="en" />} />
+      <Route path="/en/payment-success" component={() => <PaymentSuccess locale="en" />} />
       <Route path="/en/help/fbaudit" component={() => <FbAuditHelp locale="en" />} />
       <Route path="/en/help/calculator" component={() => <CalculatorHelp locale="en" />} />
       <Route path="/en/help/campaign-planner" component={() => <CampaignPlannerHelp locale="en" />} />
@@ -153,6 +159,8 @@ function Router() {
       <Route path="/jp/campaign-planner" component={() => <CampaignPlannerV2 locale="ja" />} />
       <Route path="/jp/fbaudit" component={() => <FbAudit locale="ja" />} />
       <Route path="/jp/pricing" component={() => <Pricing locale="ja" />} />
+      <Route path="/jp/checkout" component={() => <Checkout locale="ja" />} />
+      <Route path="/jp/payment-success" component={() => <PaymentSuccess locale="ja" />} />
       <Route path="/jp/help/fbaudit" component={() => <FbAuditHelp locale="ja" />} />
       <Route path="/jp/help/calculator" component={() => <CalculatorHelp locale="ja" />} />
       <Route path="/jp/help/campaign-planner" component={() => <CampaignPlannerHelp locale="ja" />} />
