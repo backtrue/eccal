@@ -390,14 +390,16 @@ export class MetaAccountService {
   }
 
   /**
-   * 生成 AI 帳戶診斷報告
+   * 生成 AI 帳戶診斷報告（支援多語言）
    */
   async generateAccountDiagnosisReport(
     accountName: string,
     diagnosisData: AccountDiagnosisData,
-    metaData?: MetaAccountData
+    metaData?: MetaAccountData,
+    locale: string = 'zh-TW'
   ): Promise<string> {
-    const prompt = this.buildAccountDiagnosisPrompt(accountName, diagnosisData, metaData);
+    const prompt = this.buildAccountDiagnosisPrompt(accountName, diagnosisData, metaData, locale);
+    const systemMessage = this.getSystemMessage(locale);
     
     try {
       const completion = await this.openai.chat.completions.create({
@@ -405,7 +407,7 @@ export class MetaAccountService {
         messages: [
           {
             role: "system", 
-            content: "你是專業的 Facebook 廣告優化顧問，專精於電商廣告帳戶診斷和優化建議。請提供精準、實用的分析和建議。"
+            content: systemMessage
           },
           {
             role: "user",
@@ -416,23 +418,208 @@ export class MetaAccountService {
         temperature: 0.7
       });
 
-      return completion.choices[0]?.message?.content || "診斷報告生成失敗";
+      return completion.choices[0]?.message?.content || this.getErrorMessage(locale);
     } catch (error) {
       console.error('OpenAI API 錯誤:', error);
-      return "AI 診斷服務暫時無法使用，請稍後再試。";
+      return this.getServiceUnavailableMessage(locale);
     }
   }
 
   /**
-   * 建構帳戶診斷 Prompt
+   * 獲取系統提示訊息（多語言支援）
    */
-  private buildAccountDiagnosisPrompt(accountName: string, data: AccountDiagnosisData, metaData?: MetaAccountData): string {
+  private getSystemMessage(locale: string): string {
+    switch (locale) {
+      case 'ja':
+        return `あなたは Facebook 広告最適化の専門コンサルタントです。Eコマース広告アカウントの診断と最適化提案を専門としています。正確で実用的な分析とアドバイスを提供してください。
+
+専門用語は以下の通り使用してください：
+- ROAS: ${fbAuditTerms.roas}
+- CTR: ${fbAuditTerms.ctr}
+- CPC: ${fbAuditTerms.cpc}
+- CPM: ${fbAuditTerms.cpm}
+- コンバージョン: ${fbAuditTerms.conversion}
+- インプレッション: ${fbAuditTerms.impressions}
+- ターゲティング: ${fbAuditTerms.targeting}
+- クリエイティブ: ${fbAuditTerms.creative}
+
+回答は「小黒先生」として、プロフェッショナルかつ親しみやすい口調で提供してください。`;
+      
+      case 'en':
+        return "You are a professional Facebook advertising optimization consultant specializing in e-commerce ad account diagnosis and optimization recommendations. Please provide accurate and practical analysis and advice. Respond as 'Teacher Black' with a professional yet approachable tone.";
+      
+      default: // zh-TW
+        return "你是專業的 Facebook 廣告優化顧問，專精於電商廣告帳戶診斷和優化建議。請提供精準、實用的分析和建議。請以「小黑老師」的身份，用專業而親切的語調回答。";
+    }
+  }
+
+  /**
+   * 獲取錯誤訊息（多語言支援）
+   */
+  private getErrorMessage(locale: string): string {
+    switch (locale) {
+      case 'ja':
+        return "診断レポートの生成に失敗しました";
+      case 'en':
+        return "Failed to generate diagnosis report";
+      default:
+        return "診斷報告生成失敗";
+    }
+  }
+
+  /**
+   * 獲取服務不可用訊息（多語言支援）
+   */
+  private getServiceUnavailableMessage(locale: string): string {
+    switch (locale) {
+      case 'ja':
+        return "AI診断サービスは一時的に利用できません。しばらくしてからもう一度お試しください。";
+      case 'en':
+        return "AI diagnosis service is temporarily unavailable. Please try again later.";
+      default:
+        return "AI 診斷服務暫時無法使用，請稍後再試。";
+    }
+  }
+
+  /**
+   * 建構帳戶診斷 Prompt（支援多語言）
+   */
+  private buildAccountDiagnosisPrompt(accountName: string, data: AccountDiagnosisData, metaData?: MetaAccountData, locale: string = 'zh-TW'): string {
     const healthScore = this.calculateAccountHealthScore(data);
     
     // 計算目標轉換率
     const targetBrowseToCartRate = 15; // 業界標準
     const targetCartToCheckoutRate = 25; // 業界標準
     
+    switch (locale) {
+      case 'ja':
+        return this.buildJapanesePrompt(accountName, data, metaData, healthScore, targetBrowseToCartRate, targetCartToCheckoutRate);
+      case 'en':
+        return this.buildEnglishPrompt(accountName, data, metaData, healthScore, targetBrowseToCartRate, targetCartToCheckoutRate);
+      default:
+        return this.buildChinesePrompt(accountName, data, metaData, healthScore, targetBrowseToCartRate, targetCartToCheckoutRate);
+    }
+  }
+
+  /**
+   * 建構日文診斷提示
+   */
+  private buildJapanesePrompt(accountName: string, data: AccountDiagnosisData, metaData?: MetaAccountData, healthScore: number, targetBrowseToCartRate: number, targetCartToCheckoutRate: number): string {
+    return `
+専門的な Facebook 広告最適化コンサルタントとして、「${accountName}」の包括的なアカウント${fbAuditTerms.healthCheck}分析を行ってください：
+
+## 📊 アカウント基本データ
+- 目標月間${fbAuditTerms.revenue}：¥${data.targetRevenue.toLocaleString()}
+- 目標AOV（平均注文単価）：¥${data.targetAov.toLocaleString()}
+- 目標${fbAuditTerms.conversionRate}：${data.targetConversionRate}%
+- 目標${fbAuditTerms.roas}：${data.targetRoas.toFixed(2)}x
+- 目標日次トラフィック：${Math.round(data.targetDailyTraffic)} 人
+- 目標日次${fbAuditTerms.budget}：¥${Math.round(data.targetDailyBudget).toLocaleString()}
+
+## 📈 実際のアカウント${fbAuditTerms.performance}
+- 実際の日次トラフィック：${Math.round(data.actualDailyTraffic)} 人 (達成率：${data.trafficAchievementRate.toFixed(1)}%)
+- 実際の日次支出：¥${Math.round(data.actualDailySpend).toLocaleString()} (予算使用率：${data.budgetUtilizationRate.toFixed(1)}%)
+- 実際の${fbAuditTerms.ctr}：${data.actualCtr.toFixed(2)}% (${this.getCtrRating(data.actualCtr)})
+- 実際のCPA（獲得単価）：¥${Math.round(data.actualCpa).toLocaleString()}
+- 実際の${fbAuditTerms.roas}：${data.actualRoas.toFixed(2)}x
+
+## 🔄 ${fbAuditTerms.conversion}ファネル分析
+- 閲覧→カート追加率：${data.addToCartRate.toFixed(1)}% (目標：${targetBrowseToCartRate}%)
+- カート追加→購入率：${data.checkoutRate.toFixed(1)}% (目標：${targetCartToCheckoutRate}%)
+- 総合${fbAuditTerms.conversionRate}：${data.overallConversionRate.toFixed(2)}%
+
+## 🎯 健康スコア
+アカウント健康スコア：${healthScore}/100 点
+
+${metaData && metaData.topPerformingAds && metaData.topPerformingAds.length > 0 ? `
+## ⭐ 高効果広告分析
+アカウントデータ分析に基づき、以下の ${metaData.topPerformingAds.length} 個の高効果${fbAuditTerms.advertisement}（${fbAuditTerms.ctr}がアカウント平均以上かつ${fbAuditTerms.impressions} > 500）を発見：
+
+${metaData.topPerformingAds.map((ad, index) => `
+### 第 ${index + 1} 位 高効果${fbAuditTerms.advertisement}
+- ${fbAuditTerms.advertisement}名：${ad.adName}
+- 投稿ID：${ad.effectiveObjectStoryId}
+- ${fbAuditTerms.ctr}：${ad.ctr.toFixed(2)}%
+- ${fbAuditTerms.impressions}：${ad.impressions.toLocaleString()}
+- ${fbAuditTerms.clicks}：${ad.clicks.toLocaleString()}
+- 支出金額：¥${ad.spend.toLocaleString()}
+`).join('')}
+
+**${fbAuditTerms.optimization}提案：** これらの${fbAuditTerms.advertisement}は優秀な${fbAuditTerms.performance}を示しているため、以下を推奨します：
+1. これらの高効果${fbAuditTerms.advertisement}の${fbAuditTerms.budget}を20-50%増加
+2. これらの${fbAuditTerms.advertisement}の${fbAuditTerms.creative}戦略を新しい広告グループに複製
+3. これらの${fbAuditTerms.advertisement}の共通特徴を分析し、他の広告素材に適用
+4. 投稿IDを使用して広告マネージャーで対応する素材を迅速に特定
+` : ''}
+
+以下の構造に従って完全な${fbAuditTerms.diagnosis}レポートを提供してください：
+
+## 1. 🌟 成功ハイライト分析
+既存データに基づくアカウントの強み：
+- ${fbAuditTerms.ctr} ${fbAuditTerms.performance}分析と成功要因
+- ${fbAuditTerms.roas}達成状況と${fbAuditTerms.optimization}戦略
+- ${fbAuditTerms.conversionRate} ${fbAuditTerms.performance}評価
+- ${fbAuditTerms.audience} ${fbAuditTerms.targeting}効果分析
+
+## 2. 📊 ${fbAuditTerms.conversion}ファネル${fbAuditTerms.optimization}提案
+詳細説明：
+- 「閲覧→カート追加率」現在 ${data.addToCartRate.toFixed(1)}%、目標 ${targetBrowseToCartRate}% への改善方法
+- 「カート追加→購入率」現在 ${data.checkoutRate.toFixed(1)}%、目標 ${targetCartToCheckoutRate}% への改善方法
+- 具体的な${fbAuditTerms.optimization}戦略と実行可能な改善案の提供
+
+## 3. ⚠️ 問題${fbAuditTerms.diagnosis}と解決方案
+実際のデータに基づく問題の特定と解決策の提供
+
+## 4. 💡 具体的なアクションプラン
+- 短期改善策（1-2週間以内）
+- 中期戦略（1-3ヶ月）
+- 長期成長計画（3-6ヶ月）
+
+## 5. 📋 実行チェックリスト
+優先順位付きの具体的なタスクリスト
+
+専門用語を正確に使用し、「小黒先生」として親しみやすく実用的なアドバイスを提供してください。
+`;
+  }
+
+  /**
+   * 建構英文診斷提示
+   */
+  private buildEnglishPrompt(accountName: string, data: AccountDiagnosisData, metaData?: MetaAccountData, healthScore: number, targetBrowseToCartRate: number, targetCartToCheckoutRate: number): string {
+    return `
+As a professional Facebook advertising optimization consultant, please conduct a comprehensive account health analysis for "${accountName}":
+
+## 📊 Account Basic Data
+- Target Monthly Revenue: $${data.targetRevenue.toLocaleString()}
+- Target AOV: $${data.targetAov.toLocaleString()}
+- Target Conversion Rate: ${data.targetConversionRate}%
+- Target ROAS: ${data.targetRoas.toFixed(2)}x
+- Target Daily Traffic: ${Math.round(data.targetDailyTraffic)} visits
+- Target Daily Budget: $${Math.round(data.targetDailyBudget).toLocaleString()}
+
+## 📈 Actual Account Performance
+- Actual Daily Traffic: ${Math.round(data.actualDailyTraffic)} visits (Achievement: ${data.trafficAchievementRate.toFixed(1)}%)
+- Actual Daily Spend: $${Math.round(data.actualDailySpend).toLocaleString()} (Budget Utilization: ${data.budgetUtilizationRate.toFixed(1)}%)
+- Actual CTR: ${data.actualCtr.toFixed(2)}% (${this.getCtrRating(data.actualCtr)})
+- Actual CPA: $${Math.round(data.actualCpa).toLocaleString()}
+- Actual ROAS: ${data.actualRoas.toFixed(2)}x
+
+## 🔄 Conversion Funnel Analysis
+- Browse→Add to Cart Rate: ${data.addToCartRate.toFixed(1)}% (Target: ${targetBrowseToCartRate}%)
+- Add to Cart→Purchase Rate: ${data.checkoutRate.toFixed(1)}% (Target: ${targetCartToCheckoutRate}%)
+- Overall Conversion Rate: ${data.overallConversionRate.toFixed(2)}%
+
+## 🎯 Health Score
+Account Health Score: ${healthScore}/100 points
+
+Please provide a complete diagnosis report following this structure as "Teacher Black" with professional and approachable advice.
+`;
+  }
+
+  /**
+   * 建構中文診斷提示
+   */
+  private buildChinesePrompt(accountName: string, data: AccountDiagnosisData, metaData?: MetaAccountData, healthScore: number, targetBrowseToCartRate: number, targetCartToCheckoutRate: number): string {
     return `
 作為專業的 Facebook 廣告優化顧問，請針對「${accountName}」進行全面帳戶健診分析：
 

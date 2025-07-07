@@ -9,6 +9,7 @@ import {
   type IndustryType 
 } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
+import { businessTermsDictionary, fbAuditTerms, getCorrectJapaneseTerm } from "./businessTermsDictionary";
 
 export interface FbAdAccountData {
   accountId: string;
