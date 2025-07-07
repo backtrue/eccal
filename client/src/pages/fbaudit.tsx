@@ -534,12 +534,10 @@ export default function FbAudit({ locale }: FbAuditProps) {
                       };
 
                       const displayName = getIndustryName(industry, locale);
-                      const roasText = locale === 'ja' ? '平均ROAS' : locale === 'en' ? 'Avg ROAS' : '平均 ROAS';
-                      const ctrText = locale === 'ja' ? '平均CTR' : locale === 'en' ? 'Avg CTR' : '平均 CTR';
                       
                       return (
                         <SelectItem key={industry.id} value={industry.id}>
-                          {displayName} ({roasText}: {industry.averageRoas}x, {ctrText}: {industry.averageCtr}%)
+                          {displayName}
                         </SelectItem>
                       );
                     })}
