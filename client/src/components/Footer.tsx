@@ -116,6 +116,16 @@ export default function Footer() {
                   {t.terms}
                 </Link>
               </li>
+              <li>
+                <Link href={getCurrentLocale() === 'zh-TW' ? '/help/fbaudit' :
+                           getCurrentLocale() === 'en' ? '/en/help/fbaudit' :
+                           '/jp/help/fbaudit'} 
+                      className="text-gray-300 hover:text-white transition-colors">
+                  {getCurrentLocale() === 'zh-TW' ? 'FB廣告健檢說明' :
+                   getCurrentLocale() === 'en' ? 'FB Ads Health Check Guide' :
+                   'FB広告ヘルスチェック説明'}
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
