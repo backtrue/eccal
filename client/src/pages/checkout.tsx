@@ -4,11 +4,14 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, User } from "lucide-react";
+import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import NavigationBar from "@/components/NavigationBar";
 import Footer from "@/components/Footer";
+import GoogleLoginButton from "@/components/GoogleLoginButton";
 import { getTranslations, type Locale } from "@/lib/i18n";
 
 // Load Stripe
@@ -155,10 +158,17 @@ export default function Checkout({ locale }: CheckoutProps) {
   const [amount, setAmount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { user, isAuthenticated } = useAuth();
 
   const t = getTranslations(locale);
 
   useEffect(() => {
+    // Check if user is authenticated first
+    if (!isAuthenticated) {
+      setIsLoading(false);
+      return;
+    }
+
     // Get plan type and amount from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const plan = urlParams.get('plan') as 'monthly' | 'lifetime';
@@ -170,6 +180,7 @@ export default function Checkout({ locale }: CheckoutProps) {
         description: locale === 'zh-TW' ? "缺少付款資訊" : locale === 'en' ? "Missing payment information" : "支払い情報が不足しています",
         variant: "destructive",
       });
+      setIsLoading(false);
       return;
     }
 
@@ -180,7 +191,7 @@ export default function Checkout({ locale }: CheckoutProps) {
     apiRequest("POST", "/api/stripe/create-payment-intent", {
       amount: parseInt(planAmount),
       paymentType: plan,
-      currency: 'usd'
+      currency: 'jpy'
     })
       .then((res) => res.json())
       .then((data) => {
@@ -196,8 +207,9 @@ export default function Checkout({ locale }: CheckoutProps) {
         });
         setIsLoading(false);
       });
-  }, [locale, toast]);
+  }, [locale, toast, isAuthenticated]);
 
+  // Show loading screen
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
@@ -208,6 +220,46 @@ export default function Checkout({ locale }: CheckoutProps) {
               <CardContent className="p-8 text-center">
                 <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
                 <p>{locale === 'zh-TW' ? '正在準備付款...' : locale === 'en' ? 'Preparing payment...' : '支払いを準備中...'}</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Show login requirement if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        <NavigationBar locale={locale} />
+        <div className="container mx-auto px-4 py-16">
+          <div className="max-w-md mx-auto">
+            <Card>
+              <CardHeader className="text-center">
+                <User className="h-16 w-16 text-blue-500 mx-auto mb-4" />
+                <CardTitle className="text-2xl">
+                  {locale === 'zh-TW' ? '需要登入' : locale === 'en' ? 'Login Required' : 'ログインが必要'}
+                </CardTitle>
+                <CardDescription>
+                  {locale === 'zh-TW' 
+                    ? '請先登入您的 Google 帳戶以繼續付款流程'
+                    : locale === 'en'
+                    ? 'Please login with your Google account to continue with payment'
+                    : 'お支払いを続行するには、Googleアカウントでログインしてください'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <GoogleLoginButton 
+                  locale={locale} 
+                  returnTo={window.location.pathname + window.location.search}
+                />
+                <Link href={locale === 'zh-TW' ? '/pricing' : `/${locale === 'en' ? 'en' : 'jp'}/pricing`}>
+                  <Button variant="outline" className="w-full">
+                    {locale === 'zh-TW' ? '返回定價頁面' : locale === 'en' ? 'Back to Pricing' : '料金ページに戻る'}
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </div>

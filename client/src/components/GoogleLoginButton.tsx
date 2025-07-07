@@ -1,27 +1,30 @@
 import { Button } from "@/components/ui/button";
 import { Chrome } from "lucide-react";
+import type { Locale } from "@/lib/i18n";
 
 interface GoogleLoginButtonProps {
-  className?: string;
+  locale: Locale;
+  returnTo?: string;
 }
 
-export default function GoogleLoginButton({ className }: GoogleLoginButtonProps) {
+export default function GoogleLoginButton({ locale, returnTo }: GoogleLoginButtonProps) {
   const handleGoogleLogin = () => {
-    // Get current page for return redirect
-    const currentPage = window.location.pathname + window.location.search;
-    // Pass returnTo as URL parameter to the OAuth endpoint
-    const returnToParam = encodeURIComponent(currentPage);
-    window.location.href = `/api/auth/google?returnTo=${returnToParam}`;
+    const params = new URLSearchParams();
+    if (returnTo) {
+      params.set('returnTo', returnTo);
+    }
+    
+    window.location.href = `/api/auth/google${params.toString() ? '?' + params.toString() : ''}`;
   };
 
   return (
-    <Button 
-      onClick={handleGoogleLogin}
-      variant="outline"
-      className={`flex items-center space-x-2 ${className}`}
-    >
-      <Chrome className="w-4 h-4" />
-      <span>使用 Google 登入</span>
+    <Button onClick={handleGoogleLogin} variant="outline" className="w-full">
+      <Chrome className="mr-2 h-4 w-4" />
+      {locale === 'zh-TW' 
+        ? 'Google 登入' 
+        : locale === 'en' 
+        ? 'Login with Google' 
+        : 'Googleでログイン'}
     </Button>
   );
 }

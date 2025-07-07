@@ -8,6 +8,8 @@ if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
 }
 
+console.log('Initializing Stripe with secret key starting with:', process.env.STRIPE_SECRET_KEY?.substring(0, 7));
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2023-10-16",
 });
@@ -43,8 +45,11 @@ export function setupStripeRoutes(app: Express) {
       }
 
       // Create payment intent
+      // Note: JPY doesn't need to be multiplied by 100 as it's already the smallest unit
+      const finalAmount = currency === 'jpy' ? Math.round(amount) : Math.round(amount * 100);
+      
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(amount * 100), // Convert to cents
+        amount: finalAmount,
         currency: currency,
         customer: customerId,
         metadata: {
@@ -62,8 +67,19 @@ export function setupStripeRoutes(app: Express) {
       });
     } catch (error: any) {
       console.error("Error creating payment intent:", error);
+      
+      // More detailed error logging
+      console.error("Error details:", {
+        message: error.message,
+        type: error.type,
+        code: error.code,
+        param: error.param,
+        stack: error.stack
+      });
+      
       res.status(500).json({ 
-        error: "Error creating payment intent: " + error.message 
+        error: "Error creating payment intent: " + (error.message || 'Unknown error'),
+        details: error.type || 'server_error'
       });
     }
   });
