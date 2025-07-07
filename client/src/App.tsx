@@ -26,6 +26,7 @@ import DiagnosisReportDetail from "./pages/diagnosis-report-detail";
 import AuthDebug from "./pages/auth-debug";
 import FacebookPermissions from "./pages/facebook-permissions";
 import FbAudit from "./pages/fbaudit";
+import Pricing from "./pages/pricing";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 
 // Error Boundary Component
@@ -112,6 +113,7 @@ function Router() {
       <Route path="/calculator" component={() => <Calculator locale={locale} />} />
       <Route path="/campaign-planner" component={() => <CampaignPlannerV2 locale={locale} />} />
       <Route path="/fbaudit" component={() => <FbAudit locale={locale} />} />
+      <Route path="/pricing" component={() => <Pricing locale={locale} />} />
       <Route path="/dashboard" component={() => <Dashboard locale={locale} />} />
       <Route path="/project/:id" component={ProjectDetail} />
       <Route path="/diagnosis-report/:id" component={DiagnosisReportDetail} />
@@ -130,6 +132,7 @@ function Router() {
       <Route path="/en/calculator" component={() => <Calculator locale="en" />} />
       <Route path="/en/campaign-planner" component={() => <CampaignPlannerV2 locale="en" />} />
       <Route path="/en/fbaudit" component={() => <FbAudit locale="en" />} />
+      <Route path="/en/pricing" component={() => <Pricing locale="en" />} />
       <Route path="/en/dashboard" component={() => <Dashboard locale="en" />} />
       <Route path="/en/brevo-sync" component={() => <BrevoSync />} />
       <Route path="/en/privacy" component={() => <Privacy locale="en" />} />
@@ -140,6 +143,7 @@ function Router() {
       <Route path="/jp/calculator" component={() => <Calculator locale="ja" />} />
       <Route path="/jp/campaign-planner" component={() => <CampaignPlannerV2 locale="ja" />} />
       <Route path="/jp/fbaudit" component={() => <FbAudit locale="ja" />} />
+      <Route path="/jp/pricing" component={() => <Pricing locale="ja" />} />
       <Route path="/jp/dashboard" component={() => <Dashboard locale="ja" />} />
       <Route path="/jp/brevo-sync" component={() => <BrevoSync />} />
       <Route path="/jp/privacy" component={() => <Privacy locale="ja" />} />

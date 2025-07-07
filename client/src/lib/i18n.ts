@@ -185,6 +185,35 @@ export interface TranslationData {
   analyzingDescription: string;
   tipTitle: string;
   tipMessage: string;
+  
+  // Pricing Page
+  pricing: string;
+  pricingTitle: string;
+  pricingSubtitle: string;
+  whyChoose: string;
+  whyChooseSubtitle: string;
+  simplePricing: string;
+  simplePricingSubtitle: string;
+  monthlyPlan: string;
+  lifetimePlan: string;
+  popularPlan: string;
+  bestValue: string;
+  limitedSale: string;
+  getStarted: string;
+  buyNow: string;
+  planComparison: string;
+  planComparisonSubtitle: string;
+  features: string;
+  monthlyCredits: string;
+  priorityAccess: string;
+  creditDiscount: string;
+  dedicatedSupport: string;
+  basicSupport: string;
+  specialDiscount: string;
+  getStartedToday: string;
+  getStartedTodaySubtitle: string;
+  tryMonthly: string;
+  buyLifetime: string;
 }
 
 const translations: Record<Locale, TranslationData> = {
@@ -335,6 +364,35 @@ const translations: Record<Locale, TranslationData> = {
     account: '帳戶',
     healthScore: '健康分數',
     recommendations: '建議',
+    
+    // Pricing Page
+    pricing: '價格方案',
+    pricingTitle: '報數據 Premium',
+    pricingSubtitle: '專業級分析工具，最大化您的廣告投資回報',
+    whyChoose: '為什麼選擇報數據？',
+    whyChooseSubtitle: '數據驅動行銷的全新標準',
+    simplePricing: '簡單透明的價格結構',
+    simplePricingSubtitle: '選擇最適合您需求的方案',
+    monthlyPlan: '月訂閱方案',
+    lifetimePlan: '終身訂閱',
+    popularPlan: '熱門方案',
+    bestValue: '最超值',
+    limitedSale: '限時特價中',
+    getStarted: '立即開始',
+    buyNow: '立即購買',
+    planComparison: '方案比較',
+    planComparisonSubtitle: '各方案詳細功能比較',
+    features: '功能',
+    monthlyCredits: '每月點數',
+    priorityAccess: '新功能優先使用',
+    creditDiscount: '點數使用折扣',
+    dedicatedSupport: '專屬客服',
+    basicSupport: '基本客服',
+    specialDiscount: '特別折扣',
+    getStartedToday: '立即開始使用',
+    getStartedTodaySubtitle: '限時特價中，機會難得',
+    tryMonthly: '試用月訂閱',
+    buyLifetime: '購買終身版',
   },
   
   'en': {
@@ -484,6 +542,35 @@ const translations: Record<Locale, TranslationData> = {
     account: 'Account',
     healthScore: 'Health Score',
     recommendations: 'Recommendations',
+    
+    // Pricing Page
+    pricing: 'Pricing',
+    pricingTitle: 'Report Data Premium',
+    pricingSubtitle: 'Professional-grade analytics tools to maximize your ad investment',
+    whyChoose: 'Why Choose Report Data?',
+    whyChooseSubtitle: 'The new standard for data-driven marketing',
+    simplePricing: 'Simple Pricing Structure',
+    simplePricingSubtitle: 'Choose from two plans that fit your needs',
+    monthlyPlan: 'Monthly Plan',
+    lifetimePlan: 'Lifetime Plan',
+    popularPlan: 'Popular Plan',
+    bestValue: 'Best Value',
+    limitedSale: 'Limited Time Sale',
+    getStarted: 'Get Started',
+    buyNow: 'Buy Now',
+    planComparison: 'Plan Comparison',
+    planComparisonSubtitle: 'Detailed feature comparison for each plan',
+    features: 'Features',
+    monthlyCredits: 'Monthly Credits',
+    priorityAccess: 'Priority Access to New Features',
+    creditDiscount: 'Credit Usage Discount',
+    dedicatedSupport: 'Dedicated Support',
+    basicSupport: 'Basic Support',
+    specialDiscount: 'Special Discount',
+    getStartedToday: 'Get Started Today',
+    getStartedTodaySubtitle: 'Limited time sale - don\'t miss this opportunity',
+    tryMonthly: 'Try Monthly Plan',
+    buyLifetime: 'Buy Lifetime',
   },
   
   'ja': {
@@ -672,6 +759,35 @@ const translations: Record<Locale, TranslationData> = {
     analyzingDescription: '過去28日間の広告データを分析しておりますので、しばらくお待ちください...',
     tipTitle: '💡 ヒント',
     tipMessage: '広告クリエイティブのCTRが高いほど、通常CPCは低くなります。',
+    
+    // Pricing Page
+    pricing: '料金プラン',
+    pricingTitle: '報數據プレミアム',
+    pricingSubtitle: '広告投資を最大化する、プロレベルの分析ツール',
+    whyChoose: 'なぜ報數據を選ぶのか？',
+    whyChooseSubtitle: 'データ駆動型マーケティングの新しいスタンダード',
+    simplePricing: 'シンプルな価格設定',
+    simplePricingSubtitle: 'あなたのニーズに合わせて選べる2つのプラン',
+    monthlyPlan: '月額プラン',
+    lifetimePlan: 'ライフタイム',
+    popularPlan: '人気プラン',
+    bestValue: '最もお得',
+    limitedSale: '限定セール中',
+    getStarted: '今すぐ始める',
+    buyNow: '今すぐ購入',
+    planComparison: 'プラン比較',
+    planComparisonSubtitle: '各プランの詳細な機能比較',
+    features: '機能',
+    monthlyCredits: '月間クレジット',
+    priorityAccess: '新機能優先アクセス',
+    creditDiscount: 'クレジット使用特別割引',
+    dedicatedSupport: '専用サポート',
+    basicSupport: '基本サポート',
+    specialDiscount: '特別割引',
+    getStartedToday: '今すぐ始めましょう',
+    getStartedTodaySubtitle: '限定セール中、この機会をお見逃しなく',
+    tryMonthly: '月額プランを試す',
+    buyLifetime: 'ライフタイムを購入',
   },
 };
 
