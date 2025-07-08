@@ -45,13 +45,7 @@ export default function NavigationBar({ locale }: NavigationBarProps) {
               FB廣告健檢
             </Link>
 
-            <Link href="/pricing" className="text-purple-600 hover:text-purple-800 transition-colors font-medium">
-              {t.pricingLabel}
-            </Link>
 
-            <Link href="/about" className="text-gray-600 hover:text-gray-900 transition-colors">
-              {t.about.title}
-            </Link>
 
             {isAuthenticated && (
               <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 transition-colors">
@@ -99,13 +93,7 @@ export default function NavigationBar({ locale }: NavigationBarProps) {
                 FB廣告健檢
               </Link>
 
-              <Link href="/pricing" className="text-purple-600 hover:text-purple-800 transition-colors font-medium">
-                {t.pricingLabel}
-              </Link>
 
-              <Link href="/about" className="text-gray-600 hover:text-gray-900 transition-colors">
-                {t.about.title}
-              </Link>
 
               {isAuthenticated && (
                 <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 transition-colors">

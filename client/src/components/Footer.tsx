@@ -107,6 +107,22 @@ export default function Footer() {
                 </a>
               </li>
               <li>
+                <Link href={getCurrentLocale() === 'zh-TW' ? '/pricing' :
+                           getCurrentLocale() === 'en' ? '/en/pricing' :
+                           '/jp/pricing'} 
+                      className="text-gray-300 hover:text-white transition-colors">
+                  {t.pricingLabel}
+                </Link>
+              </li>
+              <li>
+                <Link href={getCurrentLocale() === 'zh-TW' ? '/about' :
+                           getCurrentLocale() === 'en' ? '/en/about' :
+                           '/jp/about'} 
+                      className="text-gray-300 hover:text-white transition-colors">
+                  {t.about.title}
+                </Link>
+              </li>
+              <li>
                 <Link href="/privacy-policy" className="text-gray-300 hover:text-white transition-colors">
                   {t.privacy}
                 </Link>
