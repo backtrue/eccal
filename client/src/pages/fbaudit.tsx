@@ -73,7 +73,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
     } catch (error) {
       console.error('Audit failed:', error);
       // 即使失敗也要有清楚的錯誤顯示
-      alert('健檢執行失敗，請檢查控制台錯誤信息');
+      alert(t.healthCheckFailed);
     }
   };
 
@@ -104,7 +104,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
           <div className="text-center py-20">
             <Facebook className="w-16 h-16 text-blue-600 mx-auto mb-6" />
             <h1 className="text-3xl font-bold mb-4">{t.fbAuditTitle}</h1>
-            <p className="text-gray-600 mb-8">{locale === 'zh-TW' ? '請先登入以使用廣告健檢功能' : locale === 'en' ? 'Please login to use the ad health check feature' : 'まず広告健康診断機能をご利用するためにログインしてください'}</p>
+            <p className="text-gray-600 mb-8">{t.loginRequired}</p>
             <Button size="lg" onClick={() => window.location.href = '/api/auth/google'}>
               {t.loginWithGoogle}
             </Button>
@@ -378,7 +378,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
                   {/* Facebook 設定指南連結 */}
                   <div className="mt-6 pt-6 border-t border-gray-200">
                     <p className="text-sm text-gray-500 mb-3">
-                      遇到「無法使用此功能」的錯誤嗎？
+                      {t.errorEncountered}
                     </p>
                     <Button 
                       variant="outline"
@@ -386,7 +386,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
                       onClick={() => window.open('/facebook-setup', '_blank')}
                       className="text-blue-600 hover:text-blue-700"
                     >
-                      📋 查看 Facebook 應用程式設定指南
+                      {t.fbSetupGuide}
                     </Button>
                   </div>
                 </div>
@@ -403,7 +403,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
           </Card>
         )}
 
-        {/* 步驟 2: 選擇廣告帳號 */}
+        {/* {t.selectAdAccountStep} */}
         {currentStep === 2 && isConnected && (
           <Card className="mb-8">
             <CardHeader>
@@ -436,7 +436,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
                   {selectedAccount && (
                     <div className="text-center pt-4">
                       <Button onClick={() => setCurrentStep(3)}>
-                        {locale === 'zh-TW' ? '下一步：選擇預算計劃' : locale === 'en' ? 'Next: Select Campaign Plan' : '次のステップ：キャンペーンプラン選択'}
+                        {t.nextSelectBudgetPlan}
                       </Button>
                     </div>
                   )}
@@ -444,15 +444,15 @@ export default function FbAudit({ locale }: FbAuditProps) {
               ) : (
                 <div className="text-center py-8">
                   <AlertTriangle className="w-12 h-12 text-yellow-600 mx-auto mb-4" />
-                  <p className="text-yellow-600 font-medium">未找到可用的廣告帳號</p>
-                  <p className="text-gray-600 text-sm">請確認您的 Facebook 帳號有廣告管理權限</p>
+                  <p className="text-yellow-600 font-medium">{t.noAccountsFound}</p>
+                  <p className="text-gray-600 text-sm">{t.confirmFbPermissions}</p>
                 </div>
               )}
             </CardContent>
           </Card>
         )}
 
-        {/* 步驟 3: 選擇預算計劃 */}
+        {/* {t.selectPlanStep} */}
         {currentStep === 3 && (
           <Card className="mb-8">
             <CardHeader>
@@ -485,7 +485,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
                   {selectedPlan && (
                     <div className="text-center pt-4">
                       <Button onClick={() => setCurrentStep(4)}>
-                        {locale === 'zh-TW' ? '下一步：選擇產業類型' : locale === 'en' ? 'Next: Select Industry Type' : '次のステップ：業界タイプ選択'}
+                        {t.nextSelectIndustryType}
                       </Button>
                     </div>
                   )}
@@ -506,7 +506,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
           </Card>
         )}
 
-        {/* 步驟 4: 選擇產業類型 */}
+        {/* {t.selectIndustryStep} */}
         {currentStep === 4 && (
           <Card className="mb-8">
             <CardHeader>

@@ -208,6 +208,18 @@ export interface TranslationData {
   tipTitle: string;
   tipMessage: string;
   
+  // Additional UI messages
+  loginRequired: string;
+  healthCheckFailed: string;
+  confirmFbPermissions: string;
+  errorEncountered: string;
+  fbSetupGuide: string;
+  nextSelectBudgetPlan: string;
+  nextSelectIndustryType: string;
+  selectAdAccountStep: string;
+  selectPlanStep: string;
+  selectIndustryStep: string;
+  
   // Pricing Page
   pricing: string;
   pricingTitle: string;
@@ -413,6 +425,18 @@ const translations: Record<Locale, TranslationData> = {
     analyzingDescription: '我們正在分析您過去 28 天的廣告數據，請稍候...',
     tipTitle: '小提示',
     tipMessage: '分析完成後，您將獲得專業的廣告優化建議，幫助提升廣告效益。',
+    
+    // Additional UI messages
+    loginRequired: '請先登入以使用廣告健檢功能',
+    healthCheckFailed: '健檢執行失敗，請檢查控制台錯誤信息',
+    confirmFbPermissions: '請確認您的 Facebook 帳號有廣告管理權限',
+    errorEncountered: '遇到「無法使用此功能」的錯誤嗎？',
+    fbSetupGuide: '📋 查看 Facebook 應用程式設定指南',
+    nextSelectBudgetPlan: '下一步：選擇預算計劃',
+    nextSelectIndustryType: '下一步：選擇產業類型',
+    selectAdAccountStep: '步驟 2: 選擇廣告帳號',
+    selectPlanStep: '步驟 3: 選擇預算計劃',
+    selectIndustryStep: '步驟 4: 選擇產業類型',
     
     // Calculator Page Additional
     connectAccountTitle: '連接帳戶以使用完整功能',
@@ -651,6 +675,18 @@ const translations: Record<Locale, TranslationData> = {
     analyzingDescription: 'We are analyzing your advertising data from the past 28 days, please wait...',
     tipTitle: 'Tip',
     tipMessage: 'After analysis completion, you will receive professional advertising optimization recommendations to help improve ad effectiveness.',
+    
+    // Additional UI messages
+    loginRequired: 'Please login to use the ad health check feature',
+    healthCheckFailed: 'Health check failed, please check console error messages',
+    confirmFbPermissions: 'Please confirm your Facebook account has advertising management permissions',
+    errorEncountered: 'Encountered "Cannot use this feature" error?',
+    fbSetupGuide: '📋 View Facebook Application Setup Guide',
+    nextSelectBudgetPlan: 'Next: Select Budget Plan',
+    nextSelectIndustryType: 'Next: Select Industry Type',
+    selectAdAccountStep: 'Step 2: Select Ad Account',
+    selectPlanStep: 'Step 3: Select Budget Plan',
+    selectIndustryStep: 'Step 4: Select Industry Type',
     
     // Calculator Page Additional
     connectAccountTitle: 'Connect Accounts for Full Features',
@@ -923,6 +959,18 @@ const translations: Record<Locale, TranslationData> = {
     analyzingDescription: '過去28日間の広告データを分析しておりますので、しばらくお待ちください...',
     tipTitle: '💡 ヒント',
     tipMessage: '広告クリエイティブのCTRが高いほど、通常CPCは低くなります。',
+    
+    // Additional UI messages
+    loginRequired: 'まず広告健康診断機能をご利用するためにログインしてください',
+    healthCheckFailed: 'ヘルスチェックに失敗しました。コンソールエラーメッセージを確認してください',
+    confirmFbPermissions: 'FacebookアカウントがAdvertising管理権限を持っていることを確認してください',
+    errorEncountered: '「この機能を使用できません」エラーが発生しましたか？',
+    fbSetupGuide: '📋 Facebookアプリケーション設定ガイドを表示',
+    nextSelectBudgetPlan: '次のステップ：予算プラン選択',
+    nextSelectIndustryType: '次のステップ：業界タイプ選択',
+    selectAdAccountStep: 'ステップ 2: 広告アカウント選択',
+    selectPlanStep: 'ステップ 3: 予算プラン選択',
+    selectIndustryStep: 'ステップ 4: 業界タイプ選択',
     
     // Pricing Page
     pricingTitle: '報數據プレミアム',
