@@ -374,6 +374,21 @@ export default function FbAudit({ locale }: FbAuditProps) {
                     {t.connectFacebookPrompt}
                   </p>
                   <FacebookLoginButton />
+                  
+                  {/* Facebook 設定指南連結 */}
+                  <div className="mt-6 pt-6 border-t border-gray-200">
+                    <p className="text-sm text-gray-500 mb-3">
+                      遇到「無法使用此功能」的錯誤嗎？
+                    </p>
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open('/facebook-setup', '_blank')}
+                      className="text-blue-600 hover:text-blue-700"
+                    >
+                      📋 查看 Facebook 應用程式設定指南
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-8">

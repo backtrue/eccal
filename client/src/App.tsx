@@ -25,6 +25,7 @@ import DiagnosisReport from "./pages/diagnosis-report";
 import DiagnosisReportDetail from "./pages/diagnosis-report-detail";
 import AuthDebug from "./pages/auth-debug";
 import FacebookPermissions from "./pages/facebook-permissions";
+import FacebookSetup from "./pages/facebook-setup";
 import FbAudit from "./pages/fbaudit";
 import Pricing from "./pages/pricing";
 import FbAuditHelp from "./pages/help/fbaudit-help";
@@ -136,6 +137,7 @@ function Router() {
       )} />
       <Route path="/brevo-sync" component={() => <BrevoSync />} />
       <Route path="/facebook-permissions" component={() => <FacebookPermissions />} />
+      <Route path="/facebook-setup" component={() => <FacebookSetup locale={locale} />} />
       <Route path="/privacy" component={() => <Privacy locale={locale} />} />
       <Route path="/terms" component={() => <Terms locale={locale} />} />
       
@@ -153,6 +155,7 @@ function Router() {
       <Route path="/en/help/campaign-planner" component={() => <CampaignPlannerHelp locale="en" />} />
       <Route path="/en/dashboard" component={() => <Dashboard locale="en" />} />
       <Route path="/en/brevo-sync" component={() => <BrevoSync />} />
+      <Route path="/en/facebook-setup" component={() => <FacebookSetup locale="en" />} />
       <Route path="/en/privacy" component={() => <Privacy locale="en" />} />
       <Route path="/en/terms" component={() => <Terms locale="en" />} />
       
@@ -170,6 +173,7 @@ function Router() {
       <Route path="/jp/help/campaign-planner" component={() => <CampaignPlannerHelp locale="ja" />} />
       <Route path="/jp/dashboard" component={() => <Dashboard locale="ja" />} />
       <Route path="/jp/brevo-sync" component={() => <BrevoSync />} />
+      <Route path="/jp/facebook-setup" component={() => <FacebookSetup locale="ja" />} />
       <Route path="/jp/privacy" component={() => <Privacy locale="ja" />} />
       <Route path="/jp/terms" component={() => <Terms locale="ja" />} />
       

@@ -8,6 +8,26 @@ import { eq } from 'drizzle-orm';
 
 export function setupDiagnosisRoutes(app: Express) {
 
+  // Facebook 配置檢查端點
+  app.get('/api/diagnosis/facebook-config', (req: any, res) => {
+    try {
+      const appId = process.env.FACEBOOK_APP_ID;
+      const appSecret = process.env.FACEBOOK_APP_SECRET;
+      
+      res.json({
+        appId: appId || null,
+        hasAppSecret: !!appSecret,
+        redirectUris: [
+          `https://eccal.thinkwithblack.com/api/diagnosis/facebook-callback`,
+          `https://${req.get('host')}/api/diagnosis/facebook-callback`
+        ]
+      });
+    } catch (error) {
+      console.error('Error getting Facebook config:', error);
+      res.status(500).json({ error: 'Failed to get Facebook config' });
+    }
+  });
+
   // Facebook OAuth 授權 URL - 提前設置，避免被其他中間件攔截
   app.get('/api/diagnosis/facebook-auth-url', (req: any, res) => {
     try {
