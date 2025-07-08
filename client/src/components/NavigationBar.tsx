@@ -49,6 +49,10 @@ export default function NavigationBar({ locale }: NavigationBarProps) {
               {t.pricingLabel}
             </Link>
 
+            <Link href="/about" className="text-gray-600 hover:text-gray-900 transition-colors">
+              {t.about.title}
+            </Link>
+
             {isAuthenticated && (
               <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 transition-colors">
                 儀表板
@@ -97,6 +101,10 @@ export default function NavigationBar({ locale }: NavigationBarProps) {
 
               <Link href="/pricing" className="text-purple-600 hover:text-purple-800 transition-colors font-medium">
                 {t.pricingLabel}
+              </Link>
+
+              <Link href="/about" className="text-gray-600 hover:text-gray-900 transition-colors">
+                {t.about.title}
               </Link>
 
               {isAuthenticated && (

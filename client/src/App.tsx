@@ -34,6 +34,7 @@ import CampaignPlannerHelp from "./pages/help/campaign-planner-help";
 import Checkout from "./pages/checkout";
 import SubscriptionCheckout from "./pages/subscription-checkout";
 import PaymentSuccess from "./pages/payment-success";
+import About from "./pages/about";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 
 // Error Boundary Component
@@ -140,6 +141,7 @@ function Router() {
       <Route path="/facebook-setup" component={() => <FacebookSetup locale={locale} />} />
       <Route path="/privacy" component={() => <Privacy locale={locale} />} />
       <Route path="/terms" component={() => <Terms locale={locale} />} />
+      <Route path="/about" component={() => <About locale={locale} />} />
       
       {/* English routes */}
       <Route path="/en" component={() => <Home locale="en" />} />
@@ -158,6 +160,7 @@ function Router() {
       <Route path="/en/facebook-setup" component={() => <FacebookSetup locale="en" />} />
       <Route path="/en/privacy" component={() => <Privacy locale="en" />} />
       <Route path="/en/terms" component={() => <Terms locale="en" />} />
+      <Route path="/en/about" component={() => <About locale="en" />} />
       
       {/* Japanese routes */}
       <Route path="/jp" component={() => <Home locale="ja" />} />
@@ -176,6 +179,7 @@ function Router() {
       <Route path="/jp/facebook-setup" component={() => <FacebookSetup locale="ja" />} />
       <Route path="/jp/privacy" component={() => <Privacy locale="ja" />} />
       <Route path="/jp/terms" component={() => <Terms locale="ja" />} />
+      <Route path="/jp/about" component={() => <About locale="ja" />} />
       
       {/* Debug routes */}
       <Route path="/auth-debug" component={() => <AuthDebug />} />

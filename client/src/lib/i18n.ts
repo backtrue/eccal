@@ -249,6 +249,58 @@ export interface TranslationData {
   getStartedTodaySubtitle: string;
   tryMonthly: string;
   buyLifetime: string;
+  
+  // About Us Page
+  about: {
+    title: string;
+    subtitle: string;
+    mission: {
+      title: string;
+      problem: string;
+      solution: string;
+      platform: string;
+      outcome: string;
+    };
+    founder: {
+      title: string;
+      intro: string;
+      experience: string;
+      philosophy: string;
+      vision: string;
+      conclusion: string;
+    };
+    company: {
+      title: string;
+      description: string;
+      mission: string;
+      courses_intro: string;
+      course1: {
+        title: string;
+        description: string;
+      };
+      course2: {
+        title: string;
+        description: string;
+      };
+      course3: {
+        title: string;
+        description: string;
+      };
+      japan_office: string;
+    };
+    message: {
+      title: string;
+      growth: string;
+      conclusion: string;
+    };
+    cta: {
+      title: string;
+      description: string;
+      calculator: string;
+      fbaudit: string;
+      campaign_planner: string;
+    };
+  };
 }
 
 const translations: Record<Locale, TranslationData> = {
@@ -501,6 +553,58 @@ const translations: Record<Locale, TranslationData> = {
     getStartedTodaySubtitle: '限時特價中，機會難得',
     tryMonthly: '試用月訂閱',
     buyLifetime: '購買終身版',
+    
+    // About Us Page
+    about: {
+      title: '關於我們',
+      subtitle: '讓廣告操作者，擁有看懂數據與主導策略的能力。',
+      mission: {
+        title: '我們為什麼打造《報數據》？',
+        problem: '很多人以為，Facebook 廣告就是會操作廣告後台。但我們知道，真正有價值的投手，不只是點幾個按鈕就能變專業。',
+        solution: '我們打造《報數據》，就是想讓更多行銷人員不只是「系統操作者」，而是能夠獨立企劃、拆解成效、提出優化建議的廣告策略專家。',
+        platform: '這個平台，從 GA 數據到 Facebook 廣告指標，整合我十幾年實戰經驗，幫助你看懂每個成效背後的意義。不再靠運氣亂投，也不再在報表前面一片空白。',
+        outcome: '你會知道怎麼規劃預算，怎麼追蹤 ROAS，怎麼成為讓老闆願意加薪、客戶願意信任的人。'
+      },
+      founder: {
+        title: '創辦人介紹｜邱煜庭（小黑）',
+        intro: '你可能在某堂課上看過我、在某篇貼文裡讀過我說的話，但如果真的要介紹我自己，那應該是這樣：',
+        experience: '我從 Facebook 廣告一問世就開始投入這個產業，從一人小工作室到跨國集團，從 1 萬預算到 1,000 萬規模，幾乎什麼產業都做過一些。這些年來，我見過太多優秀的行銷人，卡在「找不到人問」「不知道怎麼做」的焦慮裡。',
+        philosophy: '我常開玩笑說，我這個人不好找、也不愛回訊息，所以我就想，能不能有更多「我的分身」，陪著你度過那些深夜一個人面對報表的時候。',
+        vision: '《報數據》，就是這樣一個存在。',
+        conclusion: '它不只是工具，它是你背後的邏輯支援，是幫你找破口、出建議的策略顧問。'
+      },
+      company: {
+        title: '我們是誰？',
+        description: '《報數據》由煜言顧問有限公司（台灣）與燈言顧問株式会社（日本）共同開發與營運。這兩家公司，也正是我們線上課程「燒賣研究所」的法人實體與技術支援。',
+        mission: '我們的核心任務很簡單——把實戰經驗變成可以落地使用的策略工具，幫助更多廣告操作者走得更遠。',
+        courses_intro: '目前我們在 PressPlay Academy 上的代表性課程包括：',
+        course1: {
+          title: '電商結構學',
+          description: '從商業模式與定位切入，建立可長可短的廣告策略骨架'
+        },
+        course2: {
+          title: 'FB 廣告自學攻略',
+          description: '為初學者量身打造的系統教學'
+        },
+        course3: {
+          title: 'FB 廣告成效攻略',
+          description: '針對進階投手的數據解讀與策略提案訓練'
+        },
+        japan_office: '而我們在日本設立的「燈言顧問」，則希望成為台灣品牌進軍日本市場的橋樑，提供更在地的行銷建議與顧問資源。'
+      },
+      message: {
+        title: '想對你說的話',
+        growth: '如果你正想靠廣告轉職、升職、接案，甚至創業，那我們希望《報數據》可以成為你每一步成長過程裡最可靠的夥伴。',
+        conclusion: '這不會是你操作後台的替代品，而是幫你做出更聰明決策的副駕駛。'
+      },
+      cta: {
+        title: '立即開始使用報數據',
+        description: '選擇最適合你的工具，開始你的廣告優化之旅',
+        calculator: '廣告預算計算機',
+        fbaudit: 'FB 廣告健檢',
+        campaign_planner: '活動預算規劃師'
+      }
+    }
   },
   
   'en': {
@@ -752,6 +856,58 @@ const translations: Record<Locale, TranslationData> = {
     getStartedTodaySubtitle: 'Limited time sale - don\'t miss this opportunity',
     tryMonthly: 'Try Monthly Plan',
     buyLifetime: 'Buy Lifetime',
+    
+    // About Us Page
+    about: {
+      title: 'About Us',
+      subtitle: 'Empowering advertisers with data understanding and strategic leadership capabilities.',
+      mission: {
+        title: 'Why We Built "Report Data"?',
+        problem: 'Many people think Facebook advertising is just about operating the ad backend. But we know that truly valuable marketers are more than just clicking buttons to become professionals.',
+        solution: 'We built "Report Data" to help more marketing professionals become not just "system operators," but advertising strategy experts who can independently plan, analyze performance, and provide optimization recommendations.',
+        platform: 'This platform integrates my decades of practical experience, from GA data to Facebook advertising metrics, helping you understand the meaning behind every performance metric. No more random spending based on luck, no more blank stares at reports.',
+        outcome: 'You\'ll know how to plan budgets, track ROAS, and become someone your boss wants to promote and clients want to trust.'
+      },
+      founder: {
+        title: 'Founder Introduction | Qiu Yu-Ting (Mr.Kuro)',
+        intro: 'You might have seen me in a class or read something I wrote in a post, but if I really had to introduce myself, it would be like this:',
+        experience: 'I\'ve been involved in this industry since Facebook advertising first launched, from one-person studios to multinational corporations, from 10,000 budgets to 10-million scale, across almost every industry. Over the years, I\'ve seen too many excellent marketers stuck in the anxiety of "can\'t find anyone to ask" and "don\'t know how to do it."',
+        philosophy: 'I often joke that I\'m hard to find and don\'t like replying to messages, so I thought, could there be more "versions of me" to accompany you through those late nights facing reports alone?',
+        vision: '"Report Data" is exactly that kind of existence.',
+        conclusion: 'It\'s not just a tool, it\'s the logical support behind you, the strategy consultant that helps you find breakthroughs and provides recommendations.'
+      },
+      company: {
+        title: 'Who Are We?',
+        description: '"Report Data" is jointly developed and operated by YuYan Consulting Co., Ltd. (Taiwan) and Togen Consulting Co., Ltd. (Japan). These two companies are also the legal entities and technical support for our online course "Shumai Research Institute."',
+        mission: 'Our core mission is simple—turn practical experience into actionable strategic tools to help more advertising operators go further.',
+        courses_intro: 'Our representative courses on PressPlay Academy currently include:',
+        course1: {
+          title: 'E-commerce Structure Studies',
+          description: 'Starting from business model and positioning, building long-term and short-term advertising strategy frameworks'
+        },
+        course2: {
+          title: 'FB Advertising Self-Learning Guide',
+          description: 'Systematic teaching tailored for beginners'
+        },
+        course3: {
+          title: 'FB Advertising Performance Guide',
+          description: 'Data interpretation and strategy proposal training for advanced marketers'
+        },
+        japan_office: 'Our "Togen Consulting" established in Japan hopes to become a bridge for Taiwanese brands entering the Japanese market, providing more localized marketing advice and consulting resources.'
+      },
+      message: {
+        title: 'What We Want to Tell You',
+        growth: 'If you\'re looking to change careers, get promoted, freelance, or even start a business through advertising, we hope "Report Data" can become your most reliable partner in every step of your growth journey.',
+        conclusion: 'This won\'t replace your backend operations, but it will be your co-pilot in making smarter decisions.'
+      },
+      cta: {
+        title: 'Start Using Report Data Now',
+        description: 'Choose the tool that suits you best and begin your advertising optimization journey',
+        calculator: 'Ad Budget Calculator',
+        fbaudit: 'FB Ad Health Check',
+        campaign_planner: 'Campaign Planner'
+      }
+    }
   },
   
   'ja': {
@@ -1003,6 +1159,58 @@ const translations: Record<Locale, TranslationData> = {
     getStartedTodaySubtitle: '限定セール中、この機会をお見逃しなく',
     tryMonthly: '月額プランを試す',
     buyLifetime: 'ライフタイムを購入',
+    
+    // About Us Page
+    about: {
+      title: '私たちについて',
+      subtitle: '広告運用者にデータ理解と戦略主導の能力を提供します。',
+      mission: {
+        title: 'なぜ《レポートデータ》を作ったのか？',
+        problem: '多くの人はFacebook広告というと、広告管理画面を操作することだと思っています。しかし、私たちは本当に価値のある運用者は、ただボタンを押すだけでプロになれるわけではないことを知っています。',
+        solution: '私たちが《レポートデータ》を作ったのは、より多くのマーケティング担当者が単なる「システム操作者」ではなく、独立して企画し、成果を分析し、最適化提案を行える広告戦略のエキスパートになれるよう支援したいからです。',
+        platform: 'このプラットフォームは、GAデータからFacebook広告指標まで、私の十数年の実戦経験を統合し、各成果の背後にある意味を理解できるよう支援します。もう運任せの投資や、レポートを前に何も分からない状況はありません。',
+        outcome: '予算の計画方法、ROASの追跡方法、上司に昇進を望まれ、クライアントに信頼される人材になる方法を学べます。'
+      },
+      founder: {
+        title: '創設者紹介｜邱煜庭（小黒先生）',
+        intro: 'どこかのクラスで私を見たことがあるか、投稿で私の言葉を読んだことがあるかもしれませんが、本当に自己紹介をするなら、こんな感じです：',
+        experience: 'Facebook広告が世に出た時からこの業界に携わり、一人の小さな作業室から多国籍企業まで、1万円の予算から1000万円規模まで、ほぼすべての業界で経験を積んできました。この年月で、「聞ける人がいない」「どうしたらいいかわからない」という不安に陥る多くの優秀なマーケターを見てきました。',
+        philosophy: 'よく冗談で、私は見つけにくいし、メッセージの返信も好きではないと言っています。だから、深夜一人でレポートと向き合う時に、もっと多くの「私の分身」があなたに寄り添えないかと考えました。',
+        vision: '《レポートデータ》は、まさにそのような存在です。',
+        conclusion: 'これは単なるツールではなく、あなたの背後にある論理的なサポートであり、突破口を見つけて提案を行う戦略コンサルタントです。'
+      },
+      company: {
+        title: '私たちは誰ですか？',
+        description: '《レポートデータ》は煜言顧問有限公司（台湾）と燈言顧問株式会社（日本）が共同開発・運営しています。この2つの会社は、私たちのオンラインコース「燒賣研究所」の法人実体および技術サポートでもあります。',
+        mission: '私たちの核心任務はシンプルです——実戦経験を実践可能な戦略ツールに変え、より多くの広告運用者がさらに遠くへ行けるよう支援することです。',
+        courses_intro: '現在、PressPlay Academyでの代表的なコースには以下があります：',
+        course1: {
+          title: 'EC構造学',
+          description: 'ビジネスモデルとポジショニングから出発し、長期・短期の広告戦略フレームワークを構築'
+        },
+        course2: {
+          title: 'FB広告自学攻略',
+          description: '初心者向けにカスタマイズされた体系的な教育'
+        },
+        course3: {
+          title: 'FB広告成果攻略',
+          description: '上級運用者向けのデータ解釈と戦略提案トレーニング'
+        },
+        japan_office: '日本に設立した「燈言顧問」は、台湾ブランドの日本市場進出の架け橋となり、よりローカルなマーケティングアドバイスとコンサルティングリソースを提供したいと考えています。'
+      },
+      message: {
+        title: 'あなたに伝えたいこと',
+        growth: '広告で転職、昇進、フリーランス、さらには起業を目指しているなら、《レポートデータ》があなたの成長過程の各段階で最も信頼できるパートナーになることを願っています。',
+        conclusion: 'これは管理画面操作の代替品ではなく、より賢明な決定を下すための副操縦士です。'
+      },
+      cta: {
+        title: 'レポートデータを今すぐ使い始めましょう',
+        description: 'あなたに最適なツールを選んで、広告最適化の旅を始めましょう',
+        calculator: '広告予算計算機',
+        fbaudit: 'FB広告ヘルスチェック',
+        campaign_planner: 'キャンペーンプランナー'
+      }
+    }
   },
 };
 
