@@ -5,6 +5,7 @@ import { requireJWTAuth } from "./jwtAuth";
 import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { PRICING_CONFIG, getCurrencyForLocale, getPricingForLocale, formatAmountForStripe, type Locale } from "./pricingConfig";
 
 // Initialize Stripe with secret key
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -18,67 +19,136 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 });
 
 export function setupStripeRoutes(app: Express) {
-  // Initialize Stripe products and prices (admin only)
+  // Initialize Stripe products and prices for all currencies (admin only)
   app.post("/api/stripe/init-products", async (req, res) => {
     try {
-      // Create monthly subscription product
-      const monthlyProduct = await stripe.products.create({
-        name: '報數據 Pro 月訂閱',
-        description: '專業電商廣告分析平台 - 月訂閱',
-        metadata: {
-          type: 'monthly_subscription'
-        }
-      });
-
-      // Create monthly price (JPY 2,000)
-      const monthlyPrice = await stripe.prices.create({
-        unit_amount: 2000,
-        currency: 'jpy',
-        recurring: {
-          interval: 'month'
-        },
-        product: monthlyProduct.id,
-        metadata: {
-          type: 'monthly_pro'
-        }
-      });
-
-      // Create lifetime product
-      const lifetimeProduct = await stripe.products.create({
-        name: '報數據 Pro 終身訂閱',
-        description: '專業電商廣告分析平台 - 終身使用',
-        metadata: {
-          type: 'lifetime_subscription'
-        }
-      });
-
-      // Create lifetime price (JPY 17,250)
-      const lifetimePrice = await stripe.prices.create({
-        unit_amount: 17250,
-        currency: 'jpy',
-        product: lifetimeProduct.id,
-        metadata: {
-          type: 'lifetime_pro'
-        }
-      });
-
-      res.json({
+      const results: any = {
         success: true,
-        products: {
+        products: {}
+      };
+
+      // Create products and prices for each locale/currency
+      for (const [locale, config] of Object.entries(PRICING_CONFIG)) {
+        const localeName = locale === 'zh-TW' ? '繁中' : locale === 'en' ? 'EN' : '日本';
+        
+        // Create monthly subscription product
+        const monthlyProduct = await stripe.products.create({
+          name: `報數據 Pro 月訂閱 (${localeName})`,
+          description: `專業電商廣告分析平台 - 月訂閱 (${config.currency})`,
+          metadata: {
+            type: 'monthly_subscription',
+            locale: locale,
+            currency: config.currency
+          }
+        });
+
+        // Create monthly price
+        const monthlyPrice = await stripe.prices.create({
+          unit_amount: formatAmountForStripe(config.monthly.amount, config.currency),
+          currency: config.currency.toLowerCase(),
+          recurring: {
+            interval: 'month'
+          },
+          product: monthlyProduct.id,
+          metadata: {
+            type: 'monthly_pro',
+            locale: locale,
+            currency: config.currency
+          }
+        });
+
+        // Create lifetime product
+        const lifetimeProduct = await stripe.products.create({
+          name: `報數據 Pro 終身訂閱 (${localeName})`,
+          description: `專業電商廣告分析平台 - 終身使用 (${config.currency})`,
+          metadata: {
+            type: 'lifetime_subscription',
+            locale: locale,
+            currency: config.currency
+          }
+        });
+
+        // Create lifetime price
+        const lifetimePrice = await stripe.prices.create({
+          unit_amount: formatAmountForStripe(config.lifetime.amount, config.currency),
+          currency: config.currency.toLowerCase(),
+          product: lifetimeProduct.id,
+          metadata: {
+            type: 'lifetime_pro',
+            locale: locale,
+            currency: config.currency
+          }
+        });
+
+        results.products[locale] = {
           monthly: {
             product: monthlyProduct.id,
-            price: monthlyPrice.id
+            price: monthlyPrice.id,
+            amount: config.monthly.amount,
+            currency: config.currency
           },
           lifetime: {
             product: lifetimeProduct.id,
-            price: lifetimePrice.id
+            price: lifetimePrice.id,
+            amount: config.lifetime.amount,
+            currency: config.currency
           }
-        }
-      });
+        };
+      }
+
+      res.json(results);
     } catch (error: any) {
       console.error('Error initializing Stripe products:', error);
       res.status(500).json({ 
         error: "Error initializing products: " + (error.message || 'Unknown error')
+      });
+    }
+  });
+
+  // Get pricing information for a specific locale
+  app.get("/api/stripe/pricing/:locale", async (req, res) => {
+    try {
+      const locale = req.params.locale as Locale;
+      
+      if (!PRICING_CONFIG[locale]) {
+        return res.status(400).json({ error: "Invalid locale" });
+      }
+
+      const pricing = getPricingForLocale(locale);
+      
+      // Find existing price IDs for this locale from Stripe
+      const prices = await stripe.prices.list({
+        limit: 100,
+        expand: ['data.product']
+      });
+
+      const localePrices = prices.data.filter(price => 
+        price.metadata.locale === locale
+      );
+
+      const monthlyPrice = localePrices.find(p => p.metadata.type === 'monthly_pro');
+      const lifetimePrice = localePrices.find(p => p.metadata.type === 'lifetime_pro');
+
+      res.json({
+        locale,
+        currency: pricing.currency,
+        pricing: {
+          monthly: {
+            priceId: monthlyPrice?.id,
+            amount: pricing.monthly.amount,
+            displayPrice: pricing.monthly.displayPrice
+          },
+          lifetime: {
+            priceId: lifetimePrice?.id,
+            amount: pricing.lifetime.amount,
+            displayPrice: pricing.lifetime.displayPrice
+          }
+        }
+      });
+    } catch (error: any) {
+      console.error('Error getting pricing:', error);
+      res.status(500).json({ 
+        error: "Error getting pricing: " + (error.message || 'Unknown error')
       });
     }
   });

@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import type { Locale } from "@/lib/i18n";
 import { getTranslations } from "@/lib/i18n";
+import { usePricing } from "@/hooks/usePricing";
 
 interface PricingProps {
   locale: Locale;
@@ -31,23 +32,31 @@ export default function Pricing({ locale }: PricingProps) {
   const t = getTranslations(locale);
   const { user, isAuthenticated } = useAuth();
   const [billingType, setBillingType] = useState<'monthly' | 'lifetime'>('monthly');
+  const { data: pricingData, isLoading, error } = usePricing(locale);
 
-  const pricingData = {
-    monthly: {
-      originalPrice: 8000,
-      salePrice: 2000,
-      credits: 350,
-      currency: 'JPY',
-      period: locale === 'ja' ? '月' : locale === 'en' ? '/month' : '/月'
-    },
-    lifetime: {
-      originalPrice: 44900,
-      salePrice: 17250,
-      credits: 700,
-      currency: 'JPY',
-      period: locale === 'ja' ? '買い切り' : locale === 'en' ? 'Lifetime' : '終身'
-    }
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <NavigationBar locale={locale} />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">Loading pricing information...</div>
+        </div>
+        <Footer locale={locale} />
+      </div>
+    );
+  }
+
+  if (error || !pricingData) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <NavigationBar locale={locale} />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center text-red-600">Failed to load pricing information</div>
+        </div>
+        <Footer locale={locale} />
+      </div>
+    );
+  }
 
   const whyFeatures = [
     {
@@ -192,14 +201,13 @@ export default function Pricing({ locale }: PricingProps) {
                 </CardTitle>
                 <div className="mt-4">
                   <div className="flex items-center justify-center gap-2 mb-2">
-                    <span className="text-3xl font-bold text-red-600">¥{pricingData.monthly.salePrice.toLocaleString()}</span>
-                    <span className="text-lg text-gray-500 line-through">¥{pricingData.monthly.originalPrice.toLocaleString()}</span>
+                    <span className="text-3xl font-bold text-red-600">{pricingData.pricing.monthly.displayPrice}</span>
                   </div>
-                  <p className="text-sm text-gray-600">{pricingData.monthly.period}</p>
+                  <p className="text-sm text-gray-600">{t.pricing.perMonth}</p>
                   <div className="flex items-center justify-center gap-2 mt-2">
                     <Gift className="w-4 h-4 text-green-600" />
                     <span className="text-sm text-green-600">
-                      {pricingData.monthly.credits} {locale === 'ja' ? 'クレジット/月' : locale === 'en' ? 'credits/month' : '點數/月'}
+                      350 {locale === 'ja' ? 'クレジット/月' : locale === 'en' ? 'credits/month' : '點數/月'}
                     </span>
                   </div>
                 </div>
@@ -213,7 +221,7 @@ export default function Pricing({ locale }: PricingProps) {
                     </li>
                   ))}
                 </ul>
-                <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/subscription-checkout?plan=monthly&priceId=price_0RiHY9YDQY3sAQESGLKwBfNm`}>
+                <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/subscription-checkout?plan=monthly&priceId=${pricingData.pricing.monthly.priceId}`}>
                   <Button className="w-full bg-blue-600 hover:bg-blue-700" size="lg">
                     {locale === 'ja' ? '月額サブスクリプション' : locale === 'en' ? 'Subscribe Monthly' : '月訂閱制'}
                   </Button>
@@ -240,14 +248,13 @@ export default function Pricing({ locale }: PricingProps) {
                 </CardTitle>
                 <div className="mt-4">
                   <div className="flex items-center justify-center gap-2 mb-2">
-                    <span className="text-3xl font-bold text-red-600">¥{pricingData.lifetime.salePrice.toLocaleString()}</span>
-                    <span className="text-lg text-gray-500 line-through">¥{pricingData.lifetime.originalPrice.toLocaleString()}</span>
+                    <span className="text-3xl font-bold text-red-600">{pricingData.pricing.lifetime.displayPrice}</span>
                   </div>
-                  <p className="text-sm text-gray-600">{pricingData.lifetime.period}</p>
+                  <p className="text-sm text-gray-600">{t.pricing.oneTime}</p>
                   <div className="flex items-center justify-center gap-2 mt-2">
                     <Sparkles className="w-4 h-4 text-purple-600" />
                     <span className="text-sm text-purple-600">
-                      {pricingData.lifetime.credits} {locale === 'ja' ? 'クレジット/月' : locale === 'en' ? 'credits/month' : '點數/月'}
+                      700 {locale === 'ja' ? 'クレジット/月' : locale === 'en' ? 'credits/month' : '點數/月'}
                     </span>
                   </div>
                 </div>
@@ -261,7 +268,7 @@ export default function Pricing({ locale }: PricingProps) {
                     </li>
                   ))}
                 </ul>
-                <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/subscription-checkout?plan=lifetime&priceId=price_0RiHY9YDQY3sAQESlN1UPzu0`}>
+                <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/subscription-checkout?plan=lifetime&priceId=${pricingData.pricing.lifetime.priceId}`}>
                   <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white" size="lg">
                     {locale === 'ja' ? '今すぐ購入' : locale === 'en' ? 'Buy Now' : '立即購買'}
                   </Button>

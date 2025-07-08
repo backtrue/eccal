@@ -53,6 +53,28 @@ export interface TranslationData {
   visitors: string;
   cpcValue: number;
   
+  // Pricing navigation label
+  pricingLabel: string;
+  
+  // Pricing
+  pricing: {
+    monthlyPlan: string;
+    lifetimePlan: string;
+    monthlyPrice: string;
+    lifetimePrice: string;
+    perMonth: string;
+    oneTime: string;
+    currency: string;
+    features: {
+      allFeatures: string;
+      prioritySupport: string;
+      monthlyCredits: string;
+      advancedAnalytics: string;
+      lifetimeAccess: string;
+      unlimitedCredits: string;
+    };
+  };
+  
   // Meta
   metaTitle: string;
   metaDescription: string;
@@ -268,6 +290,28 @@ const translations: Record<Locale, TranslationData> = {
     visitors: '人',
     cpcValue: 5,
     
+    // Pricing navigation label
+    pricingLabel: '價格方案',
+    
+    // Pricing
+    pricing: {
+      monthlyPlan: '月訂閱',
+      lifetimePlan: '終身訂閱',
+      monthlyPrice: 'NT$690',
+      lifetimePrice: 'NT$5,990',
+      perMonth: '每月',
+      oneTime: '一次付清',
+      currency: 'TWD',
+      features: {
+        allFeatures: '所有功能',
+        prioritySupport: '優先支援',
+        monthlyCredits: '月度積分',
+        advancedAnalytics: '進階分析',
+        lifetimeAccess: '終身使用',
+        unlimitedCredits: '無限積分'
+      }
+    },
+    
     // Meta
     metaTitle: '廣告預算怎麼抓｜報數據來告訴你FB, IG廣告預算流量要多少',
     metaDescription: '免費電商廣告預算計算器！輸入目標營收、平均客單價和轉換率，立即算出Facebook、Instagram廣告每日預算和所需流量。適合電商老闆快速評估廣告投放成本。',
@@ -366,7 +410,6 @@ const translations: Record<Locale, TranslationData> = {
     recommendations: '建議',
     
     // Pricing Page
-    pricing: '價格方案',
     pricingTitle: '報數據 Premium',
     pricingSubtitle: '專業級分析工具，最大化您的廣告投資回報',
     whyChoose: '為什麼選擇報數據？',
@@ -445,6 +488,28 @@ const translations: Record<Locale, TranslationData> = {
     orders: 'orders',
     visitors: 'visitors',
     cpcValue: 1,
+    
+    // Pricing navigation label
+    pricingLabel: 'Pricing',
+    
+    // Pricing
+    pricing: {
+      monthlyPlan: 'Monthly Plan',
+      lifetimePlan: 'Lifetime Plan',
+      monthlyPrice: '$19',
+      lifetimePrice: '$169',
+      perMonth: 'per month',
+      oneTime: 'one time',
+      currency: 'USD',
+      features: {
+        allFeatures: 'All Features',
+        prioritySupport: 'Priority Support',
+        monthlyCredits: 'Monthly Credits',
+        advancedAnalytics: 'Advanced Analytics',
+        lifetimeAccess: 'Lifetime Access',
+        unlimitedCredits: 'Unlimited Credits'
+      }
+    },
     
     // Meta
     metaTitle: 'How to Set Ad Budget | Report Data tells you FB, IG ad budget and traffic requirements',
@@ -544,7 +609,6 @@ const translations: Record<Locale, TranslationData> = {
     recommendations: 'Recommendations',
     
     // Pricing Page
-    pricing: 'Pricing',
     pricingTitle: 'Report Data Premium',
     pricingSubtitle: 'Professional-grade analytics tools to maximize your ad investment',
     whyChoose: 'Why Choose Report Data?',
@@ -623,6 +687,28 @@ const translations: Record<Locale, TranslationData> = {
     orders: '件',
     visitors: '人',
     cpcValue: 120,
+    
+    // Pricing navigation label
+    pricingLabel: '料金プラン',
+    
+    // Pricing
+    pricing: {
+      monthlyPlan: '月額プラン',
+      lifetimePlan: 'ライフタイムプラン',
+      monthlyPrice: '¥2,000',
+      lifetimePrice: '¥17,250',
+      perMonth: '月額',
+      oneTime: '買い切り',
+      currency: 'JPY',
+      features: {
+        allFeatures: '全機能',
+        prioritySupport: '優先サポート',
+        monthlyCredits: '月間クレジット',
+        advancedAnalytics: '高度な分析',
+        lifetimeAccess: '生涯利用',
+        unlimitedCredits: '無制限クレジット'
+      }
+    },
     
     // Meta
     metaTitle: '広告予算の決め方｜レポートデータがFB・IG広告予算とトラフィック要件をお教えします',
@@ -761,7 +847,6 @@ const translations: Record<Locale, TranslationData> = {
     tipMessage: '広告クリエイティブのCTRが高いほど、通常CPCは低くなります。',
     
     // Pricing Page
-    pricing: '料金プラン',
     pricingTitle: '報數據プレミアム',
     pricingSubtitle: '広告投資を最大化する、プロレベルの分析ツール',
     whyChoose: 'なぜ報數據を選ぶのか？',

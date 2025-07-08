@@ -46,7 +46,7 @@ export default function NavigationBar({ locale }: NavigationBarProps) {
             </Link>
 
             <Link href="/pricing" className="text-purple-600 hover:text-purple-800 transition-colors font-medium">
-              {t.pricing}
+              {t.pricingLabel}
             </Link>
 
             {isAuthenticated && (
@@ -96,7 +96,7 @@ export default function NavigationBar({ locale }: NavigationBarProps) {
               </Link>
 
               <Link href="/pricing" className="text-purple-600 hover:text-purple-800 transition-colors font-medium">
-                {t.pricing}
+                {t.pricingLabel}
               </Link>
 
               {isAuthenticated && (

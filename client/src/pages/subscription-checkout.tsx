@@ -9,6 +9,7 @@ import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { usePricing } from "@/hooks/usePricing";
 import NavigationBar from "@/components/NavigationBar";
 import Footer from "@/components/Footer";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
@@ -30,11 +31,7 @@ interface CheckoutFormProps {
   priceId: string;
 }
 
-// Define price IDs for each plan - these are created from Stripe init-products
-const PRICE_IDS = {
-  monthly: 'price_0RiHY9YDQY3sAQESGLKwBfNm', // Monthly recurring subscription JPY 2,000
-  lifetime: 'price_0RiHY9YDQY3sAQESlN1UPzu0' // One-time payment for lifetime JPY 17,250
-};
+// Price IDs are now dynamically fetched based on user locale
 
 const CheckoutForm = ({ locale, planType, priceId }: CheckoutFormProps) => {
   const stripe = useStripe();
@@ -42,6 +39,7 @@ const CheckoutForm = ({ locale, planType, priceId }: CheckoutFormProps) => {
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const { data: pricingData } = usePricing(locale);
 
   const t = getTranslations(locale);
 
@@ -121,6 +119,7 @@ export default function SubscriptionCheckout({ locale }: SubscriptionCheckoutPro
   const [error, setError] = useState<string | null>(null);
   const [planType, setPlanType] = useState<'monthly' | 'lifetime'>('monthly');
   const [priceId, setPriceId] = useState<string>('');
+  const { data: pricingData, isLoading: pricingLoading } = usePricing(locale);
 
   const t = getTranslations(locale);
 
@@ -184,10 +183,11 @@ export default function SubscriptionCheckout({ locale }: SubscriptionCheckoutPro
     createSubscription();
   }, [isAuthenticated, priceId, planType, t, toast]);
 
-  const planDetails = {
+  // Use dynamic pricing data from API
+  const planDetails = pricingData ? {
     monthly: {
       name: t.pricing.monthlyPlan,
-      price: '¥2,000',
+      price: pricingData.pricing.monthly.displayPrice,
       period: t.pricing.perMonth,
       icon: Calendar,
       features: [
@@ -199,7 +199,7 @@ export default function SubscriptionCheckout({ locale }: SubscriptionCheckoutPro
     },
     lifetime: {
       name: t.pricing.lifetimePlan,
-      price: '¥17,250',
+      price: pricingData.pricing.lifetime.displayPrice,
       period: t.pricing.oneTime,
       icon: CreditCard,
       features: [
@@ -209,7 +209,23 @@ export default function SubscriptionCheckout({ locale }: SubscriptionCheckoutPro
         t.pricing.features.unlimitedCredits
       ]
     }
-  };
+  } : null;
+
+  // Loading state for pricing data
+  if (pricingLoading || !pricingData || !planDetails) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <NavigationBar locale={locale} />
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto text-center">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+            <p>Loading pricing information...</p>
+          </div>
+        </div>
+        <Footer locale={locale} />
+      </div>
+    );
+  }
 
   const currentPlan = planDetails[planType];
   const IconComponent = currentPlan.icon;
