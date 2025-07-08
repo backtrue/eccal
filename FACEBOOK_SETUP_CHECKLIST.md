@@ -28,8 +28,10 @@
 - **需要的權限**:
   - `ads_read` - 讀取廣告數據
   - `ads_management` - 管理廣告帳戶
+  - `pages_read_engagement` - Facebook 要求的依賴權限（與 ads_management 綁定）
 - **當前狀態**: 需要提交 Facebook 審查
 - **問題**: 只有應用程式管理者可以使用，一般用戶無法存取
+- **重要**: Facebook 政策要求使用 ads_management 必須同時申請 pages_read_engagement
 
 ### 4. 測試用戶設定（如果權限還在審核中）
 - **路徑**: 角色 → 測試用戶
@@ -77,7 +79,8 @@
    
 2. **申請必要權限**
    - 點擊「新增權限」
-   - 選擇 `ads_read` 和 `ads_management`
+   - 選擇 `ads_read`、`ads_management` 和 `pages_read_engagement`
+   - 注意：`pages_read_engagement` 是 Facebook 要求的依賴權限
    
 3. **提供審查資料**
    - 說明使用目的：「為電商廣告分析工具提供 Facebook 廣告數據讀取功能」
