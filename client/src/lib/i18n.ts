@@ -263,11 +263,27 @@ export interface TranslationData {
     };
     founder: {
       title: string;
+      subtitle: string;
       intro: string;
-      experience: string;
+      early_motivation: string;
+      career_path: string;
+      transition: string;
+      pain_point: string;
+      solution: string;
+      reputation_title: string;
+      reputation_intro: string;
+      reputation_mentor: string;
+      reputation_strategist: string;
+      reputation_coach: string;
+      reputation_open: string;
       philosophy: string;
-      vision: string;
-      conclusion: string;
+      target_audience_title: string;
+      target_audience_intro: string;
+      target_1: string;
+      target_2: string;
+      target_3: string;
+      promise: string;
+      approach: string;
     };
     company: {
       title: string;
@@ -567,11 +583,27 @@ const translations: Record<Locale, TranslationData> = {
       },
       founder: {
         title: '創辦人介紹｜邱煜庭（小黑）',
-        intro: '你可能在某堂課上看過我、在某篇貼文裡讀過我說的話，但如果真的要介紹我自己，那應該是這樣：',
-        experience: '我從 Facebook 廣告一問世就開始投入這個產業，從一人小工作室到跨國集團，從 1 萬預算到 1,000 萬規模，幾乎什麼產業都做過一些。這些年來，我見過太多優秀的行銷人，卡在「找不到人問」「不知道怎麼做」的焦慮裡。',
-        philosophy: '我常開玩笑說，我這個人不好找、也不愛回訊息，所以我就想，能不能有更多「我的分身」，陪著你度過那些深夜一個人面對報表的時候。',
-        vision: '《報數據》，就是這樣一個存在。',
-        conclusion: '它不只是工具，它是你背後的邏輯支援，是幫你找破口、出建議的策略顧問。'
+        subtitle: '行銷老師們的老師，用十幾年實戰經驗，陪你拆解數據、主導成效。',
+        intro: '我是邱煜庭，大家習慣叫我「小黑」。我現在是 BVG 副總、燒賣研究所課程總顧問，也是《報數據》這個廣告工具平台的設計者。',
+        early_motivation: '還在大學時期，我就在想：「為什麼明明產品很好，卻沒人知道？」這個問題，推著我踏入了行銷。',
+        career_path: '一路走來，我從 MIS、網站企劃、廣告操作員，一路做到全球電商集團的行銷總監，也歷練過兩岸三地的網路行銷市場。Facebook 廣告有多久，我就投了多久，操作過從月預算一萬到千萬等級的案子，業種產業從電商、美妝、SaaS 到傳統製造，幾乎都有實戰經驗可以聊。',
+        transition: '後來我選擇轉向顧問與教育，創辦煜言顧問、擔任燒賣研究所首席顧問，只為了一件事：讓更多廣告操作者，不只是操作系統，而是具備「思考、提出、優化」的策略能力。',
+        pain_point: '我知道，大部分人在操作 Facebook 廣告時，最難的不是後台功能，而是「看得懂數據、找得出問題、講得出下一步」。',
+        solution: '所以我開始寫書（像《網路集客力》）、做課程、做工具，想打造一個可以陪伴你成長的「分身系統」。我不一定能每次都秒回訊息，但我能保證，你打開《報數據》的每一個功能裡，都藏著我十幾年來的廣告邏輯。',
+        reputation_title: '他人怎麼看我？',
+        reputation_intro: '在業界，大家對「小黑老師」的印象，往往離不開幾個關鍵詞：',
+        reputation_mentor: '啟蒙型導師：被視為許多行銷人與講師的「入門老師」，超過千名行銷從業者透過我的課程與顧問服務入行。',
+        reputation_strategist: '肉搏派策略家：不是只談理論，我注重真實商業環境下的成效優化。學員說：「他的教學不是講高級話，而是每句話都能落地執行。」',
+        reputation_coach: '行銷老師的老師：我曾培養出多位現任講師與顧問，被業界評為「教練的教練」。',
+        reputation_open: '不藏私的顧問：最常被提到的是「邱小黑從來沒在藏，他就把會的都交出來」。',
+        philosophy: '我不是為了做一個品牌而去包裝自己，而是從一開始就決定：把那些真正能讓人變強的東西留下來、系統化、讓它變成你也能拿來用的工具。',
+        target_audience_title: '你需要什麼，我就做什麼',
+        target_audience_intro: '如果你現在是個：',
+        target_1: '想升職加薪的行銷人員',
+        target_2: '想接案卻不確定自己實力夠不夠的廣告投手',
+        target_3: '被老闆或客戶追著問「這廣告為什麼沒效？」卻說不出答案的人',
+        promise: '那我希望，《報數據》能成為你每天打開來用的那個「可以幫你出主意的夥伴」。',
+        approach: '我們不靠運氣亂投、不迷信神奇設定。我們拆數據、看趨勢、動預算，做的是——你能自己說服老闆、也說服自己的提案與優化。'
       },
       company: {
         title: '我們是誰？',

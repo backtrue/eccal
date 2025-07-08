@@ -67,23 +67,99 @@ export default function About({ locale }: AboutProps) {
                 <Users className="text-blue-500" size={24} />
                 {t.about.founder.title}
               </CardTitle>
+              <p className="text-lg text-gray-600 dark:text-gray-300 font-medium mt-2">
+                {t.about.founder.subtitle}
+              </p>
             </CardHeader>
             <CardContent className="space-y-6">
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                 {t.about.founder.intro}
               </p>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                {t.about.founder.experience}
+                {t.about.founder.early_motivation}
               </p>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                {t.about.founder.career_path}
+              </p>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                {t.about.founder.transition}
+              </p>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                {t.about.founder.pain_point}
+              </p>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                {t.about.founder.solution}
+              </p>
+              
+              <div className="mt-8">
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  {t.about.founder.reputation_title}
+                </h4>
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
+                  {t.about.founder.reputation_intro}
+                </p>
+                <div className="space-y-3">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                      {t.about.founder.reputation_mentor}
+                    </p>
+                  </div>
+                  <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                      {t.about.founder.reputation_strategist}
+                    </p>
+                  </div>
+                  <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                      {t.about.founder.reputation_coach}
+                    </p>
+                  </div>
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                      {t.about.founder.reputation_open}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed font-medium">
                 {t.about.founder.philosophy}
               </p>
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed font-medium">
-                {t.about.founder.vision}
-              </p>
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                {t.about.founder.conclusion}
-              </p>
+              
+              <div className="mt-8">
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  {t.about.founder.target_audience_title}
+                </h4>
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
+                  {t.about.founder.target_audience_intro}
+                </p>
+                <ul className="space-y-2 mb-4">
+                  <li className="flex items-start">
+                    <span className="text-blue-500 mr-2">•</span>
+                    <span className="text-gray-700 dark:text-gray-300">
+                      {t.about.founder.target_1}
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-blue-500 mr-2">•</span>
+                    <span className="text-gray-700 dark:text-gray-300">
+                      {t.about.founder.target_2}
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-blue-500 mr-2">•</span>
+                    <span className="text-gray-700 dark:text-gray-300">
+                      {t.about.founder.target_3}
+                    </span>
+                  </li>
+                </ul>
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed font-medium">
+                  {t.about.founder.promise}
+                </p>
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {t.about.founder.approach}
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>
