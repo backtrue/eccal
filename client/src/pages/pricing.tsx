@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import type { Locale } from "@/lib/i18n";
 import { getTranslations } from "@/lib/i18n";
-import { usePricing } from "@/hooks/usePricing";
+import CurrencyConverter from "@/components/CurrencyConverter";
 
 interface PricingProps {
   locale: Locale;
@@ -32,31 +32,20 @@ export default function Pricing({ locale }: PricingProps) {
   const t = getTranslations(locale);
   const { user, isAuthenticated } = useAuth();
   const [billingType, setBillingType] = useState<'monthly' | 'lifetime'>('monthly');
-  const { data: pricingData, isLoading, error } = usePricing(locale);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <NavigationBar locale={locale} />
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">Loading pricing information...</div>
-        </div>
-        <Footer locale={locale} />
-      </div>
-    );
-  }
-
-  if (error || !pricingData) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <NavigationBar locale={locale} />
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center text-red-600">Failed to load pricing information</div>
-        </div>
-        <Footer locale={locale} />
-      </div>
-    );
-  }
+  // 簡單的日圓定價數據
+  const pricingData = {
+    monthly: {
+      jpyPrice: 2000,
+      priceId: 'price_0RiHY9YDQY3sAQESGLKwBfNm',
+      credits: 350
+    },
+    lifetime: {
+      jpyPrice: 17250,
+      priceId: 'price_0RiHY9YDQY3sAQESlN1UPzu0',
+      credits: 700
+    }
+  };
 
   const whyFeatures = [
     {
@@ -200,14 +189,16 @@ export default function Pricing({ locale }: PricingProps) {
                   {locale === 'ja' ? '月額プラン' : locale === 'en' ? 'Monthly Plan' : '月訂閱方案'}
                 </CardTitle>
                 <div className="mt-4">
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <span className="text-3xl font-bold text-red-600">{pricingData.pricing.monthly.displayPrice}</span>
-                  </div>
-                  <p className="text-sm text-gray-600">{t.pricing.perMonth}</p>
+                  <CurrencyConverter 
+                    jpyAmount={pricingData.monthly.jpyPrice}
+                    locale={locale}
+                    className="text-center"
+                  />
+                  <p className="text-sm text-gray-600 mt-2 text-center">{t.pricing.perMonth}</p>
                   <div className="flex items-center justify-center gap-2 mt-2">
                     <Gift className="w-4 h-4 text-green-600" />
                     <span className="text-sm text-green-600">
-                      350 {locale === 'ja' ? 'クレジット/月' : locale === 'en' ? 'credits/month' : '點數/月'}
+                      {pricingData.monthly.credits} {locale === 'ja' ? 'クレジット/月' : locale === 'en' ? 'credits/month' : '點數/月'}
                     </span>
                   </div>
                 </div>
@@ -221,7 +212,7 @@ export default function Pricing({ locale }: PricingProps) {
                     </li>
                   ))}
                 </ul>
-                <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/subscription-checkout?plan=monthly&priceId=${pricingData.pricing.monthly.priceId}`}>
+                <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/subscription-checkout?plan=monthly&priceId=${pricingData.monthly.priceId}`}>
                   <Button className="w-full bg-blue-600 hover:bg-blue-700" size="lg">
                     {locale === 'ja' ? '月額サブスクリプション' : locale === 'en' ? 'Subscribe Monthly' : '月訂閱制'}
                   </Button>
@@ -247,14 +238,16 @@ export default function Pricing({ locale }: PricingProps) {
                   {locale === 'ja' ? 'ライフタイム' : locale === 'en' ? 'Lifetime Plan' : '終身訂閱'}
                 </CardTitle>
                 <div className="mt-4">
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <span className="text-3xl font-bold text-red-600">{pricingData.pricing.lifetime.displayPrice}</span>
-                  </div>
-                  <p className="text-sm text-gray-600">{t.pricing.oneTime}</p>
+                  <CurrencyConverter 
+                    jpyAmount={pricingData.lifetime.jpyPrice}
+                    locale={locale}
+                    className="text-center"
+                  />
+                  <p className="text-sm text-gray-600 mt-2 text-center">{t.pricing.oneTime}</p>
                   <div className="flex items-center justify-center gap-2 mt-2">
                     <Sparkles className="w-4 h-4 text-purple-600" />
                     <span className="text-sm text-purple-600">
-                      700 {locale === 'ja' ? 'クレジット/月' : locale === 'en' ? 'credits/month' : '點數/月'}
+                      {pricingData.lifetime.credits} {locale === 'ja' ? 'クレジット/月' : locale === 'en' ? 'credits/month' : '點數/月'}
                     </span>
                   </div>
                 </div>
@@ -268,7 +261,7 @@ export default function Pricing({ locale }: PricingProps) {
                     </li>
                   ))}
                 </ul>
-                <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/subscription-checkout?plan=lifetime&priceId=${pricingData.pricing.lifetime.priceId}`}>
+                <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/subscription-checkout?plan=lifetime&priceId=${pricingData.lifetime.priceId}`}>
                   <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white" size="lg">
                     {locale === 'ja' ? '今すぐ購入' : locale === 'en' ? 'Buy Now' : '立即購買'}
                   </Button>

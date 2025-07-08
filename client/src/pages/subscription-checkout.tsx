@@ -9,7 +9,7 @@ import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { usePricing } from "@/hooks/usePricing";
+// Removed usePricing import - using simple JPY pricing
 import NavigationBar from "@/components/NavigationBar";
 import Footer from "@/components/Footer";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
@@ -39,7 +39,19 @@ const CheckoutForm = ({ locale, planType, priceId }: CheckoutFormProps) => {
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const { data: pricingData } = usePricing(locale);
+  // 使用簡單的日圓定價數據
+  const pricingData = {
+    monthly: {
+      jpyPrice: 2000,
+      priceId: 'price_0RiHY9YDQY3sAQESGLKwBfNm',
+      credits: 350
+    },
+    lifetime: {
+      jpyPrice: 17250,
+      priceId: 'price_0RiHY9YDQY3sAQESlN1UPzu0',
+      credits: 700
+    }
+  };
 
   const t = getTranslations(locale);
 
@@ -119,7 +131,19 @@ export default function SubscriptionCheckout({ locale }: SubscriptionCheckoutPro
   const [error, setError] = useState<string | null>(null);
   const [planType, setPlanType] = useState<'monthly' | 'lifetime'>('monthly');
   const [priceId, setPriceId] = useState<string>('');
-  const { data: pricingData, isLoading: pricingLoading } = usePricing(locale);
+  // 使用簡單的日圓定價數據
+  const pricingData = {
+    monthly: {
+      jpyPrice: 2000,
+      priceId: 'price_0RiHY9YDQY3sAQESGLKwBfNm',
+      credits: 350
+    },
+    lifetime: {
+      jpyPrice: 17250,
+      priceId: 'price_0RiHY9YDQY3sAQESlN1UPzu0',
+      credits: 700
+    }
+  };
 
   const t = getTranslations(locale);
 
@@ -136,7 +160,7 @@ export default function SubscriptionCheckout({ locale }: SubscriptionCheckoutPro
     if (price) {
       setPriceId(price);
     } else {
-      setPriceId(PRICE_IDS[plan] || PRICE_IDS.monthly);
+      setPriceId(pricingData[plan]?.priceId || pricingData.monthly.priceId);
     }
   }, []);
 
@@ -183,11 +207,11 @@ export default function SubscriptionCheckout({ locale }: SubscriptionCheckoutPro
     createSubscription();
   }, [isAuthenticated, priceId, planType, t, toast]);
 
-  // Use dynamic pricing data from API
-  const planDetails = pricingData ? {
+  // 使用簡單的日圓定價數據
+  const planDetails = {
     monthly: {
       name: t.pricing.monthlyPlan,
-      price: pricingData.pricing.monthly.displayPrice,
+      price: `¥${pricingData.monthly.jpyPrice.toLocaleString()}`,
       period: t.pricing.perMonth,
       icon: Calendar,
       features: [
@@ -199,7 +223,7 @@ export default function SubscriptionCheckout({ locale }: SubscriptionCheckoutPro
     },
     lifetime: {
       name: t.pricing.lifetimePlan,
-      price: pricingData.pricing.lifetime.displayPrice,
+      price: `¥${pricingData.lifetime.jpyPrice.toLocaleString()}`,
       period: t.pricing.oneTime,
       icon: CreditCard,
       features: [
@@ -209,10 +233,10 @@ export default function SubscriptionCheckout({ locale }: SubscriptionCheckoutPro
         t.pricing.features.unlimitedCredits
       ]
     }
-  } : null;
+  };
 
-  // Loading state for pricing data
-  if (pricingLoading || !pricingData || !planDetails) {
+  // 簡化的加載狀態檢查
+  if (!priceId) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
         <NavigationBar locale={locale} />
