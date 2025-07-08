@@ -635,146 +635,34 @@ export class FbAuditService {
       
       console.log('前三名廣告組合:', top3AdSets);
       
-      let adSetRecommendation = '';
-      if (top3AdSets.length > 0) {
-        adSetRecommendation = `
-根據過去7天的數據分析，這是你轉換率最高的前三個廣告組合：
-
-${top3AdSets.map((adSet, index) => 
-  `${index + 1}. 【${adSet.adSetName}】
-   - 轉換率：${adSet.conversionRate.toFixed(2)}%
-   - 購買數：${adSet.purchases} 次
-   - 花費：${adSet.spend.toLocaleString()} 元`
-).join('\n\n')}
-
-我建議你立即對這些成效好的廣告組合進行加碼，因為它們已經證明能夠帶來轉換。`;
-      } else {
-        adSetRecommendation = '目前沒有找到足夠的廣告組合數據，建議先確認廣告是否正常運行。';
-      }
+      const adSetRecommendation = this.buildAdSetRecommendation(top3AdSets, 'purchase', locale);
       
-      // 多語言廣告組合推薦內容
-      const adSetRecommendations = {
-        'zh-TW': adSetRecommendation,
-        'en': top3AdSets.length > 0 ? `
-Based on the past 7 days of data analysis, here are your top 3 ad sets with the highest conversion rates:
-
-${top3AdSets.map((adSet, index) => 
-  `${index + 1}. 【${adSet.adSetName}】
-   - Conversion Rate: ${adSet.conversionRate.toFixed(2)}%
-   - Purchases: ${adSet.purchases} times
-   - Spend: ${adSet.spend.toLocaleString()} dollars`
-).join('\n\n')}
-
-I recommend immediately scaling up these high-performing ad sets since they have proven to drive conversions.` : 'Currently no sufficient ad set data found. Please verify if ads are running properly.',
-        'ja': top3AdSets.length > 0 ? `
-過去7日間のデータ分析に基づいて、コンバージョン率が最も高い上位3つの広告セットをご紹介します：
-
-${top3AdSets.map((adSet, index) => 
-  `${index + 1}. 【${adSet.adSetName}】
-   - コンバージョン率：${adSet.conversionRate.toFixed(2)}%
-   - 購入数：${adSet.purchases} 回
-   - 支出：${adSet.spend.toLocaleString()} 円`
-).join('\n\n')}
-
-これらの成果の良い広告セットは既にコンバージョンを証明しているため、すぐに予算を増やすことをお勧めします。` : '現在、十分な広告セットデータが見つかりません。広告が正常に動作しているかをご確認ください。'
-      };
-
-      const prompts = {
-        'zh-TW': `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對購買數指標提供結構化的優化建議。
-
-**數據概況：**
-- 目標購買數：${target} 次
-- 實際購買數：${actual} 次
-- 落差：${target - actual} 次
-
-請按照以下結構輸出建議：
-
-## 1. 現況洞察
-分析目標 vs 實際的落差情況，以及對整體廣告成效的影響。
-
-## 2. 核心策略說明
-解釋購買數指標的重要性，以及如何透過「找出轉換率最高的廣告組合」來優化此指標。
-
-## 3. 具體數據分析和建議
-${adSetRecommendations['zh-TW']}
-
-## 4. 下一步建議
-針對找出的高轉換率廣告組合，提供具體的加碼日預算建議。
-
-請用小黑老師親切直接的語調，直接輸出HTML格式。每個章節用 <h3> 標籤包裝標題，內容用 <p> 和 <ul> 標籤。`,
-
-        'en': `You are "Teacher Black", a professional Facebook e-commerce advertising expert with over 10 years of experience. Please provide structured optimization recommendations for the purchase metric.
-
-**Data Overview:**
-- Target Purchases: ${target} times
-- Actual Purchases: ${actual} times
-- Gap: ${target - actual} times
-
-Please output recommendations following this structure:
-
-## 1. Current Situation Analysis
-Analyze the gap between target vs actual performance and its impact on overall ad effectiveness.
-
-## 2. Core Strategy Explanation
-Explain the importance of the purchase metric and how to optimize it by "identifying the highest conversion rate ad sets."
-
-## 3. Specific Data Analysis and Recommendations
-${adSetRecommendations['en']}
-
-## 4. Next Step Recommendations
-Provide specific daily budget scaling recommendations for the identified high-conversion ad sets.
-
-Please use Teacher Black's friendly and direct tone, output directly in HTML format. Use <h3> tags for section titles, <p> and <ul> tags for content.`,
-
-        'ja': `あなたは10年以上の経験を持つFacebookeコマース広告の専門家「小黒先生」です。購入数指標に関する構造化された最適化提案を提供してください。
-
-**重要：必ず日本語で回答してください。中国語や英語は使用しないでください。**
-
-**データ概要：**
-- 目標購入数：${target} 回
-- 実際購入数：${actual} 回
-- ギャップ：${target - actual} 回
-
-以下の構造に従って提案を出力してください：
-
-## 1. 現状分析
-目標 vs 実際のパフォーマンスギャップを分析し、全体的な広告効果への影響を説明してください。
-
-## 2. 核心戦略説明
-購入数指標の重要性と、「最高コンバージョン率の広告セットを特定する」ことでこの指標を最適化する方法を説明してください。
-
-## 3. 具体的データ分析と提案
-${adSetRecommendations['ja']}
-
-## 4. 次のステップ提案
-特定された高コンバージョン広告セットに対する具体的な日次予算スケーリング提案を提供してください。
-
-小黒先生の親しみやすく直接的な口調で、HTML形式で直接出力してください。セクションタイトルには<h3>タグ、コンテンツには<p>と<ul>タグを使用してください。すべての内容を日本語で記述してください。`
-      };
-
-      const prompt = prompts[locale as keyof typeof prompts] || prompts['zh-TW'];
+      const { prompt, systemMessage } = this.buildPurchasePrompt(target, actual, adSetRecommendation, locale);
 
       const response = await this.openai.chat.completions.create({
         model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
-        max_tokens: 2000,  // 增加 token 限制確保完整輸出
+        messages: [
+          { role: "system", content: systemMessage },
+          { role: "user", content: prompt }
+        ],
+        max_tokens: 2000,
         temperature: 0.7,
       });
 
-      let result = response.choices[0].message.content || '暫無建議';
-      
-      // 移除 markdown 代碼塊標記
-      result = result.replace(/```html\s*/g, '').replace(/```\s*$/g, '').trim();
+      let advice = response.choices[0].message.content || '';
+      advice = advice.replace(/```html\s*/g, '').replace(/```\s*$/g, '').trim();
       
       console.log('=== ChatGPT 購買數建議生成完成 ===');
-      console.log('建議內容長度:', result.length);
+      console.log('建議內容長度:', advice.length);
       
-      return result;
+      return advice;
     } catch (error) {
       console.error('ChatGPT 購買數建議生成錯誤:', error);
-      return '無法生成購買數建議，請稍後再試';
+      return '無法生成建議，請稍後再試';
     }
   }
+
+
 
   /**
    * 獲取 ROAS 最高的廣告組合數據 (過去7天)
@@ -1075,49 +963,16 @@ ${adSetRecommendations['ja']}
       
       console.log('前三名 ROAS 廣告組合:', topROASAdSets);
       
-      let adSetRecommendation = '';
-      if (topROASAdSets.length > 0) {
-        adSetRecommendation = `
-根據過去7天的數據分析，這是你 ROAS 最高的前三個廣告組合：
-
-${topROASAdSets.map((adSet, index) => 
-  `${index + 1}. 【${adSet.adSetName}】
-   - ROAS：${adSet.roas.toFixed(2)}x
-   - 購買數：${adSet.purchases} 次
-   - 花費：${adSet.spend.toLocaleString()} 元`
-).join('\n\n')}
-
-我建議你立即對這些 ROAS 表現最好的廣告組合進行加碼，因為它們已經證明能夠帶來高投資報酬率。`;
-      } else {
-        adSetRecommendation = '目前沒有找到足夠的廣告組合 ROAS 數據，建議先確認廣告是否正常運行並有購買轉換數據。';
-      }
+      const adSetRecommendation = this.buildAdSetRecommendation(topROASAdSets, 'roas', locale);
       
-      const prompt = `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對 ROAS 指標提供結構化的優化建議。
-
-**數據概況：**
-- 目標 ROAS：${target}x
-- 實際 ROAS：${actual.toFixed(2)}x
-- 落差：${(target - actual).toFixed(2)}x
-
-請按照以下結構輸出建議：
-
-## 1. 現況洞察
-分析目標 vs 實際的落差情況，以及對整體廣告投資報酬率的影響。
-
-## 2. 核心策略說明
-解釋 ROAS 指標的重要性，以及如何透過「找出 ROAS 最高的廣告組合」來優化此指標。
-
-## 3. 具體數據分析和建議
-${adSetRecommendation}
-
-## 4. 下一步建議
-針對找出的高 ROAS 廣告組合，提供具體的測試更多不同受眾的建議。
-
-請用小黑老師親切直接的語調，直接輸出HTML格式。每個章節用 <h3> 標籤包裝標題，內容用 <p> 和 <ul> 標籤。`;
+      const { prompt, systemMessage } = this.buildROASPrompt(target, actual, adSetRecommendation, locale);
 
       const response = await this.openai.chat.completions.create({
         model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
+        messages: [
+          { role: "system", content: systemMessage },
+          { role: "user", content: prompt }
+        ],
         max_tokens: 2000,  // 增加 token 限制確保完整輸出
       });
 
@@ -1156,64 +1011,20 @@ ${adSetRecommendation}
       console.log('Hero Post 類型:', typeof heroPosts);
       console.log('是否為陣列:', Array.isArray(heroPosts));
       
-      let heroPostRecommendation = '';
-      if (heroPosts.length > 0) {
-        console.log('✅ 找到 Hero Post，開始生成推薦內容...');
-        heroPostRecommendation = `
-✨ 根據過去7天的數據分析，發現你的 ${heroPosts.length} 個 Hero Post 廣告（高連外點擊率）：
-
-${heroPosts.map((hero, index) => 
-  `🎯 Hero Post ${index + 1}：【${hero.adName}】
-   📊 連外點擊率：${hero.outboundCtr.toFixed(2)}%（表現優異！）
-   🎯 整體點擊率：${hero.ctr.toFixed(2)}%
-   🛒 購買轉換：${hero.purchases} 次
-   💰 廣告花費：$${hero.spend.toFixed(2)}
-   👁️ 曝光次數：${hero.impressions.toLocaleString()}`
-).join('\n\n')}
-
-🚀 立即行動建議：
-1. 【加碼投放】：對這些 Hero Post 增加預算，擴大受眾觸及
-2. 【創意複製】：分析這些廣告的創意元素，套用到新廣告中
-3. 【ASC 放大】：使用廣告組合簡化功能，讓 Facebook 自動放大這些高效廣告
-4. 【受眾測試】：拿這些 Hero Post 去測試更多不同的受眾組合
-`;
-      } else {
-        console.log('❌ 沒有找到 Hero Post，使用備用建議...');
-        heroPostRecommendation = '❌ 目前無法找到高連外點擊率的 Hero Post（過去7天曝光超過500且連外CTR表現突出），建議先優化現有廣告的創意和受眾設定。';
-      }
+      // 根據語言生成 Hero Post 推薦內容
+      const heroPostRecommendation = this.buildHeroPostRecommendation(heroPosts, locale);
       
       console.log('=== Hero Post 推薦內容 ===');
       console.log('推薦內容長度:', heroPostRecommendation.length);
       console.log('推薦內容預覽:', heroPostRecommendation.substring(0, 200) + '...');
 
-      // 構建結構化的 CTR 建議提示
-      const prompt = `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對連結點擊率指標提供結構化的優化建議。
-
-**數據概況：**
-- 目標 CTR：${target.toFixed(2)}%
-- 實際 CTR：${actual.toFixed(2)}%
-- 落差：${(target - actual).toFixed(2)}%
-
-請按照以下結構輸出建議：
-
-## 1. 現況洞察
-分析目標 vs 實際的落差情況，以及對整體廣告點擊成效的影響。
-
-## 2. 核心策略說明
-解釋連結點擊率指標的重要性，以及如何透過「找出連外點擊率最高的三個廣告（Hero Post）」來優化此指標。
-
-## 3. 具體數據分析和建議
-${heroPostRecommendation}
-
-## 4. 下一步建議
-針對找出的高 CTR 廣告（Hero Post），提供具體的類似受眾投放和擴大曝光觸及建議。
-
-請用小黑老師親切直接的語調，直接輸出HTML格式。每個章節用 <h3> 標籤包裝標題，內容用 <p> 和 <ul> 標籤。`;
+      // 構建多語言的 CTR 建議提示
+      const { prompt, systemMessage } = this.buildCTRPrompt(target, actual, heroPostRecommendation, locale);
 
       const messages = [
         {
           role: 'system',
-          content: '你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。專精於透過分析高連外點擊率廣告來優化整體廣告表現，請以專業且實用的語調提供廣告優化建議。直接輸出HTML格式，不要用markdown包裝。'
+          content: systemMessage
         },
         {
           role: 'user',
@@ -1352,51 +1163,16 @@ ${heroPostRecommendation}
       // 獲取預算沒花完的廣告活動數據
       const underSpentCampaigns = await this.getUnderSpentCampaigns(accessToken, adAccountId);
       
-      let campaignData = '';
-      if (underSpentCampaigns.length > 0) {
-        campaignData = `
-根據過去7天的數據分析，這是預算沒花完的前三個廣告活動：
-
-${underSpentCampaigns.map((campaign, index) => 
-  `${index + 1}. 【${campaign.campaignName}】
-   - 日預算：${campaign.dailyBudget.toLocaleString()} 元
-   - 實際平均花費：${campaign.budgetUsed.toLocaleString()} 元
-   - 預算使用率：${campaign.utilizationRate.toFixed(1)}%`
-).join('\n\n')}
-
-這些廣告活動的預算使用率偏低，需要優化受眾設定或出價策略來提升花費效率。`;
-      } else {
-        campaignData = '目前所有廣告活動的預算使用率都正常（超過90%），問題可能是整體廣告帳戶的日預算設定太少，建議增加總預算。';
-      }
+      const campaignData = this.buildCampaignSpendRecommendation(underSpentCampaigns, locale);
       
-      const prompt = `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對日均花費指標提供結構化的優化建議。
-
-**數據概況：**
-- 目標日均花費：${target.toLocaleString()} 元
-- 實際日均花費：${actual.toLocaleString()} 元
-- 落差：${shortfall.toLocaleString()} 元
-
-請按照以下結構輸出建議：
-
-## 1. 現況洞察
-分析目標 vs 實際的落差情況，以及對整體廣告曝光和流量的影響。
-
-## 2. 核心策略說明
-解釋日均花費指標的重要性，以及如何透過「找出三個日預算沒有花完的廣告活動」來診斷問題。
-
-## 3. 具體數據分析和建議
-${campaignData}
-
-## 4. 下一步建議
-${underSpentCampaigns.length > 0 ? 
-  '針對預算沒花完的廣告活動，提供增加受眾、調整出價等具體建議來有效花完預算。' : 
-  '由於所有廣告活動預算使用率正常，建議整體增加廣告帳戶的日預算設定。'}
-
-請用小黑老師親切直接的語調，直接輸出HTML格式。每個章節用 <h3> 標籤包裝標題，內容用 <p> 和 <ul> 標籤。`;
+      const { prompt, systemMessage } = this.buildDailySpendPrompt(target, actual, shortfall, campaignData, underSpentCampaigns, locale);
 
       const response = await this.openai.chat.completions.create({
         model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
+        messages: [
+          { role: "system", content: systemMessage },
+          { role: "user", content: prompt }
+        ],
         max_tokens: 2000,  // 增加 token 限制確保完整輸出
         temperature: 0.7,
       });
@@ -1633,6 +1409,589 @@ Please output in HTML format using <ul> and <li> tags to organize the suggestion
     } catch (error) {
       console.error('Error initializing industry types:', error);
       throw error;
+    }
+  }
+
+  /**
+   * 構建多語言的 Hero Post 推薦內容
+   */
+  private buildHeroPostRecommendation(heroPosts: any[], locale: string = 'zh-TW'): string {
+    if (heroPosts.length === 0) {
+      switch (locale) {
+        case 'ja':
+          return '❌ 現在、高いクリック率のHero Post（過去7日間で500回以上のインプレッション、優れた外部CTR）が見つかりませんでした。既存の広告のクリエイティブとオーディエンス設定を最適化することをお勧めします。';
+        case 'en':
+          return '❌ Currently unable to find Hero Posts with high outbound click rates (over 500 impressions in the past 7 days with outstanding outbound CTR). Please optimize your existing ad creative and audience targeting.';
+        default:
+          return '❌ 目前無法找到高連外點擊率的 Hero Post（過去7天曝光超過500且連外CTR表現突出），建議先優化現有廣告的創意和受眾設定。';
+      }
+    }
+
+    let content = '';
+    switch (locale) {
+      case 'ja':
+        content = `
+✨ 過去7日間のデータ分析に基づいて、${heroPosts.length}つのHero Post広告（高外部クリック率）が見つかりました：
+
+${heroPosts.map((hero, index) => 
+  `🎯 Hero Post ${index + 1}：【${hero.adName}】
+   📊 外部クリック率：${hero.outboundCtr.toFixed(2)}%（優秀な成果！）
+   🎯 全体クリック率：${hero.ctr.toFixed(2)}%
+   🛒 購入コンバージョン：${hero.purchases} 回
+   💰 広告費用：$${hero.spend.toFixed(2)}
+   👁️ インプレッション数：${hero.impressions.toLocaleString()}`
+).join('\n\n')}
+
+🚀 即座の行動提案：
+1. 【予算増額】：これらのHero Postの予算を増やし、オーディエンスリーチを拡大
+2. 【クリエイティブ複製】：これらの広告のクリエイティブ要素を分析し、新しい広告に適用
+3. 【ASC拡張】：広告セット簡素化機能を使用し、Facebookにこれらの高効率広告を自動拡張させる
+4. 【オーディエンステスト】：これらのHero Postでより多くの異なるオーディエンス組み合わせをテスト
+`;
+        break;
+      case 'en':
+        content = `
+✨ Based on the past 7 days of data analysis, found ${heroPosts.length} Hero Post ads (high outbound click rate):
+
+${heroPosts.map((hero, index) => 
+  `🎯 Hero Post ${index + 1}: 【${hero.adName}】
+   📊 Outbound Click Rate: ${hero.outboundCtr.toFixed(2)}% (Excellent performance!)
+   🎯 Overall Click Rate: ${hero.ctr.toFixed(2)}%
+   🛒 Purchase Conversions: ${hero.purchases} times
+   💰 Ad Spend: $${hero.spend.toFixed(2)}
+   👁️ Impressions: ${hero.impressions.toLocaleString()}`
+).join('\n\n')}
+
+🚀 Immediate Action Recommendations:
+1. 【Scale Budget】: Increase budget for these Hero Posts to expand audience reach
+2. 【Creative Replication】: Analyze creative elements of these ads and apply to new campaigns
+3. 【ASC Scaling】: Use Advantage+ campaign features to let Facebook automatically scale these high-performing ads
+4. 【Audience Testing】: Test these Hero Posts with more diverse audience combinations
+`;
+        break;
+      default:
+        content = `
+✨ 根據過去7天的數據分析，發現你的 ${heroPosts.length} 個 Hero Post 廣告（高連外點擊率）：
+
+${heroPosts.map((hero, index) => 
+  `🎯 Hero Post ${index + 1}：【${hero.adName}】
+   📊 連外點擊率：${hero.outboundCtr.toFixed(2)}%（表現優異！）
+   🎯 整體點擊率：${hero.ctr.toFixed(2)}%
+   🛒 購買轉換：${hero.purchases} 次
+   💰 廣告花費：$${hero.spend.toFixed(2)}
+   👁️ 曝光次數：${hero.impressions.toLocaleString()}`
+).join('\n\n')}
+
+🚀 立即行動建議：
+1. 【加碼投放】：對這些 Hero Post 增加預算，擴大受眾觸及
+2. 【創意複製】：分析這些廣告的創意元素，套用到新廣告中
+3. 【ASC 放大】：使用廣告組合簡化功能，讓 Facebook 自動放大這些高效廣告
+4. 【受眾測試】：拿這些 Hero Post 去測試更多不同的受眾組合
+`;
+    }
+    
+    return content;
+  }
+
+  /**
+   * 獲取語言適配的系統訊息
+   */
+  private getSystemMessage(locale: string = 'zh-TW'): string {
+    switch (locale) {
+      case 'ja':
+        return 'あなたは10年以上の経験を持つFacebook電子商取引広告のエキスパート「小黒先生」です。専門的で実用的な語調で広告最適化の提案を提供してください。HTML形式で直接出力し、markdownでのラップは使用しないでください。';
+      case 'en':
+        return 'You are Teacher Black, a Facebook e-commerce advertising expert with over ten years of experience. Please provide advertising optimization recommendations in a professional and practical tone. Output directly in HTML format without using markdown wrapping.';
+      default:
+        return '你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請以專業且實用的語調提供廣告優化建議。直接輸出HTML格式，不要用markdown包裝。';
+    }
+  }
+
+  /**
+   * 構建多語言的廣告組合推薦內容
+   */
+  private buildAdSetRecommendation(adSets: any[], type: 'purchase' | 'roas', locale: string = 'zh-TW'): string {
+    if (adSets.length === 0) {
+      switch (locale) {
+        case 'ja':
+          return '現在、十分な広告セットデータが見つかりません。広告が正常に動作しているかをご確認ください。';
+        case 'en':
+          return 'Currently no sufficient ad set data found. Please verify if ads are running properly.';
+        default:
+          return '目前沒有找到足夠的廣告組合數據，建議先確認廣告是否正常運行。';
+      }
+    }
+
+    const metricLabel = type === 'purchase' ? 
+      { 'zh-TW': '轉換率', 'en': 'Conversion Rate', 'ja': 'コンバージョン率' } :
+      { 'zh-TW': 'ROAS', 'en': 'ROAS', 'ja': 'ROAS' };
+
+    const metricValue = type === 'purchase' ? 
+      (adSet: any) => `${adSet.conversionRate.toFixed(2)}%` :
+      (adSet: any) => `${adSet.roas.toFixed(2)}x`;
+
+    switch (locale) {
+      case 'ja':
+        return `
+過去7日間のデータ分析に基づいて、${metricLabel[locale]}が最も高い上位3つの広告セットをご紹介します：
+
+${adSets.map((adSet, index) => 
+  `${index + 1}. 【${adSet.adSetName}】
+   - ${metricLabel[locale]}：${metricValue(adSet)}
+   - 購入数：${adSet.purchases} 回
+   - 支出：${adSet.spend.toLocaleString()} 円`
+).join('\n\n')}
+
+これらの成果の良い広告セットは既に${type === 'purchase' ? 'コンバージョン' : '高いROAS'}を証明しているため、すぐに予算を増やすことをお勧めします。`;
+
+      case 'en':
+        return `
+Based on the past 7 days of data analysis, here are your top 3 ad sets with the highest ${metricLabel[locale].toLowerCase()}:
+
+${adSets.map((adSet, index) => 
+  `${index + 1}. 【${adSet.adSetName}】
+   - ${metricLabel[locale]}: ${metricValue(adSet)}
+   - Purchases: ${adSet.purchases} times
+   - Spend: ${adSet.spend.toLocaleString()} dollars`
+).join('\n\n')}
+
+I recommend immediately scaling up these high-performing ad sets since they have proven to drive ${type === 'purchase' ? 'conversions' : 'high ROAS'}.`;
+
+      default:
+        return `
+根據過去7天的數據分析，這是你${metricLabel[locale]}最高的前三個廣告組合：
+
+${adSets.map((adSet, index) => 
+  `${index + 1}. 【${adSet.adSetName}】
+   - ${metricLabel[locale]}：${metricValue(adSet)}
+   - 購買數：${adSet.purchases} 次
+   - 花費：${adSet.spend.toLocaleString()} 元`
+).join('\n\n')}
+
+我建議你立即對這些成效好的廣告組合進行加碼，因為它們已經證明能夠帶來${type === 'purchase' ? '轉換' : '高投資報酬率'}。`;
+    }
+  }
+
+  /**
+   * 構建多語言的購買數提示語
+   */
+  private buildPurchasePrompt(target: number, actual: number, adSetRecommendation: string, locale: string = 'zh-TW'): { prompt: string; systemMessage: string } {
+    const gap = target - actual;
+    
+    switch (locale) {
+      case 'ja':
+        return {
+          prompt: `Facebook電子商取引広告のエキスパートとして、購入数指標の最適化について構造化された提案を提供してください。
+
+**データ概要：**
+- 目標購入数：${target} 回
+- 実際の購入数：${actual} 回
+- 差異：${gap} 回
+
+以下の構造で提案を出力してください：
+
+## 1. 現状の洞察
+目標vs実際のギャップと、全体的な広告効果への影響を分析します。
+
+## 2. 核心戦略説明
+購入数指標の重要性と、「最高のコンバージョン率の広告セットを見つける」ことでこの指標を最適化する方法を説明します。
+
+## 3. 具体的なデータ分析と提案
+${adSetRecommendation}
+
+## 4. 次のステップ提案
+見つかった高コンバージョン率広告セットに対して、具体的な日次予算増額の提案を提供します。
+
+小黒先生の親しみやすく直接的な語調で、HTML形式で直接出力してください。各章のタイトルは<h3>タグで、内容は<p>と<ul>タグを使用してください。`,
+          systemMessage: this.getSystemMessage(locale)
+        };
+      case 'en':
+        return {
+          prompt: `As a Facebook e-commerce advertising expert, please provide structured optimization recommendations for the purchase metric.
+
+**Data Overview:**
+- Target Purchases: ${target} times
+- Actual Purchases: ${actual} times
+- Gap: ${gap} times
+
+Please output recommendations in the following structure:
+
+## 1. Current Situation Analysis
+Analyze the gap between target vs actual performance and its impact on overall ad effectiveness.
+
+## 2. Core Strategy Explanation
+Explain the importance of the purchase metric and how to optimize it by "identifying the highest conversion rate ad sets."
+
+## 3. Specific Data Analysis and Recommendations
+${adSetRecommendation}
+
+## 4. Next Step Recommendations
+Provide specific daily budget scaling recommendations for the identified high conversion rate ad sets.
+
+Please use Teacher Black's friendly and direct tone, output directly in HTML format. Wrap chapter titles with <h3> tags and content with <p> and <ul> tags.`,
+          systemMessage: this.getSystemMessage(locale)
+        };
+      default:
+        return {
+          prompt: `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對購買數指標提供結構化的優化建議。
+
+**數據概況：**
+- 目標購買數：${target} 次
+- 實際購買數：${actual} 次
+- 落差：${gap} 次
+
+請按照以下結構輸出建議：
+
+## 1. 現況洞察
+分析目標 vs 實際的落差情況，以及對整體廣告成效的影響。
+
+## 2. 核心策略說明
+解釋購買數指標的重要性，以及如何透過「找出轉換率最高的廣告組合」來優化此指標。
+
+## 3. 具體數據分析和建議
+${adSetRecommendation}
+
+## 4. 下一步建議
+針對找出的高轉換率廣告組合，提供具體的加碼日預算建議。
+
+請用小黑老師親切直接的語調，直接輸出HTML格式。每個章節用 <h3> 標籤包裝標題，內容用 <p> 和 <ul> 標籤。`,
+          systemMessage: this.getSystemMessage(locale)
+        };
+    }
+  }
+
+  /**
+   * 構建多語言的 ROAS 提示語
+   */
+  private buildROASPrompt(target: number, actual: number, adSetRecommendation: string, locale: string = 'zh-TW'): { prompt: string; systemMessage: string } {
+    const gap = target - actual;
+    
+    switch (locale) {
+      case 'ja':
+        return {
+          prompt: `Facebook電子商取引広告のエキスパートとして、ROAS指標の最適化について構造化された提案を提供してください。
+
+**データ概要：**
+- 目標ROAS：${target}x
+- 実際のROAS：${actual.toFixed(2)}x
+- 差異：${gap.toFixed(2)}x
+
+以下の構造で提案を出力してください：
+
+## 1. 現状の洞察
+目標vs実際のギャップと、全体的な広告投資収益率への影響を分析します。
+
+## 2. 核心戦略説明
+ROAS指標の重要性と、「最高のROASの広告セットを見つける」ことでこの指標を最適化する方法を説明します。
+
+## 3. 具体的なデータ分析と提案
+${adSetRecommendation}
+
+## 4. 次のステップ提案
+見つかった高ROAS広告セットに対して、具体的な様々なオーディエンステストの提案を提供します。
+
+小黒先生の親しみやすく直接的な語調で、HTML形式で直接出力してください。各章のタイトルは<h3>タグで、内容は<p>と<ul>タグを使用してください。`,
+          systemMessage: this.getSystemMessage(locale)
+        };
+      case 'en':
+        return {
+          prompt: `As a Facebook e-commerce advertising expert, please provide structured optimization recommendations for the ROAS metric.
+
+**Data Overview:**
+- Target ROAS: ${target}x
+- Actual ROAS: ${actual.toFixed(2)}x
+- Gap: ${gap.toFixed(2)}x
+
+Please output recommendations in the following structure:
+
+## 1. Current Situation Analysis
+Analyze the gap between target vs actual performance and its impact on overall advertising return on investment.
+
+## 2. Core Strategy Explanation
+Explain the importance of the ROAS metric and how to optimize it by "identifying the highest ROAS ad sets."
+
+## 3. Specific Data Analysis and Recommendations
+${adSetRecommendation}
+
+## 4. Next Step Recommendations
+Provide specific recommendations for testing different audiences with the identified high ROAS ad sets.
+
+Please use Teacher Black's friendly and direct tone, output directly in HTML format. Wrap chapter titles with <h3> tags and content with <p> and <ul> tags.`,
+          systemMessage: this.getSystemMessage(locale)
+        };
+      default:
+        return {
+          prompt: `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對 ROAS 指標提供結構化的優化建議。
+
+**數據概況：**
+- 目標 ROAS：${target}x
+- 實際 ROAS：${actual.toFixed(2)}x
+- 落差：${gap.toFixed(2)}x
+
+請按照以下結構輸出建議：
+
+## 1. 現況洞察
+分析目標 vs 實際的落差情況，以及對整體廣告投資報酬率的影響。
+
+## 2. 核心策略說明
+解釋 ROAS 指標的重要性，以及如何透過「找出 ROAS 最高的廣告組合」來優化此指標。
+
+## 3. 具體數據分析和建議
+${adSetRecommendation}
+
+## 4. 下一步建議
+針對找出的高 ROAS 廣告組合，提供具體的測試更多不同受眾的建議。
+
+請用小黑老師親切直接的語調，直接輸出HTML格式。每個章節用 <h3> 標籤包裝標題，內容用 <p> 和 <ul> 標籤。`,
+          systemMessage: this.getSystemMessage(locale)
+        };
+    }
+  }
+
+  /**
+   * 構建多語言的廣告活動花費推薦內容
+   */
+  private buildCampaignSpendRecommendation(underSpentCampaigns: any[], locale: string = 'zh-TW'): string {
+    if (underSpentCampaigns.length === 0) {
+      switch (locale) {
+        case 'ja':
+          return '現在、すべての広告キャンペーンの予算使用率が正常です（90%以上）。問題は広告アカウント全体の日次予算設定が少なすぎることの可能性があります。総予算を増やすことをお勧めします。';
+        case 'en':
+          return 'Currently all ad campaigns have normal budget utilization rates (over 90%). The issue may be that the overall ad account daily budget is set too low. We recommend increasing the total budget.';
+        default:
+          return '目前所有廣告活動的預算使用率都正常（超過90%），問題可能是整體廣告帳戶的日預算設定太少，建議增加總預算。';
+      }
+    }
+
+    const currencySymbol = locale === 'ja' ? '円' : 
+                          locale === 'en' ? '$' : '元';
+
+    switch (locale) {
+      case 'ja':
+        return `
+過去7日間のデータ分析に基づいて、予算が使い切れていない上位3つの広告キャンペーンをご紹介します：
+
+${underSpentCampaigns.map((campaign, index) => 
+  `${index + 1}. 【${campaign.campaignName}】
+   - 日次予算：${campaign.dailyBudget.toLocaleString()} ${currencySymbol}
+   - 実際の平均支出：${campaign.budgetUsed.toLocaleString()} ${currencySymbol}
+   - 予算使用率：${campaign.utilizationRate.toFixed(1)}%`
+).join('\n\n')}
+
+これらの広告キャンペーンの予算使用率が低いため、オーディエンス設定や入札戦略を最適化して支出効率を向上させる必要があります。`;
+
+      case 'en':
+        return `
+Based on the past 7 days of data analysis, here are the top 3 ad campaigns with underspent budgets:
+
+${underSpentCampaigns.map((campaign, index) => 
+  `${index + 1}. 【${campaign.campaignName}】
+   - Daily Budget: ${campaign.dailyBudget.toLocaleString()} ${currencySymbol}
+   - Actual Average Spend: ${campaign.budgetUsed.toLocaleString()} ${currencySymbol}
+   - Budget Utilization: ${campaign.utilizationRate.toFixed(1)}%`
+).join('\n\n')}
+
+These ad campaigns have low budget utilization rates and need optimization of audience settings or bidding strategies to improve spending efficiency.`;
+
+      default:
+        return `
+根據過去7天的數據分析，這是預算沒花完的前三個廣告活動：
+
+${underSpentCampaigns.map((campaign, index) => 
+  `${index + 1}. 【${campaign.campaignName}】
+   - 日預算：${campaign.dailyBudget.toLocaleString()} ${currencySymbol}
+   - 實際平均花費：${campaign.budgetUsed.toLocaleString()} ${currencySymbol}
+   - 預算使用率：${campaign.utilizationRate.toFixed(1)}%`
+).join('\n\n')}
+
+這些廣告活動的預算使用率偏低，需要優化受眾設定或出價策略來提升花費效率。`;
+    }
+  }
+
+  /**
+   * 構建多語言的日均花費提示語
+   */
+  private buildDailySpendPrompt(target: number, actual: number, shortfall: number, campaignData: string, underSpentCampaigns: any[], locale: string = 'zh-TW'): { prompt: string; systemMessage: string } {
+    const currencySymbol = locale === 'ja' ? '円' : 
+                          locale === 'en' ? '$' : '元';
+
+    const nextStepRecommendation = underSpentCampaigns.length > 0 ? 
+      {
+        'zh-TW': '針對預算沒花完的廣告活動，提供增加受眾、調整出價等具體建議來有效花完預算。',
+        'en': 'For campaigns with underspent budgets, provide specific recommendations to increase audience, adjust bids, and other tactics to effectively spend the budget.',
+        'ja': '予算が使い切れていない広告キャンペーンについて、オーディエンス拡大、入札調整などの具体的な提案で効果的に予算を使い切る方法を提供します。'
+      } : 
+      {
+        'zh-TW': '由於所有廣告活動預算使用率正常，建議整體增加廣告帳戶的日預算設定。',
+        'en': 'Since all ad campaigns have normal budget utilization rates, recommend overall increases to the ad account daily budget settings.',
+        'ja': 'すべての広告キャンペーンの予算使用率が正常であるため、広告アカウント全体の日次予算設定を増やすことをお勧めします。'
+      };
+
+    switch (locale) {
+      case 'ja':
+        return {
+          prompt: `Facebook電子商取引広告のエキスパートとして、日次平均支出指標の最適化について構造化された提案を提供してください。
+
+**データ概要：**
+- 目標日次平均支出：${target.toLocaleString()} ${currencySymbol}
+- 実際の日次平均支出：${actual.toLocaleString()} ${currencySymbol}
+- 差異：${shortfall.toLocaleString()} ${currencySymbol}
+
+以下の構造で提案を出力してください：
+
+## 1. 現状の洞察
+目標vs実際のギャップと、全体的な広告露出と流入への影響を分析します。
+
+## 2. 核心戦略説明
+日次平均支出指標の重要性と、「3つの日次予算が使い切れていない広告キャンペーンを見つける」ことで問題を診断する方法を説明します。
+
+## 3. 具体的なデータ分析と提案
+${campaignData}
+
+## 4. 次のステップ提案
+${nextStepRecommendation['ja']}
+
+小黒先生の親しみやすく直接的な語調で、HTML形式で直接出力してください。各章のタイトルは<h3>タグで、内容は<p>と<ul>タグを使用してください。`,
+          systemMessage: this.getSystemMessage(locale)
+        };
+      case 'en':
+        return {
+          prompt: `As a Facebook e-commerce advertising expert, please provide structured optimization recommendations for the daily average spend metric.
+
+**Data Overview:**
+- Target Daily Average Spend: ${target.toLocaleString()} ${currencySymbol}
+- Actual Daily Average Spend: ${actual.toLocaleString()} ${currencySymbol}
+- Gap: ${shortfall.toLocaleString()} ${currencySymbol}
+
+Please output recommendations in the following structure:
+
+## 1. Current Situation Analysis
+Analyze the gap between target vs actual performance and its impact on overall ad exposure and traffic.
+
+## 2. Core Strategy Explanation
+Explain the importance of daily average spend metrics and how to diagnose issues by "finding three ad campaigns with unspent daily budgets."
+
+## 3. Specific Data Analysis and Recommendations
+${campaignData}
+
+## 4. Next Step Recommendations
+${nextStepRecommendation['en']}
+
+Please use Teacher Black's friendly and direct tone, output directly in HTML format. Wrap chapter titles with <h3> tags and content with <p> and <ul> tags.`,
+          systemMessage: this.getSystemMessage(locale)
+        };
+      default:
+        return {
+          prompt: `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對日均花費指標提供結構化的優化建議。
+
+**數據概況：**
+- 目標日均花費：${target.toLocaleString()} ${currencySymbol}
+- 實際日均花費：${actual.toLocaleString()} ${currencySymbol}
+- 落差：${shortfall.toLocaleString()} ${currencySymbol}
+
+請按照以下結構輸出建議：
+
+## 1. 現況洞察
+分析目標 vs 實際的落差情況，以及對整體廣告曝光和流量的影響。
+
+## 2. 核心策略說明
+解釋日均花費指標的重要性，以及如何透過「找出三個日預算沒有花完的廣告活動」來診斷問題。
+
+## 3. 具體數據分析和建議
+${campaignData}
+
+## 4. 下一步建議
+${nextStepRecommendation['zh-TW']}
+
+請用小黑老師親切直接的語調，直接輸出HTML格式。每個章節用 <h3> 標籤包裝標題，內容用 <p> 和 <ul> 標籤。`,
+          systemMessage: this.getSystemMessage(locale)
+        };
+    }
+  }
+
+  /**
+   * 構建多語言的 CTR 提示語
+   */
+  private buildCTRPrompt(target: number, actual: number, heroPostRecommendation: string, locale: string = 'zh-TW'): { prompt: string; systemMessage: string } {
+    switch (locale) {
+      case 'ja':
+        return {
+          prompt: `Facebook電子商取引広告のエキスパートとして、リンククリック率指標の最適化について構造化された提案を提供してください。
+
+**データ概要：**
+- 目標CTR：${target.toFixed(2)}%
+- 実際のCTR：${actual.toFixed(2)}%
+- 差異：${(target - actual).toFixed(2)}%
+
+以下の構造で提案を出力してください：
+
+## 1. 現状の洞察
+目標vs実際のギャップと、全体的な広告クリック効果への影響を分析します。
+
+## 2. 核心戦略説明
+リンククリック率指標の重要性と、「外部クリック率が最も高い3つの広告（Hero Post）を見つける」ことでこの指標を最適化する方法を説明します。
+
+## 3. 具体的なデータ分析と提案
+${heroPostRecommendation}
+
+## 4. 次のステップ提案
+見つかった高CTR広告（Hero Post）に対して、具体的な類似オーディエンス配信と拡張露出提案を提供します。
+
+小黒先生の親しみやすく直接的な語調で、HTML形式で直接出力してください。各章のタイトルは<h3>タグで、内容は<p>と<ul>タグを使用してください。`,
+          systemMessage: 'あなたは10年以上の経験を持つFacebook電子商取引広告のエキスパート「小黒先生」です。高い外部クリック率広告の分析を通じて全体の広告パフォーマンスを最適化することに特化しており、専門的で実用的な語調で広告最適化の提案を提供してください。HTML形式で直接出力し、markdownでのラップは使用しないでください。'
+        };
+      case 'en':
+        return {
+          prompt: `As a Facebook e-commerce advertising expert, please provide structured optimization recommendations for the link click rate metric.
+
+**Data Overview:**
+- Target CTR: ${target.toFixed(2)}%
+- Actual CTR: ${actual.toFixed(2)}%
+- Gap: ${(target - actual).toFixed(2)}%
+
+Please output recommendations in the following structure:
+
+## 1. Current Situation Analysis
+Analyze the gap between target vs actual performance and its impact on overall ad click effectiveness.
+
+## 2. Core Strategy Explanation
+Explain the importance of link click rate metrics and how to optimize this metric by "finding the three ads with the highest outbound click rates (Hero Posts)".
+
+## 3. Specific Data Analysis and Recommendations
+${heroPostRecommendation}
+
+## 4. Next Step Recommendations
+Provide specific similar audience targeting and expanded reach recommendations for the identified high CTR ads (Hero Posts).
+
+Please use Teacher Black's friendly and direct tone, output directly in HTML format. Wrap chapter titles with <h3> tags and content with <p> and <ul> tags.`,
+          systemMessage: 'You are Teacher Black, a Facebook e-commerce advertising expert with over ten years of experience. You specialize in optimizing overall ad performance through analysis of high outbound click rate ads. Please provide advertising optimization recommendations in a professional and practical tone. Output directly in HTML format without using markdown wrapping.'
+        };
+      default:
+        return {
+          prompt: `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對連結點擊率指標提供結構化的優化建議。
+
+**數據概況：**
+- 目標 CTR：${target.toFixed(2)}%
+- 實際 CTR：${actual.toFixed(2)}%
+- 落差：${(target - actual).toFixed(2)}%
+
+請按照以下結構輸出建議：
+
+## 1. 現況洞察
+分析目標 vs 實際的落差情況，以及對整體廣告點擊成效的影響。
+
+## 2. 核心策略說明
+解釋連結點擊率指標的重要性，以及如何透過「找出連外點擊率最高的三個廣告（Hero Post）」來優化此指標。
+
+## 3. 具體數據分析和建議
+${heroPostRecommendation}
+
+## 4. 下一步建議
+針對找出的高 CTR 廣告（Hero Post），提供具體的類似受眾投放和擴大曝光觸及建議。
+
+請用小黑老師親切直接的語調，直接輸出HTML格式。每個章節用 <h3> 標籤包裝標題，內容用 <p> 和 <ul> 標籤。`,
+          systemMessage: '你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。專精於透過分析高連外點擊率廣告來優化整體廣告表現，請以專業且實用的語調提供廣告優化建議。直接輸出HTML格式，不要用markdown包裝。'
+        };
     }
   }
 }
