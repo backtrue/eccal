@@ -61,7 +61,7 @@ export default function NavigationBar({ locale }: NavigationBarProps) {
               {isAuthenticated ? (
                 <LogoutButton />
               ) : (
-                <GoogleLoginButton className="text-sm" />
+                <GoogleLoginButton locale={locale} />
               )}
             </div>
           </div>
@@ -110,7 +110,7 @@ export default function NavigationBar({ locale }: NavigationBarProps) {
                 {isAuthenticated ? (
                   <LogoutButton />
                 ) : (
-                  <GoogleLoginButton className="w-full" />
+                  <GoogleLoginButton locale={locale} />
                 )}
               </div>
             </div>

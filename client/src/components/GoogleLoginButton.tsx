@@ -5,9 +5,10 @@ import type { Locale } from "@/lib/i18n";
 interface GoogleLoginButtonProps {
   locale: Locale;
   returnTo?: string;
+  className?: string;
 }
 
-export default function GoogleLoginButton({ locale, returnTo }: GoogleLoginButtonProps) {
+export default function GoogleLoginButton({ locale, returnTo, className }: GoogleLoginButtonProps) {
   const handleGoogleLogin = () => {
     const params = new URLSearchParams();
     if (returnTo) {
@@ -20,7 +21,7 @@ export default function GoogleLoginButton({ locale, returnTo }: GoogleLoginButto
   };
 
   return (
-    <Button onClick={handleGoogleLogin} variant="outline" className="w-full">
+    <Button onClick={handleGoogleLogin} variant="outline" className={className || "w-full"}>
       <Chrome className="mr-2 h-4 w-4" />
       {locale === 'zh-TW' 
         ? 'Google 登入' 
