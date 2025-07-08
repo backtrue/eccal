@@ -1236,7 +1236,7 @@ export class FbAuditService {
 
 請使用 HTML 格式輸出，使用 <ul> 和 <li> 標籤來組織建議清單。`,
 
-        'en': `You are a professional Facebook e-commerce advertising consultant named "Teacher Black". For the ${industryType} industry, this ad account's "${metricNames['en'][metric as keyof typeof metricNames['en']]}" is underperforming.
+        'en': `You are a professional Facebook e-commerce advertising consultant named "Mr.Kuro". For the ${industryType} industry, this ad account's "${metricNames['en'][metric as keyof typeof metricNames['en']]}" is underperforming.
 
 Target value: ${target}
 Actual value: ${actual}
@@ -1501,7 +1501,7 @@ ${heroPosts.map((hero, index) =>
       case 'ja':
         return 'あなたは10年以上の経験を持つFacebook電子商取引広告のエキスパート「小黒先生」です。専門的で実用的な語調で広告最適化の提案を提供してください。HTML形式で直接出力し、markdownでのラップは使用しないでください。';
       case 'en':
-        return 'You are Teacher Black, a Facebook e-commerce advertising expert with over ten years of experience. Please provide advertising optimization recommendations in a professional and practical tone. Output directly in HTML format without using markdown wrapping.';
+        return 'You are Mr.Kuro, a Facebook e-commerce advertising expert with over ten years of experience. Please provide advertising optimization recommendations in a professional and practical tone. Output directly in HTML format without using markdown wrapping.';
       default:
         return '你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請以專業且實用的語調提供廣告優化建議。直接輸出HTML格式，不要用markdown包裝。';
     }
@@ -1628,7 +1628,7 @@ ${adSetRecommendation}
 ## 4. Next Step Recommendations
 Provide specific daily budget scaling recommendations for the identified high conversion rate ad sets.
 
-Please use Teacher Black's friendly and direct tone, output directly in HTML format. Wrap chapter titles with <h3> tags and content with <p> and <ul> tags.`,
+Please use Mr.Kuro's friendly and direct tone, output directly in HTML format. Wrap chapter titles with <h3> tags and content with <p> and <ul> tags.`,
           systemMessage: this.getSystemMessage(locale)
         };
       default:
@@ -1716,7 +1716,7 @@ ${adSetRecommendation}
 ## 4. Next Step Recommendations
 Provide specific recommendations for testing different audiences with the identified high ROAS ad sets.
 
-Please use Teacher Black's friendly and direct tone, output directly in HTML format. Wrap chapter titles with <h3> tags and content with <p> and <ul> tags.`,
+Please use Mr.Kuro's friendly and direct tone, output directly in HTML format. Wrap chapter titles with <h3> tags and content with <p> and <ul> tags.`,
           systemMessage: this.getSystemMessage(locale)
         };
       default:
@@ -1877,7 +1877,7 @@ ${campaignData}
 ## 4. Next Step Recommendations
 ${nextStepRecommendation['en']}
 
-Please use Teacher Black's friendly and direct tone, output directly in HTML format. Wrap chapter titles with <h3> tags and content with <p> and <ul> tags.`,
+Please use Mr.Kuro's friendly and direct tone, output directly in HTML format. Wrap chapter titles with <h3> tags and content with <p> and <ul> tags.`,
           systemMessage: this.getSystemMessage(locale)
         };
       default:
@@ -1963,8 +1963,8 @@ ${heroPostRecommendation}
 ## 4. Next Step Recommendations
 Provide specific similar audience targeting and expanded reach recommendations for the identified high CTR ads (Hero Posts).
 
-Please use Teacher Black's friendly and direct tone, output directly in HTML format. Wrap chapter titles with <h3> tags and content with <p> and <ul> tags.`,
-          systemMessage: 'You are Teacher Black, a Facebook e-commerce advertising expert with over ten years of experience. You specialize in optimizing overall ad performance through analysis of high outbound click rate ads. Please provide advertising optimization recommendations in a professional and practical tone. Output directly in HTML format without using markdown wrapping.'
+Please use Mr.Kuro's friendly and direct tone, output directly in HTML format. Wrap chapter titles with <h3> tags and content with <p> and <ul> tags.`,
+          systemMessage: 'You are Mr.Kuro, a Facebook e-commerce advertising expert with over ten years of experience. You specialize in optimizing overall ad performance through analysis of high outbound click rate ads. Please provide advertising optimization recommendations in a professional and practical tone. Output directly in HTML format without using markdown wrapping.'
         };
       default:
         return {
