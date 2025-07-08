@@ -423,8 +423,8 @@ const translations: Record<Locale, TranslationData> = {
     securityNotice: '我們僅會讀取您的廣告數據，不會進行任何設定變更。數據安全是我們的首要考量。',
     analyzingYourData: '正在分析您的廣告數據',
     analyzingDescription: '我們正在分析您過去 28 天的廣告數據，請稍候...',
-    tipTitle: '小提示',
-    tipMessage: '分析完成後，您將獲得專業的廣告優化建議，幫助提升廣告效益。',
+    tipTitle: '💡 小提示',
+    tipMessage: '廣告創意的 CTR 越高，通常 CPC 就越低。',
     
     // Additional UI messages
     loginRequired: '請先登入以使用廣告健檢功能',
@@ -673,8 +673,8 @@ const translations: Record<Locale, TranslationData> = {
     securityNotice: 'We only read your advertising data and never make any configuration changes. Data security is our top priority.',
     analyzingYourData: 'Analyzing your advertising data',
     analyzingDescription: 'We are analyzing your advertising data from the past 28 days, please wait...',
-    tipTitle: 'Tip',
-    tipMessage: 'After analysis completion, you will receive professional advertising optimization recommendations to help improve ad effectiveness.',
+    tipTitle: '💡 Tip',
+    tipMessage: 'The higher the CTR of your ad creative, the lower the CPC usually is.',
     
     // Additional UI messages
     loginRequired: 'Please login to use the ad health check feature',
