@@ -42,7 +42,7 @@ export default function NavigationBar({ locale }: NavigationBarProps) {
             </Link>
 
             <Link href="/fbaudit" className="text-blue-600 hover:text-blue-800 transition-colors">
-              FB廣告健檢
+              {t.fbAuditTitle}
             </Link>
 
 
@@ -90,7 +90,7 @@ export default function NavigationBar({ locale }: NavigationBarProps) {
               </Link>
 
               <Link href="/fbaudit" className="text-blue-600 hover:text-blue-800 transition-colors">
-                FB廣告健檢
+                {t.fbAuditTitle}
               </Link>
 
 
