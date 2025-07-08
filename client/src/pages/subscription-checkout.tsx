@@ -40,7 +40,7 @@ const CheckoutForm = ({ locale, planType, priceId }: CheckoutFormProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success' | 'error'>('idle');
   // 使用簡單的日圓定價數據
-  const pricingData = {
+  const pricingDataForCheckout = {
     monthly: {
       jpyPrice: 2000,
       priceId: 'price_0RiHY9YDQY3sAQESGLKwBfNm',
@@ -50,6 +50,11 @@ const CheckoutForm = ({ locale, planType, priceId }: CheckoutFormProps) => {
       jpyPrice: 17250,
       priceId: 'price_0RiHY9YDQY3sAQESlN1UPzu0',
       credits: 700
+    },
+    yearend: {
+      jpyPrice: 22000,
+      priceId: 'price_yearend_2024',
+      credits: 800
     }
   };
 
@@ -129,7 +134,7 @@ export default function SubscriptionCheckout({ locale }: SubscriptionCheckoutPro
   const [clientSecret, setClientSecret] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [planType, setPlanType] = useState<'monthly' | 'lifetime'>('monthly');
+  const [planType, setPlanType] = useState<'monthly' | 'lifetime' | 'yearend'>('monthly');
   const [priceId, setPriceId] = useState<string>('');
   // 使用簡單的日圓定價數據
   const pricingData = {
@@ -142,6 +147,11 @@ export default function SubscriptionCheckout({ locale }: SubscriptionCheckoutPro
       jpyPrice: 17250,
       priceId: 'price_0RiHY9YDQY3sAQESlN1UPzu0',
       credits: 700
+    },
+    yearend: {
+      jpyPrice: 22000,
+      priceId: 'price_yearend_2024',
+      credits: 800
     }
   };
 
@@ -231,6 +241,18 @@ export default function SubscriptionCheckout({ locale }: SubscriptionCheckoutPro
         t.pricing.features.lifetimeAccess,
         t.pricing.features.prioritySupport,
         t.pricing.features.unlimitedCredits
+      ]
+    },
+    yearend: {
+      name: locale === 'ja' ? '年末スペシャル' : locale === 'en' ? 'Year-End Special' : '年底特惠',
+      price: `¥${pricingData.yearend.jpyPrice.toLocaleString()}`,
+      period: t.pricing.oneTime,
+      icon: Sparkles,
+      features: [
+        t.pricing.features.allFeatures,
+        t.pricing.features.lifetimeAccess,
+        t.pricing.features.prioritySupport,
+        locale === 'ja' ? '年末ボーナス機能' : locale === 'en' ? 'Year-End Bonus Features' : '年底獎勵功能'
       ]
     }
   };

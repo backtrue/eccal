@@ -44,6 +44,11 @@ export default function Pricing({ locale }: PricingProps) {
       jpyPrice: 17250,
       priceId: 'price_0RiHY9YDQY3sAQESlN1UPzu0',
       credits: 700
+    },
+    yearend: {
+      jpyPrice: 22000,
+      priceId: 'price_yearend_2024', // 待設定的年底優惠 price ID
+      credits: 800
     }
   };
 
@@ -171,7 +176,7 @@ export default function Pricing({ locale }: PricingProps) {
           </div>
 
           {/* Pricing Cards */}
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {/* Monthly Plan */}
             <Card className={`relative overflow-hidden ${billingType === 'monthly' ? 'ring-2 ring-blue-600 shadow-xl' : ''}`}>
               {billingType === 'monthly' && (
@@ -264,6 +269,71 @@ export default function Pricing({ locale }: PricingProps) {
                 <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/subscription-checkout?plan=lifetime&priceId=${pricingData.lifetime.priceId}`}>
                   <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white" size="lg">
                     {locale === 'ja' ? '今すぐ購入' : locale === 'en' ? 'Buy Now' : '立即購買'}
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            {/* Year-End Special Plan */}
+            <Card className="relative overflow-hidden border-2 border-orange-500 shadow-xl">
+              <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-orange-500 to-red-500 text-white text-center py-2">
+                <span className="text-sm font-medium">
+                  {locale === 'ja' ? '年末限定' : locale === 'en' ? 'Year-End Special' : '年底限定'}
+                </span>
+              </div>
+              <CardHeader className="text-center pt-16">
+                <div className="flex justify-center mb-4">
+                  <Sparkles className="w-8 h-8 text-orange-500" />
+                </div>
+                <CardTitle className="text-2xl">
+                  {locale === 'ja' ? '年末スペシャル' : locale === 'en' ? 'Year-End Special' : '年底特惠'}
+                </CardTitle>
+                <div className="mt-4">
+                  <CurrencyConverter 
+                    jpyAmount={pricingData.yearend.jpyPrice}
+                    locale={locale}
+                    className="text-center"
+                  />
+                  <p className="text-sm text-gray-600 mt-2 text-center">{t.pricing.oneTime}</p>
+                  <div className="flex items-center justify-center gap-2 mt-2">
+                    <Sparkles className="w-4 h-4 text-orange-500" />
+                    <span className="text-sm text-orange-500">
+                      {pricingData.yearend.credits} {locale === 'ja' ? 'クレジット/月' : locale === 'en' ? 'credits/month' : '點數/月'}
+                    </span>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3 mb-6">
+                  {/* Year-end special features */}
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span className="text-sm">
+                      {locale === 'ja' ? 'ライフタイムアクセス' : locale === 'en' ? 'Lifetime Access' : '終身使用權'}
+                    </span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span className="text-sm">
+                      {locale === 'ja' ? '優先サポート' : locale === 'en' ? 'Priority Support' : '優先客戶支援'}
+                    </span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span className="text-sm">
+                      {locale === 'ja' ? '無制限クレジット' : locale === 'en' ? 'Unlimited Credits' : '無限點數'}
+                    </span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span className="text-sm">
+                      {locale === 'ja' ? '年末ボーナス機能' : locale === 'en' ? 'Year-End Bonus Features' : '年底獎勵功能'}
+                    </span>
+                  </li>
+                </ul>
+                <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/subscription-checkout?plan=yearend&priceId=${pricingData.yearend.priceId}`}>
+                  <Button className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white" size="lg">
+                    {locale === 'ja' ? '年末特価で購入' : locale === 'en' ? 'Get Year-End Deal' : '搶購年底優惠'}
                   </Button>
                 </Link>
               </CardContent>

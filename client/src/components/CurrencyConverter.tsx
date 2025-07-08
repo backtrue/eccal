@@ -59,18 +59,15 @@ export default function CurrencyConverter({ jpyAmount, locale, className = "" }:
 
   return (
     <div className={`${className}`}>
-      <div className="space-y-1">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl font-bold text-red-600">
-            {currency.symbol}{currency.amount.toLocaleString()}
-          </span>
-          <span className="text-sm text-gray-500">({currency.code})</span>
+      <div className="space-y-1 text-center">
+        <div className="text-2xl font-bold text-red-600">
+          {currency.symbol}{currency.amount.toLocaleString()}
         </div>
-        <div className="text-xs text-gray-400 flex items-center gap-1">
+        <div className="text-xs text-gray-400 flex items-center justify-center gap-1">
           <TrendingUp className="w-3 h-3" />
           <span>≈ ¥{jpyAmount.toLocaleString()} JPY</span>
         </div>
-        <div className="text-xs text-gray-400 flex items-center gap-1">
+        <div className="text-xs text-gray-400 flex items-center justify-center gap-1">
           <Clock className="w-3 h-3" />
           <span>
             {locale === 'zh-TW' 
