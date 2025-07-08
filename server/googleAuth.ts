@@ -105,9 +105,31 @@ export function setupGoogleAuth(app: Express) {
     (req.session as any).returnTo = returnTo;
     console.log('Saving returnTo in session:', returnTo);
 
+    // Determine language from query parameter or referrer, default to Traditional Chinese
+    let language = req.query.hl as string || 'zh-TW';
+    
+    // Fallback: check referrer if no language parameter
+    if (!req.query.hl) {
+      const referer = req.get('Referer') || '';
+      if (referer.includes('/en/') || referer.includes('/en')) {
+        language = 'en';
+      } else if (referer.includes('/jp/') || referer.includes('/jp')) {
+        language = 'ja';
+      }
+    }
+
+    // Convert locale codes to Google's expected format
+    const googleLanguage = language === 'zh-TW' ? 'zh-TW' : 
+                          language === 'ja' ? 'ja' : 
+                          'en';
+
+    console.log('Using Google OAuth language:', googleLanguage);
+
     passport.authenticate('google', {
       accessType: 'offline',
-      prompt: 'consent'
+      prompt: 'consent',
+      // Set Google OAuth language
+      hl: googleLanguage
     })(req, res, next);
   });
 

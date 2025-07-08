@@ -13,6 +13,8 @@ export default function GoogleLoginButton({ locale, returnTo }: GoogleLoginButto
     if (returnTo) {
       params.set('returnTo', returnTo);
     }
+    // Add language parameter to help backend determine correct OAuth language
+    params.set('hl', locale);
     
     window.location.href = `/api/auth/google${params.toString() ? '?' + params.toString() : ''}`;
   };
