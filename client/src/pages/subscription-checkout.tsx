@@ -4,7 +4,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle, XCircle, User, Calendar, CreditCard } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, User, Calendar, CreditCard, Crown } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -27,7 +27,7 @@ interface SubscriptionCheckoutProps {
 
 interface CheckoutFormProps {
   locale: Locale;
-  planType: 'monthly' | 'lifetime';
+  planType: 'monthly' | 'lifetime' | 'annual';
   priceId: string;
 }
 
@@ -51,10 +51,10 @@ const CheckoutForm = ({ locale, planType, priceId }: CheckoutFormProps) => {
       priceId: 'price_0RiHY9YDQY3sAQESlN1UPzu0',
       credits: 700
     },
-    yearend: {
-      jpyPrice: 22000,
-      priceId: 'price_yearend_2024',
-      credits: 800
+    annual: {
+      jpyPrice: 20000,
+      priceId: 'price_0RiVZOYDQY3sAQESuwqOGvzn',
+      credits: 4200
     }
   };
 
@@ -134,7 +134,7 @@ export default function SubscriptionCheckout({ locale }: SubscriptionCheckoutPro
   const [clientSecret, setClientSecret] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [planType, setPlanType] = useState<'monthly' | 'lifetime' | 'yearend'>('monthly');
+  const [planType, setPlanType] = useState<'monthly' | 'lifetime' | 'annual'>('monthly');
   const [priceId, setPriceId] = useState<string>('');
   // 使用簡單的日圓定價數據
   const pricingData = {
@@ -148,10 +148,10 @@ export default function SubscriptionCheckout({ locale }: SubscriptionCheckoutPro
       priceId: 'price_0RiHY9YDQY3sAQESlN1UPzu0',
       credits: 700
     },
-    yearend: {
-      jpyPrice: 22000,
-      priceId: 'price_yearend_2024',
-      credits: 800
+    annual: {
+      jpyPrice: 20000,
+      priceId: 'price_0RiVZOYDQY3sAQESuwqOGvzn',
+      credits: 4200
     }
   };
 
@@ -160,7 +160,7 @@ export default function SubscriptionCheckout({ locale }: SubscriptionCheckoutPro
   useEffect(() => {
     // Get plan type from URL params
     const urlParams = new URLSearchParams(window.location.search);
-    const plan = urlParams.get('plan') as 'monthly' | 'lifetime';
+    const plan = urlParams.get('plan') as 'monthly' | 'lifetime' | 'annual';
     const price = urlParams.get('priceId');
     
     if (plan) {
@@ -243,16 +243,16 @@ export default function SubscriptionCheckout({ locale }: SubscriptionCheckoutPro
         t.pricing.features.unlimitedCredits
       ]
     },
-    yearend: {
-      name: locale === 'ja' ? '年末スペシャル' : locale === 'en' ? 'Year-End Special' : '年底特惠',
-      price: `¥${pricingData.yearend.jpyPrice.toLocaleString()}`,
-      period: t.pricing.oneTime,
-      icon: Sparkles,
+    annual: {
+      name: locale === 'ja' ? '年間プラン' : locale === 'en' ? 'Annual Plan' : '年訂閱方案',
+      price: `¥${pricingData.annual.jpyPrice.toLocaleString()}`,
+      period: locale === 'ja' ? '年額（自動更新）' : locale === 'en' ? 'Annual (Auto-renewal)' : '年費（自動續費）',
+      icon: Crown,
       features: [
         t.pricing.features.allFeatures,
-        t.pricing.features.lifetimeAccess,
         t.pricing.features.prioritySupport,
-        locale === 'ja' ? '年末ボーナス機能' : locale === 'en' ? 'Year-End Bonus Features' : '年底獎勵功能'
+        locale === 'ja' ? '年間4,200クレジット' : locale === 'en' ? '4,200 Credits/Year' : '年度4,200點數',
+        locale === 'ja' ? '月額より17%節約' : locale === 'en' ? '17% Savings vs Monthly' : '比月費節省17%'
       ]
     }
   };

@@ -57,6 +57,32 @@ export function setupStripeRoutes(app: Express) {
           }
         });
 
+        // Create annual subscription product
+        const annualProduct = await stripe.products.create({
+          name: `報數據 Pro 年訂閱 (${localeName})`,
+          description: `專業電商廣告分析平台 - 年訂閱 (${config.currency})`,
+          metadata: {
+            type: 'annual_subscription',
+            locale: locale,
+            currency: config.currency
+          }
+        });
+
+        // Create annual price
+        const annualPrice = await stripe.prices.create({
+          unit_amount: formatAmountForStripe(config.annual.amount, config.currency),
+          currency: config.currency.toLowerCase(),
+          recurring: {
+            interval: 'year'
+          },
+          product: annualProduct.id,
+          metadata: {
+            type: 'annual_pro',
+            locale: locale,
+            currency: config.currency
+          }
+        });
+
         // Create lifetime product
         const lifetimeProduct = await stripe.products.create({
           name: `報數據 Pro 終身訂閱 (${localeName})`,
@@ -85,6 +111,12 @@ export function setupStripeRoutes(app: Express) {
             product: monthlyProduct.id,
             price: monthlyPrice.id,
             amount: config.monthly.amount,
+            currency: config.currency
+          },
+          annual: {
+            product: annualProduct.id,
+            price: annualPrice.id,
+            amount: config.annual.amount,
             currency: config.currency
           },
           lifetime: {
@@ -127,6 +159,7 @@ export function setupStripeRoutes(app: Express) {
       );
 
       const monthlyPrice = localePrices.find(p => p.metadata.type === 'monthly_pro');
+      const annualPrice = localePrices.find(p => p.metadata.type === 'annual_pro');
       const lifetimePrice = localePrices.find(p => p.metadata.type === 'lifetime_pro');
 
       res.json({
@@ -137,6 +170,11 @@ export function setupStripeRoutes(app: Express) {
             priceId: monthlyPrice?.id,
             amount: pricing.monthly.amount,
             displayPrice: pricing.monthly.displayPrice
+          },
+          annual: {
+            priceId: annualPrice?.id,
+            amount: pricing.annual.amount,
+            displayPrice: pricing.annual.displayPrice
           },
           lifetime: {
             priceId: lifetimePrice?.id,

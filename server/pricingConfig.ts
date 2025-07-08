@@ -8,6 +8,10 @@ export interface PricingConfig {
     amount: number;
     displayPrice: string;
   };
+  annual: {
+    amount: number;
+    displayPrice: string;
+  };
   lifetime: {
     amount: number;
     displayPrice: string;
@@ -22,6 +26,10 @@ export const PRICING_CONFIG: Record<Locale, PricingConfig> = {
       amount: 690,        // NT$690/month
       displayPrice: 'NT$690'
     },
+    annual: {
+      amount: 6900,       // NT$6,900/year (17% savings)
+      displayPrice: 'NT$6,900'
+    },
     lifetime: {
       amount: 5990,       // NT$5,990 one-time
       displayPrice: 'NT$5,990'
@@ -33,6 +41,10 @@ export const PRICING_CONFIG: Record<Locale, PricingConfig> = {
       amount: 1900,       // $19.00/month (stored as cents)
       displayPrice: '$19'
     },
+    annual: {
+      amount: 19000,      // $190.00/year (17% savings)
+      displayPrice: '$190'
+    },
     lifetime: {
       amount: 16900,      // $169.00 one-time (stored as cents)
       displayPrice: '$169'
@@ -43,6 +55,10 @@ export const PRICING_CONFIG: Record<Locale, PricingConfig> = {
     monthly: {
       amount: 2000,       // ¥2,000/month
       displayPrice: '¥2,000'
+    },
+    annual: {
+      amount: 20000,      // ¥20,000/year (17% savings)
+      displayPrice: '¥20,000'
     },
     lifetime: {
       amount: 17250,      // ¥17,250 one-time
