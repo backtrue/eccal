@@ -205,6 +205,7 @@ export interface TranslationData {
   securityNotice: string;
   analyzingYourData: string;
   analyzingDescription: string;
+  resultsBasedOn: string;
   tipTitle: string;
   tipMessage: string;
   
@@ -423,6 +424,7 @@ const translations: Record<Locale, TranslationData> = {
     securityNotice: '我們僅會讀取您的廣告數據，不會進行任何設定變更。數據安全是我們的首要考量。',
     analyzingYourData: '正在分析您的廣告數據',
     analyzingDescription: '我們正在分析您過去 28 天的廣告數據，請稍候...',
+    resultsBasedOn: '基於過去 28 天的廣告數據分析',
     tipTitle: '💡 小提示',
     tipMessage: '廣告創意的 CTR 越高，通常 CPC 就越低。',
     
@@ -673,6 +675,7 @@ const translations: Record<Locale, TranslationData> = {
     securityNotice: 'We only read your advertising data and never make any configuration changes. Data security is our top priority.',
     analyzingYourData: 'Analyzing your advertising data',
     analyzingDescription: 'We are analyzing your advertising data from the past 28 days, please wait...',
+    resultsBasedOn: 'Based on advertising data analysis from the past 28 days',
     tipTitle: '💡 Tip',
     tipMessage: 'The higher the CTR of your ad creative, the lower the CPC usually is.',
     
@@ -957,6 +960,7 @@ const translations: Record<Locale, TranslationData> = {
     securityNotice: 'お客様の広告データの読み取りのみを行い、設定の変更は一切いたしません。データの安全性が最優先事項です。',
     analyzingYourData: 'お客様の広告データを分析中',
     analyzingDescription: '過去28日間の広告データを分析しておりますので、しばらくお待ちください...',
+    resultsBasedOn: '過去28日間の広告データ分析に基づいて',
     tipTitle: '💡 ヒント',
     tipMessage: '広告クリエイティブのCTRが高いほど、通常CPCは低くなります。',
     

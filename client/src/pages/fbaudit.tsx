@@ -132,7 +132,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
         <div className="container mx-auto p-6 max-w-6xl">
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2">{t.healthCheckResults}</h1>
-            <p className="text-gray-600">{locale === 'zh-TW' ? '基於過去 28 天的廣告數據分析' : locale === 'en' ? 'Based on advertising data analysis from the past 28 days' : '過去28日間の広告データ分析に基づいて'}</p>
+            <p className="text-gray-600">{t.resultsBasedOn}</p>
           </div>
 
           {/* 健檢結果概覽 */}
