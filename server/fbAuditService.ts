@@ -38,6 +38,13 @@ export interface HealthCheckComparison {
   actual: number;
   status: 'achieved' | 'not_achieved';
   advice?: string;
+  currencyConversionInfo?: {
+    originalAmount: number;
+    originalCurrency: string;
+    convertedAmount: number;
+    targetCurrency: string;
+    conversionRate: number;
+  } | null;
 }
 
 export class FbAuditService {
@@ -308,51 +315,73 @@ export class FbAuditService {
         throw new Error('Plan result not found');
       }
 
-      // 檢測 Facebook 帳戶的幣值（默認為 USD）
-      const facebookCurrency = detectFacebookAccountCurrency(adAccountId || '');
+      // 以預算計劃的幣值為基準
       const planCurrency = planResult.currency || 'TWD';
+      const facebookCurrency = detectFacebookAccountCurrency(adAccountId || '');
       
-      // 轉換目標值到 Facebook 帳戶的幣值
-      const originalTargetDailySpend = parseFloat(planResult.dailyAdBudget.toString());
-      const targetDailySpend = convertCurrency(originalTargetDailySpend, planCurrency, facebookCurrency);
-      
+      // 目標值直接使用計劃中的原始值
+      const targetDailySpend = parseFloat(planResult.dailyAdBudget.toString());
       const targetPurchases = Math.round(planResult.requiredOrders / 30);
       const targetRoas = parseFloat(planResult.targetRoas.toString());
       const targetCtr = 1.5;
       
-      console.log('幣值轉換資訊:', {
-        planCurrency,
-        facebookCurrency,
-        originalTargetDailySpend,
-        convertedTargetDailySpend: targetDailySpend,
-        conversionRate: targetDailySpend / originalTargetDailySpend
-      });
+      // 如果Facebook帳戶幣值與計劃幣值不同，需要轉換實際值
+      let convertedActualSpend = actualMetrics.dailySpend;
+      let currencyConversionInfo = null;
+      
+      if (facebookCurrency !== planCurrency) {
+        const originalActualSpend = actualMetrics.dailySpend;
+        convertedActualSpend = convertCurrency(originalActualSpend, facebookCurrency, planCurrency);
+        
+        currencyConversionInfo = {
+          originalAmount: originalActualSpend,
+          originalCurrency: facebookCurrency,
+          convertedAmount: convertedActualSpend,
+          targetCurrency: planCurrency,
+          conversionRate: convertedActualSpend / originalActualSpend
+        };
+        
+        console.log('幣值轉換資訊:', {
+          planCurrency,
+          facebookCurrency,
+          originalActualSpend,
+          convertedActualSpend,
+          conversionRate: convertedActualSpend / originalActualSpend
+        });
+      }
+      
+      // 更新實際指標以使用轉換後的值
+      const adjustedActualMetrics = {
+        ...actualMetrics,
+        dailySpend: convertedActualSpend
+      };
 
-      // 建立初始比較結果
+      // 建立初始比較結果，使用調整後的實際指標
       const comparisons: HealthCheckComparison[] = [
         {
           metric: 'dailySpend',
           target: targetDailySpend,
-          actual: actualMetrics.dailySpend,
-          status: actualMetrics.dailySpend >= targetDailySpend ? 'achieved' : 'not_achieved'
+          actual: adjustedActualMetrics.dailySpend,
+          status: adjustedActualMetrics.dailySpend >= targetDailySpend ? 'achieved' : 'not_achieved',
+          currencyConversionInfo: currencyConversionInfo
         },
         {
           metric: 'purchases',
           target: targetPurchases,
-          actual: actualMetrics.purchases,
-          status: actualMetrics.purchases >= targetPurchases ? 'achieved' : 'not_achieved'
+          actual: adjustedActualMetrics.purchases,
+          status: adjustedActualMetrics.purchases >= targetPurchases ? 'achieved' : 'not_achieved'
         },
         {
           metric: 'roas',
           target: targetRoas,
-          actual: actualMetrics.roas,
-          status: actualMetrics.roas >= targetRoas ? 'achieved' : 'not_achieved'
+          actual: adjustedActualMetrics.roas,
+          status: adjustedActualMetrics.roas >= targetRoas ? 'achieved' : 'not_achieved'
         },
         {
           metric: 'ctr',
           target: targetCtr,
-          actual: actualMetrics.ctr,
-          status: actualMetrics.ctr >= targetCtr ? 'achieved' : 'not_achieved'
+          actual: adjustedActualMetrics.ctr,
+          status: adjustedActualMetrics.ctr >= targetCtr ? 'achieved' : 'not_achieved'
         }
       ];
 

@@ -268,6 +268,12 @@ export default function FbAudit({ locale }: FbAuditProps) {
                            comparison.metric === 'roas' ? `${comparison.target}x` :
                            comparison.target.toLocaleString()}
                         </div>
+                        {/* 顯示目標值幣值資訊 */}
+                        {comparison.metric === 'dailySpend' && comparison.currencyConversionInfo && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            ({comparison.currencyConversionInfo.targetCurrency})
+                          </div>
+                        )}
                       </div>
                       <div>
                         <div className="text-sm text-gray-600">實際值</div>
@@ -287,6 +293,12 @@ export default function FbAudit({ locale }: FbAuditProps) {
                             }
                           })()}
                         </div>
+                        {/* 顯示幣值轉換資訊 */}
+                        {comparison.metric === 'dailySpend' && comparison.currencyConversionInfo && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            原始值: {comparison.currencyConversionInfo.originalCurrency} {comparison.currencyConversionInfo.originalAmount.toLocaleString()}
+                          </div>
+                        )}
                       </div>
                     </div>
                     
