@@ -183,10 +183,24 @@ export default function FbAudit({ locale }: FbAuditProps) {
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                   <div className="text-sm text-gray-600 mb-1">日均花費</div>
                   <div className="text-2xl font-bold text-blue-600 mb-1">
-                    NT$ {(checkMutation.data as any)?.actualMetrics?.dailySpend?.toLocaleString() || '0'}
+                    {(() => {
+                      const dailySpendComparison = (checkMutation.data as any)?.comparisons?.find((c: any) => c.metric === 'dailySpend');
+                      const actualSpend = (checkMutation.data as any)?.actualMetrics?.dailySpend;
+                      if (dailySpendComparison?.currencyConversionInfo) {
+                        return `${dailySpendComparison.currencyConversionInfo.targetCurrency} ${actualSpend?.toLocaleString() || '0'}`;
+                      }
+                      return `NT$ ${actualSpend?.toLocaleString() || '0'}`;
+                    })()}
                   </div>
                   <div className="text-xs text-gray-500">
-                    目標: NT$ {(checkMutation.data as any)?.comparisons?.find((c: any) => c.metric === 'dailySpend')?.target?.toLocaleString() || '0'}
+                    {(() => {
+                      const dailySpendComparison = (checkMutation.data as any)?.comparisons?.find((c: any) => c.metric === 'dailySpend');
+                      const target = dailySpendComparison?.target;
+                      if (dailySpendComparison?.currencyConversionInfo) {
+                        return `目標: ${dailySpendComparison.currencyConversionInfo.targetCurrency} ${target?.toLocaleString() || '0'}`;
+                      }
+                      return `目標: NT$ ${target?.toLocaleString() || '0'}`;
+                    })()}
                   </div>
                 </div>
 
@@ -302,14 +316,16 @@ export default function FbAudit({ locale }: FbAuditProps) {
                       </div>
                     </div>
                     
-                    {!isAchieved && comparison.advice && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    {comparison.advice && (
+                      <div className={`border rounded-lg p-4 ${isAchieved ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`}>
                         <div className="flex items-start gap-2">
-                          <Lightbulb className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                          <Lightbulb className={`w-5 h-5 mt-0.5 flex-shrink-0 ${isAchieved ? 'text-green-600' : 'text-yellow-600'}`} />
                           <div>
-                            <div className="font-medium text-yellow-800 mb-1">{t.aiRecommendations}</div>
+                            <div className={`font-medium mb-1 ${isAchieved ? 'text-green-800' : 'text-yellow-800'}`}>
+                              {isAchieved ? (locale === 'zh-TW' ? '🎉 達標加碼建議' : locale === 'en' ? '🎉 Scale-up Recommendations' : '🎉 スケールアップ提案') : t.aiRecommendations}
+                            </div>
                             <div 
-                              className="text-yellow-700 text-sm leading-relaxed"
+                              className={`text-sm leading-relaxed ${isAchieved ? 'text-green-700' : 'text-yellow-700'}`}
                               dangerouslySetInnerHTML={{ __html: comparison.advice }}
                             />
                           </div>

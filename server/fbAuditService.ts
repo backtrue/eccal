@@ -391,56 +391,58 @@ export class FbAuditService {
         data: comparisons
       });
 
-      // 逐個為未達標指標生成 AI 建議
+      // 為所有指標生成 AI 建議（達標改為鼓勵加碼，未達標為改善建議）
       for (const comparison of comparisons) {
-        if (comparison.status === 'not_achieved') {
-          onProgress?.({
-            type: 'generating',
-            metric: comparison.metric,
-            message: `正在生成 ${comparison.metric} 的 AI 建議...`
-          });
+        onProgress?.({
+          type: 'generating',
+          metric: comparison.metric,
+          message: `正在生成 ${comparison.metric} 的 AI 建議...`
+        });
 
-          if (comparison.metric === 'dailySpend' && accessToken && adAccountId) {
-            comparison.advice = await this.generateDailySpendAdvice(
-              comparison.target,
-              comparison.actual,
-              accessToken,
-              adAccountId,
-              locale
-            );
-          } else if (comparison.metric === 'purchases' && accessToken && adAccountId) {
-            comparison.advice = await this.generatePurchaseAdvice(
-              accessToken,
-              adAccountId,
-              comparison.target,
-              comparison.actual,
-              locale
-            );
-          } else if (comparison.metric === 'roas' && accessToken && adAccountId) {
-            comparison.advice = await this.generateROASAdvice(
-              accessToken,
-              adAccountId,
-              comparison.target,
-              comparison.actual,
-              locale
-            );
-          } else {
-            comparison.advice = await this.generateAIAdvice(
-              comparison.metric,
-              comparison.target,
-              comparison.actual,
-              industryType,
-              locale
-            );
-          }
-
-          // 發送更新後的比較結果
-          onProgress?.({
-            type: 'advice_complete',
-            metric: comparison.metric,
-            advice: comparison.advice
-          });
+        if (comparison.metric === 'dailySpend' && accessToken && adAccountId) {
+          comparison.advice = await this.generateDailySpendAdvice(
+            comparison.target,
+            comparison.actual,
+            accessToken,
+            adAccountId,
+            locale,
+            comparison.status === 'achieved' // 傳遞達標狀態
+          );
+        } else if (comparison.metric === 'purchases' && accessToken && adAccountId) {
+          comparison.advice = await this.generatePurchaseAdvice(
+            accessToken,
+            adAccountId,
+            comparison.target,
+            comparison.actual,
+            locale,
+            comparison.status === 'achieved'
+          );
+        } else if (comparison.metric === 'roas' && accessToken && adAccountId) {
+          comparison.advice = await this.generateROASAdvice(
+            accessToken,
+            adAccountId,
+            comparison.target,
+            comparison.actual,
+            locale,
+            comparison.status === 'achieved'
+          );
+        } else {
+          comparison.advice = await this.generateAIAdvice(
+            comparison.metric,
+            comparison.target,
+            comparison.actual,
+            industryType,
+            locale,
+            comparison.status === 'achieved'
+          );
         }
+
+        // 發送更新後的比較結果
+        onProgress?.({
+          type: 'advice_complete',
+          metric: comparison.metric,
+          advice: comparison.advice
+        });
       }
 
       return comparisons;
@@ -692,7 +694,7 @@ export class FbAuditService {
   /**
    * 生成購買數建議 (使用 ChatGPT 4o mini)
    */
-  async generatePurchaseAdvice(accessToken: string, adAccountId: string, target: number, actual: number, locale: string = 'zh-TW'): Promise<string> {
+  async generatePurchaseAdvice(accessToken: string, adAccountId: string, target: number, actual: number, locale: string = 'zh-TW', isAchieved: boolean = false): Promise<string> {
     try {
       console.log('=== ChatGPT 購買數建議生成開始 ===');
       console.log('目標購買數:', target);
@@ -706,7 +708,7 @@ export class FbAuditService {
       
       const adSetRecommendation = this.buildAdSetRecommendation(top3AdSets, 'purchase', locale);
       
-      const { prompt, systemMessage } = this.buildPurchasePrompt(target, actual, adSetRecommendation, locale);
+      const { prompt, systemMessage } = this.buildPurchasePrompt(target, actual, adSetRecommendation, locale, isAchieved);
 
       const response = await this.openai.chat.completions.create({
         model: "gpt-4o-mini",
@@ -1021,7 +1023,7 @@ export class FbAuditService {
   /**
    * 生成 ROAS 建議 (使用 ChatGPT 4o mini)
    */
-  async generateROASAdvice(accessToken: string, adAccountId: string, target: number, actual: number, locale: string = 'zh-TW'): Promise<string> {
+  async generateROASAdvice(accessToken: string, adAccountId: string, target: number, actual: number, locale: string = 'zh-TW', isAchieved: boolean = false): Promise<string> {
     try {
       console.log('=== ChatGPT ROAS 建議生成開始 ===');
       console.log('目標 ROAS:', target);
@@ -1034,7 +1036,7 @@ export class FbAuditService {
       
       const adSetRecommendation = this.buildAdSetRecommendation(topROASAdSets, 'roas', locale);
       
-      const { prompt, systemMessage } = this.buildROASPrompt(target, actual, adSetRecommendation, locale);
+      const { prompt, systemMessage } = this.buildROASPrompt(target, actual, adSetRecommendation, locale, isAchieved);
 
       const response = await this.openai.chat.completions.create({
         model: "gpt-4o-mini",
@@ -1221,7 +1223,7 @@ export class FbAuditService {
   /**
    * 生成日均花費建議 (使用 ChatGPT 4o mini)
    */
-  private async generateDailySpendAdvice(target: number, actual: number, accessToken?: string, adAccountId?: string, locale: string = 'zh-TW'): Promise<string> {
+  private async generateDailySpendAdvice(target: number, actual: number, accessToken?: string, adAccountId?: string, locale: string = 'zh-TW', isAchieved: boolean = false): Promise<string> {
     try {
       console.log('=== ChatGPT 日均花費建議生成開始 ===');
       console.log('目標花費:', target);
@@ -1234,7 +1236,7 @@ export class FbAuditService {
       
       const campaignData = this.buildCampaignSpendRecommendation(underSpentCampaigns, locale);
       
-      const { prompt, systemMessage } = this.buildDailySpendPrompt(target, actual, shortfall, campaignData, underSpentCampaigns, locale);
+      const { prompt, systemMessage } = this.buildDailySpendPrompt(target, actual, shortfall, campaignData, underSpentCampaigns, locale, isAchieved);
 
       const response = await this.openai.chat.completions.create({
         model: "gpt-4o-mini",
@@ -1269,7 +1271,8 @@ export class FbAuditService {
     target: number,
     actual: number,
     industryType: string,
-    locale: string = 'zh-TW'
+    locale: string = 'zh-TW',
+    isAchieved: boolean = false
   ): Promise<string> {
     try {
       // 多語言指標名稱
@@ -1294,9 +1297,18 @@ export class FbAuditService {
         }
       };
 
-      // 多語言 prompt
+      // 多語言 prompt（根據達標狀態調整）
       const prompts = {
-        'zh-TW': `你是一位專業的 Facebook 電商廣告顧問「小黑老師」。針對 ${industryType} 產業，此廣告帳號的「${metricNames['zh-TW'][metric as keyof typeof metricNames['zh-TW']]}」未達標。
+        'zh-TW': isAchieved ? 
+          `你是一位專業的 Facebook 電商廣告顧問「小黑老師」。針對 ${industryType} 產業，此廣告帳號的「${metricNames['zh-TW'][metric as keyof typeof metricNames['zh-TW']]}」已達標！
+
+目標值：${target}
+實際值：${actual}
+
+太棒了！你已經達到目標。請用繁體中文，提供 2-3 點鼓勵加碼投放的建議，幫助你爭取更高的預算和更好的成效。每個建議控制在50字以內，直接提供具體行動方案。
+
+請使用 HTML 格式輸出，使用 <ul> 和 <li> 標籤來組織建議清單。`
+          : `你是一位專業的 Facebook 電商廣告顧問「小黑老師」。針對 ${industryType} 產業，此廣告帳號的「${metricNames['zh-TW'][metric as keyof typeof metricNames['zh-TW']]}」未達標。
 
 目標值：${target}
 實際值：${actual}
@@ -1305,7 +1317,16 @@ export class FbAuditService {
 
 請使用 HTML 格式輸出，使用 <ul> 和 <li> 標籤來組織建議清單。`,
 
-        'en': `You are a professional Facebook e-commerce advertising consultant named "Mr.Kuro". For the ${industryType} industry, this ad account's "${metricNames['en'][metric as keyof typeof metricNames['en']]}" is underperforming.
+        'en': isAchieved ?
+          `You are a professional Facebook e-commerce advertising consultant named "Mr.Kuro". For the ${industryType} industry, this ad account's "${metricNames['en'][metric as keyof typeof metricNames['en']]}" has achieved the target!
+
+Target value: ${target}
+Actual value: ${actual}
+
+Excellent! You've reached your target. Please provide 2-3 suggestions in English for scaling up your advertising investment to secure higher budgets and better results. Keep each suggestion under 50 words and provide specific action plans.
+
+Please output in HTML format using <ul> and <li> tags to organize the suggestion list.`
+          : `You are a professional Facebook e-commerce advertising consultant named "Mr.Kuro". For the ${industryType} industry, this ad account's "${metricNames['en'][metric as keyof typeof metricNames['en']]}" is underperforming.
 
 Target value: ${target}
 Actual value: ${actual}
@@ -1314,7 +1335,18 @@ Please provide 2-3 concise, actionable optimization suggestions in English. Keep
 
 Please output in HTML format using <ul> and <li> tags to organize the suggestion list.`,
 
-        'ja': `私は「小黒先生」という名前のプロフェッショナルなFacebookeコマース広告コンサルタントです。${industryType}業界において、この広告アカウントの「${metricNames['ja'][metric as keyof typeof metricNames['ja']]}」が目標を下回っています。
+        'ja': isAchieved ?
+          `私は「小黒先生」という名前のプロフェッショナルなFacebookeコマース広告コンサルタントです。${industryType}業界において、この広告アカウントの「${metricNames['ja'][metric as keyof typeof metricNames['ja']]}」が目標を達成しました！
+
+目標値：${target}
+実際値：${actual}
+
+**【重要指示】必ず日本語で回答してください。決して中国語や英語を使用しないでください。全ての文章を日本語で書いてください。**
+
+素晴らしい！目標を達成しました。より高い予算とより良い結果を得るために、広告投資を拡大する2-3つの提案を日本語で提供します。各提案は50文字以内にして、具体的なアクションプランを日本語で提供します。
+
+<ul>と<li>タグを使用してHTML形式で出力します。すべての内容を必ず日本語で記述します。中国語は絶対に使用しません。`
+          : `私は「小黒先生」という名前のプロフェッショナルなFacebookeコマース広告コンサルタントです。${industryType}業界において、この広告アカウントの「${metricNames['ja'][metric as keyof typeof metricNames['ja']]}」が目標を下回っています。
 
 目標値：${target}
 実際値：${actual}
@@ -1644,13 +1676,34 @@ ${adSets.map((adSet, index) =>
   /**
    * 構建多語言的購買數提示語
    */
-  private buildPurchasePrompt(target: number, actual: number, adSetRecommendation: string, locale: string = 'zh-TW'): { prompt: string; systemMessage: string } {
-    const gap = target - actual;
+  private buildPurchasePrompt(target: number, actual: number, adSetRecommendation: string, locale: string = 'zh-TW', isAchieved: boolean = false): { prompt: string; systemMessage: string } {
+    const gap = isAchieved ? actual - target : target - actual;
     
     switch (locale) {
       case 'ja':
         return {
-          prompt: `Facebook電子商取引広告のエキスパートとして、購入数指標の最適化について構造化された提案を提供してください。
+          prompt: isAchieved ? `Facebook電子商取引広告のエキスパートとして、購入数指標の達成に関する加碼提案を提供してください。
+
+**データ概要：**
+- 目標購入数：${target} 回
+- 実際の購入数：${actual} 回
+- 超過実績：${gap} 回
+
+🎉 素晴らしい！目標を達成しました！以下の構造で加碼提案を出力してください：
+
+## 1. 達成状況の分析
+目標を超えた実績と、さらなる拡大の可能性を分析します。
+
+## 2. 拡大戦略説明
+現在の成功をベースに、より大きな予算でのスケールアップ戦略を説明します。
+
+## 3. 具体的なデータ分析と提案
+${adSetRecommendation}
+
+## 4. 次のステップ提案
+成功している高コンバージョン率広告セットに対して、より大きな予算での拡大提案を提供します。
+
+小黒先生の親しみやすく直接的な語調で、HTML形式で直接出力してください。各章のタイトルは<h3>タグで、内容は<p>と<ul>タグを使用してください。` : `Facebook電子商取引広告のエキスパートとして、購入数指標の最適化について構造化された提案を提供してください。
 
 **データ概要：**
 - 目標購入数：${target} 回
@@ -1702,7 +1755,28 @@ Please use Mr.Kuro's friendly and direct tone, output directly in HTML format. W
         };
       default:
         return {
-          prompt: `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對購買數指標提供結構化的優化建議。
+          prompt: isAchieved ? `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對購買數指標達標提供結構化的加碼建議。
+
+**數據概況：**
+- 目標購買數：${target} 次
+- 實際購買數：${actual} 次
+- 超標表現：${gap} 次
+
+🎉 太棒了！你已經達到目標！請按照以下結構輸出加碼建議：
+
+## 1. 達標狀況分析
+分析超標表現以及進一步擴大的潛力。
+
+## 2. 擴大策略說明
+基於現有成功的基礎，說明如何進行更大規模的預算投入。
+
+## 3. 具體數據分析和建議
+${adSetRecommendation}
+
+## 4. 下一步建議
+針對表現優秀的高轉換率廣告組合，提供具體的擴大加碼建議。
+
+請用小黑老師親切直接的語調，直接輸出HTML格式。每個章節用 <h3> 標籤包裝標題，內容用 <p> 和 <ul> 標籤。` : `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對購買數指標提供結構化的優化建議。
 
 **數據概況：**
 - 目標購買數：${target} 次
@@ -1732,13 +1806,34 @@ ${adSetRecommendation}
   /**
    * 構建多語言的 ROAS 提示語
    */
-  private buildROASPrompt(target: number, actual: number, adSetRecommendation: string, locale: string = 'zh-TW'): { prompt: string; systemMessage: string } {
-    const gap = target - actual;
+  private buildROASPrompt(target: number, actual: number, adSetRecommendation: string, locale: string = 'zh-TW', isAchieved: boolean = false): { prompt: string; systemMessage: string } {
+    const gap = isAchieved ? actual - target : target - actual;
     
     switch (locale) {
       case 'ja':
         return {
-          prompt: `Facebook電子商取引広告のエキスパートとして、ROAS指標の最適化について構造化された提案を提供してください。
+          prompt: isAchieved ? `Facebook電子商取引広告のエキスパートとして、ROAS指標の達成に関する加碼提案を提供してください。
+
+**データ概要：**
+- 目標ROAS：${target}x
+- 実際のROAS：${actual.toFixed(2)}x
+- 超過実績：${gap.toFixed(2)}x
+
+🎉 素晴らしい！目標を達成しました！以下の構造で加碼提案を出力してください：
+
+## 1. 達成状況の分析
+目標を超えたROAS実績と、さらなる拡大の可能性を分析します。
+
+## 2. 拡大戦略説明
+現在のROAS成功をベースに、より大きな予算でのスケールアップ戦略を説明します。
+
+## 3. 具体的なデータ分析と提案
+${adSetRecommendation}
+
+## 4. 次のステップ提案
+成功している高ROAS広告セットに対して、より大きな予算での拡大提案を提供します。
+
+小黒先生の親しみやすく直接的な語調で、HTML形式で直接出力してください。各章のタイトルは<h3>タグで、内容は<p>と<ul>タグを使用してください。` : `Facebook電子商取引広告のエキスパートとして、ROAS指標の最適化について構造化された提案を提供してください。
 
 **データ概要：**
 - 目標ROAS：${target}x
@@ -1790,7 +1885,28 @@ Please use Mr.Kuro's friendly and direct tone, output directly in HTML format. W
         };
       default:
         return {
-          prompt: `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對 ROAS 指標提供結構化的優化建議。
+          prompt: isAchieved ? `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對 ROAS 指標達標提供結構化的加碼建議。
+
+**數據概況：**
+- 目標 ROAS：${target}x
+- 實際 ROAS：${actual.toFixed(2)}x
+- 超標表現：${gap.toFixed(2)}x
+
+🎉 太棒了！你已經達到目標！請按照以下結構輸出加碼建議：
+
+## 1. 達標狀況分析
+分析超標的 ROAS 表現以及進一步擴大的潛力。
+
+## 2. 擴大策略說明
+基於現有的成功 ROAS 基礎，說明如何進行更大規模的預算投入。
+
+## 3. 具體數據分析和建議
+${adSetRecommendation}
+
+## 4. 下一步建議
+針對表現優秀的高 ROAS 廣告組合，提供具體的擴大加碼建議。
+
+請用小黑老師親切直接的語調，直接輸出HTML格式。每個章節用 <h3> 標籤包裝標題，內容用 <p> 和 <ul> 標籤。` : `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對 ROAS 指標提供結構化的優化建議。
 
 **數據概況：**
 - 目標 ROAS：${target}x
@@ -1880,7 +1996,7 @@ ${underSpentCampaigns.map((campaign, index) =>
   /**
    * 構建多語言的日均花費提示語
    */
-  private buildDailySpendPrompt(target: number, actual: number, shortfall: number, campaignData: string, underSpentCampaigns: any[], locale: string = 'zh-TW'): { prompt: string; systemMessage: string } {
+  private buildDailySpendPrompt(target: number, actual: number, shortfall: number, campaignData: string, underSpentCampaigns: any[], locale: string = 'zh-TW', isAchieved: boolean = false): { prompt: string; systemMessage: string } {
     const currencySymbol = locale === 'ja' ? '円' : 
                           locale === 'en' ? '$' : '元';
 
