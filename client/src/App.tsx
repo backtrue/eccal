@@ -35,6 +35,7 @@ import Checkout from "./pages/checkout";
 import SubscriptionCheckout from "./pages/subscription-checkout";
 import PaymentSuccess from "./pages/payment-success";
 import About from "./pages/about";
+import FacebookTestDemo from "./pages/facebook-test-demo";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 
 // Error Boundary Component
@@ -137,6 +138,7 @@ function Router() {
       <Route path="/privacy" component={() => <Privacy locale="zh-TW" />} />
       <Route path="/terms" component={() => <Terms locale="zh-TW" />} />
       <Route path="/about" component={() => <About locale="zh-TW" />} />
+      <Route path="/facebook-test-demo" component={() => <FacebookTestDemo locale="zh-TW" />} />
       
       {/* English routes */}
       <Route path="/en" component={() => <Home locale="en" />} />
