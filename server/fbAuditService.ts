@@ -532,60 +532,64 @@ export class FbAuditService {
         }
       ];
 
-      // 為未達標指標生成 AI 建議
-      console.log('開始為未達標指標生成 AI 建議...');
+      // 為所有指標生成 AI 建議（達標改為鼓勵加碼，未達標為改善建議）
+      console.log('開始為所有指標生成 AI 建議...');
       for (const comparison of comparisons) {
         console.log(`檢查指標: ${comparison.metric}, 狀態: ${comparison.status}, 目標: ${comparison.target}, 實際: ${comparison.actual}`);
         
-        if (comparison.status === 'not_achieved') {
-          console.log(`指標 ${comparison.metric} 未達標，開始生成建議...`);
-          
-          if (comparison.metric === 'dailySpend') {
-            comparison.advice = await this.generateDailySpendAdvice(
-              comparison.target,
-              comparison.actual,
-              undefined,
-              undefined,
-              locale
-            );
-          } else if (comparison.metric === 'purchases' && accessToken && adAccountId) {
-            // 購買數未達標時調用新的購買建議函數
-            comparison.advice = await this.generatePurchaseAdvice(
-              accessToken,
-              adAccountId,
-              comparison.target,
-              comparison.actual,
-              locale
-            );
-          } else if (comparison.metric === 'roas' && accessToken && adAccountId) {
-            // ROAS 未達標時調用新的 ROAS 建議函數
-            comparison.advice = await this.generateROASAdvice(
-              accessToken,
-              adAccountId,
-              comparison.target,
-              comparison.actual,
-              locale
-            );
-          } else if (comparison.metric === 'ctr' && accessToken && adAccountId) {
-            // CTR 未達標時調用新的 CTR 建議函數
-            console.log('開始生成 CTR 建議，參數:', { accessToken: accessToken?.length, adAccountId, target: comparison.target, actual: comparison.actual });
-            comparison.advice = await this.generateCTRAdvice(
-              accessToken,
-              adAccountId,
-              comparison.target,
-              comparison.actual,
-              locale
-            );
-            console.log('CTR 建議生成完成，長度:', comparison.advice?.length);
-          } else {
-            comparison.advice = await this.generateAIAdvice(
-              comparison.metric,
-              comparison.target,
-              comparison.actual,
-              industryType,
-              locale
-            );
-          }
+        const isAchieved = comparison.status === 'achieved';
+        console.log(`指標 ${comparison.metric} ${isAchieved ? '已達標' : '未達標'}，開始生成建議...`);
+        
+        if (comparison.metric === 'dailySpend') {
+          comparison.advice = await this.generateDailySpendAdvice(
+            comparison.target,
+            comparison.actual,
+            accessToken,
+            adAccountId,
+            locale,
+            isAchieved
+          );
+        } else if (comparison.metric === 'purchases' && accessToken && adAccountId) {
+          // 購買數建議函數（支援達標和未達標）
+          comparison.advice = await this.generatePurchaseAdvice(
+            accessToken,
+            adAccountId,
+            comparison.target,
+            comparison.actual,
+            locale,
+            isAchieved
+          );
+        } else if (comparison.metric === 'roas' && accessToken && adAccountId) {
+          // ROAS 建議函數（支援達標和未達標）
+          comparison.advice = await this.generateROASAdvice(
+            accessToken,
+            adAccountId,
+            comparison.target,
+            comparison.actual,
+            locale,
+            isAchieved
+          );
+        } else if (comparison.metric === 'ctr' && accessToken && adAccountId) {
+          // CTR 建議函數（支援達標和未達標）
+          console.log('開始生成 CTR 建議，參數:', { accessToken: accessToken?.length, adAccountId, target: comparison.target, actual: comparison.actual });
+          comparison.advice = await this.generateCTRAdvice(
+            accessToken,
+            adAccountId,
+            comparison.target,
+            comparison.actual,
+            locale,
+            isAchieved
+          );
+          console.log('CTR 建議生成完成，長度:', comparison.advice?.length);
+        } else {
+          comparison.advice = await this.generateAIAdvice(
+            comparison.metric,
+            comparison.target,
+            comparison.actual,
+            industryType,
+            locale,
+            isAchieved
+          );
         }
       }
 
@@ -1064,7 +1068,7 @@ export class FbAuditService {
   /**
    * 生成 CTR 建議 (使用 ChatGPT 4o mini)
    */
-  async generateCTRAdvice(accessToken: string, adAccountId: string, target: number, actual: number, locale: string = 'zh-TW'): Promise<string> {
+  async generateCTRAdvice(accessToken: string, adAccountId: string, target: number, actual: number, locale: string = 'zh-TW', isAchieved: boolean = false): Promise<string> {
     try {
       console.log('=== CTR 建議生成開始 ===');
       console.log('目標 CTR:', target, '%');
@@ -1090,7 +1094,7 @@ export class FbAuditService {
       console.log('推薦內容預覽:', heroPostRecommendation.substring(0, 200) + '...');
 
       // 構建多語言的 CTR 建議提示
-      const { prompt, systemMessage } = this.buildCTRPrompt(target, actual, heroPostRecommendation, locale);
+      const { prompt, systemMessage } = this.buildCTRPrompt(target, actual, heroPostRecommendation, locale, isAchieved);
 
       const messages = [
         {
@@ -2097,7 +2101,7 @@ ${nextStepRecommendation['zh-TW']}
   /**
    * 構建多語言的 CTR 提示語
    */
-  private buildCTRPrompt(target: number, actual: number, heroPostRecommendation: string, locale: string = 'zh-TW'): { prompt: string; systemMessage: string } {
+  private buildCTRPrompt(target: number, actual: number, heroPostRecommendation: string, locale: string = 'zh-TW', isAchieved: boolean = false): { prompt: string; systemMessage: string } {
     switch (locale) {
       case 'ja':
         return {
@@ -2153,7 +2157,28 @@ Please use Mr.Kuro's friendly and direct tone, output directly in HTML format. W
         };
       default:
         return {
-          prompt: `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對連結點擊率指標提供結構化的優化建議。
+          prompt: isAchieved ? `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對連結點擊率指標提供結構化的加碼建議。
+
+**數據概況：**
+- 目標 CTR：${target.toFixed(2)}%
+- 實際 CTR：${actual.toFixed(2)}%
+- 超標表現：${(actual - target).toFixed(2)}%
+
+🎉 太棒了！你的 CTR 已經達標！請按照以下結構輸出加碼建議：
+
+## 1. 達標成果分析
+分析目標 vs 實際的超標表現，以及對整體廣告點擊成效的正面影響。
+
+## 2. 加碼投放策略
+解釋連結點擊率指標達標的意義，以及如何透過「找出連外點擊率最高的三個廣告（Hero Post）」來進一步擴大投放。
+
+## 3. 具體數據分析和加碼建議
+${heroPostRecommendation}
+
+## 4. 下一步加碼建議
+針對找出的高 CTR 廣告（Hero Post），提供具體的預算加碼和擴大曝光觸及建議。
+
+請用小黑老師親切直接的語調，直接輸出HTML格式。每個章節用 <h3> 標籤包裝標題，內容用 <p> 和 <ul> 標籤。` : `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對連結點擊率指標提供結構化的優化建議。
 
 **數據概況：**
 - 目標 CTR：${target.toFixed(2)}%
