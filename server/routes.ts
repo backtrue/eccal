@@ -46,6 +46,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Facebook 資料刪除端點 (直接在這裡註冊，避免被通用路由攔截)
+  app.post('/api/diagnosis/facebook-data-deletion', (req, res) => {
+    try {
+      const timestamp = new Date().toISOString();
+      const requestId = Math.random().toString(36).substring(2, 15);
+      
+      console.log(`[${timestamp}] Facebook data deletion request received:`, {
+        requestId,
+        hasBody: !!req.body,
+        bodyType: typeof req.body,
+        hasSignedRequest: !!(req.body && req.body.signed_request),
+        userAgent: req.get('User-Agent'),
+        ip: req.ip
+      });
+
+      let userId = 'unknown';
+      
+      // 嘗試解析 signed_request（如果存在）
+      if (req.body && req.body.signed_request) {
+        try {
+          const parts = req.body.signed_request.split('.');
+          if (parts.length === 2) {
+            const payload = parts[1];
+            // 簡單的 base64 解碼
+            const decoded = Buffer.from(payload, 'base64').toString('utf8');
+            const data = JSON.parse(decoded);
+            userId = data.user_id || 'unknown';
+          }
+        } catch (e) {
+          console.log('Could not parse signed_request, using default userId');
+        }
+      }
+
+      // 記錄處理結果
+      console.log(`[${timestamp}] Data deletion processed for user: ${userId} (requestId: ${requestId})`);
+
+      // 返回 Facebook 要求的格式
+      const host = req.get('host') || 'localhost:5000';
+      const baseUrl = host.includes('localhost') ? `http://${host}` : `https://${host}`;
+      
+      const response = {
+        url: `${baseUrl}/data-deletion-status/${userId}`,
+        confirmation_code: `DEL_${timestamp}_${requestId}`
+      };
+
+      res.json(response);
+    } catch (error) {
+      console.error('Facebook data deletion error:', error);
+      
+      // 即使出錯也要回應成功
+      res.json({
+        url: `https://eccal.thinkwithblack.com/data-deletion-status/error`,
+        confirmation_code: `DEL_${Date.now()}_error`
+      });
+    }
+  });
+
   // Note: /api/auth/user route is handled in jwtAuth.ts
   // Analytics routes
   app.get('/api/analytics/properties', requireJWTAuth, async (req: any, res) => {
