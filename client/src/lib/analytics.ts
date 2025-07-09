@@ -28,13 +28,18 @@ export const initGA = () => {
 
   // Initialize gtag
   const script2 = document.createElement('script');
-  script2.innerHTML = `
+  script2.textContent = `
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', '${measurementId}');
   `;
   document.head.appendChild(script2);
+  
+  // Initialize GA configuration safely using the API
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = window.gtag || function() { window.dataLayer.push(arguments); };
+  window.gtag('js', new Date());
+  window.gtag('config', measurementId);
 };
 
 // Track page views - useful for single-page applications
