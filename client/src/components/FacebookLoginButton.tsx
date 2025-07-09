@@ -33,7 +33,7 @@ export default function FacebookLoginButton({ className }: FacebookLoginButtonPr
       <p className="text-xs text-gray-600 max-w-sm">
         點擊上方按鈕即表示您同意我們的{' '}
         <a 
-          href="/privacy-policy" 
+          href="https://thinkwithblack.com/privacy" 
           target="_blank" 
           rel="noopener noreferrer"
           className="text-blue-600 hover:text-blue-700 underline"

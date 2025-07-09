@@ -270,11 +270,11 @@ export default function FacebookTestDemo({ locale }: FacebookTestDemoProps) {
             <div className="mt-6 pt-6 border-t">
               <h3 className="font-semibold mb-3">相關連結</h3>
               <div className="flex flex-wrap gap-4">
-                <Button variant="outline" onClick={() => window.open('/privacy-policy', '_blank')}>
+                <Button variant="outline" onClick={() => window.open('https://thinkwithblack.com/privacy', '_blank')}>
                   <ExternalLink className="w-4 h-4 mr-2" />
                   隱私政策
                 </Button>
-                <Button variant="outline" onClick={() => window.open('/terms-of-service', '_blank')}>
+                <Button variant="outline" onClick={() => window.open('https://thinkwithblack.com/terms', '_blank')}>
                   <ExternalLink className="w-4 h-4 mr-2" />
                   服務條款
                 </Button>

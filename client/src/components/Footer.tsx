@@ -136,14 +136,24 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/privacy-policy" className="text-gray-300 hover:text-white transition-colors">
+                <a 
+                  href="https://thinkwithblack.com/privacy" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-300 hover:text-white transition-colors"
+                >
                   {t.privacy}
-                </Link>
+                </a>
               </li>
               <li>
-                <Link href="/terms-of-service" className="text-gray-300 hover:text-white transition-colors">
+                <a 
+                  href="https://thinkwithblack.com/terms" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-300 hover:text-white transition-colors"
+                >
                   {t.terms}
-                </Link>
+                </a>
               </li>
               <li>
                 <Link href={getCurrentLocale() === 'zh-TW' ? '/help/calculator' :
