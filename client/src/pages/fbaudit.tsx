@@ -28,6 +28,7 @@ import { NPSRating } from "@/components/NPSRating";
 import FacebookAccountSelector from "@/components/FacebookAccountSelector";
 import type { Locale } from "@/lib/i18n";
 import { getTranslations } from "@/lib/i18n";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface FbAuditProps {
   locale: Locale;
@@ -36,6 +37,7 @@ interface FbAuditProps {
 export default function FbAudit({ locale }: FbAuditProps) {
   const t = getTranslations(locale);
   const { user, isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
   const [selectedAccount, setSelectedAccount] = useState<string>("");
   const [selectedPlan, setSelectedPlan] = useState<string>("");
   const [selectedIndustry, setSelectedIndustry] = useState<string>("");
@@ -45,7 +47,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
   // 只有在用戶已認證且有 Facebook access token 時才載入帳戶
   const shouldLoadAccounts = Boolean(isAuthenticated && user?.metaAccessToken);
   const { data: accounts, isLoading: accountsLoading } = useFbAuditAccounts(shouldLoadAccounts);
-  const { data: plans, isLoading: plansLoading } = useFbAuditPlans(isAuthenticated);
+  const { data: plans, isLoading: plansLoading, refetch: refetchPlans } = useFbAuditPlans(isAuthenticated, false);
   const { data: industries } = useFbAuditIndustries();
   const checkMutation = useFbAuditCheck();
   const streamAudit = useFbAuditStream();
@@ -63,12 +65,23 @@ export default function FbAudit({ locale }: FbAuditProps) {
       setSelectedIndustry(industry);
       setCurrentStep(3);
       
-      // 如果有新建立的計劃，自動選擇它
+      // 如果有新建立的計劃，強制重新載入計劃資料並選擇新計劃
       if (newPlan) {
-        setSelectedPlan(newPlan);
+        console.log('偵測到新建立的計劃，重新載入計劃資料:', newPlan);
+        // 清除快取並重新載入計劃資料
+        queryClient.invalidateQueries({ queryKey: ['/api/fbaudit/plans'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/plan-results'] });
+        
+        // 強制重新載入並等待完成
+        setTimeout(() => {
+          refetchPlans().then(() => {
+            setSelectedPlan(newPlan);
+            console.log('已選擇新建立的計劃:', newPlan);
+          });
+        }, 100); // 給一點時間讓快取清除生效
       }
     }
-  }, []);
+  }, [queryClient, refetchPlans]);
 
   const handleStartAudit = async () => {
     if (!selectedAccount || !selectedPlan || !selectedIndustry) {

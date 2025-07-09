@@ -13,13 +13,18 @@ export function useFbAuditAccounts(enabled = true) {
 }
 
 // 獲取預算計劃列表
-export function useFbAuditPlans(enabled = true) {
+export function useFbAuditPlans(enabled = true, forceRefresh = false) {
   return useQuery({
     queryKey: ['/api/fbaudit/plans'],
     enabled: enabled,
-    staleTime: 5 * 60 * 1000,
+    staleTime: forceRefresh ? 0 : 5 * 60 * 1000, // 如果需要強制刷新，設為 0
     gcTime: 10 * 60 * 1000,
-    select: (data: any) => data?.data || [], // 提取 API 回應中的 data 欄位
+    select: (data: any) => {
+      console.log('useFbAuditPlans - Raw API response:', data);
+      const plans = data?.data || [];
+      console.log('useFbAuditPlans - Processed plans:', plans);
+      return plans;
+    },
   });
 }
 

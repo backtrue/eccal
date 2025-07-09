@@ -71,6 +71,9 @@ export default function SavePlanDialog({ calculationData, children, returnTo }: 
 
       const result = await savePlanMutation.mutateAsync(planData);
       
+      console.log('SavePlanDialog - API response:', result);
+      console.log('SavePlanDialog - Plan ID:', result?.data?.id);
+      
       toast({
         title: "儲存成功",
         description: "計劃已成功儲存，可在儀表板中查看",
@@ -83,7 +86,10 @@ export default function SavePlanDialog({ calculationData, children, returnTo }: 
       if (returnTo && result?.data?.id) {
         const url = new URL(returnTo, window.location.origin);
         url.searchParams.set('newPlan', result.data.id);
+        console.log('SavePlanDialog - Redirecting to:', url.toString());
         window.location.href = url.toString();
+      } else {
+        console.log('SavePlanDialog - No redirect:', { returnTo, resultData: result?.data });
       }
     } catch (error) {
       toast({
