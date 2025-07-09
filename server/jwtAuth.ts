@@ -178,13 +178,17 @@ export function setupJWTGoogleAuth(app: Express) {
   app.get('/api/auth/google', (req, res, next) => {
     console.log('Starting Google OAuth with JWT');
     
-    // 儲存 returnTo 參數到 session (暫時需要，用於回調)
+    // 儲存 returnTo 參數到 req 物件 (因為沒有 session)
     const returnTo = req.query.returnTo as string || req.get('Referer') || '/';
-    (req as any).returnTo = returnTo;
+    console.log('Saving returnTo in request:', returnTo);
+    
+    // 將 returnTo 作為 state 參數傳遞
+    const state = Buffer.from(JSON.stringify({ returnTo })).toString('base64');
     
     passport.authenticate('google', {
       accessType: 'offline',
-      prompt: 'consent'
+      prompt: 'consent',
+      state: state
     })(req, res, next);
   });
 
@@ -222,7 +226,21 @@ export function setupJWTGoogleAuth(app: Express) {
         console.log('JWT token generated for user:', user.id);
 
         const baseUrl = getBaseUrl(req);
-        const returnTo = (req as any).returnTo || '/';
+        
+        // 從 state 參數中解析 returnTo
+        let returnTo = '/';
+        try {
+          const stateParam = req.query.state as string;
+          if (stateParam) {
+            const decoded = JSON.parse(Buffer.from(stateParam, 'base64').toString());
+            returnTo = decoded.returnTo || '/';
+          }
+        } catch (error) {
+          console.error('Error parsing state parameter:', error);
+          returnTo = '/';
+        }
+        
+        console.log('Extracted returnTo from state:', returnTo);
         
         let redirectUrl: string;
         if (returnTo.startsWith('http')) {

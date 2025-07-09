@@ -125,11 +125,15 @@ export function setupGoogleAuth(app: Express) {
 
     console.log('Using Google OAuth language:', googleLanguage);
 
+    // 也將 returnTo 加入 state 參數作為備用
+    const state = Buffer.from(JSON.stringify({ returnTo, language })).toString('base64');
+
     passport.authenticate('google', {
       accessType: 'offline',
       prompt: 'consent',
       // Set Google OAuth language
-      hl: googleLanguage
+      hl: googleLanguage,
+      state: state
     })(req, res, next);
   });
 
@@ -184,8 +188,21 @@ export function setupGoogleAuth(app: Express) {
           console.log('Brevo sync disabled due to IP whitelist - user email:', user.email);
 
           const baseUrl = getBaseUrl(req);
-          const returnTo = (req.session as any)?.returnTo || '/';
+          
+          // 優先從 session 取得 returnTo，然後從 state 參數
+          let returnTo = (req.session as any)?.returnTo || '/';
+          try {
+            const stateParam = req.query.state as string;
+            if (stateParam && !returnTo) {
+              const decoded = JSON.parse(Buffer.from(stateParam, 'base64').toString());
+              returnTo = decoded.returnTo || '/';
+            }
+          } catch (error) {
+            console.error('Error parsing state parameter:', error);
+          }
+          
           delete (req.session as any).returnTo; // Clean up after use
+          console.log('Using returnTo for redirect:', returnTo);
 
           // Ensure the redirect URL is properly formatted
           let redirectUrl: string;

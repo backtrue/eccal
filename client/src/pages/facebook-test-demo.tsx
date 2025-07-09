@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import NavigationBar from "@/components/NavigationBar";
 import Footer from "@/components/Footer";
 import FacebookLoginButton from "@/components/FacebookLoginButton";
+import GoogleLoginButton from "@/components/GoogleLoginButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -184,12 +185,11 @@ export default function FacebookTestDemo({ locale }: FacebookTestDemoProps) {
                     <p className="text-sm text-gray-600 mb-2">{step.description}</p>
                     
                     {step.id === 2 && !isAuthenticated && (
-                      <Button 
-                        onClick={() => window.location.href = '/api/auth/google'}
+                      <GoogleLoginButton 
+                        locale={locale}
+                        returnTo="/facebook-test-demo"
                         className="bg-blue-600 hover:bg-blue-700"
-                      >
-                        開始 Google 登入
-                      </Button>
+                      />
                     )}
                     
                     {step.id === 3 && isAuthenticated && !user?.metaAccessToken && (
