@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { LOCALE_STORAGE_KEY } from "@/lib/i18n";
 
 interface LanguageDropdownProps {
   className?: string;
@@ -49,6 +50,11 @@ export default function LanguageDropdown({ className = "" }: LanguageDropdownPro
     // Ensure path starts with /
     if (!newPath.startsWith('/')) {
       newPath = '/' + newPath;
+    }
+
+    // Save language preference to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(LOCALE_STORAGE_KEY, newLang);
     }
 
     setLocation(newPath);

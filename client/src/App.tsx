@@ -94,22 +94,17 @@ function Router() {
   // Track page views when routes change
   useAnalytics();
   
-  // Simplified route-based language switching
+  // Route-based language switching - only change if explicit language prefix is detected
   useEffect(() => {
     try {
       if (location.startsWith('/en') && locale !== 'en') {
         changeLocale('en');
       } else if (location.startsWith('/jp') && locale !== 'ja') {
         changeLocale('ja');
-      } else if (location === '/' && locale !== 'zh-TW') {
-        changeLocale('zh-TW');
       }
+      // Removed automatic zh-TW switching for root path to preserve user's language preference
     } catch (error) {
       console.error('Language switching error:', error);
-      // Fallback to default language on error
-      if (locale !== 'zh-TW') {
-        changeLocale('zh-TW');
-      }
     }
   }, [location, locale, changeLocale]);
 

@@ -9,7 +9,7 @@ import {
 
 export const useLocale = () => {
   const [locale, setLocale] = useState<Locale>(() => {
-    // Only use stored locale if it exists, otherwise default to zh-TW
+    // Use stored locale if it exists, otherwise default to zh-TW
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem(LOCALE_STORAGE_KEY) as Locale;
       if (stored && ['zh-TW', 'en', 'ja'].includes(stored)) {
@@ -23,9 +23,11 @@ export const useLocale = () => {
   const translations = getTranslations(locale);
 
   const changeLocale = (newLocale: Locale) => {
+    console.log('Changing locale from', locale, 'to', newLocale);
     setLocale(newLocale);
     if (typeof window !== 'undefined') {
       localStorage.setItem(LOCALE_STORAGE_KEY, newLocale);
+      console.log('Language preference saved to localStorage:', newLocale);
     }
     // Force re-render by updating state
     setTimeout(() => {
