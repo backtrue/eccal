@@ -56,6 +56,30 @@ export interface TranslationData {
   // Pricing navigation label
   pricingLabel: string;
   
+  // Calculator page additional translations
+  connectAccountTitle: string;
+  connectAccountDescription: string;
+  googleAnalytics: string;
+  facebookAds: string;
+  connected: string;
+  notConnected: string;
+  selectAccountsTitle: string;
+  selectGaProperty: string;
+  selectFbAccount: string;
+  checkPermissions: string;
+  loadGaData: string;
+  autoFill: string;
+  targetMonthlyRevenue: string;
+  averageOrderValueInput: string;
+  conversionRateInput: string;
+  calculationResults: string;
+  requiredOrdersCount: string;
+  monthlyTrafficNeeded: string;
+  dailyTrafficNeeded: string;
+  monthlyAdBudgetNeeded: string;
+  dailyAdBudgetNeeded: string;
+  targetRoasValue: string;
+  
   // Pricing
   pricing: {
     monthlyPlan: string;
@@ -374,6 +398,30 @@ const translations: Record<Locale, TranslationData> = {
     // Pricing navigation label
     pricingLabel: '價格方案',
     
+    // Calculator page additional translations
+    connectAccountTitle: '連接帳戶',
+    connectAccountDescription: '連接您的 Google Analytics 和 Facebook 廣告帳戶以自動填入數據',
+    googleAnalytics: 'Google Analytics',
+    facebookAds: 'Facebook 廣告',
+    connected: '已連接',
+    notConnected: '未連接',
+    selectAccountsTitle: '選擇要使用的帳戶',
+    selectGaProperty: '選擇 Google Analytics 資源',
+    selectFbAccount: 'Facebook 廣告帳戶',
+    checkPermissions: '檢查權限',
+    loadGaData: '載入 GA 數據',
+    autoFill: '自動填入',
+    targetMonthlyRevenue: '目標月營收',
+    averageOrderValueInput: '平均訂單價值',
+    conversionRateInput: '轉換率',
+    calculationResults: '計算結果',
+    requiredOrdersCount: '所需訂單數',
+    monthlyTrafficNeeded: '月流量需求',
+    dailyTrafficNeeded: '日流量需求',
+    monthlyAdBudgetNeeded: '月廣告預算',
+    dailyAdBudgetNeeded: '日廣告預算',
+    targetRoasValue: '目標 ROAS',
+    
     // Pricing
     pricing: {
       monthlyPlan: '月訂閱',
@@ -509,21 +557,13 @@ const translations: Record<Locale, TranslationData> = {
     selectIndustryStep: '步驟 4: 選擇產業類型',
     
     // Calculator Page Additional
-    connectAccountTitle: '連接帳戶以使用完整功能',
-    connectAccountDescription: '需要同時連接 Google Analytics 和 Facebook 廣告帳戶才能使用所有功能',
-    googleAnalytics: 'Google Analytics',
-    facebookAds: 'Facebook 廣告',
-    connected: '已連接',
-    notConnected: '未連接',
     targetRevenuePlaceholder: '例如：300000',
     aovPlaceholder: '例如：1500',
     conversionRatePlaceholder: '例如：2.5',
-    targetMonthlyRevenue: '目標月營收',
     targetMonthlyRevenueUnit: '元',
     averageOrderValueUnit: '元',
     conversionRateUnit: '%',
     calculateBudget: '計算預算',
-    calculationResults: '計算結果',
     monthlyRequiredOrders: '每月所需訂單數',
     ordersUnit: '筆',
     dailyApprox: '每日約',
@@ -693,6 +733,30 @@ const translations: Record<Locale, TranslationData> = {
     // Pricing navigation label
     pricingLabel: 'Pricing',
     
+    // Calculator page additional translations
+    connectAccountTitle: 'Connect Accounts',
+    connectAccountDescription: 'Connect your Google Analytics and Facebook Ad accounts for automatic data filling',
+    googleAnalytics: 'Google Analytics',
+    facebookAds: 'Facebook Ads',
+    connected: 'Connected',
+    notConnected: 'Not Connected',
+    selectAccountsTitle: 'Select Accounts to Use',
+    selectGaProperty: 'Select Google Analytics Property',
+    selectFbAccount: 'Facebook Ad Account',
+    checkPermissions: 'Check Permissions',
+    loadGaData: 'Load GA Data',
+    autoFill: 'Auto Fill',
+    targetMonthlyRevenue: 'Target Monthly Revenue',
+    averageOrderValueInput: 'Average Order Value',
+    conversionRateInput: 'Conversion Rate',
+    calculationResults: 'Calculation Results',
+    requiredOrdersCount: 'Required Orders',
+    monthlyTrafficNeeded: 'Monthly Traffic Needed',
+    dailyTrafficNeeded: 'Daily Traffic Needed',
+    monthlyAdBudgetNeeded: 'Monthly Ad Budget',
+    dailyAdBudgetNeeded: 'Daily Ad Budget',
+    targetRoasValue: 'Target ROAS',
+    
     // Pricing
     pricing: {
       monthlyPlan: 'Monthly Plan',
@@ -828,21 +892,13 @@ const translations: Record<Locale, TranslationData> = {
     selectIndustryStep: 'Step 4: Select Industry Type',
     
     // Calculator Page Additional
-    connectAccountTitle: 'Connect Accounts for Full Features',
-    connectAccountDescription: 'Connect both Google Analytics and Facebook Ad accounts to access all features',
-    googleAnalytics: 'Google Analytics',
-    facebookAds: 'Facebook Ads',
-    connected: 'Connected',
-    notConnected: 'Not Connected',
     targetRevenuePlaceholder: 'e.g., 10000',
     aovPlaceholder: 'e.g., 50',
     conversionRatePlaceholder: 'e.g., 2.5',
-    targetMonthlyRevenue: 'Target Monthly Revenue',
     targetMonthlyRevenueUnit: 'USD',
     averageOrderValueUnit: 'USD',
     conversionRateUnit: '%',
     calculateBudget: 'Calculate Budget',
-    calculationResults: 'Calculation Results',
     monthlyRequiredOrders: 'Monthly Required Orders',
     ordersUnit: 'orders',
     dailyApprox: 'Daily approx.',
@@ -996,6 +1052,30 @@ const translations: Record<Locale, TranslationData> = {
     // Pricing navigation label
     pricingLabel: '料金プラン',
     
+    // Calculator page additional translations
+    connectAccountTitle: 'アカウント接続',
+    connectAccountDescription: 'Google Analytics と Facebook 広告アカウントを接続してデータの自動入力を有効にします',
+    googleAnalytics: 'Google Analytics',
+    facebookAds: 'Facebook広告',
+    connected: '接続済み',
+    notConnected: '未接続',
+    selectAccountsTitle: '使用するアカウントを選択',
+    selectGaProperty: 'Google Analytics プロパティを選択',
+    selectFbAccount: 'Facebook広告アカウント',
+    checkPermissions: '権限を確認',
+    loadGaData: 'GA データを読み込み',
+    autoFill: '自動入力',
+    targetMonthlyRevenue: '目標月間売上',
+    averageOrderValueInput: '平均注文額',
+    conversionRateInput: 'コンバージョン率',
+    calculationResults: '計算結果',
+    requiredOrdersCount: '必要注文数',
+    monthlyTrafficNeeded: '月間必要トラフィック',
+    dailyTrafficNeeded: '日間必要トラフィック',
+    monthlyAdBudgetNeeded: '月間広告予算',
+    dailyAdBudgetNeeded: '日間広告予算',
+    targetRoasValue: '目標ROAS',
+    
     // Pricing
     pricing: {
       monthlyPlan: '月額プラン',
@@ -1079,21 +1159,13 @@ const translations: Record<Locale, TranslationData> = {
     thankYouMessage: '評価をありがとうございます！あなたのフィードバックは私たちにとって非常に重要です。',
     
     // Calculator Page Additional
-    connectAccountTitle: '完全な機能を使用するためにアカウントを接続',
-    connectAccountDescription: 'すべての機能にアクセスするにはGoogle AnalyticsとFacebook広告アカウントの両方を接続する必要があります',
-    googleAnalytics: 'Google Analytics',
-    facebookAds: 'Facebook広告',
-    connected: '接続済み',
-    notConnected: '未接続',
     targetRevenuePlaceholder: '例：1000000',
     aovPlaceholder: '例：6000',
     conversionRatePlaceholder: '例：2.5',
-    targetMonthlyRevenue: '目標月間売上',
     targetMonthlyRevenueUnit: '円',
     averageOrderValueUnit: '円',
     conversionRateUnit: '%',
     calculateBudget: '予算計算',
-    calculationResults: '計算結果',
     monthlyRequiredOrders: '月間必要注文数',
     ordersUnit: '件',
     dailyApprox: '日次約',
