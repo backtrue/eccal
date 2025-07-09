@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>外部網站 A - Eccal 帳號中心整合範例</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .auth-section {
+            border: 2px solid #e0e0e0;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .user-info {
+            background: #f0f8ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .button {
+            background: #007cba;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #005a8a;
+        }
+        .button.logout {
+            background: #dc3545;
+        }
+        .button.logout:hover {
+            background: #c82333;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #cce7ff;
+            color: #004085;
+            border: 1px solid #b8daff;
+        }
+        .hidden {
+            display: none;
+        }
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .user-data {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .user-data h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .user-data p {
+            margin: 5px 0;
+        }
+        .membership-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .membership-free {
+            background: #6c757d;
+            color: white;
+        }
+        .membership-pro {
+            background: #28a745;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>外部網站 A - Eccal 帳號中心整合範例</h1>
+        <p>這是一個示範如何將外部網站與 Eccal 帳號中心整合的完整範例。</p>
+        
+        <!-- 認證狀態顯示 -->
+        <div class="auth-section">
+            <h2>認證狀態</h2>
+            <div id="auth-status" class="status info">檢查認證狀態中...</div>
+            
+            <!-- 未登入時顯示 -->
+            <div id="login-section" class="hidden">
+                <p>您尚未登入，請使用 Eccal 帳號登入以享受完整功能。</p>
+                <button id="login-btn" class="button">使用 Eccal 帳號登入</button>
+            </div>
+            
+            <!-- 已登入時顯示 -->
+            <div id="user-section" class="hidden">
+                <div class="user-info">
+                    <h3>歡迎回來！</h3>
+                    <p id="user-name">載入中...</p>
+                    <p id="user-email">載入中...</p>
+                </div>
+                <button id="logout-btn" class="button logout">登出</button>
+                <button id="refresh-data-btn" class="button">重新載入資料</button>
+            </div>
+        </div>
+        
+        <!-- 用戶詳細資料 -->
+        <div id="user-details" class="hidden">
+            <h2>用戶資料</h2>
+            <div class="user-data">
+                <h3>基本資料</h3>
+                <p><strong>用戶 ID:</strong> <span id="user-id"></span></p>
+                <p><strong>姓名:</strong> <span id="user-display-name"></span></p>
+                <p><strong>電子郵件:</strong> <span id="user-display-email"></span></p>
+            </div>
+            
+            <div class="user-data">
+                <h3>會員資訊</h3>
+                <p><strong>會員等級:</strong> <span id="membership-level" class="membership-badge"></span></p>
+                <p><strong>到期日:</strong> <span id="membership-expires"></span></p>
+                <p><strong>狀態:</strong> <span id="membership-status"></span></p>
+            </div>
+            
+            <div class="user-data">
+                <h3>點數資訊</h3>
+                <p><strong>目前點數:</strong> <span id="credits-balance"></span></p>
+                <p><strong>總獲得點數:</strong> <span id="credits-earned"></span></p>
+                <p><strong>已使用點數:</strong> <span id="credits-spent"></span></p>
+            </div>
+            
+            <div class="user-data">
+                <h3>推薦統計</h3>
+                <p><strong>推薦人數:</strong> <span id="referral-count"></span></p>
+                <p><strong>推薦獲得點數:</strong> <span id="referral-earned"></span></p>
+            </div>
+        </div>
+        
+        <!-- 系統資訊 -->
+        <div class="auth-section">
+            <h2>系統資訊</h2>
+            <p><strong>網站來源:</strong> <span id="client-origin"></span></p>
+            <p><strong>帳號中心:</strong> <span id="account-center-url"></span></p>
+            <p><strong>SDK 版本:</strong> 1.0.0</p>
+            <button id="health-check-btn" class="button">健康檢查</button>
+            <div id="health-status" class="status info hidden"></div>
+        </div>
+        
+        <!-- 調試資訊 -->
+        <div class="auth-section">
+            <h2>調試資訊</h2>
+            <button id="show-token-btn" class="button">顯示 Token</button>
+            <button id="verify-token-btn" class="button">驗證 Token</button>
+            <button id="clear-cache-btn" class="button">清除快取</button>
+            <div id="debug-info" class="status info hidden"></div>
+        </div>
+    </div>
+
+    <!-- 引入 Eccal Auth SDK -->
+    <script src="https://eccal.thinkwithblack.com/sdk/eccal-auth-sdk.js"></script>
+    
+    <script>
+        // 初始化 Eccal Auth SDK
+        const eccalAuth = new EccalAuthSDK({
+            accountCenterUrl: 'https://eccal.thinkwithblack.com',
+            clientOrigin: window.location.origin,
+            debug: true
+        });
+
+        // DOM 元素
+        const authStatus = document.getElementById('auth-status');
+        const loginSection = document.getElementById('login-section');
+        const userSection = document.getElementById('user-section');
+        const userDetails = document.getElementById('user-details');
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const refreshDataBtn = document.getElementById('refresh-data-btn');
+        const healthCheckBtn = document.getElementById('health-check-btn');
+        const showTokenBtn = document.getElementById('show-token-btn');
+        const verifyTokenBtn = document.getElementById('verify-token-btn');
+        const clearCacheBtn = document.getElementById('clear-cache-btn');
+
+        // 更新認證狀態顯示
+        function updateAuthStatus(message, type = 'info') {
+            authStatus.textContent = message;
+            authStatus.className = `status ${type}`;
+        }
+
+        // 顯示用戶資料
+        function displayUserData(userData) {
+            // 基本資料
+            document.getElementById('user-name').textContent = userData.name || '未設定';
+            document.getElementById('user-email').textContent = userData.email || '未設定';
+            document.getElementById('user-id').textContent = userData.id || '未知';
+            document.getElementById('user-display-name').textContent = userData.name || '未設定';
+            document.getElementById('user-display-email').textContent = userData.email || '未設定';
+
+            // 會員資訊
+            const membershipLevel = userData.membership?.level || 'free';
+            const membershipBadge = document.getElementById('membership-level');
+            membershipBadge.textContent = membershipLevel.toUpperCase();
+            membershipBadge.className = `membership-badge membership-${membershipLevel}`;
+            
+            document.getElementById('membership-expires').textContent = 
+                userData.membership?.expiresAt ? new Date(userData.membership.expiresAt).toLocaleDateString() : '無期限';
+            document.getElementById('membership-status').textContent = 
+                userData.membership?.isActive ? '有效' : '無效';
+
+            // 點數資訊
+            document.getElementById('credits-balance').textContent = userData.credits || 0;
+            document.getElementById('credits-earned').textContent = userData.referrals?.totalEarned || 0;
+            document.getElementById('credits-spent').textContent = '計算中...';
+
+            // 推薦統計
+            document.getElementById('referral-count').textContent = userData.referrals?.count || 0;
+            document.getElementById('referral-earned').textContent = userData.referrals?.totalEarned || 0;
+
+            // 顯示用戶詳細資料
+            userDetails.classList.remove('hidden');
+        }
+
+        // 主要認證流程
+        async function authenticateUser() {
+            try {
+                updateAuthStatus('檢查認證狀態...', 'info');
+                
+                const result = await eccalAuth.authenticate();
+                
+                if (result.authenticated) {
+                    updateAuthStatus('已登入', 'success');
+                    loginSection.classList.add('hidden');
+                    userSection.classList.remove('hidden');
+                    displayUserData(result.user);
+                } else {
+                    updateAuthStatus('未登入', 'error');
+                    loginSection.classList.remove('hidden');
+                    userSection.classList.add('hidden');
+                    userDetails.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Authentication error:', error);
+                updateAuthStatus('認證檢查失敗', 'error');
+                loginSection.classList.remove('hidden');
+                userSection.classList.add('hidden');
+                userDetails.classList.add('hidden');
+            }
+        }
+
+        // 事件監聽
+        eccalAuth.on('login_success', (event) => {
+            console.log('Login successful:', event.detail);
+            updateAuthStatus('登入成功，正在載入資料...', 'success');
+            setTimeout(() => {
+                authenticateUser();
+            }, 1000);
+        });
+
+        eccalAuth.on('logout_success', (event) => {
+            console.log('Logout successful');
+            updateAuthStatus('已登出', 'info');
+            loginSection.classList.remove('hidden');
+            userSection.classList.add('hidden');
+            userDetails.classList.add('hidden');
+        });
+
+        // 按鈕事件
+        loginBtn.addEventListener('click', () => {
+            eccalAuth.login();
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await eccalAuth.logout();
+            } catch (error) {
+                console.error('Logout error:', error);
+                updateAuthStatus('登出失敗', 'error');
+            }
+        });
+
+        refreshDataBtn.addEventListener('click', () => {
+            authenticateUser();
+        });
+
+        healthCheckBtn.addEventListener('click', async () => {
+            try {
+                const healthStatus = document.getElementById('health-status');
+                healthStatus.classList.remove('hidden');
+                healthStatus.textContent = '檢查中...';
+                healthStatus.className = 'status info';
+                
+                const result = await eccalAuth.healthCheck();
+                healthStatus.textContent = `健康狀態：${result.status} | 服務：${result.service} | 時間：${result.timestamp}`;
+                healthStatus.className = 'status success';
+            } catch (error) {
+                const healthStatus = document.getElementById('health-status');
+                healthStatus.textContent = `健康檢查失敗：${error.message}`;
+                healthStatus.className = 'status error';
+            }
+        });
+
+        showTokenBtn.addEventListener('click', () => {
+            const token = eccalAuth.getToken();
+            const debugInfo = document.getElementById('debug-info');
+            debugInfo.classList.remove('hidden');
+            debugInfo.textContent = token ? `Token: ${token.substring(0, 50)}...` : 'No token found';
+            debugInfo.className = 'status info';
+        });
+
+        verifyTokenBtn.addEventListener('click', async () => {
+            try {
+                const debugInfo = document.getElementById('debug-info');
+                debugInfo.classList.remove('hidden');
+                debugInfo.textContent = '驗證中...';
+                debugInfo.className = 'status info';
+                
+                const result = await eccalAuth.verifyToken();
+                debugInfo.textContent = `Token 驗證結果：${result.valid ? '有效' : '無效'}`;
+                debugInfo.className = result.valid ? 'status success' : 'status error';
+            } catch (error) {
+                const debugInfo = document.getElementById('debug-info');
+                debugInfo.textContent = `驗證失敗：${error.message}`;
+                debugInfo.className = 'status error';
+            }
+        });
+
+        clearCacheBtn.addEventListener('click', () => {
+            eccalAuth.clearToken();
+            const debugInfo = document.getElementById('debug-info');
+            debugInfo.classList.remove('hidden');
+            debugInfo.textContent = '快取已清除';
+            debugInfo.className = 'status success';
+            authenticateUser();
+        });
+
+        // 設定系統資訊
+        document.getElementById('client-origin').textContent = window.location.origin;
+        document.getElementById('account-center-url').textContent = eccalAuth.accountCenterUrl;
+
+        // 頁面載入時檢查認證狀態
+        window.addEventListener('DOMContentLoaded', () => {
+            authenticateUser();
+        });
+    </script>
+</body>
+</html>

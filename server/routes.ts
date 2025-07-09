@@ -11,11 +11,15 @@ import { setupCampaignPlannerRoutes } from "./campaignPlannerRoutes";
 import { setupDiagnosisRoutes } from "./diagnosisRoutes";
 import { setupFbAuditRoutes } from "./fbAuditRoutes";
 import { setupStripeRoutes } from "./stripeRoutes";
+import { setupAccountCenterRoutes } from "./accountCenterRoutes";
 import multer from "multer";
 import fs from "fs";
 import path from "path";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup Account Center SSO routes
+  setupAccountCenterRoutes(app);
+  
   // Setup new Campaign Planner v2 routes
   setupCampaignPlannerRoutes(app);
   
