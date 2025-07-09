@@ -36,9 +36,10 @@ interface SavePlanDialogProps {
     dataSource?: string;
   };
   children: React.ReactNode;
+  returnTo?: string;
 }
 
-export default function SavePlanDialog({ calculationData, children }: SavePlanDialogProps) {
+export default function SavePlanDialog({ calculationData, children, returnTo }: SavePlanDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const savePlanMutation = useSavePlanResult();
@@ -68,7 +69,7 @@ export default function SavePlanDialog({ calculationData, children }: SavePlanDi
         dataSource: calculationData.dataSource || 'manual',
       };
 
-      await savePlanMutation.mutateAsync(planData);
+      const result = await savePlanMutation.mutateAsync(planData);
       
       toast({
         title: "儲存成功",
@@ -77,6 +78,13 @@ export default function SavePlanDialog({ calculationData, children }: SavePlanDi
       
       setOpen(false);
       form.reset();
+      
+      // 如果有 returnTo 參數，跳轉回原來的頁面並帶上新計劃的 ID
+      if (returnTo && result?.data?.id) {
+        const url = new URL(returnTo, window.location.origin);
+        url.searchParams.set('newPlan', result.data.id);
+        window.location.href = url.toString();
+      }
     } catch (error) {
       toast({
         title: "儲存失敗",

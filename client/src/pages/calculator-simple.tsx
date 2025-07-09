@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -56,7 +56,17 @@ export default function Calculator({ locale }: CalculatorProps) {
   const [selectedProperty, setSelectedProperty] = useState<string>('');
   const [loadingGaData, setLoadingGaData] = useState(false);
   const [formData, setFormData] = useState<any>(null); // 儲存表單數據
+  const [returnTo, setReturnTo] = useState<string>(''); // 儲存返回 URL
   const { isAuthenticated, user } = useAuth();
+
+  // 檢查是否有 returnTo 參數
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const returnToParam = urlParams.get('returnTo');
+    if (returnToParam) {
+      setReturnTo(decodeURIComponent(returnToParam));
+    }
+  }, []);
   
   // GA Analytics hooks
   const { data: properties } = useAnalyticsProperties(isAuthenticated);
@@ -325,7 +335,7 @@ export default function Calculator({ locale }: CalculatorProps) {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-green-800">{t.calculationResults}</CardTitle>
               {isAuthenticated && formData && (
-                <SavePlanDialog calculationData={formData}>
+                <SavePlanDialog calculationData={formData} returnTo={returnTo}>
                   <Button variant="outline" size="sm">
                     <Save className="w-4 h-4 mr-2" />
                     {t.save}

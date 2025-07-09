@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import NavigationBar from "@/components/NavigationBar";
 import Footer from "@/components/Footer";
@@ -49,6 +49,26 @@ export default function FbAudit({ locale }: FbAuditProps) {
   const { data: industries } = useFbAuditIndustries();
   const checkMutation = useFbAuditCheck();
   const streamAudit = useFbAuditStream();
+
+  // 處理從計算機頁面返回的情況
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const step = urlParams.get('step');
+    const account = urlParams.get('account');
+    const industry = urlParams.get('industry');
+    const newPlan = urlParams.get('newPlan');
+
+    if (step === '3' && account && industry) {
+      setSelectedAccount(account);
+      setSelectedIndustry(industry);
+      setCurrentStep(3);
+      
+      // 如果有新建立的計劃，自動選擇它
+      if (newPlan) {
+        setSelectedPlan(newPlan);
+      }
+    }
+  }, []);
 
   const handleStartAudit = async () => {
     if (!selectedAccount || !selectedPlan || !selectedIndustry) {
@@ -464,7 +484,15 @@ export default function FbAudit({ locale }: FbAuditProps) {
                 </div>
               ) : hasPlans ? (
                 <div className="space-y-4">
-                  <Select value={selectedPlan} onValueChange={setSelectedPlan}>
+                  <Select value={selectedPlan} onValueChange={(value) => {
+                    if (value === 'create_new_plan') {
+                      // 跳轉到計算機頁面，並帶上返回參數
+                      const returnUrl = `/fbaudit?step=3&account=${selectedAccount}&industry=${selectedIndustry}`;
+                      window.location.href = `/calculator?returnTo=${encodeURIComponent(returnUrl)}`;
+                    } else {
+                      setSelectedPlan(value);
+                    }
+                  }}>
                     <SelectTrigger>
                       <SelectValue placeholder={t.selectCampaignPlan} />
                     </SelectTrigger>
@@ -474,6 +502,9 @@ export default function FbAudit({ locale }: FbAuditProps) {
                           {plan.planName} (目標 ROAS: {plan.targetRoas}x)
                         </SelectItem>
                       ))}
+                      <SelectItem value="create_new_plan" className="text-blue-600 font-medium">
+                        {locale === 'zh-TW' ? '+ 新增計劃' : locale === 'en' ? '+ Create New Plan' : '+ 新しいプランを作成'}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   
@@ -492,7 +523,10 @@ export default function FbAudit({ locale }: FbAuditProps) {
                   <p className="text-gray-600 mb-6">
                     {locale === 'zh-TW' ? '需要先建立預算計劃才能進行健檢對比' : locale === 'en' ? 'Need to create a campaign plan first for health check comparison' : 'ヘルスチェック比較のためにまずキャンペーンプランを作成する必要があります'}
                   </p>
-                  <Button onClick={() => window.location.href = '/calculator'}>
+                  <Button onClick={() => {
+                    const returnUrl = `/fbaudit?step=3&account=${selectedAccount}&industry=${selectedIndustry}`;
+                    window.location.href = `/calculator?returnTo=${encodeURIComponent(returnUrl)}`;
+                  }}>
                     {locale === 'zh-TW' ? '前往建立預算計劃' : locale === 'en' ? 'Go to Create Campaign Plan' : 'キャンペーンプラン作成へ'}
                   </Button>
                 </div>
