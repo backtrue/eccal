@@ -10,7 +10,7 @@ import {
 } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { businessTermsDictionary, fbAuditTerms, getCorrectJapaneseTerm } from "./businessTermsDictionary";
-import { convertCurrency, detectFacebookAccountCurrency } from "@shared/currency";
+import { convertCurrency, detectFacebookAccountCurrency, EXCHANGE_RATES } from "@shared/currency";
 
 export interface FbAdAccountData {
   accountId: string;
@@ -481,54 +481,78 @@ export class FbAuditService {
       const targetRoas = parseFloat(planResult.targetRoas.toString());
       const targetCtr = 1.5; // 預設 1.5%
 
+      // 檢測計劃和 Facebook 廣告帳戶的幣值
+      const planCurrency = planResult.currency || 'TWD'; // 預設為 TWD
+      const fbAccountCurrency = detectFacebookAccountCurrency(adAccountId || ''); // 通常是 USD
+
+      console.log('===== 幣值轉換資訊 =====');
+      console.log('計劃幣值:', planCurrency);
+      console.log('FB 帳戶幣值:', fbAccountCurrency);
+      console.log('原始 actualMetrics.dailySpend:', actualMetrics.dailySpend);
+
+      // 進行幣值轉換：將 Facebook 實際值轉換為計劃幣值
+      let convertedDailySpend = actualMetrics.dailySpend;
+      let currencyConversionInfo = null;
+
+      if (planCurrency !== fbAccountCurrency) {
+        const originalAmount = actualMetrics.dailySpend;
+        convertedDailySpend = convertCurrency(originalAmount, fbAccountCurrency, planCurrency);
+        
+        const conversionRate = EXCHANGE_RATES[fbAccountCurrency as keyof typeof EXCHANGE_RATES]?.[planCurrency as keyof typeof EXCHANGE_RATES['TWD']] || 1;
+        
+        currencyConversionInfo = {
+          originalAmount,
+          originalCurrency: fbAccountCurrency,
+          convertedAmount: convertedDailySpend,
+          targetCurrency: planCurrency,
+          conversionRate
+        };
+
+        console.log('幣值轉換完成:', {
+          原始金額: originalAmount,
+          原始幣值: fbAccountCurrency,
+          轉換後金額: convertedDailySpend,
+          目標幣值: planCurrency,
+          轉換率: conversionRate
+        });
+      }
+
       console.log('===== 目標值直接顯示 =====');
       console.log('目標日均花費:', targetDailySpend);
       console.log('目標購買數:', targetPurchases);
       console.log('目標 ROAS:', targetRoas);
       console.log('目標 CTR:', targetCtr);
-      
-      console.log('=== 目標值詳細資訊 ===');
-      console.log('原始 planResult 資料:', {
-        dailyAdBudget: planResult.dailyAdBudget,
-        dailyAdBudgetType: typeof planResult.dailyAdBudget,
-        requiredOrders: planResult.requiredOrders,
-        targetRoas: planResult.targetRoas,
-        targetRoasType: typeof planResult.targetRoas
-      });
-      console.log('計算後的目標值:', {
-        targetDailySpend,
-        targetDailySpendType: typeof targetDailySpend,
-        targetPurchases,
-        targetRoas,
-        targetRoasType: typeof targetRoas,
-        targetCtr
-      });
+      console.log('轉換後實際日均花費:', convertedDailySpend);
 
-      // 使用真實的資料庫目標值
+      // 使用轉換後的實際值進行比較
       const comparisons: HealthCheckComparison[] = [
         {
           metric: 'dailySpend',
           target: targetDailySpend,
-          actual: actualMetrics.dailySpend,
-          status: actualMetrics.dailySpend >= targetDailySpend ? 'achieved' : 'not_achieved'
+          actual: convertedDailySpend,
+          status: convertedDailySpend >= targetDailySpend ? 'achieved' : 'not_achieved',
+          currencyConversionInfo
         },
         {
           metric: 'purchases',
           target: targetPurchases,
           actual: actualMetrics.purchases,
-          status: actualMetrics.purchases >= targetPurchases ? 'achieved' : 'not_achieved'
+          status: actualMetrics.purchases >= targetPurchases ? 'achieved' : 'not_achieved',
+          currencyConversionInfo: null
         },
         {
           metric: 'roas',
           target: targetRoas,
           actual: actualMetrics.roas,
-          status: actualMetrics.roas >= targetRoas ? 'achieved' : 'not_achieved'
+          status: actualMetrics.roas >= targetRoas ? 'achieved' : 'not_achieved',
+          currencyConversionInfo: null
         },
         {
           metric: 'ctr',
           target: targetCtr,
           actual: actualMetrics.ctr,
-          status: actualMetrics.ctr >= targetCtr ? 'achieved' : 'not_achieved'
+          status: actualMetrics.ctr >= targetCtr ? 'achieved' : 'not_achieved',
+          currencyConversionInfo: null
         }
       ];
 

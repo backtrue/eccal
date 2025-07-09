@@ -25,17 +25,30 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 className="hover:text-blue-300 transition-colors"
               >
-                {getCurrentLocale() === 'zh-TW' ? '報數據｜幫你算廣告預算' :
-                 getCurrentLocale() === 'en' ? 'ReportData | Ad Budget Calculator' :
-                 'データ報告｜広告予算計算機'}
+                {getCurrentLocale() === 'zh-TW' ? '報數據｜專業電商廣告分析平台' :
+                 getCurrentLocale() === 'en' ? 'ReportData | Professional E-commerce Advertising Analytics Platform' :
+                 'データ報告｜プロフェッショナル電子商取引広告分析プラットフォーム'}
               </a>
             </h3>
             <p className="text-gray-300 mb-4">
               {getCurrentLocale() === 'zh-TW' ? 
-                '想知道廣告預算怎麼抓？用《報數據》一鍵計算 FB、IG 廣告預算和所需流量，只要輸入目標金額、客單價、轉換率，馬上算出最適合你的廣告預算與流量需求，幫你告別瞎猜和試錯！' :
+                '讓廣告操作者，擁有看懂數據與主導策略的能力。我們整合實戰經驗，從 GA 數據到 Facebook 廣告指標，幫助你看懂每個成效背後的意義。不再靠運氣亂投，成為能夠獨立企劃、拆解成效、提出優化建議的廣告策略專家。' :
                getCurrentLocale() === 'en' ?
-                'Want to know how much to spend on ads? Use ReportData to calculate FB and IG ad budgets and required traffic with one click. Just input your target revenue, average order value, and conversion rate to instantly calculate the optimal ad budget and traffic requirements. Say goodbye to guessing and trial-and-error!' :
-                '広告予算をどう決めるかわからない？『データ報告』でFB・IG広告予算と必要トラフィックをワンクリック計算。目標売上、平均注文額、コンバージョン率を入力するだけで、最適な広告予算とトラフィック要件をすぐに算出。推測や試行錯誤とはもうお別れ！'}
+                'Empowering advertisers with data understanding and strategic leadership capabilities. We integrate practical experience from GA data to Facebook advertising metrics, helping you understand the meaning behind every performance metric. No more random spending - become an advertising strategy expert who can independently plan, analyze, and optimize.' :
+                '広告担当者がデータを理解し、戦略を主導する能力を身につけることを支援します。GAデータからFacebook広告指標まで、実戦経験を統合し、すべてのパフォーマンス指標の背後にある意味を理解できるようお手伝いします。もう運に頼った投資は必要ありません。'}
+            </p>
+            <p className="text-gray-300 mb-4 text-sm">
+              {getCurrentLocale() === 'zh-TW' ? 
+                '廣告與服務合作請寄信至：' :
+               getCurrentLocale() === 'en' ?
+                'For advertising and service partnerships, please email: ' :
+                '広告およびサービス提携については、メールでお問い合わせください：'}
+              <a 
+                href="mailto:backtrue@thinkwithblack.com" 
+                className="text-blue-300 hover:text-blue-200 transition-colors"
+              >
+                backtrue@thinkwithblack.com
+              </a>
             </p>
           </div>
 
