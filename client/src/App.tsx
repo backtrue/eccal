@@ -112,18 +112,18 @@ function Router() {
 
   return (
     <Switch>
-      <Route path="/" component={() => <Home locale={locale} />} />
-      <Route path="/calculator" component={() => <Calculator locale={locale} />} />
-      <Route path="/campaign-planner" component={() => <CampaignPlannerV2 locale={locale} />} />
-      <Route path="/fbaudit" component={() => <FbAudit locale={locale} />} />
-      <Route path="/pricing" component={() => <Pricing locale={locale} />} />
-      <Route path="/checkout" component={() => <Checkout locale={locale} />} />
-      <Route path="/subscription-checkout" component={() => <SubscriptionCheckout locale={locale} />} />
-      <Route path="/payment-success" component={() => <PaymentSuccess locale={locale} />} />
-      <Route path="/help/fbaudit" component={() => <FbAuditHelp locale={locale} />} />
-      <Route path="/help/calculator" component={() => <CalculatorHelp locale={locale} />} />
-      <Route path="/help/campaign-planner" component={() => <CampaignPlannerHelp locale={locale} />} />
-      <Route path="/dashboard" component={() => <Dashboard locale={locale} />} />
+      <Route path="/" component={() => <Home locale="zh-TW" />} />
+      <Route path="/calculator" component={() => <Calculator locale="zh-TW" />} />
+      <Route path="/campaign-planner" component={() => <CampaignPlannerV2 locale="zh-TW" />} />
+      <Route path="/fbaudit" component={() => <FbAudit locale="zh-TW" />} />
+      <Route path="/pricing" component={() => <Pricing locale="zh-TW" />} />
+      <Route path="/checkout" component={() => <Checkout locale="zh-TW" />} />
+      <Route path="/subscription-checkout" component={() => <SubscriptionCheckout locale="zh-TW" />} />
+      <Route path="/payment-success" component={() => <PaymentSuccess locale="zh-TW" />} />
+      <Route path="/help/fbaudit" component={() => <FbAuditHelp locale="zh-TW" />} />
+      <Route path="/help/calculator" component={() => <CalculatorHelp locale="zh-TW" />} />
+      <Route path="/help/campaign-planner" component={() => <CampaignPlannerHelp locale="zh-TW" />} />
+      <Route path="/dashboard" component={() => <Dashboard locale="zh-TW" />} />
       <Route path="/project/:id" component={ProjectDetail} />
       <Route path="/diagnosis-report/:id" component={DiagnosisReportDetail} />
       <Route path="/bdmin" component={() => (
@@ -133,10 +133,10 @@ function Router() {
       )} />
       <Route path="/brevo-sync" component={() => <BrevoSync />} />
       <Route path="/facebook-permissions" component={() => <FacebookPermissions />} />
-      <Route path="/facebook-setup" component={() => <FacebookSetup locale={locale} />} />
-      <Route path="/privacy" component={() => <Privacy locale={locale} />} />
-      <Route path="/terms" component={() => <Terms locale={locale} />} />
-      <Route path="/about" component={() => <About locale={locale} />} />
+      <Route path="/facebook-setup" component={() => <FacebookSetup locale="zh-TW" />} />
+      <Route path="/privacy" component={() => <Privacy locale="zh-TW" />} />
+      <Route path="/terms" component={() => <Terms locale="zh-TW" />} />
+      <Route path="/about" component={() => <About locale="zh-TW" />} />
       
       {/* English routes */}
       <Route path="/en" component={() => <Home locale="en" />} />
