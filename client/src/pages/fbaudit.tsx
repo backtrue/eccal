@@ -25,6 +25,7 @@ import {
 import { useFbAuditAccounts, useFbAuditPlans, useFbAuditIndustries, useFbAuditCheck } from "@/hooks/useFbAudit";
 import { useFbAuditStream } from "@/hooks/useFbAuditStream";
 import { NPSRating } from "@/components/NPSRating";
+import FacebookAccountSelector from "@/components/FacebookAccountSelector";
 import type { Locale } from "@/lib/i18n";
 import { getTranslations } from "@/lib/i18n";
 
@@ -420,18 +421,12 @@ export default function FbAudit({ locale }: FbAuditProps) {
                 </div>
               ) : accounts && accounts.length > 0 ? (
                 <div className="space-y-4">
-                  <Select value={selectedAccount} onValueChange={setSelectedAccount}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t.selectAdAccount} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {accounts.map((account: any) => (
-                        <SelectItem key={account.id} value={account.id}>
-                          {account.name} (ID: {account.id})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FacebookAccountSelector 
+                    onAccountSelected={(accountId) => setSelectedAccount(accountId)}
+                    accounts={accounts}
+                    isLoading={accountsLoading}
+                    useExternalData={true}
+                  />
                   
                   {selectedAccount && (
                     <div className="text-center pt-4">
