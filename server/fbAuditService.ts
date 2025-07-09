@@ -50,47 +50,71 @@ export class FbAuditService {
   }
 
   /**
-   * 獲取使用者的 Facebook 廣告帳號列表
+   * 獲取使用者的 Facebook 廣告帳號列表（支援分頁）
    */
   async getAdAccounts(accessToken: string): Promise<Array<{id: string, name: string}>> {
     try {
-      const url = `${this.baseUrl}/me/adaccounts?fields=id,name,account_status&access_token=${accessToken}`;
-      console.log('Facebook API 請求 URL:', url.replace(accessToken, accessToken.substring(0, 20) + '...'));
+      const allAccounts: Array<{id: string, name: string}> = [];
+      let nextPageUrl = `${this.baseUrl}/me/adaccounts?fields=id,name,account_status&limit=100&access_token=${accessToken}`;
       
-      const response = await fetch(url);
+      console.log('開始獲取 Facebook 廣告帳戶 (支援分頁)');
+      let pageCount = 0;
       
-      console.log('Facebook API 回應狀態:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Facebook API 錯誤詳情:', errorText);
-        throw new Error(`Facebook API error: ${response.status} - ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log('Facebook API 原始回應:', {
-        dataExists: !!data.data,
-        totalAccounts: data.data?.length || 0,
-        accounts: data.data?.map((acc: any) => ({
-          id: acc.id,
-          name: acc.name,
-          status: acc.account_status
-        })) || []
-      });
-      
-      const activeAccounts = data.data
-        .filter((account: any) => account.account_status === 1) // 只返回啟用的帳號
-        .map((account: any) => ({
-          id: account.id,
-          name: account.name
-        }));
+      while (nextPageUrl && pageCount < 10) { // 限制最多 10 頁避免無限循環
+        pageCount++;
+        console.log(`正在獲取第 ${pageCount} 頁:`, nextPageUrl.replace(accessToken, accessToken.substring(0, 20) + '...'));
         
-      console.log('過濾後的啟用帳戶:', {
-        activeCount: activeAccounts.length,
-        accounts: activeAccounts
+        const response = await fetch(nextPageUrl);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Facebook API 錯誤詳情:', errorText);
+          throw new Error(`Facebook API error: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        
+        console.log(`第 ${pageCount} 頁回應:`, {
+          dataExists: !!data.data,
+          pageAccounts: data.data?.length || 0,
+          hasNextPage: !!data.paging?.next,
+          accounts: data.data?.map((acc: any) => ({
+            id: acc.id,
+            name: acc.name,
+            status: acc.account_status
+          })) || []
+        });
+        
+        if (data.data && Array.isArray(data.data)) {
+          // 只收集啟用的帳戶
+          const activePageAccounts = data.data
+            .filter((account: any) => account.account_status === 1)
+            .map((account: any) => ({
+              id: account.id,
+              name: account.name
+            }));
+          
+          allAccounts.push(...activePageAccounts);
+          console.log(`第 ${pageCount} 頁新增 ${activePageAccounts.length} 個啟用帳戶，總計: ${allAccounts.length}`);
+        }
+        
+        // 檢查是否有下一頁
+        nextPageUrl = data.paging?.next || null;
+        
+        // 如果沒有更多頁面，跳出循環
+        if (!nextPageUrl) {
+          console.log('已獲取所有頁面，結束分頁查詢');
+          break;
+        }
+      }
+      
+      console.log('最終結果 - 所有啟用帳戶:', {
+        totalPages: pageCount,
+        totalActiveAccounts: allAccounts.length,
+        accounts: allAccounts
       });
       
-      return activeAccounts;
+      return allAccounts;
     } catch (error) {
       console.error('Error fetching ad accounts:', error);
       throw error;

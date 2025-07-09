@@ -371,7 +371,7 @@ export function setupDiagnosisRoutes(app: Express) {
     }
   });
 
-  // 獲取用戶可用的 Facebook 廣告帳戶列表
+  // 獲取用戶可用的 Facebook 廣告帳戶列表（支援分頁）
   app.get('/api/diagnosis/facebook-accounts', requireJWTAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
@@ -384,25 +384,60 @@ export function setupDiagnosisRoutes(app: Express) {
         });
       }
 
-      // 獲取廣告帳戶列表
-      const accountsResponse = await fetch(
-        `https://graph.facebook.com/v19.0/me/adaccounts?fields=id,name,account_status,currency&access_token=${user.metaAccessToken}`
-      );
+      // 獲取廣告帳戶列表（支援分頁）
+      const allAccounts: Array<{id: string, name: string, status: number, currency: string}> = [];
+      let nextPageUrl = `https://graph.facebook.com/v19.0/me/adaccounts?fields=id,name,account_status,currency&limit=100&access_token=${user.metaAccessToken}`;
+      
+      console.log('開始獲取 Facebook 廣告帳戶 (支援分頁) - 用戶:', userId);
+      let pageCount = 0;
+      
+      while (nextPageUrl && pageCount < 10) { // 限制最多 10 頁避免無限循環
+        pageCount++;
+        console.log(`正在獲取第 ${pageCount} 頁:`, nextPageUrl.replace(user.metaAccessToken, user.metaAccessToken.substring(0, 20) + '...'));
+        
+        const accountsResponse = await fetch(nextPageUrl);
 
-      if (!accountsResponse.ok) {
-        throw new Error(`Facebook API 錯誤: ${accountsResponse.status}`);
+        if (!accountsResponse.ok) {
+          throw new Error(`Facebook API 錯誤: ${accountsResponse.status}`);
+        }
+
+        const accountsData = await accountsResponse.json();
+        
+        console.log(`第 ${pageCount} 頁回應:`, {
+          dataExists: !!accountsData.data,
+          pageAccounts: accountsData.data?.length || 0,
+          hasNextPage: !!accountsData.paging?.next
+        });
+        
+        if (accountsData.data && Array.isArray(accountsData.data)) {
+          const pageAccounts = accountsData.data.map((account: any) => ({
+            id: account.id,
+            name: account.name,
+            status: account.account_status,
+            currency: account.currency || 'TWD'
+          }));
+          
+          allAccounts.push(...pageAccounts);
+          console.log(`第 ${pageCount} 頁新增 ${pageAccounts.length} 個帳戶，總計: ${allAccounts.length}`);
+        }
+        
+        // 檢查是否有下一頁
+        nextPageUrl = accountsData.paging?.next || null;
+        
+        // 如果沒有更多頁面，跳出循環
+        if (!nextPageUrl) {
+          console.log('已獲取所有頁面，結束分頁查詢');
+          break;
+        }
       }
+      
+      console.log('最終結果 - 所有廣告帳戶:', {
+        totalPages: pageCount,
+        totalAccounts: allAccounts.length,
+        activeAccounts: allAccounts.filter(acc => acc.status === 1).length
+      });
 
-      const accountsData = await accountsResponse.json();
-
-      const accounts = accountsData.data?.map((account: any) => ({
-        id: account.id,
-        name: account.name,
-        status: account.account_status,
-        currency: account.currency || 'TWD'
-      })) || [];
-
-      res.json({ accounts });
+      res.json({ accounts: allAccounts });
     } catch (error) {
       console.error('獲取 Facebook 廣告帳戶錯誤:', error);
       res.status(500).json({
