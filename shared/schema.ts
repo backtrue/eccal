@@ -223,6 +223,7 @@ export const planResults = pgTable("plan_results", {
   averageOrderValue: decimal("average_order_value", { precision: 10, scale: 2 }).notNull(),
   conversionRate: decimal("conversion_rate", { precision: 5, scale: 4 }).notNull(),
   cpc: decimal("cpc", { precision: 6, scale: 2 }).notNull(),
+  currency: varchar("currency").default("TWD").notNull(), // TWD, USD, JPY
   
   // Calculated Results
   requiredOrders: integer("required_orders").notNull(),

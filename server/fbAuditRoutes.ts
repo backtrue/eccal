@@ -66,6 +66,7 @@ export function setupFbAuditRoutes(app: Express) {
           targetRoas: true,
           dailyAdBudget: true,
           requiredOrders: true,
+          currency: true,
           createdAt: true
         }
       });

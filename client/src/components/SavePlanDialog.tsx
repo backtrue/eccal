@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useSavePlanResult } from "@/hooks/usePlanResults";
+import { getCurrencyByLocale } from "@shared/currency";
 
 const savePlanSchema = z.object({
   planName: z.string().min(1, "計劃名稱不能為空").max(50, "計劃名稱不能超過50個字符"),
@@ -37,9 +38,10 @@ interface SavePlanDialogProps {
   };
   children: React.ReactNode;
   returnTo?: string;
+  locale?: string;
 }
 
-export default function SavePlanDialog({ calculationData, children, returnTo }: SavePlanDialogProps) {
+export default function SavePlanDialog({ calculationData, children, returnTo, locale = 'zh-TW' }: SavePlanDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const savePlanMutation = useSavePlanResult();
@@ -53,6 +55,7 @@ export default function SavePlanDialog({ calculationData, children, returnTo }: 
 
   const onSubmit = async (data: SavePlanFormData) => {
     try {
+      const currencyConfig = getCurrencyByLocale(locale);
       const planData = {
         planName: data.planName,
         targetRevenue: calculationData.targetRevenue,
@@ -64,6 +67,7 @@ export default function SavePlanDialog({ calculationData, children, returnTo }: 
         monthlyAdBudget: calculationData.results.monthlyAdBudget,
         dailyAdBudget: calculationData.results.dailyAdBudget,
         targetRoas: calculationData.results.targetRoas,
+        currency: currencyConfig.code,
         gaPropertyId: calculationData.gaPropertyId,
         gaPropertyName: calculationData.gaPropertyName,
         dataSource: calculationData.dataSource || 'manual',

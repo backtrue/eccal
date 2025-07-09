@@ -335,7 +335,7 @@ export default function Calculator({ locale }: CalculatorProps) {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-green-800">{t.calculationResults}</CardTitle>
               {isAuthenticated && formData && (
-                <SavePlanDialog calculationData={formData} returnTo={returnTo}>
+                <SavePlanDialog calculationData={formData} returnTo={returnTo} locale={locale}>
                   <Button variant="outline" size="sm">
                     <Save className="w-4 h-4 mr-2" />
                     {t.save}

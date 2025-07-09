@@ -9,6 +9,7 @@ export interface PlanResult {
   averageOrderValue: string;
   conversionRate: string;
   cpc: string;
+  currency: string;
   requiredOrders: number;
   monthlyTraffic: number;
   dailyTraffic: number;
@@ -35,6 +36,7 @@ export interface SavePlanData {
   monthlyAdBudget: number;
   dailyAdBudget: number;
   targetRoas: number;
+  currency: string;
   gaPropertyId?: string;
   gaPropertyName?: string;
   dataSource: string;

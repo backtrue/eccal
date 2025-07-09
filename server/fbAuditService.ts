@@ -10,6 +10,7 @@ import {
 } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { businessTermsDictionary, fbAuditTerms, getCorrectJapaneseTerm } from "./businessTermsDictionary";
+import { convertCurrency, detectFacebookAccountCurrency } from "@shared/currency";
 
 export interface FbAdAccountData {
   accountId: string;
@@ -307,10 +308,25 @@ export class FbAuditService {
         throw new Error('Plan result not found');
       }
 
-      const targetDailySpend = parseFloat(planResult.dailyAdBudget.toString());
+      // 檢測 Facebook 帳戶的幣值（默認為 USD）
+      const facebookCurrency = detectFacebookAccountCurrency(adAccountId || '');
+      const planCurrency = planResult.currency || 'TWD';
+      
+      // 轉換目標值到 Facebook 帳戶的幣值
+      const originalTargetDailySpend = parseFloat(planResult.dailyAdBudget.toString());
+      const targetDailySpend = convertCurrency(originalTargetDailySpend, planCurrency, facebookCurrency);
+      
       const targetPurchases = Math.round(planResult.requiredOrders / 30);
       const targetRoas = parseFloat(planResult.targetRoas.toString());
       const targetCtr = 1.5;
+      
+      console.log('幣值轉換資訊:', {
+        planCurrency,
+        facebookCurrency,
+        originalTargetDailySpend,
+        convertedTargetDailySpend: targetDailySpend,
+        conversionRate: targetDailySpend / originalTargetDailySpend
+      });
 
       // 建立初始比較結果
       const comparisons: HealthCheckComparison[] = [

@@ -633,7 +633,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Request body:', req.body);
       console.log('User:', req.user);
       
-      const { planName, targetRevenue, averageOrderValue, conversionRate, requiredOrders, monthlyTraffic, dailyTraffic, monthlyAdBudget, dailyAdBudget, targetRoas, gaPropertyId, gaPropertyName, dataSource } = req.body;
+      const { planName, targetRevenue, averageOrderValue, conversionRate, requiredOrders, monthlyTraffic, dailyTraffic, monthlyAdBudget, dailyAdBudget, targetRoas, currency, gaPropertyId, gaPropertyName, dataSource } = req.body;
       
       const planData = {
         userId: req.user!.id,
@@ -642,6 +642,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         averageOrderValue: averageOrderValue.toString(),
         conversionRate: conversionRate.toString(),
         cpc: '5', // 固定值
+        currency: currency || 'TWD',
         requiredOrders,
         monthlyTraffic,
         dailyTraffic,
