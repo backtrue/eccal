@@ -193,10 +193,18 @@ export default function FacebookTestDemo({ locale }: FacebookTestDemoProps) {
                     )}
                     
                     {step.id === 3 && isAuthenticated && !user?.metaAccessToken && (
-                      <div className="space-y-2">
+                      <div className="space-y-3">
+                        <Alert className="border-blue-200 bg-blue-50">
+                          <AlertTriangle className="h-4 w-4 text-blue-600" />
+                          <AlertDescription className="text-blue-800">
+                            <strong>審查員請注意：</strong>
+                            點擊下方按鈕將開啟 Facebook 登入對話框，我們的隱私政策連結會在對話框中顯示。
+                            隱私政策網址：<span className="font-mono text-sm">https://thinkwithblack.com/privacy</span>
+                          </AlertDescription>
+                        </Alert>
                         <FacebookLoginButton />
                         <p className="text-xs text-gray-500">
-                          點擊上方按鈕開始 Facebook OAuth 授權流程
+                          💡 Facebook OAuth 對話框將包含隱私政策連結，符合 Meta 平台政策要求
                         </p>
                       </div>
                     )}
@@ -278,7 +286,7 @@ export default function FacebookTestDemo({ locale }: FacebookTestDemoProps) {
                   <ExternalLink className="w-4 h-4 mr-2" />
                   服務條款
                 </Button>
-                <Button variant="outline" onClick={() => window.open('/auth/facebook/data-deletion', '_blank')}>
+                <Button variant="outline" onClick={() => window.open('/api/facebook/data-deletion', '_blank')}>
                   <ExternalLink className="w-4 h-4 mr-2" />
                   資料刪除
                 </Button>

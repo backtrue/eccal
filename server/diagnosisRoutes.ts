@@ -65,7 +65,8 @@ export function setupDiagnosisRoutes(app: Express) {
         `redirect_uri=${encodeURIComponent(redirectUri)}&` +
         `scope=ads_read,ads_management&` +
         `response_type=code&` +
-        `state=${userId}`;
+        `state=${userId}&` +
+        `auth_type=rerequest`;
 
       // 直接重定向到 Facebook OAuth 頁面
       res.redirect(authUrl);
