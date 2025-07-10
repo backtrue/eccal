@@ -40,7 +40,16 @@ export default function FacebookLoginButton({ className }: FacebookLoginButtonPr
         >
           隱私政策
         </a>
-        {' '}並授權我們存取您的 Facebook 廣告資料以提供分析服務。
+        {' '}及{' '}
+        <a 
+          href="https://thinkwithblack.com/terms" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-700 underline"
+        >
+          使用條款
+        </a>
+        ，並授權我們存取您的 Facebook 廣告資料以提供分析服務。
       </p>
     </div>
   );
