@@ -245,6 +245,11 @@ export interface TranslationData {
   selectPlanStep: string;
   selectIndustryStep: string;
   
+  // Privacy and Terms
+  privacyTermsNotice: string;
+  privacyPolicy: string;
+  termsOfService: string;
+  
   // Pricing Page
   pricing: string;
   pricingTitle: string;
@@ -548,6 +553,11 @@ const translations: Record<Locale, TranslationData> = {
     loginRequired: '請先登入以使用廣告健檢功能',
     healthCheckFailed: '健檢執行失敗，請檢查控制台錯誤信息',
     confirmFbPermissions: '請確認您的 Facebook 帳號有廣告管理權限',
+    
+    // Privacy and Terms
+    privacyTermsNotice: '點擊上方按鈕即表示您同意我們的隱私政策及使用條款，並授權我們存取您的 Facebook 廣告資料以提供分析服務。',
+    privacyPolicy: '隱私政策',
+    termsOfService: '使用條款',
     errorEncountered: '遇到「無法使用此功能」的錯誤嗎？',
     fbSetupGuide: '📋 查看 Facebook 應用程式設定指南',
     nextSelectBudgetPlan: '下一步：選擇預算計劃',
@@ -883,6 +893,11 @@ const translations: Record<Locale, TranslationData> = {
     loginRequired: 'Please login to use the ad health check feature',
     healthCheckFailed: 'Health check failed, please check console error messages',
     confirmFbPermissions: 'Please confirm your Facebook account has advertising management permissions',
+    
+    // Privacy and Terms
+    privacyTermsNotice: 'By clicking the button above, you agree to our Privacy Policy and Terms of Service, and authorize us to access your Facebook advertising data to provide analysis services.',
+    privacyPolicy: 'Privacy Policy',
+    termsOfService: 'Terms of Service',
     errorEncountered: 'Encountered "Cannot use this feature" error?',
     fbSetupGuide: '📋 View Facebook Application Setup Guide',
     nextSelectBudgetPlan: 'Next: Select Budget Plan',
@@ -1228,6 +1243,11 @@ const translations: Record<Locale, TranslationData> = {
     loginRequired: 'まず広告健康診断機能をご利用するためにログインしてください',
     healthCheckFailed: 'ヘルスチェックに失敗しました。コンソールエラーメッセージを確認してください',
     confirmFbPermissions: 'FacebookアカウントがAdvertising管理権限を持っていることを確認してください',
+    
+    // Privacy and Terms
+    privacyTermsNotice: '上記のボタンをクリックすることで、プライバシーポリシーおよび利用規約に同意し、分析サービス提供のためのFacebook広告データアクセスを承認したものとみなされます。',
+    privacyPolicy: 'プライバシーポリシー',
+    termsOfService: '利用規約',
     errorEncountered: '「この機能を使用できません」エラーが発生しましたか？',
     fbSetupGuide: '📋 Facebookアプリケーション設定ガイドを表示',
     nextSelectBudgetPlan: '次のステップ：予算プラン選択',
