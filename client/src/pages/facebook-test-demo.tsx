@@ -34,44 +34,44 @@ export default function FacebookTestDemo({ locale }: FacebookTestDemoProps) {
   const steps = [
     {
       id: 1,
-      title: "1. 訪問測試頁面",
-      description: "前往 Facebook 廣告健檢頁面",
-      action: "訪問頁面",
+      title: "1. Access Test Page",
+      description: "Visit Facebook Ad Health Check test demonstration",
+      action: "Visit Page",
       status: "completed"
     },
     {
       id: 2,
-      title: "2. Google 登入",
-      description: "完成 Google OAuth 身份驗證",
-      action: "Google 登入",
+      title: "2. Google Login",
+      description: "Complete Google OAuth authentication (required for user identity)",
+      action: "Google Login",
       status: isAuthenticated ? "completed" : "pending"
     },
     {
       id: 3,
-      title: "3. Facebook 授權",
-      description: "授權應用程式存取 Facebook 廣告資料",
-      action: "Facebook 授權",
+      title: "3. Facebook Authorization",
+      description: "🔍 IMPORTANT: Watch for privacy policy display in Facebook OAuth dialog",
+      action: "Facebook Authorization",
       status: user?.metaAccessToken ? "completed" : "pending"
     },
     {
       id: 4,
-      title: "4. 權限確認",
-      description: "確認應用程式取得必要權限",
-      action: "權限檢查",
+      title: "4. Permission Verification",
+      description: "Confirm app received necessary permissions (ads_read, ads_management)",
+      action: "Check Permissions",
       status: user?.metaAccessToken ? "completed" : "pending"
     },
     {
       id: 5,
-      title: "5. 廣告帳戶選擇",
-      description: "選擇要分析的 Facebook 廣告帳戶",
-      action: "選擇帳戶",
+      title: "5. Ad Account Selection",
+      description: "Select Facebook ad account for analysis",
+      action: "Select Account",
       status: "pending"
     },
     {
       id: 6,
-      title: "6. 開始健檢",
-      description: "執行 Facebook 廣告資料分析",
-      action: "開始分析",
+      title: "6. Start Health Check",
+      description: "Execute Facebook advertising data analysis",
+      action: "Start Analysis",
       status: "pending"
     }
   ];
@@ -79,24 +79,24 @@ export default function FacebookTestDemo({ locale }: FacebookTestDemoProps) {
   const permissions = [
     {
       name: "ads_read",
-      description: "讀取廣告資料",
-      purpose: "分析廣告表現、生成診斷報告",
+      description: "Read advertising data",
+      purpose: "Analyze ad performance and generate diagnostic reports",
       examples: [
-        "讀取廣告帳戶清單",
-        "獲取廣告活動資料",
-        "分析點擊率和轉換率",
-        "計算 ROAS (廣告投資回報率)"
+        "Read advertising account list",
+        "Retrieve advertising campaign data",
+        "Analyze click-through rates and conversion rates",
+        "Calculate ROAS (Return on Ad Spend)"
       ]
     },
     {
       name: "ads_management",
-      description: "廣告帳戶管理",
-      purpose: "存取詳細的廣告帳戶資訊",
+      description: "Advertising account management",
+      purpose: "Access detailed advertising account information",
       examples: [
-        "取得廣告帳戶詳細資訊",
-        "讀取廣告組和廣告素材",
-        "分析廣告投放設定",
-        "提供優化建議"
+        "Retrieve detailed advertising account information",
+        "Read ad groups and creative materials",
+        "Analyze advertising placement settings",
+        "Provide optimization recommendations"
       ]
     }
   ];
@@ -108,40 +108,49 @@ export default function FacebookTestDemo({ locale }: FacebookTestDemoProps) {
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         {/* 頁面標題 */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-4">Facebook 應用程式測試演示</h1>
+          <h1 className="text-3xl font-bold mb-4">Facebook App Review Test Demo</h1>
           <p className="text-gray-600 mb-6">
-            此頁面為 Facebook 應用程式審查團隊提供完整的測試流程演示
+            This page provides a complete end-to-end testing flow demonstration for the Facebook App Review Team
           </p>
-          <Alert className="mb-6">
-            <AlertTriangle className="h-4 w-4" />
+          <Alert className="mb-6 bg-blue-50 border-blue-200">
+            <AlertTriangle className="h-4 w-4 text-blue-600" />
             <AlertDescription>
-              <strong>審查員注意事項：</strong>
-              本應用程式需要 ads_read 和 ads_management 權限來提供 Facebook 廣告健檢服務。
-              請依照以下步驟完成測試，如有任何問題請聯絡 backtrue@thinkwithblack.com
+              <strong>For Meta App Reviewers:</strong><br />
+              This app requires ads_read and ads_management permissions for Facebook advertising health check services.
+              Please follow the steps below to complete testing. For any questions, contact: backtrue@thinkwithblack.com
+              <br /><br />
+              <strong>📋 Privacy Policy Notice:</strong> During Facebook login, you will see our privacy policy link displayed in the OAuth dialog.
+              Privacy Policy URL: <a href="https://thinkwithblack.com/privacy" target="_blank" className="text-blue-600 underline font-medium">https://thinkwithblack.com/privacy</a>
             </AlertDescription>
           </Alert>
         </div>
 
-        {/* 權限說明 */}
+        {/* Permission Usage Explanation */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="w-5 h-5" />
-              權限使用說明
+              Facebook Permission Usage Explanation
             </CardTitle>
           </CardHeader>
           <CardContent>
+            <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                <strong>⚠️ Important Notice for Reviewers:</strong> Our application only performs READ operations on Facebook advertising data. 
+                We never modify, create, or delete any advertising content or settings. All permissions are used solely for data analysis and reporting purposes.
+              </p>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {permissions.map((permission) => (
                 <div key={permission.name} className="border rounded-lg p-4">
                   <h3 className="font-semibold mb-2 text-blue-600">{permission.name}</h3>
                   <p className="text-sm text-gray-600 mb-3">{permission.description}</p>
                   <div className="mb-3">
-                    <span className="text-sm font-medium text-gray-700">使用目的：</span>
+                    <span className="text-sm font-medium text-gray-700">Purpose:</span>
                     <p className="text-sm text-gray-600">{permission.purpose}</p>
                   </div>
                   <div>
-                    <span className="text-sm font-medium text-gray-700">具體用途：</span>
+                    <span className="text-sm font-medium text-gray-700">Specific Usage:</span>
                     <ul className="text-sm text-gray-600 mt-1">
                       {permission.examples.map((example, index) => (
                         <li key={index} className="flex items-start gap-2">
@@ -157,12 +166,12 @@ export default function FacebookTestDemo({ locale }: FacebookTestDemoProps) {
           </CardContent>
         </Card>
 
-        {/* 測試步驟 */}
+        {/* Testing Process */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Play className="w-5 h-5" />
-              測試流程
+              End-to-End Testing Process
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -194,18 +203,21 @@ export default function FacebookTestDemo({ locale }: FacebookTestDemoProps) {
                     
                     {step.id === 3 && isAuthenticated && !user?.metaAccessToken && (
                       <div className="space-y-3">
-                        <Alert className="border-blue-200 bg-blue-50">
-                          <AlertTriangle className="h-4 w-4 text-blue-600" />
-                          <AlertDescription className="text-blue-800">
-                            <strong>審查員請注意：</strong>
-                            點擊下方按鈕將開啟 Facebook 登入對話框，我們的隱私政策連結會在對話框中顯示。
-                            隱私政策網址：<span className="font-mono text-sm">https://thinkwithblack.com/privacy</span>
+                        <Alert className="border-red-200 bg-red-50">
+                          <AlertTriangle className="h-4 w-4 text-red-600" />
+                          <AlertDescription className="text-red-800">
+                            <strong>🔍 FOR META REVIEWERS - PRIVACY POLICY VERIFICATION:</strong><br />
+                            Clicking the button below will open the Facebook login dialog. <strong>Please verify that our privacy policy link is displayed in the OAuth dialog.</strong><br />
+                            Privacy Policy URL: <span className="font-mono text-sm bg-white px-2 py-1 rounded">https://thinkwithblack.com/privacy</span><br />
+                            This demonstrates compliance with Meta Platform Policy Section 4.a - Privacy Policy requirements.
                           </AlertDescription>
                         </Alert>
-                        <FacebookLoginButton />
-                        <p className="text-xs text-gray-500">
-                          💡 Facebook OAuth 對話框將包含隱私政策連結，符合 Meta 平台政策要求
-                        </p>
+                        <div className="border-2 border-dashed border-blue-300 p-4 rounded-lg bg-blue-50">
+                          <FacebookLoginButton />
+                          <p className="text-xs text-blue-600 mt-2">
+                            ⚠️ The Facebook OAuth dialog will include our privacy policy link, meeting Meta Platform Policy requirements
+                          </p>
+                        </div>
                       </div>
                     )}
                     
@@ -213,10 +225,10 @@ export default function FacebookTestDemo({ locale }: FacebookTestDemoProps) {
                       <div className="bg-green-50 p-3 rounded-lg">
                         <div className="flex items-center gap-2 text-green-700">
                           <CheckCircle className="w-4 h-4" />
-                          <span className="text-sm font-medium">Facebook 授權成功</span>
+                          <span className="text-sm font-medium">Facebook Authorization Successful</span>
                         </div>
                         <p className="text-xs text-green-600 mt-1">
-                          應用程式已取得必要權限，可以進行廣告資料分析
+                          Application has obtained necessary permissions and can perform advertising data analysis
                         </p>
                       </div>
                     )}
@@ -226,7 +238,7 @@ export default function FacebookTestDemo({ locale }: FacebookTestDemoProps) {
                         onClick={() => window.location.href = '/fbaudit'}
                         className="bg-purple-600 hover:bg-purple-700"
                       >
-                        前往廣告健檢 <ArrowRight className="w-4 h-4 ml-2" />
+                        Go to Ad Health Check <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
                     )}
                   </div>
@@ -236,59 +248,65 @@ export default function FacebookTestDemo({ locale }: FacebookTestDemoProps) {
           </CardContent>
         </Card>
 
-        {/* 隱私政策與安全說明 */}
+        {/* Privacy Policy and Security */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Lock className="w-5 h-5" />
-              隱私政策與資料安全
+              Privacy Policy & Data Security
             </CardTitle>
           </CardHeader>
           <CardContent>
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-sm text-green-800">
+                <strong>✅ Meta Platform Policy Compliance:</strong> Our application fully complies with Meta Platform Policy Section 4.a regarding privacy policy requirements. 
+                The privacy policy is publicly accessible and clearly explains our data collection, usage, and protection practices.
+              </p>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center">
                 <div className="bg-blue-100 p-3 rounded-lg mb-3 inline-block">
                   <Eye className="w-6 h-6 text-blue-600" />
                 </div>
-                <h3 className="font-semibold mb-2">資料透明</h3>
+                <h3 className="font-semibold mb-2">Data Transparency</h3>
                 <p className="text-sm text-gray-600">
-                  明確說明收集哪些資料以及如何使用
+                  Clear explanation of what data is collected and how it's used
                 </p>
               </div>
               <div className="text-center">
                 <div className="bg-green-100 p-3 rounded-lg mb-3 inline-block">
                   <Shield className="w-6 h-6 text-green-600" />
                 </div>
-                <h3 className="font-semibold mb-2">安全保護</h3>
+                <h3 className="font-semibold mb-2">Security Protection</h3>
                 <p className="text-sm text-gray-600">
-                  採用業界標準的加密和安全措施
+                  Industry-standard encryption and security measures
                 </p>
               </div>
               <div className="text-center">
                 <div className="bg-purple-100 p-3 rounded-lg mb-3 inline-block">
                   <UserCheck className="w-6 h-6 text-purple-600" />
                 </div>
-                <h3 className="font-semibold mb-2">用戶控制</h3>
+                <h3 className="font-semibold mb-2">User Control</h3>
                 <p className="text-sm text-gray-600">
-                  用戶可隨時撤銷權限或要求刪除資料
+                  Users can revoke permissions or request data deletion anytime
                 </p>
               </div>
             </div>
             
             <div className="mt-6 pt-6 border-t">
-              <h3 className="font-semibold mb-3">相關連結</h3>
+              <h3 className="font-semibold mb-3">Related Links (For Reviewers)</h3>
               <div className="flex flex-wrap gap-4">
                 <Button variant="outline" onClick={() => window.open('https://thinkwithblack.com/privacy', '_blank')}>
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  隱私政策
+                  Privacy Policy
                 </Button>
                 <Button variant="outline" onClick={() => window.open('https://thinkwithblack.com/terms', '_blank')}>
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  服務條款
+                  Terms of Service
                 </Button>
                 <Button variant="outline" onClick={() => window.open('/api/facebook/data-deletion', '_blank')}>
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  資料刪除
+                  Data Deletion Endpoint
                 </Button>
               </div>
             </div>
