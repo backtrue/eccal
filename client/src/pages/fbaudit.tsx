@@ -459,6 +459,27 @@ export default function FbAudit({ locale }: FbAuditProps) {
                   <Button onClick={() => setCurrentStep(2)}>
                     {t.nextSelectAccount}
                   </Button>
+                  <p className="text-xs text-gray-600 mt-4 max-w-sm mx-auto">
+                    點擊上方按鈕即表示您同意我們的{' '}
+                    <a 
+                      href="https://thinkwithblack.com/privacy" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-700 underline"
+                    >
+                      隱私政策
+                    </a>
+                    {' '}及{' '}
+                    <a 
+                      href="https://thinkwithblack.com/terms" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-700 underline"
+                    >
+                      使用條款
+                    </a>
+                    ，並授權我們存取您的 Facebook 廣告資料以提供分析服務。
+                  </p>
                 </div>
               )}
             </CardContent>
