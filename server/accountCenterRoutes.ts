@@ -294,12 +294,15 @@ export function setupAccountCenterRoutes(app: Express) {
       
       const credits = userCreditsData.length > 0 ? userCreditsData[0].balance : 0;
       
+      // 組合用戶名稱
+      const fullName = `${fullUser[0].firstName || ''} ${fullUser[0].lastName || ''}`.trim();
+      
       // 生成 JWT Token
       const token = jwt.sign(
         {
           sub: userId,
           email: fullUser[0].email,
-          name: fullUser[0].name,
+          name: fullName,
           service: service,
           iss: 'eccal.thinkwithblack.com',
           aud: req.headers.origin || 'unknown'
@@ -315,10 +318,10 @@ export function setupAccountCenterRoutes(app: Express) {
         user: {
           id: userId,
           email: fullUser[0].email,
-          name: fullUser[0].name,
+          name: fullName,
           membership: fullUser[0].membershipLevel || 'Free',
           credits: credits,
-          profileImageUrl: fullUser[0].picture
+          profileImageUrl: fullUser[0].profileImageUrl
         }
       };
       
