@@ -26,7 +26,7 @@ export const sessions = pgTable(
 
 // User storage table for Google OAuth
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().notNull(), // Google user ID
+  id: varchar("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()), // Auto-generate UUID
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>會員中心 - 測試頁面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .auth-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .status {
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .user-info {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .log {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+        }
+        .test-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        input[type="text"], input[type="email"] {
+            width: 100%;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>會員中心 - SSO 測試</h1>
+        
+        <div class="auth-section">
+            <h2>認證狀態</h2>
+            <div id="authStatus" class="status info">尚未認證</div>
+            <div id="userInfo" class="user-info" style="display: none;">
+                <h4>用戶資料</h4>
+                <p><strong>姓名:</strong> <span id="userName"></span></p>
+                <p><strong>Email:</strong> <span id="userEmail"></span></p>
+                <p><strong>會員等級:</strong> <span id="userMembership"></span></p>
+                <p><strong>點數:</strong> <span id="userCredits"></span></p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>1. Google SSO 認證測試</h3>
+            <p>模擬從子域名服務進行 Google SSO 認證</p>
+            <div>
+                <label>Email:</label>
+                <input type="email" id="testEmail" value="test@example.com">
+            </div>
+            <div>
+                <label>姓名:</label>
+                <input type="text" id="testName" value="測試用戶">
+            </div>
+            <div>
+                <label>服務名稱:</label>
+                <input type="text" id="testService" value="audai">
+            </div>
+            <button onclick="testGoogleSSO()">測試 Google SSO 認證</button>
+        </div>
+
+        <div class="test-section">
+            <h3>2. API 端點測試</h3>
+            <button onclick="testHealthCheck()">測試健康檢查</button>
+            <button onclick="testPing()">測試 Ping</button>
+            <button onclick="testCORSCheck()">測試 CORS 設定</button>
+        </div>
+
+        <div class="test-section">
+            <h3>3. 認證後功能測試</h3>
+            <button onclick="testUserData()" disabled id="testUserDataBtn">獲取用戶資料</button>
+            <button onclick="testCredits()" disabled id="testCreditsBtn">獲取點數資料</button>
+            <button onclick="testMembership()" disabled id="testMembershipBtn">獲取會員資料</button>
+        </div>
+
+        <div class="test-section">
+            <h3>測試日誌</h3>
+            <div id="testLog" class="log"></div>
+            <button onclick="clearLog()">清除日誌</button>
+        </div>
+    </div>
+
+    <script>
+        let authToken = null;
+        let currentUser = null;
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('testLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            logDiv.textContent += logEntry;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            
+            if (type === 'error') {
+                console.error(message);
+            } else {
+                console.log(message);
+            }
+        }
+
+        function clearLog() {
+            document.getElementById('testLog').textContent = '';
+        }
+
+        function updateAuthStatus(status, type = 'info') {
+            const statusDiv = document.getElementById('authStatus');
+            statusDiv.textContent = status;
+            statusDiv.className = `status ${type}`;
+        }
+
+        function updateUserInfo(user) {
+            const userInfoDiv = document.getElementById('userInfo');
+            if (user) {
+                document.getElementById('userName').textContent = user.name || 'N/A';
+                document.getElementById('userEmail').textContent = user.email || 'N/A';
+                document.getElementById('userMembership').textContent = user.membership || 'N/A';
+                document.getElementById('userCredits').textContent = user.credits || 'N/A';
+                userInfoDiv.style.display = 'block';
+                
+                // Enable authenticated buttons
+                document.getElementById('testUserDataBtn').disabled = false;
+                document.getElementById('testCreditsBtn').disabled = false;
+                document.getElementById('testMembershipBtn').disabled = false;
+            } else {
+                userInfoDiv.style.display = 'none';
+                
+                // Disable authenticated buttons
+                document.getElementById('testUserDataBtn').disabled = true;
+                document.getElementById('testCreditsBtn').disabled = true;
+                document.getElementById('testMembershipBtn').disabled = true;
+            }
+        }
+
+        async function testGoogleSSO() {
+            const email = document.getElementById('testEmail').value;
+            const name = document.getElementById('testName').value;
+            const service = document.getElementById('testService').value;
+
+            if (!email || !name || !service) {
+                log('請填寫所有必要欄位', 'error');
+                return;
+            }
+
+            try {
+                log(`嘗試 Google SSO 認證: ${email} (${service})`);
+                updateAuthStatus('認證中...', 'info');
+
+                const response = await fetch('/api/auth/google-sso', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Origin': 'https://audai.thinkwithblack.com'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        name: name,
+                        picture: 'https://example.com/avatar.jpg',
+                        service: service
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    authToken = data.token;
+                    currentUser = data.user;
+                    log(`Google SSO 認證成功: ${data.user.name}`);
+                    updateAuthStatus(`認證成功 - ${data.user.name}`, 'success');
+                    updateUserInfo(data.user);
+                } else {
+                    log(`Google SSO 認證失敗: ${data.error || '未知錯誤'}`, 'error');
+                    updateAuthStatus(`認證失敗: ${data.error || '未知錯誤'}`, 'error');
+                }
+            } catch (error) {
+                log(`Google SSO 請求錯誤: ${error.message}`, 'error');
+                updateAuthStatus(`請求錯誤: ${error.message}`, 'error');
+            }
+        }
+
+        async function testHealthCheck() {
+            try {
+                log('測試健康檢查端點...');
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                log(`健康檢查回應: ${JSON.stringify(data)}`);
+            } catch (error) {
+                log(`健康檢查錯誤: ${error.message}`, 'error');
+            }
+        }
+
+        async function testPing() {
+            try {
+                log('測試 Ping 端點...');
+                const response = await fetch('/api/ping');
+                const data = await response.text();
+                log(`Ping 回應: ${data}`);
+            } catch (error) {
+                log(`Ping 錯誤: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCORSCheck() {
+            try {
+                log('測試 CORS 設定...');
+                const response = await fetch('/api/account-center/allowed-origins');
+                const data = await response.json();
+                log(`CORS 設定: ${JSON.stringify(data)}`);
+            } catch (error) {
+                log(`CORS 測試錯誤: ${error.message}`, 'error');
+            }
+        }
+
+        async function testUserData() {
+            if (!currentUser) {
+                log('請先進行 Google SSO 認證', 'error');
+                return;
+            }
+
+            try {
+                log(`獲取用戶資料: ${currentUser.id}`);
+                const response = await fetch(`/api/account-center/user/${currentUser.id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                const data = await response.json();
+                log(`用戶資料: ${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                log(`用戶資料錯誤: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCredits() {
+            if (!currentUser) {
+                log('請先進行 Google SSO 認證', 'error');
+                return;
+            }
+
+            try {
+                log(`獲取點數資料: ${currentUser.id}`);
+                const response = await fetch(`/api/account-center/credits/${currentUser.id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                const data = await response.json();
+                log(`點數資料: ${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                log(`點數資料錯誤: ${error.message}`, 'error');
+            }
+        }
+
+        async function testMembership() {
+            if (!currentUser) {
+                log('請先進行 Google SSO 認證', 'error');
+                return;
+            }
+
+            try {
+                log(`獲取會員資料: ${currentUser.id}`);
+                const response = await fetch(`/api/account-center/membership/${currentUser.id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                const data = await response.json();
+                log(`會員資料: ${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                log(`會員資料錯誤: ${error.message}`, 'error');
+            }
+        }
+
+        // 初始化頁面
+        window.onload = function() {
+            log('會員中心測試頁面已載入');
+            testHealthCheck();
+        };
+    </script>
+</body>
+</html>

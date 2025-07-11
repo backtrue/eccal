@@ -4,6 +4,7 @@ import { db } from './db';
 import { users, userCredits, userReferrals } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -69,6 +70,7 @@ export function setupAccountCenterRoutes(app: Express) {
   // 應用 CORS 中間件到所有帳號中心路由
   app.use('/api/sso', corsMiddleware);
   app.use('/api/account-center', corsMiddleware);
+  app.use('/api/auth', corsMiddleware);
 
   // ==================== SSO 認證端點 ====================
   
@@ -185,6 +187,157 @@ export function setupAccountCenterRoutes(app: Express) {
       res.redirect(returnTo);
     } else {
       res.json({ success: true, message: 'Logged out successfully' });
+    }
+  });
+
+  // ==================== Google SSO 認證端點 ====================
+  
+  /**
+   * Google SSO 認證端點
+   * 專門為子域名服務提供的 Google OAuth 整合
+   */
+  app.post('/api/auth/google-sso', async (req: Request, res: Response) => {
+    try {
+      const { email, name, picture, service } = req.body;
+      
+      // 驗證必要欄位
+      if (!email || !name || !service) {
+        return res.status(400).json({
+          success: false,
+          error: '缺少必要欄位 (email, name, service)',
+          code: 'MISSING_REQUIRED_FIELDS'
+        });
+      }
+      
+      console.log('Google SSO 認證請求:', {
+        email,
+        name,
+        service,
+        origin: req.headers.origin
+      });
+      
+      // 檢查或創建用戶
+      let user = await db.select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+      
+      let userId: string;
+      
+      if (user.length === 0) {
+        // 創建新用戶
+        console.log('創建新用戶:', email);
+        const newUserId = crypto.randomUUID(); // 生成唯一 ID
+        const newUser = await db.insert(users)
+          .values({
+            id: newUserId,
+            email,
+            firstName: name.split(' ')[0],
+            lastName: name.split(' ').slice(1).join(' ') || '',
+            profileImageUrl: picture,
+            membershipLevel: 'free',
+            membershipExpires: null,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          })
+          .returning();
+        
+        userId = newUser[0].id;
+        
+        // 為新用戶創建初始點數記錄
+        await db.insert(userCredits)
+          .values({
+            userId: userId,
+            totalEarned: 30, // 新用戶贈送 30 點
+            totalSpent: 0,
+            balance: 30,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
+        
+        console.log('新用戶創建成功，贈送 30 點數');
+      } else {
+        userId = user[0].id;
+        
+        // 更新現有用戶資料
+        await db.update(users)
+          .set({
+            firstName: name.split(' ')[0],
+            lastName: name.split(' ').slice(1).join(' ') || '',
+            profileImageUrl: picture,
+            updatedAt: new Date()
+          })
+          .where(eq(users.id, userId));
+        
+        console.log('現有用戶資料更新成功');
+      }
+      
+      // 獲取完整的用戶資料
+      const fullUser = await db.select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      
+      if (fullUser.length === 0) {
+        return res.status(500).json({
+          success: false,
+          error: '用戶資料獲取失敗',
+          code: 'USER_DATA_ERROR'
+        });
+      }
+      
+      // 獲取用戶點數
+      const userCreditsData = await db.select()
+        .from(userCredits)
+        .where(eq(userCredits.userId, userId))
+        .limit(1);
+      
+      const credits = userCreditsData.length > 0 ? userCreditsData[0].balance : 0;
+      
+      // 生成 JWT Token
+      const token = jwt.sign(
+        {
+          sub: userId,
+          email: fullUser[0].email,
+          name: fullUser[0].name,
+          service: service,
+          iss: 'eccal.thinkwithblack.com',
+          aud: req.headers.origin || 'unknown'
+        },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+      
+      // 準備回應資料
+      const responseData = {
+        success: true,
+        token,
+        user: {
+          id: userId,
+          email: fullUser[0].email,
+          name: fullUser[0].name,
+          membership: fullUser[0].membershipLevel || 'Free',
+          credits: credits,
+          profileImageUrl: fullUser[0].picture
+        }
+      };
+      
+      console.log('Google SSO 認證成功:', {
+        userId,
+        email: fullUser[0].email,
+        service,
+        credits
+      });
+      
+      res.json(responseData);
+      
+    } catch (error) {
+      console.error('Google SSO 認證錯誤:', error);
+      res.status(500).json({
+        success: false,
+        error: '認證處理失敗',
+        code: 'AUTHENTICATION_ERROR'
+      });
     }
   });
 

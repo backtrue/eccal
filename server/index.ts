@@ -8,8 +8,12 @@ import { setupJWTGoogleAuth, jwtMiddleware } from './jwtAuth';
 // -------------------- 1. 基礎設定 --------------------
 const app = express();
 
-// -------------------- 1.5. Facebook 資料刪除端點 (最高優先級) --------------------
-// 此端點必須在所有中間件之前註冊，包括 JSON 解析器
+// -------------------- 1.5. 高優先級 API 端點 --------------------
+// 這些端點必須在所有中間件之前註冊，避免被 Vite 攔截
+
+// Google SSO 認證端點將在 accountCenterRoutes.ts 中註冊
+
+// Facebook 資料刪除端點
 app.use('/api/facebook/data-deletion', express.json(), (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
