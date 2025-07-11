@@ -3,9 +3,11 @@
 ## ✅ 修復完成 - 所有端點正常運作
 
 ### 🔧 修復的問題
-1. **資料庫字段映射** - 修正了 `profileImageUrl` 和 `name` 字段的映射問題
-2. **JSON 響應格式** - 所有端點現在正確返回 JSON 格式而非 HTML
-3. **Content-Type 標頭** - 所有 API 端點現在正確設置 `application/json`
+1. **生產環境路由衝突** - 修正了 Vite 靜態檔案服務攔截 API 端點的問題
+2. **Google SSO 端點** - 移至高優先級位置，避免被前端路由攔截
+3. **JSON 響應格式** - 所有端點現在正確返回 JSON 格式而非 HTML
+4. **Content-Type 標頭** - 所有 API 端點現在正確設置 `application/json`
+5. **CORS 設定** - 完整的跨域支援，支援所有 5 個子域名服務
 
 ### 📊 測試結果
 - **測試數量**: 12 個端點

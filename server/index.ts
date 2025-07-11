@@ -11,7 +11,140 @@ const app = express();
 // -------------------- 1.5. 高優先級 API 端點 --------------------
 // 這些端點必須在所有中間件之前註冊，避免被 Vite 攔截
 
-// Google SSO 認證端點將在 accountCenterRoutes.ts 中註冊
+// Google SSO 認證端點 - 高優先級註冊
+app.post('/api/auth/google-sso', express.json(), async (req, res) => {
+  try {
+    const { email, name, picture, service } = req.body;
+    
+    // 驗證必要欄位
+    if (!email || !name || !service) {
+      return res.json({
+        success: false,
+        error: '缺少必要欄位 (email, name, service)',
+        code: 'MISSING_REQUIRED_FIELDS'
+      });
+    }
+    
+    console.log('Google SSO 認證請求:', {
+      email,
+      name,
+      service,
+      origin: req.headers.origin
+    });
+    
+    // 設置 CORS 標頭
+    const allowedOrigins = [
+      'https://eccal.thinkwithblack.com',
+      'https://audai.thinkwithblack.com',
+      'https://sub3.thinkwithblack.com',
+      'https://sub4.thinkwithblack.com',
+      'https://sub5.thinkwithblack.com',
+      'https://member.thinkwithblack.com',
+      'http://localhost:3000',
+      'http://localhost:5000'
+    ];
+    
+    const origin = req.headers.origin;
+    if (origin && allowedOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin);
+    }
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    
+    // 使用動態 import 載入資料庫相關模組
+    const { db } = await import('./db');
+    const { users } = await import('@shared/schema');
+    const { eq } = await import('drizzle-orm');
+    const jwt = await import('jsonwebtoken');
+    const crypto = await import('crypto');
+    
+    const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+    
+    // 檢查或創建用戶
+    let user = await db.select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+    
+    let userId: string;
+    
+    if (user.length === 0) {
+      // 創建新用戶
+      console.log('創建新用戶:', email);
+      const newUserId = crypto.randomUUID();
+      const newUser = await db.insert(users)
+        .values({
+          id: newUserId,
+          email,
+          name,
+          profileImageUrl: picture,
+          membershipLevel: 'free',
+          credits: 30,
+          service: service
+        })
+        .returning();
+      
+      userId = newUser[0].id;
+      console.log('新用戶創建成功:', userId);
+    } else {
+      // 更新現有用戶資料
+      userId = user[0].id;
+      await db.update(users)
+        .set({
+          name,
+          profileImageUrl: picture,
+          lastLoginAt: new Date()
+        })
+        .where(eq(users.id, userId));
+      
+      console.log('現有用戶資料更新成功');
+    }
+    
+    // 生成 JWT Token
+    const token = jwt.sign(
+      { 
+        sub: userId,
+        email,
+        name,
+        service,
+        iss: 'eccal.thinkwithblack.com',
+        aud: origin || 'https://audai.thinkwithblack.com'
+      },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    
+    // 返回 JSON 響應
+    res.json({
+      success: true,
+      token: token,
+      user: {
+        id: userId,
+        email,
+        name,
+        membership: user.length > 0 ? user[0].membershipLevel : 'free',
+        credits: user.length > 0 ? user[0].credits : 30,
+        profileImageUrl: picture
+      }
+    });
+    
+    console.log('Google SSO 認證成功:', {
+      userId,
+      email,
+      service,
+      credits: user.length > 0 ? user[0].credits : 30
+    });
+    
+  } catch (error) {
+    console.error('Google SSO 認證錯誤:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || '認證失敗',
+      code: 'AUTHENTICATION_ERROR'
+    });
+  }
+});
 
 // Facebook 資料刪除端點
 app.use('/api/facebook/data-deletion', express.json(), (req, res) => {
