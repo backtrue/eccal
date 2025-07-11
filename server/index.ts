@@ -56,7 +56,7 @@ app.post('/api/auth/google-sso', express.json(), async (req, res) => {
     const { db } = await import('./db');
     const { users } = await import('@shared/schema');
     const { eq } = await import('drizzle-orm');
-    const jwt = await import('jsonwebtoken');
+    const { default: jwt } = await import('jsonwebtoken');
     const crypto = await import('crypto');
     
     const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -401,7 +401,7 @@ app.post('/api/sso/verify-token', express.json(), async (req, res) => {
     }
     
     // 使用動態 import 載入 jwt
-    const jwt = await import('jsonwebtoken');
+    const { default: jwt } = await import('jsonwebtoken');
     const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
     
     try {

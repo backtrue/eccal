@@ -28,6 +28,7 @@ export const sessions = pgTable(
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()), // Auto-generate UUID
   email: varchar("email").unique(),
+  name: varchar("name"), // Full name for SSO
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
@@ -44,6 +45,10 @@ export const users = pgTable("users", {
   stripeCustomerId: varchar("stripe_customer_id"), // Stripe customer ID
   stripeSubscriptionId: varchar("stripe_subscription_id"), // Current subscription ID
   subscriptionStatus: varchar("subscription_status"), // "active", "canceled", "incomplete", etc.
+  // Sub-service integration
+  service: varchar("service"), // Track which service the user signed up from
+  credits: integer("credits").default(30).notNull(), // User credits for services
+  lastLoginAt: timestamp("last_login_at"), // Track last login time
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
