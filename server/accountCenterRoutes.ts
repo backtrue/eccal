@@ -11,8 +11,10 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const ALLOWED_ORIGINS = [
   'https://eccal.thinkwithblack.com',
   'https://audai.thinkwithblack.com',
-  'https://site-a.com',
-  'https://site-b.com',
+  'https://sub3.thinkwithblack.com',
+  'https://sub4.thinkwithblack.com',
+  'https://sub5.thinkwithblack.com',
+  'https://member.thinkwithblack.com',
   'http://localhost:3000', // 開發環境
   'http://localhost:5000', // 開發環境
 ];
@@ -20,9 +22,37 @@ const ALLOWED_ORIGINS = [
 // CORS 中間件
 const corsMiddleware = (req: Request, res: Response, next: any) => {
   const origin = req.headers.origin;
+  const referer = req.headers.referer;
+  
+  // 詳細日誌用於診斷
+  console.log('CORS check:', {
+    origin,
+    referer,
+    method: req.method,
+    url: req.url,
+    allowedOrigins: ALLOWED_ORIGINS
+  });
+  
+  // 檢查 origin 或 referer
+  let isAllowed = false;
   if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    isAllowed = true;
     res.header('Access-Control-Allow-Origin', origin);
+  } else if (referer) {
+    // 如果沒有 origin，檢查 referer
+    const refererOrigin = new URL(referer).origin;
+    if (ALLOWED_ORIGINS.includes(refererOrigin)) {
+      isAllowed = true;
+      res.header('Access-Control-Allow-Origin', refererOrigin);
+    }
   }
+  
+  // 如果都沒有匹配，但是是開發環境，也允許
+  if (!isAllowed && process.env.NODE_ENV === 'development') {
+    console.log('Development mode: allowing all origins');
+    res.header('Access-Control-Allow-Origin', '*');
+  }
+  
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
@@ -47,16 +77,43 @@ export function setupAccountCenterRoutes(app: Express) {
    */
   app.get('/api/sso/login', (req: Request, res: Response) => {
     const { returnTo, origin } = req.query;
+    const requestOrigin = (origin as string) || req.headers.origin || req.headers.referer;
     
-    // 驗證來源域名
-    if (origin && !ALLOWED_ORIGINS.includes(origin as string)) {
-      return res.status(403).json({ error: 'Unauthorized origin' });
+    console.log('SSO login request:', {
+      returnTo,
+      origin,
+      requestOrigin,
+      headers: {
+        origin: req.headers.origin,
+        referer: req.headers.referer,
+        'user-agent': req.headers['user-agent']
+      }
+    });
+    
+    // 驗證來源域名 - 更寬鬆的檢查
+    if (requestOrigin) {
+      try {
+        const checkOrigin = requestOrigin.startsWith('http') ? requestOrigin : `https://${requestOrigin}`;
+        const originUrl = new URL(checkOrigin);
+        const originBase = `${originUrl.protocol}//${originUrl.hostname}`;
+        
+        if (!ALLOWED_ORIGINS.includes(originBase)) {
+          console.log('Origin not allowed:', { requestOrigin, originBase, allowedOrigins: ALLOWED_ORIGINS });
+          return res.status(403).json({ 
+            error: 'Unauthorized origin',
+            requestOrigin: originBase,
+            allowedOrigins: ALLOWED_ORIGINS
+          });
+        }
+      } catch (e) {
+        console.log('Origin parsing error:', e.message);
+      }
     }
     
     // 將 returnTo 和 origin 儲存到 session 或 state
     const state = Buffer.from(JSON.stringify({ 
       returnTo: returnTo || '/',
-      origin: origin || req.headers.origin
+      origin: requestOrigin || req.headers.origin
     })).toString('base64');
     
     // 重定向到 Google OAuth 登入
@@ -358,6 +415,24 @@ export function setupAccountCenterRoutes(app: Express) {
       origins: ALLOWED_ORIGINS,
       timestamp: new Date().toISOString()
     });
+  });
+
+  // 診斷端點 - 幫助調試 CORS 問題
+  app.get('/api/account-center/debug', (req: Request, res: Response) => {
+    const info = {
+      timestamp: new Date().toISOString(),
+      headers: req.headers,
+      origin: req.headers.origin,
+      referer: req.headers.referer,
+      userAgent: req.headers['user-agent'],
+      allowedOrigins: ALLOWED_ORIGINS,
+      method: req.method,
+      url: req.url,
+      query: req.query
+    };
+    
+    console.log('Debug request:', info);
+    res.json(info);
   });
 
   console.log('Account Center SSO routes initialized');

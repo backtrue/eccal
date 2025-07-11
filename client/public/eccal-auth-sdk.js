@@ -129,24 +129,40 @@ class EccalAuth {
      * 驗證 token 有效性
      */
     async verifyToken(token) {
+        console.log('Verifying token with:', {
+            baseUrl: this.baseUrl,
+            origin: window.location.origin,
+            token: token ? 'present' : 'missing'
+        });
+        
         try {
             const response = await fetch(`${this.baseUrl}/api/sso/verify-token`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Origin': window.location.origin
                 },
-                credentials: 'include'
+                credentials: 'include',
+                body: JSON.stringify({ token })
             });
 
-            if (response.ok) {
-                const data = await response.json();
-                return data.user;
-            } else {
-                throw new Error('Token verification failed');
+            console.log('Token verification response:', {
+                status: response.status,
+                statusText: response.statusText,
+                headers: Object.fromEntries(response.headers.entries())
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Token verification failed:', errorText);
+                throw new Error(`Token verification failed: ${response.status} - ${errorText}`);
             }
+
+            const data = await response.json();
+            return data.valid ? data.user : null;
         } catch (error) {
-            throw new Error('Token verification request failed: ' + error.message);
+            console.error('Token verification error:', error);
+            throw error;
         }
     }
 
@@ -220,21 +236,36 @@ class EccalAuth {
             throw new Error('User not authenticated');
         }
 
+        console.log('Fetching user details:', {
+            userId,
+            baseUrl: this.baseUrl,
+            origin: window.location.origin
+        });
+
         try {
             const response = await fetch(`${this.baseUrl}/api/account-center/user/${userId}`, {
                 headers: {
-                    'Authorization': `Bearer ${this.token}`
+                    'Authorization': `Bearer ${this.token}`,
+                    'Origin': window.location.origin
                 },
                 credentials: 'include'
             });
 
-            if (response.ok) {
-                return await response.json();
-            } else {
-                throw new Error('Failed to fetch user details');
+            console.log('User details response:', {
+                status: response.status,
+                statusText: response.statusText
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('User details request failed:', errorText);
+                throw new Error(`Failed to fetch user details: ${response.status} - ${errorText}`);
             }
+
+            return await response.json();
         } catch (error) {
-            throw new Error('User details request failed: ' + error.message);
+            console.error('User details request error:', error);
+            throw error;
         }
     }
 
