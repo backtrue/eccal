@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>子服務 - 統一登入系統</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+        
+        .google-login-btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .google-login-btn:hover {
+            background: #357ae8;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(66, 133, 244, 0.3);
+        }
+        
+        .google-icon {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .user-card {
+            background: #f8f9fa;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            object-fit: cover;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .user-name {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .user-email {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+        
+        .user-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 16px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #4285f4;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .logout-btn:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+        }
+        
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4285f4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        
+        .service-info {
+            margin-top: 24px;
+            padding: 16px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #1976d2;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 登入前顯示 -->
+        <div id="login-section">
+            <div class="logo">🔐 統一登入</div>
+            <div class="subtitle">使用 Google 帳號登入所有子服務</div>
+            
+            <div id="error-container"></div>
+            
+            <button class="google-login-btn" onclick="handleGoogleLogin()">
+                <div class="google-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24">
+                        <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                </div>
+                使用 Google 登入
+            </button>
+            
+            <div class="service-info">
+                <strong>首次登入自動獲得 30 點數獎勵</strong><br>
+                登入後可使用所有子服務功能
+            </div>
+        </div>
+        
+        <!-- 登入後顯示 -->
+        <div id="user-section" class="hidden">
+            <div class="user-card">
+                <img id="user-avatar" class="user-avatar" src="" alt="用戶頭像">
+                <div id="user-name" class="user-name"></div>
+                <div id="user-email" class="user-email"></div>
+                
+                <div class="user-stats">
+                    <div class="stat-item">
+                        <div id="user-credits" class="stat-value">0</div>
+                        <div class="stat-label">點數餘額</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="user-membership" class="stat-value">Free</div>
+                        <div class="stat-label">會員等級</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="service-info">
+                <strong>✅ 已登入統一帳號系統</strong><br>
+                現在可以使用所有子服務功能
+            </div>
+            
+            <button class="logout-btn" onclick="handleLogout()">
+                登出
+            </button>
+        </div>
+        
+        <!-- 載入中狀態 -->
+        <div id="loading-section" class="hidden">
+            <div class="loading">
+                <div class="spinner"></div>
+                <div>正在載入用戶資料...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 載入 Authentication SDK -->
+    <script src="https://eccal.thinkwithblack.com/eccal-auth-sdk.js"></script>
+    
+    <script>
+        // 子服務登入整合腳本
+        const AUTH_CONFIG = {
+            baseURL: 'https://eccal.thinkwithblack.com',
+            returnURL: window.location.origin
+        };
+
+        // 頁面載入時檢查登入狀態
+        document.addEventListener('DOMContentLoaded', function() {
+            handleOAuthCallback();
+            checkAuthStatus();
+        });
+
+        // 處理 OAuth 回調
+        function handleOAuthCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            if (urlParams.get('auth_success') === 'true') {
+                const token = urlParams.get('token');
+                if (token) {
+                    localStorage.setItem('eccal_auth_token', token);
+                    // 清除 URL 參數
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    checkAuthStatus();
+                }
+            } else if (urlParams.get('auth_error') === 'true') {
+                const errorMsg = urlParams.get('error') || '登入失敗';
+                showError(`登入錯誤: ${errorMsg}`);
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+
+        // 檢查用戶登入狀態
+        async function checkAuthStatus() {
+            const token = localStorage.getItem('eccal_auth_token');
+            
+            if (!token) {
+                showLoginSection();
+                return;
+            }
+
+            try {
+                showLoadingSection();
+                
+                // 驗證 Token 有效性
+                const isValid = await EccalAuth.verifyToken();
+                if (!isValid) {
+                    localStorage.removeItem('eccal_auth_token');
+                    showLoginSection();
+                    return;
+                }
+                
+                // 獲取用戶資料
+                const userData = await EccalAuth.getUserData();
+                
+                if (userData) {
+                    showUserSection(userData);
+                } else {
+                    localStorage.removeItem('eccal_auth_token');
+                    showLoginSection();
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                showError('載入用戶資料失敗，請重新登入');
+                localStorage.removeItem('eccal_auth_token');
+                showLoginSection();
+            }
+        }
+
+        // 處理 Google 登入
+        function handleGoogleLogin() {
+            const loginURL = `${AUTH_CONFIG.baseURL}/api/auth/google-sso?returnTo=${encodeURIComponent(AUTH_CONFIG.returnURL)}`;
+            window.location.href = loginURL;
+        }
+
+        // 處理登出
+        function handleLogout() {
+            localStorage.removeItem('eccal_auth_token');
+            showLoginSection();
+        }
+
+        // 顯示登入區塊
+        function showLoginSection() {
+            document.getElementById('login-section').classList.remove('hidden');
+            document.getElementById('user-section').classList.add('hidden');
+            document.getElementById('loading-section').classList.add('hidden');
+        }
+
+        // 顯示用戶區塊
+        function showUserSection(userData) {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('user-section').classList.remove('hidden');
+            document.getElementById('loading-section').classList.add('hidden');
+            
+            // 更新用戶資訊
+            document.getElementById('user-name').textContent = userData.name;
+            document.getElementById('user-email').textContent = userData.email;
+            document.getElementById('user-credits').textContent = userData.credits || 0;
+            document.getElementById('user-membership').textContent = userData.membershipLevel || 'Free';
+            
+            // 設置用戶頭像
+            const avatarImg = document.getElementById('user-avatar');
+            if (userData.picture) {
+                avatarImg.src = userData.picture;
+                avatarImg.style.display = 'block';
+            } else {
+                avatarImg.style.display = 'none';
+            }
+        }
+
+        // 顯示載入中
+        function showLoadingSection() {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('user-section').classList.add('hidden');
+            document.getElementById('loading-section').classList.remove('hidden');
+        }
+
+        // 顯示錯誤訊息
+        function showError(message) {
+            const errorContainer = document.getElementById('error-container');
+            errorContainer.innerHTML = `<div class="error-message">${message}</div>`;
+            setTimeout(() => {
+                errorContainer.innerHTML = '';
+            }, 5000);
+        }
+
+        // 監聽 localStorage 變化（跨標籤頁同步）
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'eccal_auth_token') {
+                if (e.newValue) {
+                    checkAuthStatus();
+                } else {
+                    showLoginSection();
+                }
+            }
+        });
+
+        // 定期檢查 Token 有效性（每 5 分鐘）
+        setInterval(async () => {
+            const token = localStorage.getItem('eccal_auth_token');
+            if (token) {
+                try {
+                    const isValid = await EccalAuth.verifyToken();
+                    if (!isValid) {
+                        localStorage.removeItem('eccal_auth_token');
+                        showError('登入已過期，請重新登入');
+                        showLoginSection();
+                    }
+                } catch (error) {
+                    console.error('Token validation failed:', error);
+                }
+            }
+        }, 5 * 60 * 1000); // 5 分鐘
+
+        // 頁面 visibility 變化時重新檢查（用戶切換標籤頁回來時）
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                const token = localStorage.getItem('eccal_auth_token');
+                if (token) {
+                    checkAuthStatus();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
