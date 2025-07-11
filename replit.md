@@ -263,6 +263,12 @@ Changelog:
 
 ## User Preferences
 
+- July 11, 2025. Fixed V4.1.1 - AudAI Authentication CORS Issues Resolution. Resolved "Unauthorized origin" error in audai.thinkwithblack.com by enhancing CORS middleware with comprehensive origin checking (both origin and referer headers), improved error handling, and detailed logging for debugging. Updated allowed origins list to include all 5 planned subdomain services. Enhanced eccal-auth-sdk.js with better error reporting and authentication flow logging. Fixed SSO login endpoint to handle origin parsing more flexibly. Added diagnostic endpoint for CORS troubleshooting. System now properly handles cross-domain authentication requests from all subdomain services.
+- July 11, 2025. Enhanced V4.1.2 - Complete Replit Integration Documentation. Created comprehensive REPLIT_SUBDOMAIN_INTEGRATION_GUIDE.md specifically for Replit agents working on subdomain services. Document includes complete HTML integration template with authentication SDK, detailed API endpoints documentation, step-by-step Replit deployment instructions, troubleshooting guide, and testing checklist. All subdomain services (audai, sub3, sub4, sub5, member) can now use this guide for seamless integration with central authentication system. Guide provides complete copy-paste ready code and eliminates integration complexity for other development teams.
+```
+
+## User Preferences
+
 ```
 Preferred communication style: Simple, everyday language.
 ```
