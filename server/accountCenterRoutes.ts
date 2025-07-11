@@ -10,6 +10,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 // 允許的外部域名清單
 const ALLOWED_ORIGINS = [
   'https://eccal.thinkwithblack.com',
+  'https://audai.thinkwithblack.com',
   'https://site-a.com',
   'https://site-b.com',
   'http://localhost:3000', // 開發環境
