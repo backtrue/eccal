@@ -279,15 +279,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Credit system routes
+  // Credit system routes - 統一使用 users 表中的 credits 欄位
   app.get('/api/credits', requireJWTAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const credits = await storage.getUserCredits(userId);
+      
+      // 使用 users 表中的 credits 欄位，與 Account Center 保持一致
+      const { db } = await import('./db');
+      const { users } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      
+      if (user.length === 0) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const currentCredits = user[0].credits || 0;
       const transactions = await storage.getCreditTransactions(userId);
       
       res.json({
-        credits: credits || { balance: 0, totalEarned: 0, totalSpent: 0 },
+        credits: { 
+          balance: currentCredits, 
+          totalEarned: currentCredits, 
+          totalSpent: 0 
+        },
         transactions
       });
     } catch (error) {
@@ -301,18 +317,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const { amount, description } = req.body;
       
-      const credits = await storage.getUserCredits(userId);
-      if (!credits || credits.balance < amount) {
+      // 使用 users 表中的 credits 欄位，與 Account Center 保持一致
+      const { db } = await import('./db');
+      const { users } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      
+      if (user.length === 0) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const currentCredits = user[0].credits || 0;
+      
+      if (currentCredits < amount) {
         return res.status(400).json({ message: "Insufficient credits" });
       }
       
-      // Update credits
-      await storage.updateUserCredits(
-        userId,
-        credits.balance - amount,
-        credits.totalEarned,
-        credits.totalSpent + amount
-      );
+      // 更新 users 表中的 credits
+      await db.update(users)
+        .set({ credits: currentCredits - amount })
+        .where(eq(users.id, userId));
       
       // Add transaction
       await storage.addCreditTransaction({
