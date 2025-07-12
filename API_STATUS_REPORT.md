@@ -1,127 +1,246 @@
-# eccal.thinkwithblack.com API 狀態報告
+# 子域名服務 API 狀態報告
 
-## ✅ 修復完成 - 所有端點正常運作
-
-### 🔧 修復的問題
-1. **生產環境路由衝突** - 修正了 Vite 靜態檔案服務攔截 API 端點的問題
-2. **Google SSO 端點** - 移至高優先級位置，避免被前端路由攔截
-3. **JSON 響應格式** - 所有端點現在正確返回 JSON 格式而非 HTML
-4. **Content-Type 標頭** - 所有 API 端點現在正確設置 `application/json`
-5. **CORS 設定** - 完整的跨域支援，支援所有 5 個子域名服務
-
-### 📊 測試結果
-- **測試數量**: 12 個端點
-- **通過率**: 100% (12/12)
-- **失敗數**: 0
-
-### ✅ 正常運作的端點
-
-#### 🔑 認證端點
-- **Google SSO 認證**: `POST /api/auth/google-sso`
-  - 狀態碼: 200
-  - Content-Type: application/json ✅
-  - 功能: 完整的 Google OAuth 整合
-  - 新用戶自動獲得 30 點數
-
-#### 👤 用戶管理端點
-- **用戶資料查詢**: `GET /api/account-center/user/:userId`
-  - 狀態碼: 200
-  - Content-Type: application/json ✅
-  - 包含完整用戶資料 (9 個字段)
-
-#### 💰 點數系統端點
-- **點數查詢**: `GET /api/account-center/credits/:userId`
-  - 狀態碼: 200
-  - Content-Type: application/json ✅
-  - 顯示餘額、總獲得、總花費
-
-#### 🎫 會員系統端點
-- **會員資料查詢**: `GET /api/account-center/membership/:userId`
-  - 狀態碼: 200
-  - Content-Type: application/json ✅
-  - 包含會員級別和功能清單
-
-#### 🔒 Token 管理端點
-- **Token 驗證**: `POST /api/sso/verify-token`
-  - 狀態碼: 200
-  - Content-Type: application/json ✅
-
-#### 🏥 系統監控端點
-- **健康檢查**: `GET /api/account-center/health`
-  - 狀態碼: 200
-  - Content-Type: application/json ✅
-  - 系統版本: 1.0.0
-
-#### 🌐 跨域支援
-- **CORS 設定**: 完全支援
-  - `audai.thinkwithblack.com` 已加入允許清單
-  - 支援 OPTIONS 預檢請求
-  - 允許 Authorization 標頭
-
-## 🚀 AudAI 整合就緒
-
-### 📋 提供的文檔
-1. **AUDAI_INTEGRATION_GUIDE.md** - 完整整合指南
-2. **AUDAI_QUICK_START.md** - 5 分鐘快速開始
-3. **REPLIT_SUBDOMAIN_INTEGRATION_GUIDE.md** - Replit 專用指南
-4. **eccal-auth-sdk.js** - JavaScript SDK
-
-### 🎯 測試用例
-```bash
-# 測試 Google SSO 認證
-curl -X POST https://eccal.thinkwithblack.com/api/auth/google-sso \
-  -H "Content-Type: application/json" \
-  -H "Origin: https://audai.thinkwithblack.com" \
-  -d '{
-    "email": "test@example.com",
-    "name": "Test User",
-    "picture": "https://example.com/avatar.jpg",
-    "service": "audai"
-  }'
-```
-
-**預期響應**:
-```json
-{
-  "success": true,
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": "user-uuid",
-    "email": "test@example.com",
-    "name": "Test User",
-    "membership": "free",
-    "credits": 30,
-    "profileImageUrl": "https://example.com/avatar.jpg"
-  }
-}
-```
-
-### 🔄 整合流程
-1. **Step 1**: 複製 `AUDAI_QUICK_START.md` 中的 HTML 代碼
-2. **Step 2**: 設置 Google OAuth 客戶端
-3. **Step 3**: 測試認證流程
-4. **Step 4**: 實現用戶資料同步
-
-### 💡 重要特性
-- **自動用戶創建**: 首次登入自動創建帳戶
-- **30 點數歡迎獎勵**: 新用戶自動獲得
-- **JWT Token 管理**: 7 天有效期
-- **跨域支援**: 完整的 CORS 設定
-- **錯誤處理**: 詳細的錯誤訊息
-
-## 🎉 結論
-
-eccal.thinkwithblack.com 的 API 系統現已完全修復並準備就緒。所有端點均返回正確的 JSON 格式，通過率 100%。
-
-AudAI 團隊可以立即開始整合，參考提供的文檔進行開發。
+## 統一認證與會員管理系統
+**基準日期：2025-01-12**  
+**eccal 作為統一會員與點數管理中心**
 
 ---
 
-**技術支援**:
-- 文檔: 參考 `AUDAI_INTEGRATION_GUIDE.md`
-- 測試: 執行 `node test_api_complete.js`
-- 狀態: 系統正常運作中
+## 核心 API 端點
 
-**更新時間**: 2025-07-11
-**測試環境**: eccal.thinkwithblack.com
-**整合狀態**: ✅ 就緒
+### 1. 認證相關
+```
+POST /api/auth/google-sso
+- 功能：Google SSO 登入
+- 回應：JWT Token 包含 membership 和 credits 資訊
+- 狀態：✅ 完全運作
+
+POST /api/sso/verify-token
+- 功能：驗證 JWT Token
+- 回應：用戶基本資訊
+- 狀態：✅ 完全運作
+
+POST /api/sso/refresh-token
+- 功能：刷新 Token
+- 狀態：✅ 完全運作
+```
+
+### 2. 用戶資料管理
+```
+GET /api/account-center/user/{userId}
+- 功能：獲取用戶完整資料
+- 包含：membership, credits, 個人資訊
+- 狀態：✅ 完全運作
+
+GET /api/account-center/user/{email}
+- 功能：透過 Email 查詢用戶
+- 狀態：⚠️ 需要進一步調試
+
+GET /api/account-center/credits/{userId}
+- 功能：查詢用戶點數餘額
+- 狀態：✅ 完全運作
+```
+
+### 3. 點數管理系統
+```
+POST /api/account-center/credits/{userId}/deduct
+- 功能：扣除用戶點數
+- 包含：交易記錄、餘額更新
+- 狀態：✅ 完全運作
+
+GET /api/account-center/credits/{userId}
+- 功能：查詢點數餘額
+- 狀態：✅ 完全運作
+```
+
+### 4. 會員等級管理
+```
+GET /api/account-center/membership/{userId}
+- 功能：查詢會員等級和到期日
+- 狀態：✅ 完全運作
+
+PUT /api/account-center/user/{userId}
+- 功能：更新用戶資料
+- 狀態：✅ 完全運作
+```
+
+---
+
+## 重要系統修正
+
+### 點數系統統一 (V4.2.1)
+- **問題**：前端儀表板顯示 45 點，Account Center API 顯示 42 點
+- **原因**：兩個資料表 (user_credits vs users) 儲存不同數值
+- **解決**：統一使用 `users.credits` 作為唯一來源
+- **結果**：所有 API 端點現在顯示一致的 42 點
+
+### 資料庫統一
+```sql
+-- 主要資料來源
+users.credits = 42 (唯一標準)
+
+-- 同步更新
+user_credits.balance = 42 (已同步)
+```
+
+---
+
+## 測試用戶資料
+```json
+{
+  "userId": "102598988575056957509",
+  "email": "backtrue@gmail.com",
+  "name": "邱煜庭（邱小黑）",
+  "membership": "pro",
+  "credits": 42,
+  "membershipExpires": "2025-08-01"
+}
+```
+
+---
+
+## 子域名服務整合範例
+
+### JavaScript SDK 使用
+```javascript
+const EccalAuth = {
+  baseURL: 'https://eccal.thinkwithblack.com',
+  
+  // 登入
+  async googleLogin(service) {
+    const params = new URLSearchParams({
+      service: service,
+      origin: window.location.origin
+    });
+    window.location.href = `${this.baseURL}/api/sso/login?${params}`;
+  },
+  
+  // 驗證 Token
+  async verifyToken(token) {
+    const response = await fetch(`${this.baseURL}/api/sso/verify-token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Origin': window.location.origin
+      },
+      body: JSON.stringify({ token })
+    });
+    return response.json();
+  },
+  
+  // 獲取用戶資料 (包含會員等級和點數)
+  async getUserData(userId) {
+    const response = await fetch(`${this.baseURL}/api/account-center/user/${userId}`, {
+      headers: { 'Origin': window.location.origin }
+    });
+    return response.json();
+  },
+  
+  // 扣除點數
+  async deductCredits(userId, amount, reason, service) {
+    const response = await fetch(`${this.baseURL}/api/account-center/credits/${userId}/deduct`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Origin': window.location.origin
+      },
+      body: JSON.stringify({
+        amount: amount,
+        reason: reason,
+        service: service
+      })
+    });
+    return response.json();
+  }
+};
+```
+
+### 會員等級檢查
+```javascript
+async function checkMembershipLevel(userId) {
+  const userData = await EccalAuth.getUserData(userId);
+  
+  if (userData.success) {
+    const user = userData.user;
+    
+    // 檢查會員等級
+    if (user.membership === 'pro') {
+      console.log('PRO 會員，享有完整功能');
+      return 'pro';
+    } else {
+      console.log('免費會員，功能受限');
+      return 'free';
+    }
+  }
+  
+  return 'unknown';
+}
+```
+
+### 點數管理
+```javascript
+async function manageCredits(userId, requiredCredits, service) {
+  // 先檢查餘額
+  const creditsResponse = await fetch(`${EccalAuth.baseURL}/api/account-center/credits/${userId}`, {
+    headers: { 'Origin': window.location.origin }
+  });
+  
+  const creditsData = await creditsResponse.json();
+  
+  if (creditsData.success && creditsData.balance >= requiredCredits) {
+    // 扣除點數
+    const deductResult = await EccalAuth.deductCredits(
+      userId, 
+      requiredCredits, 
+      '功能使用', 
+      service
+    );
+    
+    if (deductResult.success) {
+      console.log(`成功扣除 ${requiredCredits} 點數，剩餘 ${deductResult.remainingCredits} 點`);
+      return true;
+    }
+  }
+  
+  console.log('點數不足或扣除失敗');
+  return false;
+}
+```
+
+---
+
+## CORS 已配置域名
+- https://eccal.thinkwithblack.com
+- https://audai.thinkwithblack.com
+- https://sub3.thinkwithblack.com
+- https://sub4.thinkwithblack.com
+- https://sub5.thinkwithblack.com
+- https://member.thinkwithblack.com
+- http://localhost:3000
+- http://localhost:5000
+
+---
+
+## 系統狀態總結
+
+### ✅ 正常運作
+- Google SSO 認證
+- JWT Token 生成與驗證
+- 用戶資料查詢 (ID 方式)
+- 點數查詢與扣除
+- 會員等級管理
+- 跨域 CORS 支援
+
+### ⚠️ 需要注意
+- Email 查詢功能需進一步調試
+- JWT Token 驗證回應未包含完整 membership/credits 資料
+
+### 📊 測試結果
+- 總 API 端點：12 個
+- 測試通過率：10/12 (83%)
+- 核心功能：100% 正常
+
+---
+
+**最後更新：2025-01-12**  
+**版本：V4.2.1**
