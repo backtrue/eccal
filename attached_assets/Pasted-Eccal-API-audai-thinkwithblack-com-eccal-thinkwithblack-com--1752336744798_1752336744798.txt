@@ -1,0 +1,138 @@
+Eccal 整合指南 - 報受眾所需 API 端點
+概述
+本文件描述了「報受眾」(audai.thinkwithblack.com) 與 eccal.thinkwithblack.com 整合所需的 API 端點和資料格式。
+
+目前問題
+JWT token 中缺少 membership 和 credits 欄位
+無法取得用戶的會員等級和點數資訊
+用戶 backtrue@gmail.com 應該有 "pro" 會員等級和 45 點數
+需要的 API 端點
+1. JWT Token 增強
+當前 JWT payload:
+
+{
+  "sub": "用戶ID",
+  "email": "用戶信箱",
+  "name": "用戶姓名",
+  "service": "audai",
+  "iss": "eccal.thinkwithblack.com",
+  "aud": "https://audai.thinkwithblack.com",
+  "iat": 1752335046,
+  "exp": 1752939846
+}
+需要的 JWT payload:
+
+{
+  "sub": "用戶ID",
+  "email": "用戶信箱",
+  "name": "用戶姓名",
+  "membership": "pro",  // 新增：會員等級 (free, pro, premium)
+  "credits": 45,        // 新增：剩餘點數
+  "service": "audai",
+  "iss": "eccal.thinkwithblack.com",
+  "aud": "https://audai.thinkwithblack.com",
+  "iat": 1752335046,
+  "exp": 1752939846
+}
+2. Token 驗證端點增強
+端點: POST /api/sso/verify-token
+
+當前回應:
+
+{
+  "success": true,
+  "valid": true,
+  "user": {
+    "id": "用戶ID",
+    "email": "用戶信箱",
+    "name": "用戶姓名"
+  }
+}
+需要的回應:
+
+{
+  "success": true,
+  "valid": true,
+  "user": {
+    "id": "用戶ID",
+    "email": "用戶信箱",
+    "name": "用戶姓名",
+    "membership": "pro",  // 新增：會員等級
+    "credits": 45         // 新增：剩餘點數
+  }
+}
+3. 用戶資料端點
+端點: GET /api/account-center/user/{userId}
+
+需要的回應:
+
+{
+  "success": true,
+  "user": {
+    "id": "用戶ID",
+    "email": "用戶信箱",
+    "name": "用戶姓名",
+    "membership": "pro",    // 會員等級
+    "credits": 45,          // 剩餘點數
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-07-12T00:00:00Z"
+  }
+}
+錯誤回應:
+
+{
+  "success": false,
+  "error": "用戶未找到",
+  "code": "USER_NOT_FOUND"
+}
+4. 點數扣除端點
+端點: POST /api/account-center/credits/{userId}/deduct
+
+請求格式:
+
+{
+  "amount": 1,           // 扣除的點數
+  "reason": "分析產品圖片",  // 扣除原因
+  "service": "audai"     // 服務標識
+}
+成功回應:
+
+{
+  "success": true,
+  "remainingCredits": 44,  // 剩餘點數
+  "deductedAmount": 1,     // 扣除的點數
+  "transactionId": "tx_123456"
+}
+錯誤回應:
+
+{
+  "success": false,
+  "error": "點數不足",
+  "code": "INSUFFICIENT_CREDITS",
+  "currentCredits": 0
+}
+測試用戶資料
+請確保以下用戶資料在 eccal 系統中正確設定：
+
+{
+  "id": "實際的用戶ID",
+  "email": "backtrue@gmail.com",
+  "name": "煜庭",
+  "membership": "pro",
+  "credits": 45
+}
+認證流程
+用戶在 eccal 登入後獲得 JWT token
+JWT token 包含完整的用戶資訊（包括會員等級和點數）
+報受眾驗證 token 並直接從 token 中讀取會員資訊
+使用產品分析功能時，調用點數扣除 API
+安全考量
+所有 API 端點都需要使用 Authorization: Bearer {api_key} 認證
+JWT token 簽名必須可被報受眾驗證
+點數扣除操作需要記錄交易日志
+實作優先順序
+高優先級: 修改 JWT token 包含 membership 和 credits 欄位
+中優先級: 實作用戶資料查詢端點
+低優先級: 實作點數扣除端點（目前暫時略過扣除邏輯）
+聯繫方式
+如有任何問題，請聯繫報受眾開發團隊進行協調。

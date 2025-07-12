@@ -1,420 +1,311 @@
-# 子服務 SSO 整合指南
-## 跨網站登入系統實作手冊
+# 子域名 SSO 整合指南
 
-### 📋 概述
+## 概述
+本指南協助其他 Replit 專案整合 eccal.thinkwithblack.com 的統一認證系統。
 
-本指南說明如何將子服務 (audai.thinkwithblack.com、sub3.thinkwithblack.com 等) 與主服務 (eccal.thinkwithblack.com) 的統一認證系統整合。
+## 1. 快速整合步驟
 
-### 🎯 整合架構
-
-```
-主服務 (eccal.thinkwithblack.com)
-├── 認證中心 API
-├── 用戶資料庫
-├── JWT Token 管理
-└── 跨域 CORS 設定
-
-子服務 (audai.thinkwithblack.com)
-├── 前端 UI 介面
-├── eccal-auth-sdk.js 整合
-└── 用戶狀態管理
-```
-
-### 🔧 實作步驟
-
-#### 步驟 1：引入認證 SDK
-
-在子服務的 HTML 頁面中引入認證 SDK：
-
-```html
-<script src="https://eccal.thinkwithblack.com/eccal-auth-sdk.js"></script>
-```
-
-#### 步驟 2：初始化認證系統
-
+### 步驟 1: 下載認證 SDK
 ```javascript
-// 初始化認證系統
-const auth = new EccalAuth({
-    baseUrl: 'https://eccal.thinkwithblack.com',
-    siteName: 'AudAI 服務',  // 替換為你的服務名稱
-    onLogin: (user) => {
-        console.log('用戶登入成功:', user);
-        updateUIForLoggedInUser(user);
-    },
-    onLogout: () => {
-        console.log('用戶登出');
-        updateUIForLoggedOutUser();
-    },
-    onError: (error) => {
-        console.error('認證錯誤:', error);
-        showErrorMessage(error.message);
-    }
-});
-```
-
-#### 步驟 3：Google OAuth 整合
-
-```javascript
-// Google OAuth 登入函數
-async function handleGoogleLogin(googleUser) {
-    try {
-        // 獲取 Google 用戶資料
-        const profile = googleUser.getBasicProfile();
-        const userData = {
-            email: profile.getEmail(),
-            name: profile.getName(),
-            picture: profile.getImageUrl(),
-            service: 'audai'  // 替換為你的服務名稱
-        };
-        
-        // 呼叫主服務認證 API
-        const response = await fetch('https://eccal.thinkwithblack.com/api/auth/google-sso', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Origin': window.location.origin
-            },
-            body: JSON.stringify(userData)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            // 儲存認證資料
-            localStorage.setItem('eccal_auth_token', result.token);
-            localStorage.setItem('eccal_auth_user', JSON.stringify(result.user));
-            
-            // 更新 UI
-            updateUIForLoggedInUser(result.user);
-        } else {
-            throw new Error(result.error || '認證失敗');
-        }
-    } catch (error) {
-        console.error('Google 登入失敗:', error);
-        showErrorMessage('登入失敗，請稍後再試');
-    }
-}
-```
-
-#### 步驟 4：檢查認證狀態
-
-```javascript
-// 檢查現有認證狀態
-function checkAuthStatus() {
-    const token = localStorage.getItem('eccal_auth_token');
-    const userStr = localStorage.getItem('eccal_auth_user');
+// 複製以下 SDK 到你的專案
+const EccalAuth = {
+  baseURL: 'https://eccal.thinkwithblack.com',
+  
+  // Google SSO 登入
+  async googleLogin(service = 'subdomain') {
+    const params = new URLSearchParams({
+      service: service,
+      origin: window.location.origin,
+      returnTo: window.location.href
+    });
     
-    if (token && userStr) {
-        try {
-            const user = JSON.parse(userStr);
-            updateUIForLoggedInUser(user);
-        } catch (error) {
-            console.error('認證資料解析失敗:', error);
-            clearAuthData();
-        }
+    window.location.href = `${this.baseURL}/api/sso/login?${params}`;
+  },
+  
+  // 驗證 JWT Token
+  async verifyToken(token) {
+    try {
+      const response = await fetch(`${this.baseURL}/api/sso/verify-token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Origin': window.location.origin
+        },
+        body: JSON.stringify({ token })
+      });
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Token verification failed:', error);
+      return { success: false, error: 'Network error' };
     }
-}
-
-// 清除認證資料
-function clearAuthData() {
-    localStorage.removeItem('eccal_auth_token');
-    localStorage.removeItem('eccal_auth_user');
-    updateUIForLoggedOutUser();
-}
+  },
+  
+  // 獲取用戶資料
+  async getUserData(userId) {
+    try {
+      const response = await fetch(`${this.baseURL}/api/account-center/user/${userId}`, {
+        headers: { 'Origin': window.location.origin }
+      });
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Failed to fetch user data:', error);
+      return { success: false, error: 'Network error' };
+    }
+  },
+  
+  // 扣除用戶點數
+  async deductCredits(userId, amount, reason, service) {
+    try {
+      const response = await fetch(`${this.baseURL}/api/account-center/credits/${userId}/deduct`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Origin': window.location.origin
+        },
+        body: JSON.stringify({
+          amount: amount,
+          reason: reason,
+          service: service
+        })
+      });
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Credit deduction failed:', error);
+      return { success: false, error: 'Network error' };
+    }
+  }
+};
 ```
 
-### 🛠️ 完整範例程式碼
-
+### 步驟 2: 基本 HTML 整合
 ```html
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AudAI 服務</title>
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
-    <script src="https://eccal.thinkwithblack.com/eccal-auth-sdk.js"></script>
-    <meta name="google-signin-client_id" content="YOUR_GOOGLE_CLIENT_ID">
+    <title>子域名服務</title>
+    <style>
+        .auth-container { max-width: 600px; margin: 50px auto; padding: 20px; }
+        .login-btn { background: #4285f4; color: white; padding: 10px 20px; border: none; cursor: pointer; }
+        .user-info { background: #f0f0f0; padding: 15px; margin: 20px 0; border-radius: 5px; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
 </head>
 <body>
-    <div id="loginSection">
-        <h2>請登入以使用 AudAI 服務</h2>
-        <div class="g-signin2" data-onsuccess="onSignIn"></div>
-    </div>
-    
-    <div id="userSection" style="display: none;">
-        <h2>歡迎回來！</h2>
-        <p>用戶: <span id="userName"></span></p>
-        <p>信箱: <span id="userEmail"></span></p>
-        <p>會員等級: <span id="userMembership"></span></p>
-        <p>點數: <span id="userCredits"></span></p>
-        <button onclick="signOut()">登出</button>
+    <div class="auth-container">
+        <h1>子域名服務 - 統一認證</h1>
+        
+        <div id="loginSection">
+            <h2>請登入</h2>
+            <button class="login-btn" onclick="login()">使用 Google 登入</button>
+        </div>
+        
+        <div id="userSection" style="display: none;">
+            <h2>用戶資料</h2>
+            <div id="userInfo" class="user-info"></div>
+            <button onclick="testDeductCredits()">測試扣除 1 點數</button>
+            <button onclick="logout()">登出</button>
+        </div>
+        
+        <div id="messages"></div>
     </div>
 
     <script>
-        // 初始化認證系統
-        const auth = new EccalAuth({
-            baseUrl: 'https://eccal.thinkwithblack.com',
-            siteName: 'AudAI 服務',
-            onLogin: (user) => {
-                updateUIForLoggedInUser(user);
-            },
-            onLogout: () => {
-                updateUIForLoggedOutUser();
-            },
-            onError: (error) => {
-                console.error('認證錯誤:', error);
-                alert('認證失敗: ' + error.message);
-            }
-        });
-
-        // Google 登入成功回調
-        async function onSignIn(googleUser) {
-            try {
-                const profile = googleUser.getBasicProfile();
-                const userData = {
-                    email: profile.getEmail(),
-                    name: profile.getName(),
-                    picture: profile.getImageUrl(),
-                    service: 'audai'
-                };
+        // SDK 代碼在此處...
+        
+        // 初始化
+        window.onload = function() {
+            initAuth();
+        };
+        
+        function initAuth() {
+            // 檢查 URL 是否有 token 參數
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            
+            if (token) {
+                // 儲存 token
+                localStorage.setItem('eccal_token', token);
                 
-                const response = await fetch('https://eccal.thinkwithblack.com/api/auth/google-sso', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Origin': window.location.origin
-                    },
-                    body: JSON.stringify(userData)
-                });
+                // 清除 URL 參數
+                window.history.replaceState({}, document.title, window.location.pathname);
                 
-                const result = await response.json();
-                
-                if (result.success) {
-                    localStorage.setItem('eccal_auth_token', result.token);
-                    localStorage.setItem('eccal_auth_user', JSON.stringify(result.user));
-                    updateUIForLoggedInUser(result.user);
-                } else {
-                    throw new Error(result.error || '認證失敗');
+                // 驗證 token
+                verifyAndDisplayUser(token);
+            } else {
+                // 檢查是否有儲存的 token
+                const savedToken = localStorage.getItem('eccal_token');
+                if (savedToken) {
+                    verifyAndDisplayUser(savedToken);
                 }
-            } catch (error) {
-                console.error('Google 登入失敗:', error);
-                alert('登入失敗: ' + error.message);
             }
         }
-
-        // 更新登入狀態 UI
-        function updateUIForLoggedInUser(user) {
+        
+        async function verifyAndDisplayUser(token) {
+            const result = await EccalAuth.verifyToken(token);
+            
+            if (result.success && result.valid) {
+                // 獲取完整用戶資料
+                const userData = await EccalAuth.getUserData(result.user.id);
+                
+                if (userData.success) {
+                    displayUserInfo(userData.user);
+                } else {
+                    showError('無法獲取用戶資料');
+                }
+            } else {
+                showError('Token 驗證失敗，請重新登入');
+                localStorage.removeItem('eccal_token');
+            }
+        }
+        
+        function displayUserInfo(user) {
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('userSection').style.display = 'block';
-            document.getElementById('userName').textContent = user.name;
-            document.getElementById('userEmail').textContent = user.email;
-            document.getElementById('userMembership').textContent = user.membership;
-            document.getElementById('userCredits').textContent = user.credits;
+            
+            document.getElementById('userInfo').innerHTML = `
+                <p><strong>姓名：</strong> ${user.name}</p>
+                <p><strong>Email：</strong> ${user.email}</p>
+                <p><strong>會員等級：</strong> ${user.membership}</p>
+                <p><strong>可用點數：</strong> ${user.credits}</p>
+                <p><strong>用戶 ID：</strong> ${user.id}</p>
+            `;
         }
-
-        // 更新登出狀態 UI
-        function updateUIForLoggedOutUser() {
+        
+        function login() {
+            EccalAuth.googleLogin('subdomain');
+        }
+        
+        function logout() {
+            localStorage.removeItem('eccal_token');
             document.getElementById('loginSection').style.display = 'block';
             document.getElementById('userSection').style.display = 'none';
+            document.getElementById('messages').innerHTML = '';
         }
-
-        // 登出函數
-        function signOut() {
-            const auth2 = gapi.auth2.getAuthInstance();
-            auth2.signOut().then(function () {
-                localStorage.removeItem('eccal_auth_token');
-                localStorage.removeItem('eccal_auth_user');
-                updateUIForLoggedOutUser();
-            });
-        }
-
-        // 頁面載入時檢查認證狀態
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAuthStatus();
-        });
-
-        function checkAuthStatus() {
-            const token = localStorage.getItem('eccal_auth_token');
-            const userStr = localStorage.getItem('eccal_auth_user');
-            
-            if (token && userStr) {
-                try {
-                    const user = JSON.parse(userStr);
-                    updateUIForLoggedInUser(user);
-                } catch (error) {
-                    console.error('認證資料解析失敗:', error);
-                    localStorage.removeItem('eccal_auth_token');
-                    localStorage.removeItem('eccal_auth_user');
-                }
+        
+        async function testDeductCredits() {
+            const token = localStorage.getItem('eccal_token');
+            if (!token) {
+                showError('請先登入');
+                return;
             }
+            
+            const result = await EccalAuth.verifyToken(token);
+            if (!result.success) {
+                showError('Token 無效，請重新登入');
+                return;
+            }
+            
+            const deductResult = await EccalAuth.deductCredits(
+                result.user.id,
+                1,
+                '測試扣除',
+                'subdomain'
+            );
+            
+            if (deductResult.success) {
+                showSuccess(`扣除成功！剩餘點數：${deductResult.remainingCredits}`);
+                
+                // 重新載入用戶資料
+                verifyAndDisplayUser(token);
+            } else {
+                showError(`扣除失敗：${deductResult.error}`);
+            }
+        }
+        
+        function showError(message) {
+            document.getElementById('messages').innerHTML = `<div class="error">${message}</div>`;
+        }
+        
+        function showSuccess(message) {
+            document.getElementById('messages').innerHTML = `<div class="success">${message}</div>`;
         }
     </script>
 </body>
 </html>
 ```
 
-### ⚠️ 重要注意事項與常見錯誤
+## 2. API 端點說明
 
-#### 1. **CORS 設定問題**
-```javascript
-// ❌ 錯誤：缺少 Origin 標頭
-fetch('https://eccal.thinkwithblack.com/api/auth/google-sso', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(userData)
-});
+### 認證端點
+- `POST /api/auth/google-sso` - Google SSO 登入
+- `POST /api/sso/verify-token` - 驗證 JWT Token
+- `POST /api/sso/refresh-token` - 刷新 Token
 
-// ✅ 正確：包含 Origin 標頭
-fetch('https://eccal.thinkwithblack.com/api/auth/google-sso', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-        'Origin': window.location.origin  // 必須包含
-    },
-    body: JSON.stringify(userData)
-});
-```
+### 用戶資料端點
+- `GET /api/account-center/user/{userId}` - 獲取用戶資料
+- `GET /api/account-center/credits/{userId}` - 獲取用戶點數
+- `POST /api/account-center/credits/{userId}/deduct` - 扣除用戶點數
 
-#### 2. **服務名稱設定**
-```javascript
-// ❌ 錯誤：使用錯誤的服務名稱
-const userData = {
-    email: profile.getEmail(),
-    name: profile.getName(),
-    picture: profile.getImageUrl(),
-    service: 'eccal'  // 錯誤！應該是子服務名稱
-};
+## 3. 重要注意事項
 
-// ✅ 正確：使用正確的服務名稱
-const userData = {
-    email: profile.getEmail(),
-    name: profile.getName(),
-    picture: profile.getImageUrl(),
-    service: 'audai'  // 正確的子服務名稱
-};
-```
+### CORS 設定
+系統已預設允許以下域名：
+- https://eccal.thinkwithblack.com
+- https://audai.thinkwithblack.com
+- https://sub3.thinkwithblack.com
+- https://sub4.thinkwithblack.com
+- https://sub5.thinkwithblack.com
+- https://member.thinkwithblack.com
 
-#### 3. **JWT Token 儲存**
-```javascript
-// ❌ 錯誤：直接儲存 response
-localStorage.setItem('token', response);
-
-// ✅ 正確：儲存 JWT token
-localStorage.setItem('eccal_auth_token', result.token);
-localStorage.setItem('eccal_auth_user', JSON.stringify(result.user));
-```
-
-#### 4. **錯誤處理**
-```javascript
-// ❌ 錯誤：沒有錯誤處理
-const response = await fetch(url, options);
-const result = await response.json();
-
-// ✅ 正確：完整的錯誤處理
-try {
-    const response = await fetch(url, options);
-    const result = await response.json();
-    
-    if (!result.success) {
-        throw new Error(result.error || '認證失敗');
-    }
-    
-    // 處理成功結果
-} catch (error) {
-    console.error('認證錯誤:', error);
-    showErrorMessage(error.message);
+### JWT Token 結構
+```json
+{
+  "sub": "用戶ID",
+  "email": "用戶郵箱",
+  "name": "用戶姓名",
+  "membership": "會員等級（free/pro）",
+  "credits": "可用點數",
+  "service": "服務名稱",
+  "iss": "eccal.thinkwithblack.com",
+  "aud": "目標域名",
+  "iat": "發行時間",
+  "exp": "過期時間"
 }
 ```
 
-#### 5. **Google Client ID 設定**
-```html
-<!-- ❌ 錯誤：缺少或錯誤的 Client ID -->
-<meta name="google-signin-client_id" content="">
-
-<!-- ✅ 正確：設定正確的 Google Client ID -->
-<meta name="google-signin-client_id" content="YOUR_GOOGLE_CLIENT_ID">
-```
-
-### 🔍 除錯與測試
-
-#### 1. **測試認證流程**
-```javascript
-// 測試認證 API 連線
-async function testAuth() {
-    try {
-        const response = await fetch('https://eccal.thinkwithblack.com/api/auth/google-sso', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Origin': window.location.origin
-            },
-            body: JSON.stringify({
-                email: 'test@example.com',
-                name: 'Test User',
-                picture: 'https://example.com/avatar.jpg',
-                service: 'audai'
-            })
-        });
-        
-        const result = await response.json();
-        console.log('認證測試結果:', result);
-        
-        if (result.success) {
-            console.log('✅ 認證 API 連線正常');
-        } else {
-            console.error('❌ 認證失敗:', result.error);
-        }
-    } catch (error) {
-        console.error('❌ 連線失敗:', error);
-    }
+### 錯誤處理
+所有 API 回應都包含以下結構：
+```json
+{
+  "success": true/false,
+  "error": "錯誤訊息",
+  "code": "錯誤代碼",
+  "data": {...}
 }
 ```
 
-#### 2. **檢查網路問題**
-```javascript
-// 檢查 CORS 設定
-fetch('https://eccal.thinkwithblack.com/api/account-center/health')
-    .then(response => response.json())
-    .then(data => console.log('✅ CORS 設定正常:', data))
-    .catch(error => console.error('❌ CORS 問題:', error));
-```
+## 4. 測試指南
 
-### 📞 技術支援
+1. **部署你的子域名服務**
+2. **添加 HTML 整合代碼**
+3. **測試登入流程**
+4. **測試 API 調用**
+5. **測試點數扣除**
 
-如果遇到問題，請檢查：
+## 5. 故障排除
 
-1. **網路連線**：確保可以連接到 eccal.thinkwithblack.com
-2. **CORS 設定**：確認 Origin 標頭正確設定
-3. **服務名稱**：確認 service 參數使用正確的子服務名稱
-4. **Google Client ID**：確認 Google OAuth 設定正確
-5. **瀏覽器控制台**：檢查是否有 JavaScript 錯誤訊息
+### 常見問題
+1. **CORS 錯誤** - 確認域名已在允許清單中
+2. **Token 驗證失敗** - 檢查 token 是否過期
+3. **API 調用失敗** - 檢查 Origin 標頭是否正確
 
-### 🎯 檢查清單
+### 調試端點
+- `GET /api/account-center/debug` - 獲取請求詳情
+- `GET /api/account-center/health` - 檢查系統狀態
 
-整合完成前，請確認：
+## 6. 支援
 
-- [ ] 已引入 eccal-auth-sdk.js
-- [ ] 已設定正確的 Google Client ID
-- [ ] 已實作 onSignIn 回調函數
-- [ ] 已設定正確的服務名稱
-- [ ] 已實作錯誤處理機制
-- [ ] 已測試登入/登出流程
-- [ ] 已實作 UI 狀態更新
-- [ ] 已測試認證資料持久化
-
-### 📈 效能最佳化建議
-
-1. **快取認證狀態**：使用 localStorage 儲存認證資料
-2. **錯誤重試**：實作認證失敗重試機制
-3. **Loading 狀態**：顯示載入中狀態提升用戶體驗
-4. **Token 刷新**：實作 JWT token 自動刷新機制
+如需技術支援，請聯繫：
+- Email: backtrue@thinkwithblack.com
+- 技術文檔：本指南
 
 ---
 
-**版本**: V1.0.0  
-**最後更新**: 2025-07-11  
-**維護者**: 邱煜庭（邱小黑）  
-**聯絡信箱**: backtrue@thinkwithblack.com
+**最後更新：2025-01-12**

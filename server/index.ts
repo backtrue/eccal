@@ -101,12 +101,19 @@ app.post('/api/auth/google-sso', express.json(), async (req, res) => {
       console.log('現有用戶資料更新成功');
     }
     
-    // 生成 JWT Token
+    // 獲取用戶完整資料用於 JWT
+    const currentUser = user.length > 0 ? user[0] : null;
+    const userMembership = currentUser ? currentUser.membershipLevel : 'free';
+    const userCredits = currentUser ? currentUser.credits : 30;
+    
+    // 生成 JWT Token (包含 membership 和 credits)
     const token = jwt.sign(
       { 
         sub: userId,
         email,
         name,
+        membership: userMembership,
+        credits: userCredits,
         service,
         iss: 'eccal.thinkwithblack.com',
         aud: origin || 'https://audai.thinkwithblack.com'

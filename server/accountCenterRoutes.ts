@@ -148,12 +148,14 @@ export function setupAccountCenterRoutes(app: Express) {
         }
       }
       
-      // 生成新的 JWT Token 給外部網站使用
+      // 生成新的 JWT Token 給外部網站使用 (包含 membership 和 credits)
       const token = jwt.sign(
         { 
           sub: user.id,
           email: user.email,
           name: user.name,
+          membership: user.membershipLevel,
+          credits: user.credits,
           iss: 'eccal.thinkwithblack.com',
           aud: origin
         },
@@ -209,15 +211,22 @@ export function setupAccountCenterRoutes(app: Express) {
     try {
       const decoded = jwt.verify(token, JWT_SECRET) as any;
       res.json({ 
+        success: true,
         valid: true, 
         user: {
           id: decoded.sub,
           email: decoded.email,
-          name: decoded.name
+          name: decoded.name,
+          membership: decoded.membership,
+          credits: decoded.credits
         }
       });
     } catch (error) {
-      res.status(401).json({ valid: false, error: 'Invalid token' });
+      res.status(401).json({ 
+        success: false,
+        valid: false, 
+        error: 'Invalid token' 
+      });
     }
   });
 
@@ -236,6 +245,8 @@ export function setupAccountCenterRoutes(app: Express) {
         sub: user.id,
         email: user.email,
         name: user.name,
+        membership: user.membershipLevel,
+        credits: user.credits,
         iss: 'eccal.thinkwithblack.com'
       },
       JWT_SECRET,
@@ -254,56 +265,48 @@ export function setupAccountCenterRoutes(app: Express) {
     try {
       const { userId } = req.params;
       
-      // 獲取用戶基本資料
-      const user = await db.query.users.findFirst({
-        where: eq(users.id, userId)
-      });
-      
-      if (!user) {
-        return res.status(404).json({ error: 'User not found' });
+      // 支援通過 email 或 userId 查詢
+      let user;
+      if (userId.includes('@')) {
+        // 如果是 email 格式，通過 email 查詢
+        user = await db.query.users.findFirst({
+          where: eq(users.email, userId)
+        });
+      } else {
+        // 否則通過 userId 查詢
+        user = await db.query.users.findFirst({
+          where: eq(users.id, userId)
+        });
       }
       
-      // 獲取用戶點數
-      const credits = await db.query.userCredits.findFirst({
-        where: eq(userCredits.userId, userId)
-      });
+      if (!user) {
+        return res.status(404).json({ 
+          success: false,
+          error: '用戶未找到',
+          code: 'USER_NOT_FOUND' 
+        });
+      }
       
-      // 會員資訊已包含在 user 資料中
-      
-      // 獲取推薦統計
-      const referralStats = await db.query.userReferrals.findMany({
-        where: eq(userReferrals.referrerId, userId)
-      });
-      
-      const userData = {
-        id: user.id,
-        email: user.email,
-        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
-        profilePicture: user.profileImageUrl,
-        credits: credits?.balance || 0,
-        membership: {
-          level: user.membershipLevel || 'free',
-          expiresAt: user.membershipExpires,
-          isActive: user.membershipLevel === 'pro' && 
-                   (!user.membershipExpires || new Date(user.membershipExpires) > new Date())
-        },
-        referrals: {
-          count: referralStats.length,
-          totalEarned: referralStats.reduce((sum, ref) => sum + (ref.creditAwarded ? 50 : 0), 0)
-        },
-        analytics: {
-          googleAccessToken: user.googleAccessToken ? '已連接' : null
-        },
-        facebook: {
-          metaAccessToken: user.metaAccessToken ? '已連接' : null,
-          metaAdAccountId: user.metaAdAccountId
+      // 返回符合 API 規格的回應
+      res.json({
+        success: true,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name || user.email,
+          membership: user.membershipLevel || 'free',
+          credits: user.credits || 0,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt
         }
-      };
-      
-      res.json(userData);
+      });
     } catch (error) {
       console.error('Error fetching user data:', error);
-      res.status(500).json({ error: 'Failed to fetch user data' });
+      res.status(500).json({ 
+        success: false,
+        error: '無法獲取用戶資料',
+        code: 'INTERNAL_ERROR' 
+      });
     }
   });
 
@@ -380,22 +383,128 @@ export function setupAccountCenterRoutes(app: Express) {
     try {
       const { userId } = req.params;
       
-      const credits = await db.query.userCredits.findFirst({
-        where: eq(userCredits.userId, userId)
+      // 支援通過 email 或 userId 查詢
+      let user;
+      if (userId.includes('@')) {
+        user = await db.query.users.findFirst({
+          where: eq(users.email, userId)
+        });
+      } else {
+        user = await db.query.users.findFirst({
+          where: eq(users.id, userId)
+        });
+      }
+      
+      if (!user) {
+        return res.status(404).json({ 
+          success: false,
+          error: '用戶未找到',
+          code: 'USER_NOT_FOUND' 
+        });
+      }
+      
+      res.json({
+        success: true,
+        userId: user.id,
+        balance: user.credits || 0,
+        email: user.email,
+        lastUpdated: user.updatedAt
       });
-      
-      const creditsData = {
-        userId,
-        balance: credits?.balance || 0,
-        earned: credits?.earned || 0,
-        spent: credits?.spent || 0,
-        lastUpdated: credits?.updatedAt
-      };
-      
-      res.json(creditsData);
     } catch (error) {
       console.error('Error fetching credits:', error);
-      res.status(500).json({ error: 'Failed to fetch credits data' });
+      res.status(500).json({ 
+        success: false,
+        error: '無法獲取點數資訊',
+        code: 'INTERNAL_ERROR' 
+      });
+    }
+  });
+
+  /**
+   * 點數扣除端點
+   */
+  app.post('/api/account-center/credits/:userId/deduct', async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.params;
+      const { amount, reason, service } = req.body;
+      
+      // 驗證輸入
+      if (!amount || amount <= 0) {
+        return res.status(400).json({
+          success: false,
+          error: '扣除金額必須大於 0',
+          code: 'INVALID_AMOUNT'
+        });
+      }
+      
+      // 支援通過 email 或 userId 查詢
+      let user;
+      if (userId.includes('@')) {
+        user = await db.query.users.findFirst({
+          where: eq(users.email, userId)
+        });
+      } else {
+        user = await db.query.users.findFirst({
+          where: eq(users.id, userId)
+        });
+      }
+      
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: '用戶未找到',
+          code: 'USER_NOT_FOUND'
+        });
+      }
+      
+      const currentCredits = user.credits || 0;
+      
+      // 檢查餘額是否足夠
+      if (currentCredits < amount) {
+        return res.status(400).json({
+          success: false,
+          error: '點數不足',
+          code: 'INSUFFICIENT_CREDITS',
+          currentCredits: currentCredits,
+          requestedAmount: amount
+        });
+      }
+      
+      // 扣除點數
+      const newCredits = currentCredits - amount;
+      await db.update(users)
+        .set({ credits: newCredits })
+        .where(eq(users.id, user.id));
+      
+      // 生成交易 ID
+      const transactionId = `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      console.log(`點數扣除成功:`, {
+        userId: user.id,
+        email: user.email,
+        deductedAmount: amount,
+        remainingCredits: newCredits,
+        reason,
+        service,
+        transactionId
+      });
+      
+      res.json({
+        success: true,
+        remainingCredits: newCredits,
+        deductedAmount: amount,
+        transactionId,
+        reason,
+        service
+      });
+      
+    } catch (error) {
+      console.error('Error deducting credits:', error);
+      res.status(500).json({
+        success: false,
+        error: '點數扣除失敗',
+        code: 'INTERNAL_ERROR'
+      });
     }
   });
 
