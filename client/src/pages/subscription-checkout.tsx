@@ -39,6 +39,19 @@ const CheckoutForm = ({ locale, planType, priceId }: CheckoutFormProps) => {
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  // 安全的 toast 函數，防止生產環境錯誤
+  const safeToast = (options: any) => {
+    try {
+      if (toast && typeof toast === 'function') {
+        toast(options);
+      } else {
+        console.error('Toast function not available:', options);
+      }
+    } catch (error) {
+      console.error('Toast error:', error, options);
+    }
+  };
   // 使用簡單的日圓定價數據
   const pricingDataForCheckout = {
     monthly: {
@@ -80,7 +93,7 @@ const CheckoutForm = ({ locale, planType, priceId }: CheckoutFormProps) => {
       if (error) {
         console.error('Payment confirmation error:', error);
         setPaymentStatus('error');
-        toast({
+        safeToast({
           title: t.checkout.paymentError,
           description: error.message || t.checkout.paymentErrorDesc,
           variant: "destructive",
@@ -89,7 +102,7 @@ const CheckoutForm = ({ locale, planType, priceId }: CheckoutFormProps) => {
     } catch (error) {
       console.error('Payment error:', error);
       setPaymentStatus('error');
-      toast({
+      safeToast({
         title: t.checkout.paymentError,
         description: t.checkout.paymentErrorDesc,
         variant: "destructive",
@@ -204,7 +217,7 @@ export default function SubscriptionCheckout({ locale }: SubscriptionCheckoutPro
       } catch (err: any) {
         console.error('Error creating subscription:', err);
         setError(err.message || 'Failed to create subscription');
-        toast({
+        safeToast({
           title: t.checkout.subscriptionError,
           description: err.message || t.checkout.subscriptionErrorDesc,
           variant: "destructive",

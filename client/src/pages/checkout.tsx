@@ -37,6 +37,19 @@ const CheckoutForm = ({ locale, planType, amount }: CheckoutFormProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
+  // 安全的 toast 函數，防止生產環境錯誤
+  const safeToast = (options: any) => {
+    try {
+      if (toast && typeof toast === 'function') {
+        toast(options);
+      } else {
+        console.error('Toast function not available:', options);
+      }
+    } catch (error) {
+      console.error('Toast error:', error, options);
+    }
+  };
+
   const t = getTranslations(locale);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,14 +71,14 @@ const CheckoutForm = ({ locale, planType, amount }: CheckoutFormProps) => {
     if (error) {
       console.error('Payment failed:', error);
       setPaymentStatus('error');
-      toast({
+      safeToast({
         title: locale === 'zh-TW' ? "付款失敗" : locale === 'en' ? "Payment Failed" : "支払い失敗",
         description: error.message,
         variant: "destructive",
       });
     } else {
       setPaymentStatus('success');
-      toast({
+      safeToast({
         title: locale === 'zh-TW' ? "付款成功" : locale === 'en' ? "Payment Successful" : "支払い成功",
         description: locale === 'zh-TW' ? "感謝您的購買！" : locale === 'en' ? "Thank you for your purchase!" : "ご購入ありがとうございます！",
       });
@@ -162,6 +175,19 @@ export default function Checkout({ locale }: CheckoutProps) {
 
   const t = getTranslations(locale);
 
+  // 安全的 toast 函數，防止生產環境錯誤
+  const safeToast = (options: any) => {
+    try {
+      if (toast && typeof toast === 'function') {
+        toast(options);
+      } else {
+        console.error('Toast function not available:', options);
+      }
+    } catch (error) {
+      console.error('Toast error:', error, options);
+    }
+  };
+
   useEffect(() => {
     // Check if user is authenticated first
     if (!isAuthenticated) {
@@ -175,7 +201,7 @@ export default function Checkout({ locale }: CheckoutProps) {
     const planAmount = urlParams.get('amount');
 
     if (!plan || !planAmount) {
-      toast({
+      safeToast({
         title: locale === 'zh-TW' ? "錯誤" : locale === 'en' ? "Error" : "エラー",
         description: locale === 'zh-TW' ? "缺少付款資訊" : locale === 'en' ? "Missing payment information" : "支払い情報が不足しています",
         variant: "destructive",
@@ -200,7 +226,7 @@ export default function Checkout({ locale }: CheckoutProps) {
       })
       .catch((error) => {
         console.error('Error creating payment intent:', error);
-        toast({
+        safeToast({
           title: locale === 'zh-TW' ? "錯誤" : locale === 'en' ? "Error" : "エラー",
           description: locale === 'zh-TW' ? "無法初始化付款" : locale === 'en' ? "Failed to initialize payment" : "支払いの初期化に失敗しました",
           variant: "destructive",
