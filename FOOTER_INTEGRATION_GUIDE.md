@@ -19,20 +19,21 @@
    - 服務內容 (1列)
 
 2. **底部區域**
-   - 三個主要服務連結 (版權聲明之上)
+   - 四個主要服務連結 (版權聲明之上)
    - 版權聲明
 
-## 🔗 必須包含的三個主要服務
+## 🔗 必須包含的四個主要服務
 
 位置：版權聲明上方，使用「｜」分隔
 
 ```
-報數據 ｜ 報受眾 ｜ 報價
+報數據 ｜ 報受眾 ｜ 報價 ｜ 報 LINE
 ```
 
 - **報數據**: https://eccal.thinkwithblack.com
 - **報受眾**: https://audai.thinkwithblack.com  
 - **報價**: https://quote.thinkwithblack.com
+- **報 LINE**: https://thinkwithblack.com
 
 ## 🛠️ 技術實作
 
@@ -108,7 +109,7 @@
     <!-- 底部區域 -->
     <div class="border-t border-gray-700 mt-8 pt-8">
       <div class="flex flex-col items-center space-y-4">
-        <!-- 三個主要服務連結 -->
+        <!-- 四個主要服務連結 -->
         <div class="flex justify-center items-center gap-2 text-blue-300">
           <a href="https://eccal.thinkwithblack.com" target="_blank" rel="noopener noreferrer" class="hover:text-blue-200 font-medium">
             報數據
@@ -121,11 +122,15 @@
           <a href="https://quote.thinkwithblack.com" target="_blank" rel="noopener noreferrer" class="hover:text-blue-200 font-medium">
             報價
           </a>
+          <span class="text-gray-400">｜</span>
+          <a href="https://thinkwithblack.com" target="_blank" rel="noopener noreferrer" class="hover:text-blue-200 font-medium">
+            報 LINE
+          </a>
         </div>
         
         <!-- 版權聲明 -->
         <p class="text-gray-400 text-sm">
-          © 2025 煜言顧問有限公司. All rights reserved.
+          © 2025 煜言顧問有限公司(TW) <a href="https://toldyou.co" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">燈言顧問株式会社(JP)</a> 版權所有
         </p>
       </div>
     </div>
@@ -157,7 +162,8 @@ footer {
 const services = [
   { name: '報數據', url: 'https://eccal.thinkwithblack.com' },
   { name: '報受眾', url: 'https://audai.thinkwithblack.com' },
-  { name: '報價', url: 'https://quote.thinkwithblack.com' }
+  { name: '報價', url: 'https://quote.thinkwithblack.com' },
+  { name: '報 LINE', url: 'https://thinkwithblack.com' }
 ];
 
 function generateServiceLinks() {
@@ -193,7 +199,7 @@ function generateServiceLinks() {
 
 ## 📋 檢查清單
 
-- [ ] 三個主要服務連結在版權聲明上方
+- [ ] 四個主要服務連結在版權聲明上方
 - [ ] 使用正確的「｜」分隔符號
 - [ ] 所有外部連結都有 `target="_blank" rel="noopener noreferrer"`
 - [ ] 響應式設計在各尺寸裝置上正常
@@ -212,11 +218,11 @@ function generateServiceLinks() {
 **Q: 如果我的網站不使用 Tailwind CSS 怎麼辦？**
 A: 可以將 Tailwind 類別轉換為對應的 CSS 樣式，參考上方的顏色規範。
 
-**Q: 三個服務連結的順序可以改變嗎？**
-A: 不建議改變，請保持「報數據｜報受眾｜報價」的順序。
+**Q: 四個服務連結的順序可以改變嗎？**
+A: 不建議改變，請保持「報數據｜報受眾｜報價｜報 LINE」的順序。
 
 **Q: 可以添加更多服務連結嗎？**
-A: 目前只包含這三個主要服務，如需新增請聯繫開發團隊。
+A: 目前只包含這四個主要服務，如需新增請聯繫開發團隊。
 
 ## 📞 技術支援
 

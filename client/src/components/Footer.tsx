@@ -192,7 +192,7 @@ export default function Footer() {
         {/* Bottom Section */}
         <div className="border-t border-gray-700 mt-8 pt-8">
           <div className="flex flex-col items-center space-y-4">
-            {/* 三個主要服務連結 */}
+            {/* 四個主要服務連結 */}
             <div className="flex justify-center items-center gap-2 text-blue-300">
               <a 
                 href="https://eccal.thinkwithblack.com" 
@@ -220,14 +220,25 @@ export default function Footer() {
               >
                 報價
               </a>
+              <span className="text-gray-400">｜</span>
+              <a 
+                href="https://thinkwithblack.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-blue-200 transition-colors font-medium"
+              >
+                報 LINE
+              </a>
             </div>
             
             {/* 版權聲明 */}
             <p className="text-gray-400 text-sm">
-              © 2025 {getCurrentLocale() === 'zh-TW' ? '煜言顧問有限公司' : 
-                      <a href="https://toldyou.co" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                        ToldYou Co.
-                      </a>}. {t.allRightsReserved}
+              © 2025 {getCurrentLocale() === 'zh-TW' ? 
+                <>煜言顧問有限公司(TW) <a href="https://toldyou.co" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">燈言顧問株式会社(JP)</a></> : 
+                <a href="https://toldyou.co" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                  ToldYou Co.
+                </a>
+              } 版權所有
             </p>
           </div>
         </div>
