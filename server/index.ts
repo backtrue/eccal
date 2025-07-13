@@ -12,30 +12,23 @@ const app = express();
 // 這些端點必須在所有中間件之前註冊，避免被 Vite 攔截
 
 // Google SSO 認證端點 - 高優先級註冊
-app.post('/api/auth/google-sso', express.json(), async (req, res) => {
+// 這個端點負責啟動 Google OAuth 流程，應該重定向到 Google
+app.get('/api/auth/google-sso', async (req, res) => {
   try {
-    const { email, name, picture, service } = req.body;
+    const { returnTo, service } = req.query;
     
-    // 驗證必要欄位
-    if (!email || !name || !service) {
-      return res.json({
-        success: false,
-        error: '缺少必要欄位 (email, name, service)',
-        code: 'MISSING_REQUIRED_FIELDS'
-      });
-    }
-    
-    console.log('Google SSO 認證請求:', {
-      email,
-      name,
+    console.log('Google SSO 啟動請求:', {
+      returnTo,
       service,
-      origin: req.headers.origin
+      origin: req.headers.origin,
+      referer: req.headers.referer
     });
     
     // 設置 CORS 標頭
     const allowedOrigins = [
       'https://eccal.thinkwithblack.com',
       'https://audai.thinkwithblack.com',
+      'https://quote.thinkwithblack.com',
       'https://sub3.thinkwithblack.com',
       'https://sub4.thinkwithblack.com',
       'https://sub5.thinkwithblack.com',
@@ -44,112 +37,252 @@ app.post('/api/auth/google-sso', express.json(), async (req, res) => {
       'http://localhost:5000'
     ];
     
-    const origin = req.headers.origin;
-    if (origin && allowedOrigins.includes(origin)) {
-      res.header('Access-Control-Allow-Origin', origin);
+    const origin = req.headers.origin || req.headers.referer;
+    if (origin) {
+      const originUrl = new URL(origin);
+      const baseOrigin = `${originUrl.protocol}//${originUrl.hostname}`;
+      if (allowedOrigins.includes(baseOrigin)) {
+        res.header('Access-Control-Allow-Origin', baseOrigin);
+      }
     }
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     res.header('Access-Control-Allow-Credentials', 'true');
     
-    // 使用動態 import 載入資料庫相關模組
-    const { db } = await import('./db');
-    const { users } = await import('@shared/schema');
-    const { eq } = await import('drizzle-orm');
+    // 創建 state 參數來保存 returnTo 和 service 資訊
+    const state = Buffer.from(JSON.stringify({
+      returnTo: returnTo || '/',
+      service: service || 'unknown',
+      origin: origin || req.headers.origin
+    })).toString('base64');
+    
+    // 構建 Google OAuth URL
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const redirectUri = process.env.NODE_ENV === 'production' 
+      ? 'https://eccal.thinkwithblack.com/api/auth/google-sso/callback'
+      : `${req.protocol}://${req.get('host')}/api/auth/google-sso/callback`;
+    
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+      `client_id=${clientId}&` +
+      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `response_type=code&` +
+      `scope=${encodeURIComponent('profile email https://www.googleapis.com/auth/analytics.readonly')}&` +
+      `state=${state}&` +
+      `access_type=offline&` +
+      `prompt=consent`;
+    
+    console.log('重定向到 Google OAuth:', googleAuthUrl);
+    
+    // 重定向到 Google OAuth
+    res.redirect(googleAuthUrl);
+    
+  } catch (error) {
+    console.error('Google SSO 啟動錯誤:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Google SSO 啟動失敗',
+      code: 'GOOGLE_SSO_START_ERROR'
+    });
+  }
+});
+
+// Google OAuth 回調端點
+app.get('/api/auth/google-sso/callback', async (req, res) => {
+  try {
+    const { code, state } = req.query;
+    
+    if (!code) {
+      return res.status(400).json({
+        success: false,
+        error: '缺少授權碼',
+        code: 'MISSING_AUTH_CODE'
+      });
+    }
+    
+    // 解析 state 參數
+    let stateData = { returnTo: '/', service: 'unknown', origin: '' };
+    if (state) {
+      try {
+        stateData = JSON.parse(Buffer.from(state as string, 'base64').toString());
+      } catch (e) {
+        console.error('解析 state 失敗:', e);
+      }
+    }
+    
+    console.log('Google OAuth 回調:', {
+      code: code ? 'present' : 'missing',
+      stateData
+    });
+    
+    // 使用授權碼獲取用戶資料
     const { default: jwt } = await import('jsonwebtoken');
     const crypto = await import('crypto');
     
-    const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+    // 交換授權碼獲取 access token
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        client_id: process.env.GOOGLE_CLIENT_ID!,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+        code: code as string,
+        grant_type: 'authorization_code',
+        redirect_uri: process.env.NODE_ENV === 'production' 
+          ? 'https://eccal.thinkwithblack.com/api/auth/google-sso/callback'
+          : `${req.protocol}://${req.get('host')}/api/auth/google-sso/callback`,
+      })
+    });
+    
+    const tokenData = await tokenResponse.json();
+    
+    if (!tokenData.access_token) {
+      console.error('獲取 access token 失敗:', tokenData);
+      return res.status(400).json({
+        success: false,
+        error: '獲取 access token 失敗',
+        code: 'TOKEN_EXCHANGE_ERROR'
+      });
+    }
+    
+    // 使用 access token 獲取用戶資料
+    const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: {
+        'Authorization': `Bearer ${tokenData.access_token}`
+      }
+    });
+    
+    const userData = await userResponse.json();
+    
+    if (!userData.email) {
+      console.error('獲取用戶資料失敗:', userData);
+      return res.status(400).json({
+        success: false,
+        error: '獲取用戶資料失敗',
+        code: 'USER_INFO_ERROR'
+      });
+    }
     
     // 檢查或創建用戶
+    const { db } = await import('./db');
+    const { users } = await import('@shared/schema');
+    const { eq } = await import('drizzle-orm');
+    
     let user = await db.select()
       .from(users)
-      .where(eq(users.email, email))
+      .where(eq(users.email, userData.email))
       .limit(1);
     
     let userId: string;
     
     if (user.length === 0) {
       // 創建新用戶
-      console.log('創建新用戶:', email);
+      console.log('創建新用戶:', userData.email);
       const newUserId = crypto.randomUUID();
-      const newUser = await db.insert(users)
-        .values({
-          id: newUserId,
-          email,
-          name,
-          profileImageUrl: picture,
-          membershipLevel: 'free',
-          credits: 30,
-          service: service
-        })
-        .returning();
       
-      userId = newUser[0].id;
-      console.log('新用戶創建成功:', userId);
+      await db.insert(users).values({
+        id: newUserId,
+        email: userData.email,
+        name: userData.name || userData.email,
+        firstName: userData.given_name || null,
+        lastName: userData.family_name || null,
+        profileImageUrl: userData.picture || null,
+        googleAccessToken: tokenData.access_token,
+        googleRefreshToken: tokenData.refresh_token || null,
+        tokenExpiresAt: tokenData.expires_in ? 
+          new Date(Date.now() + tokenData.expires_in * 1000) : 
+          new Date(Date.now() + 3600000),
+        service: stateData.service || 'unknown',
+        credits: 30, // 新用戶獲得 30 點數
+        lastLoginAt: new Date(),
+        membershipLevel: 'free',
+        membershipExpires: null
+      });
+      
+      userId = newUserId;
     } else {
-      // 更新現有用戶資料
+      // 更新現有用戶
       userId = user[0].id;
       await db.update(users)
         .set({
-          name,
-          profileImageUrl: picture,
+          name: userData.name || user[0].name,
+          firstName: userData.given_name || user[0].firstName,
+          lastName: userData.family_name || user[0].lastName,
+          profileImageUrl: userData.picture || user[0].profileImageUrl,
+          googleAccessToken: tokenData.access_token,
+          googleRefreshToken: tokenData.refresh_token || user[0].googleRefreshToken,
+          tokenExpiresAt: tokenData.expires_in ? 
+            new Date(Date.now() + tokenData.expires_in * 1000) : 
+            new Date(Date.now() + 3600000),
           lastLoginAt: new Date()
         })
         .where(eq(users.id, userId));
-      
-      console.log('現有用戶資料更新成功');
     }
     
-    // 獲取用戶完整資料用於 JWT
-    const currentUser = user.length > 0 ? user[0] : null;
-    const userMembership = currentUser ? currentUser.membershipLevel : 'free';
-    const userCredits = currentUser ? currentUser.credits : 30;
+    // 獲取更新後的用戶資料
+    const updatedUser = await db.select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
     
-    // 生成 JWT Token (包含 membership 和 credits)
+    const finalUser = updatedUser[0];
+    
+    // 生成 JWT token
+    const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
     const token = jwt.sign(
       { 
-        sub: userId,
-        email,
-        name,
-        membership: userMembership,
-        credits: userCredits,
-        service,
+        sub: finalUser.id,
+        email: finalUser.email,
+        name: finalUser.name,
+        membership: finalUser.membershipLevel,
+        credits: finalUser.credits,
         iss: 'eccal.thinkwithblack.com',
-        aud: origin || 'https://audai.thinkwithblack.com'
+        aud: stateData.origin || 'unknown'
       },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
     
-    // 返回 JSON 響應
-    res.json({
-      success: true,
-      token: token,
-      user: {
-        id: userId,
-        email,
-        name,
-        membership: user.length > 0 ? user[0].membershipLevel : 'free',
-        credits: user.length > 0 ? user[0].credits : 30,
-        profileImageUrl: picture
-      }
-    });
+    // 構建回調 URL
+    const returnUrl = new URL(stateData.returnTo);
+    returnUrl.searchParams.set('auth_success', 'true');
+    returnUrl.searchParams.set('token', token);
+    returnUrl.searchParams.set('user_id', finalUser.id);
     
-    console.log('Google SSO 認證成功:', {
-      userId,
-      email,
-      service,
-      credits: user.length > 0 ? user[0].credits : 30
-    });
+    console.log('重定向回子服務:', returnUrl.toString());
+    
+    // 重定向回子服務
+    res.redirect(returnUrl.toString());
     
   } catch (error) {
-    console.error('Google SSO 認證錯誤:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || '認證失敗',
-      code: 'AUTHENTICATION_ERROR'
-    });
+    console.error('Google OAuth 回調錯誤:', error);
+    
+    // 嘗試重定向到錯誤頁面
+    try {
+      const { state } = req.query;
+      let stateData = { returnTo: '/', service: 'unknown' };
+      if (state) {
+        try {
+          stateData = JSON.parse(Buffer.from(state as string, 'base64').toString());
+        } catch (e) {
+          // 忽略解析錯誤
+        }
+      }
+      
+      const errorUrl = new URL(stateData.returnTo);
+      errorUrl.searchParams.set('auth_error', 'true');
+      errorUrl.searchParams.set('error_message', 'Google OAuth 認證失敗');
+      
+      res.redirect(errorUrl.toString());
+    } catch (redirectError) {
+      // 如果重定向也失敗，返回 JSON 錯誤
+      res.status(500).json({
+        success: false,
+        error: 'Google OAuth 認證失敗',
+        code: 'GOOGLE_OAUTH_CALLBACK_ERROR'
+      });
+    }
   }
 });
 
