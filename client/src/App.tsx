@@ -98,12 +98,13 @@ function Router() {
   // Route-based language switching - only change if explicit language prefix is detected
   useEffect(() => {
     try {
-      if (location.startsWith('/zh-tw') && locale !== 'zh-TW') {
-        changeLocale('zh-TW');
-      } else if (location.startsWith('/en') && locale !== 'en') {
+      if (location.startsWith('/en') && locale !== 'en') {
         changeLocale('en');
       } else if (location.startsWith('/jp') && locale !== 'ja') {
         changeLocale('ja');
+      } else if ((location === '/' || location.startsWith('/zh-tw')) && locale !== 'zh-TW') {
+        // 確保首頁和 /zh-tw 路由預設為繁體中文
+        changeLocale('zh-TW');
       }
     } catch (error) {
       console.error('Language switching error:', error);
@@ -115,6 +116,13 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={() => <Home locale="zh-TW" />} />
+      <Route path="/zh-tw" component={() => <Home locale="zh-TW" />} />
+      <Route path="/zh-tw/calculator" component={() => <Calculator locale="zh-TW" />} />
+      <Route path="/zh-tw/campaign-planner" component={() => <CampaignPlannerV2 locale="zh-TW" />} />
+      <Route path="/zh-tw/fbaudit" component={() => <FbAudit locale="zh-TW" />} />
+      <Route path="/zh-tw/pricing" component={() => <Pricing locale="zh-TW" />} />
+      <Route path="/zh-tw/dashboard" component={() => <Dashboard locale="zh-TW" />} />
+      <Route path="/zh-tw/about" component={() => <About locale="zh-TW" />} />
       <Route path="/calculator" component={() => <Calculator locale="zh-TW" />} />
       <Route path="/campaign-planner" component={() => <CampaignPlannerV2 locale="zh-TW" />} />
       <Route path="/fbaudit" component={() => <FbAudit locale="zh-TW" />} />
