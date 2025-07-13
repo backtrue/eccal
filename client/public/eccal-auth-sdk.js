@@ -167,19 +167,20 @@ class EccalAuth {
     }
 
     /**
-     * 執行登入
+     * 執行 Google SSO 登入
      */
     login() {
         const currentUrl = window.location.href;
         const origin = window.location.origin;
         
-        // 構建登入 URL
-        const loginUrl = `${this.baseUrl}/api/sso/login?` +
+        // 構建 Google SSO 登入 URL
+        const loginUrl = `${this.baseUrl}/api/auth/google-sso?` +
             `returnTo=${encodeURIComponent(currentUrl)}&` +
-            `origin=${encodeURIComponent(origin)}&` +
-            `siteName=${encodeURIComponent(this.siteName)}`;
+            `service=${encodeURIComponent(this.siteName)}`;
         
-        // 重定向到登入頁面
+        console.log('Redirecting to Google SSO:', loginUrl);
+        
+        // 重定向到 Google OAuth 流程
         window.location.href = loginUrl;
     }
 

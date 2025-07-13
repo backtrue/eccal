@@ -328,7 +328,11 @@
 
         // 處理 Google 登入
         function handleGoogleLogin() {
-            const loginURL = `${AUTH_CONFIG.baseURL}/api/auth/google-sso?returnTo=${encodeURIComponent(AUTH_CONFIG.returnURL)}`;
+            const returnUrl = encodeURIComponent(window.location.href);
+            const serviceName = encodeURIComponent(window.location.hostname.split('.')[0]); // 取得子域名作為服務名
+            const loginURL = `${AUTH_CONFIG.baseURL}/api/auth/google-sso?returnTo=${returnUrl}&service=${serviceName}`;
+            
+            console.log('Redirecting to Google SSO:', loginURL);
             window.location.href = loginURL;
         }
 

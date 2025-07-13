@@ -22,18 +22,21 @@
 ### 認證流程
 ```
 1. 用戶點擊 Google 登入按鈕
-2. 重定向到主平台 Google OAuth
-3. 用戶完成 Google 授權
-4. 系統自動創建/更新用戶資料
-5. 返回 JWT token 給子服務
-6. 子服務儲存 token 並維持登入狀態
+2. 重定向到主平台 /api/auth/google-sso (GET)
+3. 主平台重定向到 Google OAuth 授權頁面
+4. 用戶完成 Google 授權
+5. Google 回調到 /api/auth/google-sso/callback
+6. 系統自動創建/更新用戶資料並生成 JWT token
+7. 重定向回子服務並攜帶 token
+8. 子服務儲存 token 並維持登入狀態
 ```
 
 ### API 端點
 - **主平台**: `https://eccal.thinkwithblack.com`
-- **Google SSO**: `/api/auth/google-sso`
-- **Token 驗證**: `/api/sso/verify-token`
-- **用戶資料**: `/api/account-center/user/:userId`
+- **Google SSO 啟動**: `/api/auth/google-sso` (GET)
+- **Google SSO 回調**: `/api/auth/google-sso/callback` (GET)
+- **Token 驗證**: `/api/sso/verify-token` (POST)
+- **用戶資料**: `/api/account-center/user/:userId` (GET)
 
 ## 🚀 快速開始
 
@@ -117,7 +120,11 @@
 
         // 處理 Google 登入
         function handleGoogleLogin() {
-            const loginURL = `${AUTH_CONFIG.baseURL}/api/auth/google-sso?returnTo=${encodeURIComponent(AUTH_CONFIG.returnURL)}`;
+            const returnUrl = encodeURIComponent(window.location.href);
+            const serviceName = encodeURIComponent(window.location.hostname.split('.')[0]); // 取得子域名作為服務名
+            const loginURL = `${AUTH_CONFIG.baseURL}/api/auth/google-sso?returnTo=${returnUrl}&service=${serviceName}`;
+            
+            console.log('Redirecting to Google SSO:', loginURL);
             window.location.href = loginURL;
         }
 
