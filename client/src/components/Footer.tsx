@@ -191,7 +191,38 @@ export default function Footer() {
 
         {/* Bottom Section */}
         <div className="border-t border-gray-700 mt-8 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
+          <div className="flex flex-col items-center space-y-4">
+            {/* 三個主要服務連結 */}
+            <div className="flex justify-center items-center gap-2 text-blue-300">
+              <a 
+                href="https://eccal.thinkwithblack.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-blue-200 transition-colors font-medium"
+              >
+                報數據
+              </a>
+              <span className="text-gray-400">｜</span>
+              <a 
+                href="https://audai.thinkwithblack.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-blue-200 transition-colors font-medium"
+              >
+                報受眾
+              </a>
+              <span className="text-gray-400">｜</span>
+              <a 
+                href="https://quote.thinkwithblack.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-blue-200 transition-colors font-medium"
+              >
+                報價
+              </a>
+            </div>
+            
+            {/* 版權聲明 */}
             <p className="text-gray-400 text-sm">
               © 2025 {getCurrentLocale() === 'zh-TW' ? '煜言顧問有限公司' : 
                       <a href="https://toldyou.co" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
