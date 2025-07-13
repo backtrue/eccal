@@ -4,6 +4,7 @@
 
 本指引提供完整的子服務 Google SSO 登入整合步驟，適用於所有子域名服務：
 - `audai.thinkwithblack.com`
+- `quote.thinkwithblack.com`
 - `sub3.thinkwithblack.com`
 - `sub4.thinkwithblack.com`
 - `sub5.thinkwithblack.com`
