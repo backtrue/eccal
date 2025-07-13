@@ -98,12 +98,13 @@ function Router() {
   // Route-based language switching - only change if explicit language prefix is detected
   useEffect(() => {
     try {
-      if (location.startsWith('/en') && locale !== 'en') {
+      if (location.startsWith('/zh-tw') && locale !== 'zh-TW') {
+        changeLocale('zh-TW');
+      } else if (location.startsWith('/en') && locale !== 'en') {
         changeLocale('en');
       } else if (location.startsWith('/jp') && locale !== 'ja') {
         changeLocale('ja');
       }
-      // Removed automatic zh-TW switching for root path to preserve user's language preference
     } catch (error) {
       console.error('Language switching error:', error);
     }
