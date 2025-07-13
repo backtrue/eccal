@@ -19,7 +19,8 @@
    - 服務內容 (1列)
 
 2. **底部區域**
-   - 四個主要服務連結 (版權聲明之上)
+   - 四個主要服務連結
+   - 友情連結
    - 版權聲明
 
 ## 🔗 必須包含的四個主要服務
@@ -34,6 +35,18 @@
 - **報受眾**: https://audai.thinkwithblack.com  
 - **報價**: https://quote.thinkwithblack.com
 - **報 LINE**: https://thinkwithblack.com
+
+## 🤝 友情連結
+
+位置：主要服務連結下方，版權聲明上方
+
+```
+友情連結
+BVG全方位電商顧問｜數據投廣專家綠界大數據
+```
+
+- **BVG全方位電商顧問**: https://www.bvgcorp.net (nofollow)
+- **數據投廣專家綠界大數據**: https://www.ecpaydata.com.tw/ (nofollow)
 
 ## 🛠️ 技術實作
 
@@ -128,6 +141,20 @@
           </a>
         </div>
         
+        <!-- 友情連結 -->
+        <div class="flex flex-col items-center gap-1 text-gray-400 text-sm">
+          <span class="font-medium">友情連結</span>
+          <div class="flex justify-center items-center gap-2">
+            <a href="https://www.bvgcorp.net" target="_blank" rel="noopener noreferrer nofollow" class="hover:text-gray-300 transition-colors">
+              BVG全方位電商顧問
+            </a>
+            <span>｜</span>
+            <a href="https://www.ecpaydata.com.tw/" target="_blank" rel="noopener noreferrer nofollow" class="hover:text-gray-300 transition-colors">
+              數據投廣專家綠界大數據
+            </a>
+          </div>
+        </div>
+        
         <!-- 版權聲明 -->
         <p class="text-gray-400 text-sm">
           © 2025 煜言顧問有限公司(TW) <a href="https://toldyou.co" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">燈言顧問株式会社(JP)</a> 版權所有
@@ -166,6 +193,18 @@ const services = [
   { name: '報 LINE', url: 'https://thinkwithblack.com' }
 ];
 
+// 友情連結
+const friendLinks = [
+  { name: 'BVG全方位電商顧問', url: 'https://www.bvgcorp.net' },
+  { name: '數據投廣專家綠界大數據', url: 'https://www.ecpaydata.com.tw/' }
+];
+
+function generateFriendLinks() {
+  return friendLinks.map(link => 
+    `<a href="${link.url}" target="_blank" rel="noopener noreferrer nofollow" class="hover:text-gray-300 transition-colors">${link.name}</a>`
+  ).join('<span>｜</span>');
+}
+
 function generateServiceLinks() {
   return services.map(service => 
     `<a href="${service.url}" target="_blank" rel="noopener noreferrer" class="hover:text-blue-200 font-medium">${service.name}</a>`
@@ -199,7 +238,9 @@ function generateServiceLinks() {
 
 ## 📋 檢查清單
 
-- [ ] 四個主要服務連結在版權聲明上方
+- [ ] 四個主要服務連結在正確位置
+- [ ] 友情連結在服務連結下方，版權聲明上方
+- [ ] 友情連結使用 nofollow 屬性
 - [ ] 使用正確的「｜」分隔符號
 - [ ] 所有外部連結都有 `target="_blank" rel="noopener noreferrer"`
 - [ ] 響應式設計在各尺寸裝置上正常

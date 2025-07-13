@@ -231,6 +231,30 @@ export default function Footer() {
               </a>
             </div>
             
+            {/* 友情連結 */}
+            <div className="flex flex-col items-center gap-1 text-gray-400 text-sm">
+              <span className="font-medium">友情連結</span>
+              <div className="flex justify-center items-center gap-2">
+                <a 
+                  href="https://www.bvgcorp.net" 
+                  target="_blank" 
+                  rel="noopener noreferrer nofollow"
+                  className="hover:text-gray-300 transition-colors"
+                >
+                  BVG全方位電商顧問
+                </a>
+                <span>｜</span>
+                <a 
+                  href="https://www.ecpaydata.com.tw/" 
+                  target="_blank" 
+                  rel="noopener noreferrer nofollow"
+                  className="hover:text-gray-300 transition-colors"
+                >
+                  數據投廣專家綠界大數據
+                </a>
+              </div>
+            </div>
+            
             {/* 版權聲明 */}
             <p className="text-gray-400 text-sm">
               © 2025 {getCurrentLocale() === 'zh-TW' ? 
