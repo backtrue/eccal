@@ -169,13 +169,27 @@ const EccalAuth = {
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('userSection').style.display = 'block';
             
+            // 正確的會員等級顯示和判斷
+            const membershipBadge = user.membership === 'pro' ? 
+                '<span style="color: gold; font-weight: bold;">PRO</span>' : 
+                '<span style="color: gray;">FREE</span>';
+            
             document.getElementById('userInfo').innerHTML = `
                 <p><strong>姓名：</strong> ${user.name}</p>
                 <p><strong>Email：</strong> ${user.email}</p>
-                <p><strong>會員等級：</strong> ${user.membership}</p>
+                <p><strong>會員等級：</strong> ${membershipBadge}</p>
                 <p><strong>可用點數：</strong> ${user.credits}</p>
                 <p><strong>用戶 ID：</strong> ${user.id}</p>
             `;
+            
+            // 基於會員等級的功能控制示例
+            if (user.membership === 'pro') {
+                console.log('用戶是 Pro 會員，提供完整功能');
+                // 啟用 Pro 功能
+            } else {
+                console.log('用戶是免費會員，提供基本功能');
+                // 限制功能或提示升級
+            }
         }
         
         function login() {
@@ -249,6 +263,7 @@ const EccalAuth = {
 系統已預設允許以下域名：
 - https://eccal.thinkwithblack.com
 - https://audai.thinkwithblack.com
+- https://quote.thinkwithblack.com
 - https://sub3.thinkwithblack.com
 - https://sub4.thinkwithblack.com
 - https://sub5.thinkwithblack.com
@@ -267,6 +282,23 @@ const EccalAuth = {
   "aud": "目標域名",
   "iat": "發行時間",
   "exp": "過期時間"
+}
+```
+
+### 🔥 重要修正：會員等級欄位映射
+**最新修正（2025-01-14）：**
+- ✅ JWT Token 中的會員等級欄位名稱為 `membership`
+- ✅ 資料庫中的會員等級欄位名稱為 `membership_level`
+- ✅ 所有 API 回應都使用 `membership` 欄位名稱
+- ✅ 子服務應使用 `user.membership` 來判斷會員等級
+
+**正確的會員等級判斷：**
+```javascript
+// 正確方式：使用 membership 欄位
+if (user.membership === 'pro') {
+    // 提供 Pro 功能
+} else {
+    // 提供免費功能
 }
 ```
 
@@ -308,4 +340,5 @@ const EccalAuth = {
 
 ---
 
-**最後更新：2025-01-12**
+**最後更新：2025-01-14**
+**重要修正：修復了會員等級欄位映射問題 (membership vs membership_level)**
