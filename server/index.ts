@@ -91,7 +91,15 @@ app.get('/api/auth/google-sso/callback', async (req, res) => {
   try {
     const { code, state } = req.query;
     
+    console.log('=== Google OAuth 回調開始 ===');
+    console.log('Query 參數:', {
+      code: code ? 'present' : 'missing',
+      state: state ? 'present' : 'missing',
+      allParams: req.query
+    });
+    
     if (!code) {
+      console.error('缺少授權碼');
       return res.status(400).json({
         success: false,
         error: '缺少授權碼',
@@ -103,13 +111,15 @@ app.get('/api/auth/google-sso/callback', async (req, res) => {
     let stateData = { returnTo: '/', service: 'unknown', origin: '' };
     if (state) {
       try {
+        console.log('原始 state 參數:', state);
         stateData = JSON.parse(Buffer.from(state as string, 'base64').toString());
+        console.log('解析後的 state 資料:', stateData);
       } catch (e) {
         console.error('解析 state 失敗:', e);
       }
     }
     
-    console.log('Google OAuth 回調:', {
+    console.log('Google OAuth 回調處理:', {
       code: code ? 'present' : 'missing',
       stateData
     });
@@ -250,37 +260,47 @@ app.get('/api/auth/google-sso/callback', async (req, res) => {
     returnUrl.searchParams.set('token', token);
     returnUrl.searchParams.set('user_id', finalUser.id);
     
-    console.log('重定向回子服務:', returnUrl.toString());
+    console.log('=== 準備重定向 ===');
+    console.log('目標 URL:', returnUrl.toString());
+    console.log('JWT Token 長度:', token.length);
+    console.log('用戶 ID:', finalUser.id);
     
     // 重定向回子服務
+    console.log('執行重定向...');
     res.redirect(returnUrl.toString());
+    console.log('重定向完成');
     
   } catch (error) {
-    console.error('Google OAuth 回調錯誤:', error);
+    console.error('=== Google OAuth 回調錯誤 ===');
+    console.error('錯誤詳情:', error);
+    console.error('錯誤堆疊:', error.stack);
     
     // 嘗試重定向到錯誤頁面
     try {
       const { state } = req.query;
-      let stateData = { returnTo: '/', service: 'unknown' };
+      let stateData = { returnTo: 'https://quote.thinkwithblack.com', service: 'quote' };
       if (state) {
         try {
           stateData = JSON.parse(Buffer.from(state as string, 'base64').toString());
         } catch (e) {
-          // 忽略解析錯誤
+          console.error('解析 state 失敗:', e);
         }
       }
       
       const errorUrl = new URL(stateData.returnTo);
       errorUrl.searchParams.set('auth_error', 'true');
-      errorUrl.searchParams.set('error_message', 'Google OAuth 認證失敗');
+      errorUrl.searchParams.set('error_message', encodeURIComponent('Google OAuth 認證失敗'));
       
+      console.log('重定向到錯誤頁面:', errorUrl.toString());
       res.redirect(errorUrl.toString());
     } catch (redirectError) {
+      console.error('重定向錯誤失敗:', redirectError);
       // 如果重定向也失敗，返回 JSON 錯誤
       res.status(500).json({
         success: false,
         error: 'Google OAuth 認證失敗',
-        code: 'GOOGLE_OAUTH_CALLBACK_ERROR'
+        code: 'GOOGLE_OAUTH_CALLBACK_ERROR',
+        details: error.message
       });
     }
   }
