@@ -155,7 +155,7 @@ export function setupAccountCenterRoutes(app: Express) {
           sub: user.id,
           email: user.email,
           name: user.name,
-          membership: user.membershipLevel,
+          membership: user.membership_level,
           credits: user.credits,
           iss: 'eccal.thinkwithblack.com',
           aud: origin
@@ -246,7 +246,7 @@ export function setupAccountCenterRoutes(app: Express) {
         sub: user.id,
         email: user.email,
         name: user.name,
-        membership: user.membershipLevel,
+        membership: user.membership_level,
         credits: user.credits,
         iss: 'eccal.thinkwithblack.com'
       },
