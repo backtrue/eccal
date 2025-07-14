@@ -11,6 +11,194 @@ const app = express();
 // -------------------- 1.5. 高優先級 API 端點 --------------------
 // 這些端點必須在所有中間件之前註冊，避免被 Vite 攔截
 
+// 測試頁面端點
+app.get('/test-google-oauth.html', (req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google OAuth 測試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover {
+            background: #357ae8;
+        }
+        .log {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #007bff;
+            font-family: monospace;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Google OAuth 測試</h1>
+        
+        <div id="status">
+            <h2>狀態檢查</h2>
+            <div id="url-params"></div>
+            <div id="auth-result"></div>
+        </div>
+
+        <div id="controls">
+            <h2>測試控制</h2>
+            <button onclick="startGoogleOAuth()">開始 Google OAuth</button>
+            <button onclick="testQuoteService()">測試 Quote 服務</button>
+            <button onclick="clearData()">清除資料</button>
+        </div>
+
+        <div id="logs">
+            <h2>日誌</h2>
+            <div id="log-container"></div>
+        </div>
+    </div>
+
+    <script>
+        // 頁面載入時檢查 URL 參數
+        window.onload = function() {
+            checkUrlParams();
+            checkAuthResult();
+        };
+
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('log-container');
+            const logElement = document.createElement('div');
+            logElement.className = \`log \${type}\`;
+            logElement.innerHTML = \`[\${new Date().toLocaleTimeString()}] \${message}\`;
+            logContainer.appendChild(logElement);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function checkUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const params = {};
+            
+            for (const [key, value] of urlParams) {
+                params[key] = value;
+            }
+            
+            const paramsDiv = document.getElementById('url-params');
+            if (Object.keys(params).length > 0) {
+                paramsDiv.innerHTML = \`<div class="log">URL 參數: \${JSON.stringify(params, null, 2)}</div>\`;
+            } else {
+                paramsDiv.innerHTML = '<div class="log">沒有 URL 參數</div>';
+            }
+        }
+
+        function checkAuthResult() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const authResultDiv = document.getElementById('auth-result');
+            
+            if (urlParams.get('auth_success') === 'true') {
+                const token = urlParams.get('token');
+                const userId = urlParams.get('user_id');
+                
+                authResultDiv.innerHTML = \`
+                    <div class="log success">
+                        <h3>認證成功！</h3>
+                        <p>Token: \${token ? '已獲得' : '缺少'}</p>
+                        <p>User ID: \${userId || '未設定'}</p>
+                        <p>Token 長度: \${token ? token.length : 0}</p>
+                    </div>
+                \`;
+                
+                log('認證成功！', 'success');
+                
+                // 自動儲存到 localStorage
+                if (token) {
+                    localStorage.setItem('eccal_auth_token', token);
+                    log('Token 已儲存到 localStorage', 'success');
+                }
+                
+            } else if (urlParams.get('auth_error') === 'true') {
+                const errorMessage = urlParams.get('error_message') || '未知錯誤';
+                
+                authResultDiv.innerHTML = \`
+                    <div class="log error">
+                        <h3>認證失敗</h3>
+                        <p>錯誤: \${decodeURIComponent(errorMessage)}</p>
+                    </div>
+                \`;
+                
+                log(\`認證失敗: \${errorMessage}\`, 'error');
+            } else {
+                authResultDiv.innerHTML = '<div class="log">未檢測到認證結果</div>';
+            }
+        }
+
+        function startGoogleOAuth() {
+            log('開始 Google OAuth 流程...');
+            
+            const returnUrl = encodeURIComponent(window.location.href.split('?')[0]);
+            const serviceName = 'test';
+            const oauthUrl = \`https://eccal.thinkwithblack.com/api/auth/google-sso?returnTo=\${returnUrl}&service=\${serviceName}\`;
+            
+            log(\`重定向到: \${oauthUrl}\`);
+            window.location.href = oauthUrl;
+        }
+
+        function testQuoteService() {
+            log('測試 Quote 服務流程...');
+            
+            const returnUrl = encodeURIComponent('https://quote.thinkwithblack.com');
+            const serviceName = 'quote';
+            const oauthUrl = \`https://eccal.thinkwithblack.com/api/auth/google-sso?returnTo=\${returnUrl}&service=\${serviceName}\`;
+            
+            log(\`重定向到: \${oauthUrl}\`);
+            window.location.href = oauthUrl;
+        }
+
+        function clearData() {
+            localStorage.removeItem('eccal_auth_token');
+            document.getElementById('log-container').innerHTML = '';
+            
+            // 清除 URL 參數
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+            
+            log('資料已清除');
+            checkUrlParams();
+            checkAuthResult();
+        }
+    </script>
+</body>
+</html>`);
+});
+
 // Google SSO 認證端點 - 高優先級註冊
 // 這個端點負責啟動 Google OAuth 流程，應該重定向到 Google
 app.get('/api/auth/google-sso', async (req, res) => {
