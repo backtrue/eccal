@@ -430,7 +430,77 @@ if (user.membership === 'pro') {
 ### 1. CORS 錯誤
 確保子服務域名已在允許清單中，所有請求都需要包含正確的 `Origin` 標頭。
 
-### 2. Token 過期處理
+### 2. Cookie 解析問題（重要）
+**問題描述**：JWT token 正確設置但後端無法讀取
+**解決方案**：確保後端安裝並配置 cookie-parser 中間件
+```javascript
+// server/index.ts
+import cookieParser from "cookie-parser";
+app.use(cookieParser());
+```
+
+### 3. 混合認證架構（適用於既有系統）
+如果子服務已有本地認證系統，需要整合兩種認證方式：
+
+```javascript
+// client/src/hooks/useAuth.ts
+export function useAuth() {
+  const { user: eccalUser, isLoading: eccalLoading, isAuthenticated: eccalAuthenticated } = useEccalAuth();
+  
+  // 優先使用 eccal 認證，回退到本地認證
+  useEffect(() => {
+    if (eccalUser) {
+      const localUser = {
+        id: parseInt(eccalUser.id),
+        username: eccalUser.name,
+        email: eccalUser.email,
+      };
+      setUser(localUser);
+    }
+    // 其他本地認證邏輯...
+  }, [eccalUser]);
+  
+  return {
+    user,
+    isAuthenticated: eccalAuthenticated || !!user,
+    isLoading,
+    // 其他方法...
+  };
+}
+```
+
+### 4. Google OAuth 回調檢測優化
+eccal 認證使用 cookie 而非 URL 參數，需要正確處理：
+
+```javascript
+// client/src/lib/eccalAuth.ts
+handleCallback(): boolean {
+  const urlParams = new URLSearchParams(window.location.search);
+  const hasGoogleCode = urlParams.get('code');
+  const hasState = urlParams.get('state');
+  
+  if (hasGoogleCode && hasState) {
+    // 檢查 auth_token cookie
+    const token = this.getCookieValue('auth_token');
+    if (token) {
+      this.setToken(token);
+      // 清除 URL 參數
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return true;
+    }
+  }
+  return false;
+}
+
+getCookieValue(name: string): string | null {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+  return null;
+}
+```
+
+### 5. Token 過期處理
 ```javascript
 async function handleTokenExpiration() {
     try {
@@ -445,7 +515,7 @@ async function handleTokenExpiration() {
 }
 ```
 
-### 3. 錯誤處理
+### 6. 錯誤處理
 所有 API 回應都包含以下結構：
 ```json
 {
@@ -502,21 +572,147 @@ EccalAuth.verifyToken(token).then(result => {
 5. 生成 JWT token (包含正確的 membership 資訊)
 6. 重定向到子服務: `{returnTo}?auth_success=true&token={JWT}&user_id={USER_ID}`
 
+## 📋 實際整合案例：子服務 quote 的問題解決
+
+### 案例背景
+「報數據之報價」系統整合 eccal SSO 的完整過程，記錄了所有遇到的問題和解決方案。
+
+### 問題解決時間軸
+
+#### 第一階段：API 端點問題
+**問題**：Google SSO 端點返回 HTML 頁面而非 302 重定向
+**解決**：eccal 技術團隊修復了 `/api/auth/google-sso` 端點
+
+#### 第二階段：Cookie 解析問題
+**問題**：JWT token 設置成功但後端無法讀取
+**解決**：安裝 cookie-parser 中間件
+```bash
+npm install cookie-parser
+npm install @types/cookie-parser --save-dev
+```
+
+#### 第三階段：前端認證狀態同步
+**問題**：後端認證成功但前端無法偵測登入狀態
+**解決**：整合混合認證系統，優先使用 eccal 認證
+
+### 最終架構
+```
+後端：Express + cookie-parser + eccal JWT 中間件
+前端：React + 混合認證 hooks (useAuth + useEccalAuth)
+認證流程：Google OAuth → eccal JWT → cookie 設置 → 前端狀態同步
+```
+
+### 關鍵學習點
+1. **必須安裝 cookie-parser** - 這是最容易忽略的問題
+2. **回調檢測需同時支援 URL 參數和 cookie** - eccal 使用 cookie 儲存 token
+3. **混合認證架構** - 既有系統可保留本地認證作為備援
+4. **認證狀態同步** - 需要整合多個認證 hook
+
+## 🏗️ 混合認證架構指南
+
+適用於已有本地認證系統的子服務：
+
+### 後端整合
+```javascript
+// server/index.ts
+import cookieParser from "cookie-parser";
+import { eccalAuthMiddleware } from "./middleware/eccalAuth";
+
+app.use(cookieParser());
+
+// 保護的 API 路由
+app.use('/api/protected', eccalAuthMiddleware);
+
+// eccal 認證端點
+app.get('/api/eccal-auth/user', eccalAuthMiddleware, (req, res) => {
+  res.json({ success: true, user: req.user });
+});
+```
+
+### 前端整合
+```javascript
+// 混合認證 hook
+export function useAuth() {
+  const [user, setUser] = useState(null);
+  const { user: eccalUser, isAuthenticated: eccalAuth } = useEccalAuth();
+  
+  // 優先使用 eccal 認證
+  const isAuthenticated = eccalAuth || !!user;
+  
+  useEffect(() => {
+    if (eccalUser) {
+      // 轉換 eccal 用戶格式到本地格式
+      setUser({
+        id: parseInt(eccalUser.id),
+        username: eccalUser.name,
+        email: eccalUser.email,
+        membership: eccalUser.membership,
+        credits: eccalUser.credits
+      });
+    }
+  }, [eccalUser]);
+  
+  return { user, isAuthenticated, /* 其他方法... */ };
+}
+```
+
+### 登入頁面
+```jsx
+function LoginPage() {
+  return (
+    <div>
+      {/* 本地登入表單 */}
+      <LoginForm />
+      
+      {/* 分隔線 */}
+      <div>或</div>
+      
+      {/* Eccal Google SSO */}
+      <button onClick={handleEccalLogin}>
+        🔍 使用 Google 登入 (Eccal 會員)
+      </button>
+    </div>
+  );
+}
+```
+
 ## 📞 技術支援
 
 如有整合問題，請聯繫：
 - **技術支援**: backtrue@thinkwithblack.com
 - **API 文檔**: 參考 `API_STATUS_REPORT.md`
 - **SDK 原始碼**: `/client/public/eccal-auth-sdk.js`
+- **實際案例**: 參考 quote 子服務整合經驗
 
 ## 🔄 版本更新記錄
 
+- **V2.1** (2025-01-14): 整合 quote 子服務實際問題解決經驗，新增混合認證架構指南
 - **V2.0** (2025-01-14): 整合兩份文件，修正會員等級欄位問題
 - **V1.2** (2025-01-14): 修復 Google SSO 回調問題
 - **V1.1** (2025-01-11): 修復生產環境 API 路由問題
 - **V1.0** (2025-01-11): 初始版本發布
 
+## 🚨 重要提醒（基於實際經驗）
+
+### 必要的後端依賴
+```bash
+npm install cookie-parser
+npm install @types/cookie-parser --save-dev
+```
+
+### 必要的中間件配置
+```javascript
+import cookieParser from "cookie-parser";
+app.use(cookieParser()); // 必須在認證中間件之前
+```
+
+### 既有系統整合原則
+1. **保留原有認證系統** - 作為備援方案
+2. **優先使用 eccal 認證** - 提供更好的用戶體驗
+3. **狀態同步** - 確保兩種認證方式的狀態一致
+4. **逐步遷移** - 可以分階段完全遷移到 eccal 認證
+
 ---
 
 **最後更新：2025-01-14**  
-**重要修正：統一整合文件，修復會員等級欄位映射問題**
+**重要修正：整合實際問題解決經驗，完善混合認證架構指南**
