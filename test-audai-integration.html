@@ -252,6 +252,8 @@
         // 驗證存儲的 token
         async function verifyStoredToken(token) {
             try {
+                log(`開始驗證存儲的 token，長度: ${token.length}`, 'info');
+                
                 const response = await fetch('https://eccal.thinkwithblack.com/api/sso/verify-token', {
                     method: 'POST',
                     headers: {
@@ -265,7 +267,9 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    if (data.valid) {
+                    log(`驗證結果: ${JSON.stringify(data, null, 2)}`, 'info');
+                    
+                    if (data.valid && data.user) {
                         log('Token 驗證成功', 'success');
                         showUserSection(data.user);
                         document.getElementById('auth-status').className = 'status success';
@@ -273,19 +277,25 @@
                     } else {
                         log('Token 無效', 'error');
                         clearStoredAuth();
-                        document.getElementById('auth-status').innerHTML = '<strong>Token 無效</strong>';
+                        showLoginSection();
+                        document.getElementById('auth-status').className = 'status error';
+                        document.getElementById('auth-status').innerHTML = '<strong>狀態:</strong> Token 無效';
                     }
                 } else {
-                    log('Token 驗證失敗', 'error');
+                    const errorData = await response.text();
+                    log(`Token 驗證失敗: ${errorData}`, 'error');
                     clearStoredAuth();
+                    showLoginSection();
                     document.getElementById('auth-status').className = 'status error';
-                    document.getElementById('auth-status').innerHTML = '<strong>Token 驗證失敗</strong>';
+                    document.getElementById('auth-status').innerHTML = `<strong>狀態:</strong> 驗證失敗 (${response.status})`;
                 }
             } catch (error) {
-                log(`Token 驗證錯誤: ${error.message}`, 'error');
+                log(`驗證 token 時發生錯誤: ${error.message}`, 'error');
+                log(`錯誤堆疊: ${error.stack}`, 'error');
                 clearStoredAuth();
+                showLoginSection();
                 document.getElementById('auth-status').className = 'status error';
-                document.getElementById('auth-status').innerHTML = `<strong>驗證錯誤:</strong> ${error.message}`;
+                document.getElementById('auth-status').innerHTML = `<strong>狀態:</strong> 驗證錯誤`;
             }
         }
 
@@ -331,7 +341,7 @@
 
         // 測試 Google 登入
         function testGoogleLogin() {
-            const returnUrl = encodeURIComponent('https://audai.thinkwithblack.com');
+            const returnUrl = encodeURIComponent('https://eccal.thinkwithblack.com/test-audai-integration.html');
             const serviceName = 'audai';
             const loginUrl = `https://eccal.thinkwithblack.com/api/auth/google-sso?returnTo=${returnUrl}&service=${serviceName}`;
             
@@ -342,30 +352,29 @@
         // 測試 Token 驗證
         function testTokenVerification() {
             const token = localStorage.getItem('eccal_auth_token');
-            if (!token) {
-                log('沒有找到本地 token', 'error');
-                return;
+            if (token) {
+                log('測試現有 token 驗證...', 'info');
+                verifyStoredToken(token);
+            } else {
+                log('沒有找到存儲的 token', 'error');
+                document.getElementById('auth-status').className = 'status error';
+                document.getElementById('auth-status').innerHTML = '<strong>錯誤:</strong> 沒有找到存儲的 token';
             }
-            
-            log('開始驗證本地 token...', 'info');
-            verifyStoredToken(token);
         }
 
         // 清除所有資料
         function clearAll() {
             clearStoredAuth();
             cleanupUrl();
-            document.getElementById('log-container').innerHTML = '';
             log('所有資料已清除', 'info');
-            checkAuthStatus();
+            document.getElementById('auth-status').className = 'status';
+            document.getElementById('auth-status').innerHTML = '<strong>狀態:</strong> 已清除，請重新登入';
+            showLoginSection();
         }
 
         // 登出
         function logout() {
-            clearStoredAuth();
-            showLoginSection();
-            document.getElementById('auth-status').innerHTML = '<strong>已登出</strong>';
-            log('用戶已登出', 'info');
+            clearAll();
         }
     </script>
 </body>
