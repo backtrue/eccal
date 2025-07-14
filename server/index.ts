@@ -1243,6 +1243,36 @@ app.get('/test-audai-integration.html', (req, res) => {
 </html>`);
 });
 
+// 測試用 JWT Token 生成端點 - 高優先級
+app.get('/api/generate-test-token', async (req, res) => {
+  try {
+    const jwt = require('jsonwebtoken');
+    const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+    
+    const testToken = jwt.sign(
+      { 
+        sub: '102598988575056957509',
+        email: 'backtrue@gmail.com',
+        name: '煜庭 邱',
+        membership: 'pro',
+        credits: 42,
+        iss: 'eccal.thinkwithblack.com',
+        aud: 'test'
+      },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    
+    res.json({
+      success: true,
+      token: testToken,
+      decoded: jwt.decode(testToken)
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Google SSO 認證端點 - 高優先級註冊
 // 這個端點負責啟動 Google OAuth 流程，應該重定向到 Google
 app.get('/api/auth/google-sso', async (req, res) => {
@@ -1584,6 +1614,8 @@ app.get('/api/account-center/health', (req, res) => {
   });
 });
 
+
+
 app.get('/api/account-center/debug', (req, res) => {
   res.json({
     success: true,
@@ -1623,11 +1655,21 @@ app.get('/api/account-center/user/:userId', async (req, res) => {
     const { users, userCredits } = await import('@shared/schema');
     const { eq } = await import('drizzle-orm');
     
-    // 查詢用戶
-    const user = await db.select()
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
+    // 查詢用戶 - 支援 email 或 userId
+    let user;
+    if (userId.includes('@')) {
+      // 如果是 email 格式，通過 email 查詢
+      user = await db.select()
+        .from(users)
+        .where(eq(users.email, userId))
+        .limit(1);
+    } else {
+      // 否則通過 userId 查詢
+      user = await db.select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+    }
     
     if (user.length === 0) {
       return res.status(404).json({
@@ -1637,13 +1679,13 @@ app.get('/api/account-center/user/:userId', async (req, res) => {
       });
     }
     
+    const userData = user[0];
+    
     // 查詢點數
     const credits = await db.select()
       .from(userCredits)
-      .where(eq(userCredits.userId, userId))
+      .where(eq(userCredits.userId, userData.id))
       .limit(1);
-    
-    const userData = user[0];
     const creditsData = credits.length > 0 ? credits[0] : null;
     
     res.json({
@@ -1651,12 +1693,10 @@ app.get('/api/account-center/user/:userId', async (req, res) => {
       user: {
         id: userData.id,
         email: userData.email,
-        name: `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
-        firstName: userData.firstName,
-        lastName: userData.lastName,
+        name: userData.name || userData.email,
         membership: userData.membershipLevel || 'free',
         membershipExpires: userData.membershipExpires,
-        credits: creditsData ? creditsData.balance : 0,
+        credits: userData.credits || 0,
         profileImageUrl: userData.profileImageUrl,
         createdAt: userData.createdAt
       }
@@ -1804,6 +1844,7 @@ app.post('/api/sso/verify-token', express.json(), async (req, res) => {
     const allowedOrigins = [
       'https://eccal.thinkwithblack.com',
       'https://audai.thinkwithblack.com',
+      'https://quote.thinkwithblack.com',
       'https://sub3.thinkwithblack.com',
       'https://sub4.thinkwithblack.com',
       'https://sub5.thinkwithblack.com',
@@ -1841,7 +1882,9 @@ app.post('/api/sso/verify-token', express.json(), async (req, res) => {
         user: {
           id: decoded.sub,
           email: decoded.email,
-          name: decoded.name
+          name: decoded.name,
+          membership: decoded.membership,
+          credits: decoded.credits
         }
       });
     } catch (jwtError) {

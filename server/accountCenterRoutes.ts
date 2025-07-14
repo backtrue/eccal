@@ -265,20 +265,25 @@ export function setupAccountCenterRoutes(app: Express) {
   app.get('/api/account-center/user/:userId', async (req: Request, res: Response) => {
     try {
       const { userId } = req.params;
+      console.log('Querying user with ID:', userId);
       
       // 支援通過 email 或 userId 查詢
       let user;
       if (userId.includes('@')) {
         // 如果是 email 格式，通過 email 查詢
+        console.log('Searching by email:', userId);
         user = await db.query.users.findFirst({
           where: eq(users.email, userId)
         });
       } else {
         // 否則通過 userId 查詢
+        console.log('Searching by ID:', userId);
         user = await db.query.users.findFirst({
           where: eq(users.id, userId)
         });
       }
+      
+      console.log('Query result:', user ? { found: true, email: user.email, name: user.name } : { found: false });
       
       if (!user) {
         return res.status(404).json({ 
