@@ -747,6 +747,14 @@ app.get('/api/auth/google-sso/callback', async (req, res) => {
     
     const finalUser = updatedUser[0];
     
+    console.log('最終用戶資料:', {
+      id: finalUser.id,
+      email: finalUser.email,
+      name: finalUser.name,
+      membershipLevel: finalUser.membershipLevel,
+      credits: finalUser.credits
+    });
+    
     // 生成 JWT token
     const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
     const token = jwt.sign(
