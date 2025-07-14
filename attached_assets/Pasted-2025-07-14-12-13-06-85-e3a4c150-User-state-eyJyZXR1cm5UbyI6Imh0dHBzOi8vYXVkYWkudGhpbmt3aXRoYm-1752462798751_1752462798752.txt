@@ -1,0 +1,116 @@
+2025-07-14 12:13:06.85
+e3a4c150
+User
+原始 state 參數: eyJyZXR1cm5UbyI6Imh0dHBzOi8vYXVkYWkudGhpbmt3aXRoYmxhY2suY29tIiwic2VydmljZSI6InVua25vd24iLCJvcmlnaW4iOiJodHRwczovL2F1ZGFpLnRoaW5rd2l0aGJsYWNrLmNvbS8ifQ==
+2025-07-14 12:13:06.85
+e3a4c150
+User
+解析後的 state 資料: {
+2025-07-14 12:13:06.85
+e3a4c150
+User
+returnTo: 'https://audai.thinkwithblack.com',
+2025-07-14 12:13:06.85
+e3a4c150
+User
+service: 'unknown',
+2025-07-14 12:13:06.85
+e3a4c150
+User
+origin: 'https://audai.thinkwithblack.com/'
+2025-07-14 12:13:06.85
+e3a4c150
+User
+}
+2025-07-14 12:13:06.85
+e3a4c150
+User
+Google OAuth 回調處理: {
+2025-07-14 12:13:06.85
+e3a4c150
+User
+code: 'present',
+2025-07-14 12:13:06.85
+e3a4c150
+User
+stateData: {
+2025-07-14 12:13:06.85
+e3a4c150
+User
+returnTo: 'https://audai.thinkwithblack.com',
+2025-07-14 12:13:06.85
+e3a4c150
+User
+service: 'unknown',
+2025-07-14 12:13:06.85
+e3a4c150
+User
+origin: 'https://audai.thinkwithblack.com/'
+2025-07-14 12:13:06.85
+e3a4c150
+User
+}
+2025-07-14 12:13:06.85
+e3a4c150
+User
+}
+2025-07-14 12:13:06.85
+e3a4c150
+User
+開始交換授權碼...
+2025-07-14 12:13:06.95
+e3a4c150
+User
+Token 交換響應狀態: 200
+2025-07-14 12:13:06.95
+e3a4c150
+User
+Token 交換結果: success
+2025-07-14 12:13:06.95
+e3a4c150
+User
+開始獲取用戶資料...
+2025-07-14 12:13:07.02
+e3a4c150
+User
+用戶資料響應狀態: 200
+2025-07-14 12:13:07.02
+e3a4c150
+User
+用戶資料: { email: 'present', name: 'present' }
+2025-07-14 12:13:07.02
+e3a4c150
+User
+開始檢查/創建用戶...
+2025-07-14 12:13:07.12
+e3a4c150
+User
+用戶查詢結果: new user
+2025-07-14 12:13:07.12
+e3a4c150
+User
+創建新用戶: hyuianng@gmail.com
+2025-07-14 12:13:07.19
+e3a4c150
+User
+=== 準備重定向 ===
+2025-07-14 12:13:07.19
+e3a4c150
+User
+目標 URL: https://audai.thinkwithblack.com/?auth_success=true&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNjdkZmFkYi0wMjdlLTQxOTMtOGY0Yy0xZjFkOWIxZTMxMzgiLCJlbWFpbCI6Imh5dWlhbm5nQGdtYWlsLmNvbSIsIm5hbWUiOiJZdWtpaWkiLCJtZW1iZXJzaGlwIjoiZnJlZSIsImNyZWRpdHMiOjMwLCJpc3MiOiJlY2NhbC50aGlua3dpdGhibGFjay5jb20iLCJhdWQiOiJodHRwczovL2F1ZGFpLnRoaW5rd2l0aGJsYWNrLmNvbS8iLCJpYXQiOjE3NTI0NjI3ODcsImV4cCI6MTc1MzA2NzU4N30.cu7ahEoO_EAL6ByPFVivHOgtT-SopsxVQIa01VRx7h4&user_id=167dfadb-027e-4193-8f4c-1f1d9b1e3138
+2025-07-14 12:13:07.19
+e3a4c150
+User
+JWT Token 長度: 392
+2025-07-14 12:13:07.19
+e3a4c150
+User
+用戶 ID: 167dfadb-027e-4193-8f4c-1f1d9b1e3138
+2025-07-14 12:13:07.19
+e3a4c150
+User
+執行重定向...
+2025-07-14 12:13:07.20
+e3a4c150
+User
+重定向完成
