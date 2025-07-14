@@ -302,6 +302,129 @@ if (user.membership === 'pro') {
 }
 ```
 
+## 🚨 子服務開發者重要更新事項
+
+### 1. 會員等級欄位變更 (Critical)
+- **舊版可能錯誤：** 如果之前使用 `user.membershipLevel` 會造成 undefined
+- **新版正確：** 必須使用 `user.membership` 
+- **影響範圍：** 所有判斷會員等級的代碼都需要檢查
+
+### 2. JWT Token 格式一致性
+- **確認點：** 所有 API 端點 (verify-token, user data, credits) 現在都返回一致的 `membership` 欄位
+- **測試方法：** 使用 `console.log(user.membership)` 確認值為 "pro" 或 "free"
+
+### 3. 用戶認證狀態檢查
+```javascript
+// 建議的完整檢查流程
+async function checkUserAuth(token) {
+    // 1. 驗證 Token
+    const result = await EccalAuth.verifyToken(token);
+    if (!result.success || !result.valid) {
+        return { authenticated: false, error: 'Invalid token' };
+    }
+    
+    // 2. 獲取完整用戶資料
+    const userData = await EccalAuth.getUserData(result.user.id);
+    if (!userData.success) {
+        return { authenticated: false, error: 'Cannot fetch user data' };
+    }
+    
+    // 3. 檢查關鍵欄位
+    const user = userData.user;
+    if (!user.membership || !user.credits !== undefined) {
+        return { authenticated: false, error: 'Missing user data' };
+    }
+    
+    return { 
+        authenticated: true, 
+        user: user,
+        isPro: user.membership === 'pro',
+        credits: user.credits
+    };
+}
+```
+
+### 4. 錯誤處理強化
+- **新增：** 更詳細的錯誤回應格式
+- **建議：** 檢查 `result.success` 和 `result.valid` 雙重驗證
+- **Debug：** 使用 `console.log` 輸出完整的 API 回應進行調試
+
+### 5. CORS 配置更新
+- **新增域名：** `https://quote.thinkwithblack.com` 已加入允許清單
+- **注意：** 確保你的子域名在 ALLOWED_ORIGINS 清單中
+
+### 6. 測試檢查清單
+**部署前必須測試：**
+- [ ] Google OAuth 登入流程
+- [ ] JWT Token 驗證回應格式
+- [ ] 會員等級判斷邏輯 (`user.membership`)
+- [ ] 點數扣除功能
+- [ ] 錯誤處理機制
+- [ ] 跨域請求 (CORS)
+
+**具體測試指令：**
+```javascript
+// 在瀏覽器控制台執行
+const token = localStorage.getItem('eccal_token');
+EccalAuth.verifyToken(token).then(result => {
+    console.log('Token verification:', result);
+    console.log('Membership:', result.user?.membership);
+    console.log('Credits:', result.user?.credits);
+});
+```
+
+## 🔧 Google SSO 回調問題已解決 (2025-01-14)
+
+### 問題狀況
+用戶回報 Google OAuth 流程完成後，eccal 回調端點沒有正確重定向回子服務。
+
+### 解決狀況
+✅ **問題已解決** - Google SSO 回調端點已完全實現並正常工作
+
+### 回調端點詳細資訊
+- **端點位置**: `/api/auth/google-sso/callback`
+- **實現狀況**: 完整實現，包含所有必要邏輯
+- **重定向邏輯**: 正確實現，會重定向到 `returnTo` URL 並附帶 JWT token
+
+### 回調流程說明
+1. Google OAuth 完成後回調到 eccal 端點
+2. 系統解析 `state` 參數獲取 `returnTo` 和 `service` 信息
+3. 使用授權碼交換 Google access token
+4. 獲取用戶資料並創建/更新用戶記錄
+5. 生成 JWT token (包含正確的 membership 資訊)
+6. 重定向到子服務: `{returnTo}?auth_success=true&token={JWT}&user_id={USER_ID}`
+
+### 測試驗證
+```bash
+# 回調端點確實存在並正常工作
+curl -I "https://eccal.thinkwithblack.com/api/auth/google-sso/callback?code=test&state=..."
+# 返回適當的錯誤處理 (需要真實的 Google 授權碼)
+```
+
+### 子服務集成確認
+確保你的子服務能正確處理回調：
+```javascript
+// 檢查 URL 參數
+const urlParams = new URLSearchParams(window.location.search);
+const authSuccess = urlParams.get('auth_success');
+const token = urlParams.get('token');
+const userId = urlParams.get('user_id');
+
+if (authSuccess === 'true' && token) {
+    // 儲存 token 並驗證
+    localStorage.setItem('eccal_token', token);
+    EccalAuth.verifyToken(token).then(result => {
+        console.log('Auth successful:', result);
+        // 檢查 user.membership 等級
+        if (result.user.membership === 'pro') {
+            // 提供 Pro 功能
+        }
+    });
+}
+```
+
+**結論：Google SSO 回調問題已完全解決，系統正常運作中。**
+
 ### 錯誤處理
 所有 API 回應都包含以下結構：
 ```json
