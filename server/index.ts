@@ -369,10 +369,14 @@ app.get('/test-audai-integration.html', (req, res) => {
                 // 解析 JWT token (安全解析，處理可能的錯誤)
                 let payload;
                 try {
+                    log(\`開始解析 JWT token, 長度: \${token.length}\`, 'info');
+                    
                     const tokenParts = token.split('.');
                     if (tokenParts.length !== 3) {
                         throw new Error('JWT token 格式不正確');
                     }
+                    
+                    log(\`JWT token 部分長度: header=\${tokenParts[0].length}, payload=\${tokenParts[1].length}, signature=\${tokenParts[2].length}\`, 'info');
                     
                     // 修正 base64 padding
                     let base64Payload = tokenParts[1];
@@ -380,17 +384,51 @@ app.get('/test-audai-integration.html', (req, res) => {
                         base64Payload += '=';
                     }
                     
-                    payload = JSON.parse(atob(base64Payload));
-                    log(\`JWT 解析成功: \${JSON.stringify(payload, null, 2)}\`, 'info');
+                    log(\`base64 payload 長度: \${base64Payload.length}\`, 'info');
+                    
+                    const decodedPayload = atob(base64Payload);
+                    log(\`解碼後的 payload: \${decodedPayload}\`, 'info');
+                    
+                    payload = JSON.parse(decodedPayload);
+                    log(\`JWT 解析成功: \${JSON.stringify(payload, null, 2)}\`, 'success');
                 } catch (parseError) {
                     log(\`JWT 解析失敗: \${parseError.message}\`, 'error');
-                    // 使用基本用戶資訊
-                    payload = {
-                        email: 'unknown@example.com',
-                        name: '未知用戶',
-                        membership: 'free',
-                        credits: 0
-                    };
+                    log(\`錯誤堆疊: \${parseError.stack}\`, 'error');
+                    log(\`Token 內容: \${token}\`, 'error');
+                    
+                    // 嘗試使用 API 驗證 token
+                    log('嘗試使用 API 驗證 token...', 'info');
+                    try {
+                        const response = await fetch('https://eccal.thinkwithblack.com/api/sso/verify-token', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Origin': window.location.origin
+                            },
+                            body: JSON.stringify({ token })
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.valid && data.user) {
+                                log('API 驗證成功，使用 API 返回的用戶資訊', 'success');
+                                payload = data.user;
+                            } else {
+                                throw new Error('API 驗證失敗');
+                            }
+                        } else {
+                            throw new Error(\`API 驗證響應錯誤: \${response.status}\`);
+                        }
+                    } catch (apiError) {
+                        log(\`API 驗證也失敗: \${apiError.message}\`, 'error');
+                        // 使用基本用戶資訊
+                        payload = {
+                            email: 'unknown@example.com',
+                            name: '未知用戶',
+                            membership: 'free',
+                            credits: 0
+                        };
+                    }
                 }
 
                 // 顯示用戶資訊
@@ -799,6 +837,17 @@ app.get('/api/auth/google-sso/callback', async (req, res) => {
       algorithm: 'HS256'
     });
     
+    console.log('生成的 JWT Token:', token);
+    console.log('Token 長度:', token.length);
+    
+    // 立即驗證生成的 token
+    try {
+      const verifyResult = jwt.verify(token, JWT_SECRET);
+      console.log('JWT 驗證成功:', verifyResult);
+    } catch (verifyError) {
+      console.error('JWT 驗證失敗:', verifyError);
+    }
+    
     // 構建回調 URL
     const returnUrl = new URL(stateData.returnTo);
     returnUrl.searchParams.set('auth_success', 'true');
@@ -819,6 +868,8 @@ app.get('/api/auth/google-sso/callback', async (req, res) => {
     console.error('=== Google OAuth 回調錯誤 ===');
     console.error('錯誤詳情:', error);
     console.error('錯誤堆疊:', error.stack);
+    console.error('錯誤類型:', error.name);
+    console.error('錯誤信息:', error.message);
     
     // 嘗試重定向到錯誤頁面
     try {

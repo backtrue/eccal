@@ -1,0 +1,92 @@
+2025-07-14 16:07:26.32
+ca0de415
+User
+=== Google OAuth 回調開始 ===
+2025-07-14 16:07:26.32
+ca0de415
+User
+Query 參數: {
+2025-07-14 16:07:26.32
+ca0de415
+User
+code: 'present',
+2025-07-14 16:07:26.32
+ca0de415
+User
+state: 'present',
+2025-07-14 16:07:26.32
+ca0de415
+User
+allParams: {
+2025-07-14 16:07:26.32
+ca0de415
+User
+state: 'eyJyZXR1cm5UbyI6Imh0dHBzOi8vZWNjYWwudGhpbmt3aXRoYmxhY2suY29tL3Rlc3QtYXVkYWktaW50ZWdyYXRpb24uaHRtbCIsInNlcnZpY2UiOiJhdWRhaSIsIm9yaWdpbiI6Imh0dHBzOi8vZWNjYWwudGhpbmt3aXRoYmxhY2suY29tL3Rlc3QtYXVkYWktaW50ZWdyYXRpb24uaHRtbCJ9',
+2025-07-14 16:07:26.32
+ca0de415
+User
+code: '4/0AVMBsJg3L_4tE14rcZwkzV0VIFPyRjdRwVZdizyJ3TPSd3EZWXRpQ8WOR7rls7oUxqHt_Q',
+2025-07-14 16:07:26.32
+ca0de415
+User
+scope: 'email profile https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid',
+2025-07-14 16:07:26.32
+ca0de415
+User
+authuser: '0',
+2025-07-14 16:07:26.32
+ca0de415
+User
+prompt: 'consent'
+2025-07-14 16:07:26.32
+ca0de415
+User
+}
+2025-07-14 16:07:26.32
+ca0de415
+User
+}
+2025-07-14 16:07:26.32
+ca0de415
+User
+原始 state 參數: eyJyZXR1cm5UbyI6Imh0dHBzOi8vZWNjYWwudGhpbmt3aXRoYmxhY2suY29tL3Rlc3QtYXVkYWktaW50ZWdyYXRpb24uaHRtbCIsInNlcnZpY2UiOiJhdWRhaSIsIm9yaWdpbiI6Imh0dHBzOi8vZWNjYWwudGhpbmt3aXRoYmxhY2suY29tL3Rlc3QtYXVkYWktaW50ZWdyYXRpb24uaHRtbCJ9
+2025-07-14 16:07:26.32
+ca0de415
+User
+解析後的 state 資料: {
+2025-07-14 16:07:26.32
+ca0de415
+User
+returnTo: 'https://eccal.thinkwithblack.com/test-audai-integration.html',
+2025-07-14 16:07:26.32
+ca0de415
+User
+service: 'audai',
+2025-07-14 16:07:26.32
+ca0de415
+User
+origin: 'https://eccal.thinkwithblack.com/test-audai-integration.html'
+2025-07-14 16:07:26.32
+ca0de415
+User
+}
+2025-07-14 16:07:26.32
+ca0de415
+User
+Google OAuth 回調處理: {
+2025-07-14 16:07:26.32
+ca0de415
+User
+code: 'present',
+2025-07-14 16:07:26.32
+ca0de415
+User
+stateData: {
+2025-07-14 16:07:26.32
+ca0de415
+User
+returnTo: 'https://eccal.thinkwithblack.com/test-audai-integration.html',
+2025-07-14 16:07:26.32
+ca0de415
+User
+service: 'audai',
