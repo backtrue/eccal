@@ -1,0 +1,104 @@
+2025-07-14 11:56:59.35
+1f9f8592
+User
+returnTo: 'https://eccal.thinkwithblack.com/test-google-oauth.html',
+2025-07-14 11:56:59.35
+1f9f8592
+User
+service: 'test',
+2025-07-14 11:56:59.35
+1f9f8592
+User
+origin: 'https://eccal.thinkwithblack.com/test-google-oauth.html'
+2025-07-14 11:56:59.35
+1f9f8592
+User
+}
+2025-07-14 11:56:59.35
+1f9f8592
+User
+}
+2025-07-14 11:56:59.65
+1f9f8592
+User
+=== 準備重定向 ===
+2025-07-14 11:56:59.65
+1f9f8592
+User
+目標 URL: https://eccal.thinkwithblack.com/test-google-oauth.html?auth_success=true&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMDI1OTg5ODg1NzUwNTY5NTc1MDkiLCJlbWFpbCI6ImJhY2t0cnVlQGdtYWlsLmNvbSIsIm5hbWUiOiLpgrHnhZzluq3vvIjpgrHlsI_pu5HvvIkiLCJtZW1iZXJzaGlwIjoicHJvIiwiY3JlZGl0cyI6NDIsImlzcyI6ImVjY2FsLnRoaW5rd2l0aGJsYWNrLmNvbSIsImF1ZCI6Imh0dHBzOi8vZWNjYWwudGhpbmt3aXRoYmxhY2suY29tL3Rlc3QtZ29vZ2xlLW9hdXRoLmh0bWwiLCJpYXQiOjE3NTI0NjE4MTksImV4cCI6MTc1MzA2NjYxOX0.z7M9dK2-yK0A_PmYFWf8JXdTKM0U6rB7iTvlP7GfHwQ&user_id=102598988575056957509
+2025-07-14 11:56:59.65
+1f9f8592
+User
+JWT Token 長度: 424
+2025-07-14 11:56:59.65
+1f9f8592
+User
+用戶 ID: 102598988575056957509
+2025-07-14 11:56:59.65
+1f9f8592
+User
+執行重定向...
+2025-07-14 11:56:59.66
+1f9f8592
+User
+重定向完成
+2025-07-14 11:57:04.44
+1f9f8592
+User
+Google SSO 啟動請求: {
+2025-07-14 11:57:04.44
+1f9f8592
+User
+returnTo: 'https://quote.thinkwithblack.com',
+2025-07-14 11:57:04.44
+1f9f8592
+User
+service: 'quote',
+2025-07-14 11:57:04.44
+1f9f8592
+User
+origin: undefined,
+2025-07-14 11:57:04.44
+1f9f8592
+User
+referer: 'https://eccal.thinkwithblack.com/test-google-oauth.html?auth_success=true&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMDI1OTg5ODg1NzUwNTY5NTc1MDkiLCJlbWFpbCI6ImJhY2t0cnVlQGdtYWlsLmNvbSIsIm5hbWUiOiLpgrHnhZzluq3vvIjpgrHlsI_pu5HvvIkiLCJtZW1iZXJzaGlwIjoicHJvIiwiY3JlZGl0cyI6NDIsImlzcyI6ImVjY2FsLnRoaW5rd2l0aGJsYWNrLmNvbSIsImF1ZCI6Imh0dHBzOi8vZWNjYWwudGhpbmt3aXRoYmxhY2suY29tL3Rlc3QtZ29vZ2xlLW9hdXRoLmh0bWwiLCJpYXQiOjE3NTI0NjE4MTksImV4cCI6MTc1MzA2NjYxOX0.z7M9dK2-yK0A_PmYFWf8JXdTKM0U6rB7iTvlP7GfHwQ&user_id=102598988575056957509'
+2025-07-14 11:57:04.44
+1f9f8592
+User
+}
+2025-07-14 11:57:04.44
+1f9f8592
+User
+重定向到 Google OAuth: https://accounts.google.com/o/oauth2/v2/auth?client_id=1099048232723-3mkkju9csjc2vho5nb581hv5hseffklm.apps.googleusercontent.com&redirect_uri=https%3A%2F%2Feccal.thinkwithblack.com%2Fapi%2Fauth%2Fgoogle-sso%2Fcallback&response_type=code&scope=profile%20email%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fanalytics.readonly&state=eyJyZXR1cm5UbyI6Imh0dHBzOi8vcXVvdGUudGhpbmt3aXRoYmxhY2suY29tIiwic2VydmljZSI6InF1b3RlIiwib3JpZ2luIjoiaHR0cHM6Ly9lY2NhbC50aGlua3dpdGhibGFjay5jb20vdGVzdC1nb29nbGUtb2F1dGguaHRtbD9hdXRoX3N1Y2Nlc3M9dHJ1ZSZ0b2tlbj1leUpoYkdjaU9pSklVekkxTmlJc0luUjVjQ0k2SWtwWFZDSjkuZXlKemRXSWlPaUl4TURJMU9UZzVPRGcxTnpVd05UWTVOVGMxTURraUxDSmxiV0ZwYkNJNkltSmhZMnQwY25WbFFHZHRZV2xzTG1OdmJTSXNJbTVoYldVaU9pTHBnckhuaFp6bHVxM3Z2SWpwZ3JIbHNJX3B1NUh2dklraUxDSnRaVzFpWlhKemFHbHdJam9pY0hKdklpd2lZM0psWkdsMGN5STZORElzSW1semN5STZJbVZqWTJGc0xuUm9hVzVyZDJsMGFHSnNZV05yTG1OdmJTSXNJbUYxWkNJNkltaDBkSEJ6T2k4dlpXTmpZV3d1ZEdocGJtdDNhWFJvWW14aFkyc3VZMjl0TDNSbGMzUXRaMjl2WjJ4bExXOWhkWFJvTG1oMGJXd2lMQ0pwWVhRaU9qRTNOVEkwTmpFNE1Ua3NJbVY0Y0NJNk1UYzFNekEyTmpZeE9YMC56N005ZEsyLXlLMEFfUG1ZRldmOEpYZFRLTTBVNnJCN2lUdmxQN0dmSHdRJnVzZXJfaWQ9MTAyNTk4OTg4NTc1MDU2OTU3NTA5In0=&access_type=offline&prompt=consent
+2025-07-14 11:57:10.67
+1f9f8592
+User
+=== Google OAuth 回調開始 ===
+2025-07-14 11:57:10.67
+1f9f8592
+User
+Query 參數: {
+2025-07-14 11:57:10.67
+1f9f8592
+User
+code: 'present',
+2025-07-14 11:57:10.67
+1f9f8592
+User
+state: 'present',
+2025-07-14 11:57:10.67
+1f9f8592
+User
+allParams: {
+2025-07-14 11:57:10.67
+1f9f8592
+User
+state: 'eyJyZXR1cm5UbyI6Imh0dHBzOi8vcXVvdGUudGhpbmt3aXRoYmxhY2suY29tIiwic2VydmljZSI6InF1b3RlIiwib3JpZ2luIjoiaHR0cHM6Ly9lY2NhbC50aGlua3dpdGhibGFjay5jb20vdGVzdC1nb29nbGUtb2F1dGguaHRtbD9hdXRoX3N1Y2Nlc3M9dHJ1ZSZ0b2tlbj1leUpoYkdjaU9pSklVekkxTmlJc0luUjVjQ0k2SWtwWFZDSjkuZXlKemRXSWlPaUl4TURJMU9UZzVPRGcxTnpVd05UWTVOVGMxTURraUxDSmxiV0ZwYkNJNkltSmhZMnQwY25WbFFHZHRZV2xzTG1OdmJTSXNJbTVoYldVaU9pTHBnckhuaFp6bHVxM3Z2SWpwZ3JIbHNJX3B1NUh2dklraUxDSnRaVzFpWlhKemFHbHdJam9pY0hKdklpd2lZM0psWkdsMGN5STZORElzSW1semN5STZJbVZqWTJGc0xuUm9hVzVyZDJsMGFHSnNZV05yTG1OdmJTSXNJbUYxWkNJNkltaDBkSEJ6T2k4dlpXTmpZV3d1ZEdocGJtdDNhWFJvWW14aFkyc3VZMjl0TDNSbGMzUXRaMjl2WjJ4bExXOWhkWFJvTG1oMGJXd2lMQ0pwWVhRaU9qRTNOVEkwTmpFNE1Ua3NJbVY0Y0NJNk1UYzFNekEyTmpZeE9YMC56N005ZEsyLXlLMEFfUG1ZRldmOEpYZFRLTTBVNnJCN2lUdmxQN0dmSHdRJnVzZXJfaWQ9MTAyNTk4OTg4NTc1MDU2OTU3NTA5In0=',
+2025-07-14 11:57:10.67
+1f9f8592
+User
+code: '4/0AVMBsJidiC3VRH1ry_lH90Wj7a9-b3UxBaxvkbpWVecVu_A2ivQBtPTFflghNbTvNoBqWg',
+2025-07-14 11:57:10.67
+1f9f8592
+User
+scope: 'email profile https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid',

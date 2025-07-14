@@ -317,6 +317,7 @@ app.get('/api/auth/google-sso/callback', async (req, res) => {
     const crypto = await import('crypto');
     
     // 交換授權碼獲取 access token
+    console.log('開始交換授權碼...');
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: {
@@ -333,7 +334,9 @@ app.get('/api/auth/google-sso/callback', async (req, res) => {
       })
     });
     
+    console.log('Token 交換響應狀態:', tokenResponse.status);
     const tokenData = await tokenResponse.json();
+    console.log('Token 交換結果:', tokenData.access_token ? 'success' : 'failed');
     
     if (!tokenData.access_token) {
       console.error('獲取 access token 失敗:', tokenData);
@@ -345,13 +348,19 @@ app.get('/api/auth/google-sso/callback', async (req, res) => {
     }
     
     // 使用 access token 獲取用戶資料
+    console.log('開始獲取用戶資料...');
     const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: {
         'Authorization': `Bearer ${tokenData.access_token}`
       }
     });
     
+    console.log('用戶資料響應狀態:', userResponse.status);
     const userData = await userResponse.json();
+    console.log('用戶資料:', {
+      email: userData.email ? 'present' : 'missing',
+      name: userData.name ? 'present' : 'missing'
+    });
     
     if (!userData.email) {
       console.error('獲取用戶資料失敗:', userData);
@@ -363,6 +372,7 @@ app.get('/api/auth/google-sso/callback', async (req, res) => {
     }
     
     // 檢查或創建用戶
+    console.log('開始檢查/創建用戶...');
     const { db } = await import('./db');
     const { users } = await import('@shared/schema');
     const { eq } = await import('drizzle-orm');
@@ -372,6 +382,7 @@ app.get('/api/auth/google-sso/callback', async (req, res) => {
       .where(eq(users.email, userData.email))
       .limit(1);
     
+    console.log('用戶查詢結果:', user.length > 0 ? 'existing user' : 'new user');
     let userId: string;
     
     if (user.length === 0) {
