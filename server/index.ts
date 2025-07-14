@@ -73,130 +73,803 @@ app.get('/test-google-oauth.html', (req, res) => {
             <div id="url-params"></div>
             <div id="auth-result"></div>
         </div>
-
-        <div id="controls">
-            <h2>測試控制</h2>
-            <button onclick="startGoogleOAuth()">開始 Google OAuth</button>
-            <button onclick="testQuoteService()">測試 Quote 服務</button>
-            <button onclick="clearData()">清除資料</button>
+        
+        <div id="user-info" style="display: none;">
+            <h2>用戶資訊</h2>
+            <div id="user-data"></div>
         </div>
-
-        <div id="logs">
-            <h2>日誌</h2>
-            <div id="log-container"></div>
+        
+        <div id="test-results">
+            <h2>測試結果</h2>
+            <div id="test-log"></div>
+        </div>
+        
+        <div>
+            <button onclick="testGoogleLogin()">測試 Google 登入</button>
+            <button onclick="testTokenVerification()">測試 Token 驗證</button>
+            <button onclick="clearLocalStorage()">清除本地資料</button>
         </div>
     </div>
 
     <script>
-        // 頁面載入時檢查 URL 參數
-        window.onload = function() {
-            checkUrlParams();
-            checkAuthResult();
-        };
-
-        function log(message, type = 'info') {
-            const logContainer = document.getElementById('log-container');
-            const logElement = document.createElement('div');
-            logElement.className = \`log \${type}\`;
-            logElement.innerHTML = \`[\${new Date().toLocaleTimeString()}] \${message}\`;
-            logContainer.appendChild(logElement);
-            logContainer.scrollTop = logContainer.scrollHeight;
-        }
-
+        // 檢查 URL 參數
         function checkUrlParams() {
             const urlParams = new URLSearchParams(window.location.search);
-            const params = {};
+            const authSuccess = urlParams.get('auth_success');
+            const token = urlParams.get('token');
             
-            for (const [key, value] of urlParams) {
-                params[key] = value;
-            }
-            
-            const paramsDiv = document.getElementById('url-params');
-            if (Object.keys(params).length > 0) {
-                paramsDiv.innerHTML = \`<div class="log">URL 參數: \${JSON.stringify(params, null, 2)}</div>\`;
-            } else {
-                paramsDiv.innerHTML = '<div class="log">沒有 URL 參數</div>';
+            document.getElementById('url-params').innerHTML = 
+                'auth_success: ' + authSuccess + '<br>' +
+                'token: ' + (token ? token.substring(0, 20) + '...' : 'none');
+                
+            if (authSuccess === 'true' && token) {
+                localStorage.setItem('eccal_auth_token', token);
+                verifyToken(token);
             }
         }
-
-        function checkAuthResult() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const authResultDiv = document.getElementById('auth-result');
-            
-            if (urlParams.get('auth_success') === 'true') {
-                const token = urlParams.get('token');
-                const userId = urlParams.get('user_id');
-                
-                authResultDiv.innerHTML = \`
-                    <div class="log success">
-                        <h3>認證成功！</h3>
-                        <p>Token: \${token ? '已獲得' : '缺少'}</p>
-                        <p>User ID: \${userId || '未設定'}</p>
-                        <p>Token 長度: \${token ? token.length : 0}</p>
-                    </div>
-                \`;
-                
-                log('認證成功！', 'success');
-                
-                // 自動儲存到 localStorage
-                if (token) {
-                    localStorage.setItem('eccal_auth_token', token);
-                    log('Token 已儲存到 localStorage', 'success');
+        
+        function verifyToken(token) {
+            fetch('/api/sso/verify-token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: token })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.valid && data.user) {
+                    document.getElementById('auth-result').innerHTML = 
+                        '<div class="success">Token 有效！</div>';
+                    document.getElementById('user-data').innerHTML = 
+                        'Email: ' + data.user.email + '<br>' +
+                        'Name: ' + data.user.name + '<br>' +
+                        'Membership: ' + data.user.membershipLevel + '<br>' +
+                        'Credits: ' + data.user.credits;
+                    document.getElementById('user-info').style.display = 'block';
+                } else {
+                    document.getElementById('auth-result').innerHTML = 
+                        '<div class="error">Token 無效</div>';
                 }
-                
-            } else if (urlParams.get('auth_error') === 'true') {
-                const errorMessage = urlParams.get('error_message') || '未知錯誤';
-                
-                authResultDiv.innerHTML = \`
-                    <div class="log error">
-                        <h3>認證失敗</h3>
-                        <p>錯誤: \${decodeURIComponent(errorMessage)}</p>
-                    </div>
-                \`;
-                
-                log(\`認證失敗: \${errorMessage}\`, 'error');
+            })
+            .catch(error => {
+                document.getElementById('auth-result').innerHTML = 
+                    '<div class="error">驗證失敗: ' + error.message + '</div>';
+            });
+        }
+        
+        function testGoogleLogin() {
+            const returnUrl = encodeURIComponent(window.location.href);
+            window.location.href = '/api/auth/google-sso?returnTo=' + returnUrl + '&service=test';
+        }
+        
+        function testTokenVerification() {
+            const token = localStorage.getItem('eccal_auth_token');
+            if (token) {
+                verifyToken(token);
             } else {
-                authResultDiv.innerHTML = '<div class="log">未檢測到認證結果</div>';
+                document.getElementById('auth-result').innerHTML = 
+                    '<div class="error">沒有找到本地 Token</div>';
             }
         }
-
-        function startGoogleOAuth() {
-            log('開始 Google OAuth 流程...');
-            
-            const returnUrl = encodeURIComponent(window.location.href.split('?')[0]);
-            const serviceName = 'test';
-            const oauthUrl = \`https://eccal.thinkwithblack.com/api/auth/google-sso?returnTo=\${returnUrl}&service=\${serviceName}\`;
-            
-            log(\`重定向到: \${oauthUrl}\`);
-            window.location.href = oauthUrl;
-        }
-
-        function testQuoteService() {
-            log('測試 Quote 服務流程...');
-            
-            const returnUrl = encodeURIComponent('https://quote.thinkwithblack.com');
-            const serviceName = 'quote';
-            const oauthUrl = \`https://eccal.thinkwithblack.com/api/auth/google-sso?returnTo=\${returnUrl}&service=\${serviceName}\`;
-            
-            log(\`重定向到: \${oauthUrl}\`);
-            window.location.href = oauthUrl;
-        }
-
-        function clearData() {
+        
+        function clearLocalStorage() {
             localStorage.removeItem('eccal_auth_token');
-            document.getElementById('log-container').innerHTML = '';
-            
-            // 清除 URL 參數
-            const cleanUrl = window.location.pathname;
-            window.history.replaceState({}, document.title, cleanUrl);
-            
-            log('資料已清除');
-            checkUrlParams();
-            checkAuthResult();
+            document.getElementById('auth-result').innerHTML = 
+                '<div class="log">本地資料已清除</div>';
+            document.getElementById('user-info').style.display = 'none';
         }
+        
+        // 頁面載入時檢查
+        checkUrlParams();
     </script>
 </body>
-</html>`);
+</html>
+  `);
+});
+
+// 新的測試頁面端點
+app.get('/test-integration-fixed.html', (req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSO 整合測試頁面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #1a1a1a;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        h2 {
+            color: #333;
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+        
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 8px 8px 8px 0;
+            transition: background 0.2s;
+        }
+        
+        .button:hover {
+            background: #0056b3;
+        }
+        
+        .button.danger {
+            background: #dc3545;
+        }
+        
+        .button.danger:hover {
+            background: #c82333;
+        }
+        
+        .status {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .log-container {
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 16px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            height: 200px;
+            overflow-y: auto;
+            line-height: 1.4;
+        }
+        
+        .user-info {
+            display: none;
+        }
+        
+        .user-info.show {
+            display: block;
+        }
+        
+        .user-data {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 6px;
+            margin-top: 12px;
+        }
+        
+        .user-data p {
+            margin: 8px 0;
+            color: #495057;
+        }
+        
+        .user-data strong {
+            color: #212529;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🔐 SSO 整合測試頁面</h1>
+            <p>測試 eccal.thinkwithblack.com 的 SSO 認證功能</p>
+            
+            <div style="margin-top: 20px;">
+                <button class="button" onclick="startGoogleLogin()">
+                    🔑 Google 登入
+                </button>
+                <button class="button" onclick="testCurrentToken()">
+                    🔍 測試當前 Token
+                </button>
+                <button class="button danger" onclick="clearAllData()">
+                    🗑️ 清除所有資料
+                </button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>📊 認證狀態</h2>
+            <div id="auth-status" class="status info">
+                正在檢查認證狀態...
+            </div>
+        </div>
+        
+        <div class="card user-info" id="user-info">
+            <h2>👤 用戶資訊</h2>
+            <div class="user-data" id="user-data">
+                <!-- 用戶資訊將在這裡顯示 -->
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>📝 操作日誌</h2>
+            <div id="log-output" class="log-container"></div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        (function() {
+            'use strict';
+            
+            // 全域變數
+            var currentToken = null;
+            var currentUser = null;
+            var baseUrl = 'https://eccal.thinkwithblack.com';
+            
+            // 日誌函數
+            function addLog(message, type) {
+                type = type || 'info';
+                var logContainer = document.getElementById('log-output');
+                var timestamp = new Date().toLocaleTimeString('zh-TW');
+                var logLine = '[' + timestamp + '] ' + message;
+                
+                if (logContainer) {
+                    logContainer.innerHTML += logLine + '\\n';
+                    logContainer.scrollTop = logContainer.scrollHeight;
+                }
+                
+                console.log(logLine);
+            }
+            
+            // 狀態顯示函數
+            function showStatus(message, type) {
+                var statusEl = document.getElementById('auth-status');
+                if (statusEl) {
+                    statusEl.className = 'status ' + (type || 'info');
+                    statusEl.textContent = message;
+                }
+            }
+            
+            // 顯示用戶資訊
+            function showUserInfo(user) {
+                var userInfoEl = document.getElementById('user-info');
+                var userDataEl = document.getElementById('user-data');
+                
+                if (userInfoEl && userDataEl) {
+                    userDataEl.innerHTML = 
+                        '<p><strong>📧 Email:</strong> ' + (user.email || '未提供') + '</p>' +
+                        '<p><strong>👤 姓名:</strong> ' + (user.name || '未設定') + '</p>' +
+                        '<p><strong>🏆 會員等級:</strong> ' + (user.membershipLevel || 'free') + '</p>' +
+                        '<p><strong>💰 點數餘額:</strong> ' + (user.credits || 0) + ' 點</p>' +
+                        '<p><strong>🔑 用戶 ID:</strong> ' + (user.id || '未知') + '</p>';
+                    
+                    userInfoEl.classList.add('show');
+                    currentUser = user;
+                }
+            }
+            
+            // 隱藏用戶資訊
+            function hideUserInfo() {
+                var userInfoEl = document.getElementById('user-info');
+                if (userInfoEl) {
+                    userInfoEl.classList.remove('show');
+                }
+                currentUser = null;
+            }
+            
+            // 驗證 Token
+            function verifyToken(token) {
+                addLog('開始驗證 Token: ' + token.substring(0, 20) + '...');
+                
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', baseUrl + '/api/sso/verify-token', true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            try {
+                                var response = JSON.parse(xhr.responseText);
+                                if (response.valid && response.user) {
+                                    addLog('✅ Token 驗證成功');
+                                    showStatus('認證成功！Token 有效', 'success');
+                                    showUserInfo(response.user);
+                                    currentToken = token;
+                                } else {
+                                    addLog('❌ Token 無效');
+                                    showStatus('Token 無效', 'error');
+                                    hideUserInfo();
+                                }
+                            } catch (e) {
+                                addLog('❌ 解析回應失敗: ' + e.message);
+                                showStatus('解析回應失敗', 'error');
+                            }
+                        } else {
+                            addLog('❌ 驗證請求失敗: HTTP ' + xhr.status);
+                            showStatus('驗證請求失敗: HTTP ' + xhr.status, 'error');
+                        }
+                    }
+                };
+                
+                xhr.send(JSON.stringify({ token: token }));
+            }
+            
+            // 檢查當前認證狀態
+            function checkAuthStatus() {
+                addLog('🔍 檢查認證狀態...');
+                
+                // 檢查 URL 參數
+                var urlParams = new URLSearchParams(window.location.search);
+                var authSuccess = urlParams.get('auth_success');
+                var token = urlParams.get('token');
+                
+                if (authSuccess === 'true' && token) {
+                    addLog('📥 從 URL 獲取到新的 Token');
+                    localStorage.setItem('eccal_auth_token', token);
+                    verifyToken(token);
+                    return;
+                }
+                
+                // 檢查本地存儲
+                var storedToken = localStorage.getItem('eccal_auth_token');
+                if (storedToken) {
+                    addLog('📦 從本地存儲獲取到 Token');
+                    verifyToken(storedToken);
+                } else {
+                    addLog('⚠️ 沒有找到有效的認證 Token');
+                    showStatus('未認證 - 請登入', 'info');
+                }
+            }
+            
+            // 全域函數：Google 登入
+            window.startGoogleLogin = function() {
+                addLog('🚀 啟動 Google 登入流程');
+                
+                var currentUrl = window.location.href.split('?')[0];
+                var returnUrl = encodeURIComponent(currentUrl);
+                var loginUrl = baseUrl + '/api/auth/google-sso?returnTo=' + returnUrl + '&service=test';
+                
+                addLog('🔗 重導向至: ' + loginUrl);
+                window.location.href = loginUrl;
+            };
+            
+            // 全域函數：測試當前 Token
+            window.testCurrentToken = function() {
+                var token = localStorage.getItem('eccal_auth_token');
+                if (token) {
+                    addLog('🧪 測試當前 Token');
+                    verifyToken(token);
+                } else {
+                    addLog('⚠️ 沒有找到本地 Token');
+                    showStatus('沒有找到本地 Token', 'error');
+                }
+            };
+            
+            // 全域函數：清除所有資料
+            window.clearAllData = function() {
+                addLog('🗑️ 清除所有本地資料');
+                localStorage.removeItem('eccal_auth_token');
+                localStorage.removeItem('eccal_auth_user');
+                hideUserInfo();
+                currentToken = null;
+                currentUser = null;
+                showStatus('資料已清除', 'info');
+                addLog('✅ 清除完成');
+            };
+            
+            // 頁面載入時檢查認證狀態
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', checkAuthStatus);
+            } else {
+                checkAuthStatus();
+            }
+            
+            addLog('🎉 頁面初始化完成');
+        })();
+    </script>
+</body>
+</html>
+  `);
+});
+
+// Facebook 資料刪除端點（Meta 合規）
+app.use('/api/facebook/data-deletion', express.json(), (req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSO 整合測試頁面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #1a1a1a;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        h2 {
+            color: #333;
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+        
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 8px 8px 8px 0;
+            transition: background 0.2s;
+        }
+        
+        .button:hover {
+            background: #0056b3;
+        }
+        
+        .button.danger {
+            background: #dc3545;
+        }
+        
+        .button.danger:hover {
+            background: #c82333;
+        }
+        
+        .status {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .log-container {
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 16px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            height: 200px;
+            overflow-y: auto;
+            line-height: 1.4;
+        }
+        
+        .user-info {
+            display: none;
+        }
+        
+        .user-info.show {
+            display: block;
+        }
+        
+        .user-data {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 6px;
+            margin-top: 12px;
+        }
+        
+        .user-data p {
+            margin: 8px 0;
+            color: #495057;
+        }
+        
+        .user-data strong {
+            color: #212529;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🔐 SSO 整合測試頁面</h1>
+            <p>測試 eccal.thinkwithblack.com 的 SSO 認證功能</p>
+            
+            <div style="margin-top: 20px;">
+                <button class="button" onclick="startGoogleLogin()">
+                    🔑 Google 登入
+                </button>
+                <button class="button" onclick="testCurrentToken()">
+                    🔍 測試當前 Token
+                </button>
+                <button class="button danger" onclick="clearAllData()">
+                    🗑️ 清除所有資料
+                </button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>📊 認證狀態</h2>
+            <div id="auth-status" class="status info">
+                正在檢查認證狀態...
+            </div>
+        </div>
+        
+        <div class="card user-info" id="user-info">
+            <h2>👤 用戶資訊</h2>
+            <div class="user-data" id="user-data">
+                <!-- 用戶資訊將在這裡顯示 -->
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>📝 操作日誌</h2>
+            <div id="log-output" class="log-container"></div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        (function() {
+            'use strict';
+            
+            // 全域變數
+            var currentToken = null;
+            var currentUser = null;
+            var baseUrl = 'https://eccal.thinkwithblack.com';
+            
+            // 日誌函數
+            function addLog(message, type) {
+                type = type || 'info';
+                var logContainer = document.getElementById('log-output');
+                var timestamp = new Date().toLocaleTimeString('zh-TW');
+                var logLine = '[' + timestamp + '] ' + message;
+                
+                if (logContainer) {
+                    logContainer.innerHTML += logLine + '\\n';
+                    logContainer.scrollTop = logContainer.scrollHeight;
+                }
+                
+                console.log(logLine);
+            }
+            
+            // 狀態顯示函數
+            function showStatus(message, type) {
+                var statusEl = document.getElementById('auth-status');
+                if (statusEl) {
+                    statusEl.className = 'status ' + (type || 'info');
+                    statusEl.textContent = message;
+                }
+            }
+            
+            // 顯示用戶資訊
+            function showUserInfo(user) {
+                var userInfoEl = document.getElementById('user-info');
+                var userDataEl = document.getElementById('user-data');
+                
+                if (userInfoEl && userDataEl) {
+                    userDataEl.innerHTML = 
+                        '<p><strong>📧 Email:</strong> ' + (user.email || '未提供') + '</p>' +
+                        '<p><strong>👤 姓名:</strong> ' + (user.name || '未設定') + '</p>' +
+                        '<p><strong>🏆 會員等級:</strong> ' + (user.membershipLevel || 'free') + '</p>' +
+                        '<p><strong>💰 點數餘額:</strong> ' + (user.credits || 0) + ' 點</p>' +
+                        '<p><strong>🔑 用戶 ID:</strong> ' + (user.id || '未知') + '</p>';
+                    
+                    userInfoEl.classList.add('show');
+                    currentUser = user;
+                }
+            }
+            
+            // 隱藏用戶資訊
+            function hideUserInfo() {
+                var userInfoEl = document.getElementById('user-info');
+                if (userInfoEl) {
+                    userInfoEl.classList.remove('show');
+                }
+                currentUser = null;
+            }
+            
+            // 驗證 Token
+            function verifyToken(token) {
+                addLog('開始驗證 Token: ' + token.substring(0, 20) + '...');
+                
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', baseUrl + '/api/sso/verify-token', true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            try {
+                                var response = JSON.parse(xhr.responseText);
+                                if (response.valid && response.user) {
+                                    addLog('✅ Token 驗證成功');
+                                    showStatus('認證成功！Token 有效', 'success');
+                                    showUserInfo(response.user);
+                                    currentToken = token;
+                                } else {
+                                    addLog('❌ Token 無效');
+                                    showStatus('Token 無效', 'error');
+                                    hideUserInfo();
+                                }
+                            } catch (e) {
+                                addLog('❌ 解析回應失敗: ' + e.message);
+                                showStatus('解析回應失敗', 'error');
+                            }
+                        } else {
+                            addLog('❌ 驗證請求失敗: HTTP ' + xhr.status);
+                            showStatus('驗證請求失敗: HTTP ' + xhr.status, 'error');
+                        }
+                    }
+                };
+                
+                xhr.send(JSON.stringify({ token: token }));
+            }
+            
+            // 檢查當前認證狀態
+            function checkAuthStatus() {
+                addLog('🔍 檢查認證狀態...');
+                
+                // 檢查 URL 參數
+                var urlParams = new URLSearchParams(window.location.search);
+                var authSuccess = urlParams.get('auth_success');
+                var token = urlParams.get('token');
+                
+                if (authSuccess === 'true' && token) {
+                    addLog('📥 從 URL 獲取到新的 Token');
+                    localStorage.setItem('eccal_auth_token', token);
+                    verifyToken(token);
+                    return;
+                }
+                
+                // 檢查本地存儲
+                var storedToken = localStorage.getItem('eccal_auth_token');
+                if (storedToken) {
+                    addLog('📦 從本地存儲獲取到 Token');
+                    verifyToken(storedToken);
+                } else {
+                    addLog('⚠️ 沒有找到有效的認證 Token');
+                    showStatus('未認證 - 請登入', 'info');
+                }
+            }
+            
+            // 全域函數：Google 登入
+            window.startGoogleLogin = function() {
+                addLog('🚀 啟動 Google 登入流程');
+                
+                var currentUrl = window.location.href.split('?')[0];
+                var returnUrl = encodeURIComponent(currentUrl);
+                var loginUrl = baseUrl + '/api/auth/google-sso?returnTo=' + returnUrl + '&service=test';
+                
+                addLog('🔗 重導向至: ' + loginUrl);
+                window.location.href = loginUrl;
+            };
+            
+            // 全域函數：測試當前 Token
+            window.testCurrentToken = function() {
+                var token = localStorage.getItem('eccal_auth_token');
+                if (token) {
+                    addLog('🧪 測試當前 Token');
+                    verifyToken(token);
+                } else {
+                    addLog('⚠️ 沒有找到本地 Token');
+                    showStatus('沒有找到本地 Token', 'error');
+                }
+            };
+            
+            // 全域函數：清除所有資料
+            window.clearAllData = function() {
+                addLog('🗑️ 清除所有本地資料');
+                localStorage.removeItem('eccal_auth_token');
+                localStorage.removeItem('eccal_auth_user');
+                hideUserInfo();
+                currentToken = null;
+                currentUser = null;
+                showStatus('資料已清除', 'info');
+                addLog('✅ 清除完成');
+            };
+            
+            // 頁面載入時檢查認證狀態
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', checkAuthStatus);
+            } else {
+                checkAuthStatus();
+            }
+            
+            addLog('🎉 頁面初始化完成');
+        })();
+    </script>
+</body>
+</html>
+  `);
+});
+
+// Facebook 資料刪除端點（Meta 合規）
+app.use('/api/facebook/data-deletion', express.json(), (req, res) => {
+  if (req.method === 'POST') {
+    res.json({ 
+      success: true, 
+      message: 'Data deletion request received',
+      url: 'https://eccal.thinkwithblack.com/privacy',
+      confirmation_code: 'DELETION_' + Date.now()
+    });
+  } else {
+    res.status(405).json({ error: 'Method not allowed' });
+  }
 });
 
 // AudAI 整合測試頁面端點
