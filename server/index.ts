@@ -366,9 +366,32 @@ app.get('/test-audai-integration.html', (req, res) => {
                 localStorage.setItem('eccal_auth_token', token);
                 log('Token 已儲存到本地存儲', 'success');
 
-                // 解析 JWT token (簡單解析，僅用於顯示)
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                log(\`JWT 解析成功: \${JSON.stringify(payload, null, 2)}\`, 'info');
+                // 解析 JWT token (安全解析，處理可能的錯誤)
+                let payload;
+                try {
+                    const tokenParts = token.split('.');
+                    if (tokenParts.length !== 3) {
+                        throw new Error('JWT token 格式不正確');
+                    }
+                    
+                    // 修正 base64 padding
+                    let base64Payload = tokenParts[1];
+                    while (base64Payload.length % 4) {
+                        base64Payload += '=';
+                    }
+                    
+                    payload = JSON.parse(atob(base64Payload));
+                    log(\`JWT 解析成功: \${JSON.stringify(payload, null, 2)}\`, 'info');
+                } catch (parseError) {
+                    log(\`JWT 解析失敗: \${parseError.message}\`, 'error');
+                    // 使用基本用戶資訊
+                    payload = {
+                        email: 'unknown@example.com',
+                        name: '未知用戶',
+                        membership: 'free',
+                        credits: 0
+                    };
+                }
 
                 // 顯示用戶資訊
                 showUserSection(payload);
@@ -757,19 +780,24 @@ app.get('/api/auth/google-sso/callback', async (req, res) => {
     
     // 生成 JWT token
     const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-    const token = jwt.sign(
-      { 
-        sub: finalUser.id,
-        email: finalUser.email,
-        name: finalUser.name,
-        membership: finalUser.membershipLevel,
-        credits: finalUser.credits,
-        iss: 'eccal.thinkwithblack.com',
-        aud: stateData.origin || 'unknown'
-      },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    
+    // 確保所有字符串都是 UTF-8 編碼的
+    const tokenPayload = {
+      sub: String(finalUser.id),
+      email: String(finalUser.email),
+      name: String(finalUser.name || ''),
+      membership: String(finalUser.membershipLevel || 'free'),
+      credits: Number(finalUser.credits || 0),
+      iss: 'eccal.thinkwithblack.com',
+      aud: String(stateData.origin || 'unknown')
+    };
+    
+    console.log('JWT Payload:', tokenPayload);
+    
+    const token = jwt.sign(tokenPayload, JWT_SECRET, { 
+      expiresIn: '7d',
+      algorithm: 'HS256'
+    });
     
     // 構建回調 URL
     const returnUrl = new URL(stateData.returnTo);
