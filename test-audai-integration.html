@@ -157,15 +157,76 @@
         }
 
         // 處理認證回調
-        function handleAuthCallback(token, userId) {
+        async function handleAuthCallback(token, userId) {
             try {
                 // 儲存 token
                 localStorage.setItem('eccal_auth_token', token);
                 log('Token 已儲存到本地存儲', 'success');
 
-                // 解析 JWT token (簡單解析，僅用於顯示)
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                log(`JWT 解析成功: ${JSON.stringify(payload, null, 2)}`, 'info');
+                // 解析 JWT token (安全解析，處理可能的錯誤)
+                let payload;
+                try {
+                    log(`開始解析 JWT token, 長度: ${token.length}`, 'info');
+                    
+                    const tokenParts = token.split('.');
+                    if (tokenParts.length !== 3) {
+                        throw new Error('JWT token 格式不正確');
+                    }
+                    
+                    log(`JWT token 部分長度: header=${tokenParts[0].length}, payload=${tokenParts[1].length}, signature=${tokenParts[2].length}`, 'info');
+                    
+                    // 修正 base64 padding
+                    let base64Payload = tokenParts[1];
+                    while (base64Payload.length % 4) {
+                        base64Payload += '=';
+                    }
+                    
+                    log(`base64 payload 長度: ${base64Payload.length}`, 'info');
+                    
+                    const decodedPayload = atob(base64Payload);
+                    log(`解碼後的 payload: ${decodedPayload}`, 'info');
+                    
+                    payload = JSON.parse(decodedPayload);
+                    log(`JWT 解析成功: ${JSON.stringify(payload, null, 2)}`, 'success');
+                } catch (parseError) {
+                    log(`JWT 解析失敗: ${parseError.message}`, 'error');
+                    log(`錯誤堆疊: ${parseError.stack}`, 'error');
+                    log(`Token 內容: ${token}`, 'error');
+                    
+                    // 嘗試使用 API 驗證 token
+                    log('嘗試使用 API 驗證 token...', 'info');
+                    try {
+                        const response = await fetch('https://eccal.thinkwithblack.com/api/sso/verify-token', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Origin': window.location.origin
+                            },
+                            body: JSON.stringify({ token })
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.valid && data.user) {
+                                log('API 驗證成功，使用 API 返回的用戶資訊', 'success');
+                                payload = data.user;
+                            } else {
+                                throw new Error('API 驗證失敗');
+                            }
+                        } else {
+                            throw new Error(`API 驗證響應錯誤: ${response.status}`);
+                        }
+                    } catch (apiError) {
+                        log(`API 驗證也失敗: ${apiError.message}`, 'error');
+                        // 使用基本用戶資訊
+                        payload = {
+                            email: 'unknown@example.com',
+                            name: '未知用戶',
+                            membership: 'free',
+                            credits: 0
+                        };
+                    }
+                }
 
                 // 顯示用戶資訊
                 showUserSection(payload);
