@@ -1,393 +1,136 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AudAI 整合測試</title>
+    <title>測試頁面</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #f5f5f5;
-        }
-        
-        .card {
-            background: white;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .status-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-        
-        .status-item {
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid #4CAF50;
-        }
-        
-        .status-item h3 {
-            margin: 0 0 10px 0;
-            color: #333;
-        }
-        
-        .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            margin: 5px;
-            background: #4CAF50;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        .btn:hover {
-            background: #45a049;
-        }
-        
-        .btn-danger {
-            background: #f44336;
-        }
-        
-        .btn-danger:hover {
-            background: #da190b;
-        }
-        
-        .btn-info {
-            background: #2196F3;
-        }
-        
-        .btn-info:hover {
-            background: #1976D2;
-        }
-        
-        .log-box {
-            background: #1e1e1e;
-            color: #00ff00;
-            padding: 15px;
-            border-radius: 5px;
-            font-family: monospace;
-            font-size: 12px;
-            max-height: 400px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }
-        
-        .user-info {
-            background: #e3f2fd;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-        
-        .user-info h3 {
-            color: #1976d2;
-            margin-top: 0;
-        }
-        
-        .hidden {
-            display: none;
-        }
-        
-        .error {
-            color: #f44336;
-        }
-        
-        .success {
-            color: #4CAF50;
-        }
-        
-        .info {
-            color: #2196F3;
-        }
+        body { font-family: Arial; margin: 20px; }
+        .btn { padding: 10px 20px; margin: 5px; background: #4CAF50; color: white; border: none; cursor: pointer; }
+        .btn:hover { background: #45a049; }
+        .btn-red { background: #f44336; }
+        .btn-red:hover { background: #da190b; }
+        .card { background: white; padding: 20px; margin: 20px 0; border: 1px solid #ddd; }
+        .log { background: #000; color: #0f0; padding: 10px; font-family: monospace; height: 200px; overflow-y: auto; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
-    <div class="card header">
-        <h1>🔧 AudAI 整合測試</h1>
-        <p>統一認證系統測試平台</p>
+    <div class="card">
+        <h1>測試頁面</h1>
+        <button class="btn" onclick="doGoogleLogin()">Google 登入</button>
+        <button class="btn" onclick="doTokenTest()">測試 Token</button>
+        <button class="btn btn-red" onclick="doClearData()">清除資料</button>
     </div>
     
     <div class="card">
-        <h2>📊 系統狀態檢查</h2>
-        <div class="status-grid">
-            <div class="status-item">
-                <h3>URL 參數</h3>
-                <div id="url-status">檢查中...</div>
-            </div>
-            <div class="status-item">
-                <h3>本地存儲</h3>
-                <div id="storage-status">檢查中...</div>
-            </div>
-            <div class="status-item">
-                <h3>認證狀態</h3>
-                <div id="auth-status">檢查中...</div>
-            </div>
-        </div>
+        <h2>狀態</h2>
+        <div id="status">載入中...</div>
+    </div>
+    
+    <div id="userinfo" class="card hidden">
+        <h2>用戶資訊</h2>
+        <div id="userdata"></div>
     </div>
     
     <div class="card">
-        <h2>🚀 測試操作</h2>
-        <button class="btn" onclick="startGoogleLogin()">Google 登入測試</button>
-        <button class="btn btn-info" onclick="verifyCurrentToken()">驗證本地 Token</button>
-        <button class="btn btn-danger" onclick="clearAllData()">清除所有資料</button>
-    </div>
-    
-    <div id="user-section" class="card hidden">
-        <h2>👤 用戶資訊</h2>
-        <div id="user-display" class="user-info"></div>
-        <button class="btn btn-danger" onclick="logout()">登出</button>
-    </div>
-    
-    <div class="card">
-        <h2>📝 系統日誌</h2>
-        <div id="logs" class="log-box"></div>
+        <h2>日誌</h2>
+        <div id="logbox" class="log"></div>
     </div>
 
     <script>
-        // 全域變數
-        var currentUser = null;
-        var currentToken = null;
-        var logContainer = null;
+        var token = null;
+        var user = null;
         
-        // 日誌函數
-        function log(message, type) {
-            type = type || 'info';
-            var timestamp = new Date().toLocaleTimeString();
-            var logEntry = '[' + timestamp + '] ' + message + '\n';
-            
-            if (logContainer) {
-                var span = document.createElement('span');
-                span.className = type;
-                span.textContent = logEntry;
-                logContainer.appendChild(span);
-                logContainer.scrollTop = logContainer.scrollHeight;
-            }
-            
-            console.log('[' + type.toUpperCase() + '] ' + message);
+        function addLog(msg) {
+            var log = document.getElementById('logbox');
+            var time = new Date().toLocaleTimeString();
+            log.innerHTML += '[' + time + '] ' + msg + '<br>';
+            log.scrollTop = log.scrollHeight;
         }
         
-        // 初始化
-        function initialize() {
-            logContainer = document.getElementById('logs');
-            log('系統初始化開始', 'info');
-            
-            checkUrlParams();
-            checkLocalStorage();
-            checkAuthState();
-            
-            log('系統初始化完成', 'success');
-        }
-        
-        // 檢查 URL 參數
-        function checkUrlParams() {
+        function checkStatus() {
             var params = new URLSearchParams(window.location.search);
-            var authSuccess = params.get('auth_success');
-            var token = params.get('token');
-            var userId = params.get('user_id');
-            var authError = params.get('auth_error');
-            var errorMsg = params.get('error_message');
+            var status = document.getElementById('status');
             
-            var urlStatus = document.getElementById('url-status');
-            var statusText = '';
-            
-            if (authSuccess === 'true') {
-                statusText = '✅ 認證成功<br>Token: ' + (token ? '已獲取' : '缺失') + '<br>用戶ID: ' + (userId || '未知');
+            if (params.get('auth_success') === 'true') {
+                token = params.get('token');
+                status.innerHTML = '認證成功，Token: ' + (token ? '已獲取' : '無');
                 if (token) {
-                    currentToken = token;
-                    log('從 URL 獲取到 Token', 'success');
-                }
-            } else if (authError === 'true') {
-                statusText = '❌ 認證失敗<br>錯誤: ' + (errorMsg || '未知錯誤');
-                log('認證失敗: ' + errorMsg, 'error');
-            } else {
-                statusText = '⚪ 無認證參數';
-            }
-            
-            urlStatus.innerHTML = statusText;
-        }
-        
-        // 檢查本地存儲
-        function checkLocalStorage() {
-            var storedToken = localStorage.getItem('eccal_auth_token');
-            var storedUser = localStorage.getItem('eccal_auth_user');
-            
-            var storageStatus = document.getElementById('storage-status');
-            var statusText = '';
-            
-            if (storedToken) {
-                currentToken = storedToken;
-                statusText = '✅ Token 已存在<br>長度: ' + storedToken.length + ' 字符';
-                log('發現本地存儲的 Token', 'info');
-            } else {
-                statusText = '⚪ 無存儲的 Token';
-            }
-            
-            if (storedUser) {
-                statusText += '<br>用戶資料: 已存在';
-            }
-            
-            storageStatus.innerHTML = statusText;
-        }
-        
-        // 檢查認證狀態
-        function checkAuthState() {
-            if (currentToken) {
-                log('開始驗證 Token', 'info');
-                verifyToken(currentToken);
-            } else {
-                document.getElementById('auth-status').innerHTML = '⚪ 未認證';
-                log('無可用的 Token', 'info');
-            }
-        }
-        
-        // 驗證 Token（使用 Promise）
-        function verifyToken(token) {
-            log('發送 Token 驗證請求', 'info');
-            
-            fetch('https://eccal.thinkwithblack.com/api/sso/verify-token', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Origin': window.location.origin
-                },
-                body: JSON.stringify({ token: token })
-            })
-            .then(function(response) {
-                log('驗證響應: ' + response.status, 'info');
-                return response.json();
-            })
-            .then(function(data) {
-                if (data.valid && data.user) {
-                    log('Token 驗證成功', 'success');
-                    currentUser = data.user;
-                    displayUserInfo(data.user);
-                    document.getElementById('auth-status').innerHTML = '✅ 已認證';
-                    
-                    // 儲存用戶資料
                     localStorage.setItem('eccal_auth_token', token);
-                    localStorage.setItem('eccal_auth_user', JSON.stringify(data.user));
-                } else {
-                    log('Token 無效', 'error');
-                    document.getElementById('auth-status').innerHTML = '❌ Token 無效';
-                    clearAuthData();
+                    testToken(token);
                 }
-            })
-            .catch(function(error) {
-                log('驗證請求失敗: ' + error.message, 'error');
-                document.getElementById('auth-status').innerHTML = '❌ 驗證失敗';
-            });
-        }
-        
-        // 顯示用戶資訊
-        function displayUserInfo(user) {
-            var userSection = document.getElementById('user-section');
-            var userDisplay = document.getElementById('user-display');
-            
-            var userHtml = '<h3>認證成功！</h3>';
-            userHtml += '<p><strong>Email:</strong> ' + user.email + '</p>';
-            userHtml += '<p><strong>姓名:</strong> ' + (user.name || '未設定') + '</p>';
-            userHtml += '<p><strong>會員等級:</strong> ' + (user.membership || 'free') + '</p>';
-            userHtml += '<p><strong>點數:</strong> ' + (user.credits || 0) + '</p>';
-            userHtml += '<p><strong>用戶ID:</strong> ' + (user.sub || user.id) + '</p>';
-            userHtml += '<p><strong>服務:</strong> ' + (user.service || 'audai') + '</p>';
-            
-            userDisplay.innerHTML = userHtml;
-            userSection.classList.remove('hidden');
-            
-            log('用戶資訊載入: ' + user.email, 'success');
-        }
-        
-        // 隱藏用戶資訊
-        function hideUserInfo() {
-            document.getElementById('user-section').classList.add('hidden');
-        }
-        
-        // 開始 Google 登入
-        function startGoogleLogin() {
-            log('啟動 Google 登入流程', 'info');
-            
-            var returnUrl = encodeURIComponent(window.location.href);
-            var loginUrl = 'https://eccal.thinkwithblack.com/api/auth/google-sso?returnTo=' + returnUrl + '&service=audai';
-            
-            log('跳轉到: ' + loginUrl, 'info');
-            window.location.href = loginUrl;
-        }
-        
-        // 驗證目前的 Token
-        function verifyCurrentToken() {
-            var token = localStorage.getItem('eccal_auth_token');
-            if (token) {
-                log('檢查存儲的 Token', 'info');
-                verifyToken(token);
             } else {
-                log('沒有找到存儲的 Token', 'error');
-                alert('沒有找到存儲的 Token，請先登入');
+                var stored = localStorage.getItem('eccal_auth_token');
+                if (stored) {
+                    token = stored;
+                    status.innerHTML = '使用本地 Token';
+                    testToken(token);
+                } else {
+                    status.innerHTML = '未認證';
+                }
             }
         }
         
-        // 清除認證資料
-        function clearAuthData() {
+        function testToken(t) {
+            addLog('測試 Token: ' + t.substring(0, 20) + '...');
+            
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'https://eccal.thinkwithblack.com/api/sso/verify-token');
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        var data = JSON.parse(xhr.responseText);
+                        if (data.valid && data.user) {
+                            user = data.user;
+                            showUser(data.user);
+                            addLog('Token 有效');
+                        } else {
+                            addLog('Token 無效');
+                        }
+                    } else {
+                        addLog('驗證失敗: ' + xhr.status);
+                    }
+                }
+            };
+            xhr.send(JSON.stringify({ token: t }));
+        }
+        
+        function showUser(u) {
+            var userinfo = document.getElementById('userinfo');
+            var userdata = document.getElementById('userdata');
+            userdata.innerHTML = 
+                '<p>Email: ' + u.email + '</p>' +
+                '<p>姓名: ' + (u.name || '未設定') + '</p>' +
+                '<p>會員: ' + (u.membership || 'free') + '</p>' +
+                '<p>點數: ' + (u.credits || 0) + '</p>';
+            userinfo.classList.remove('hidden');
+        }
+        
+        function doGoogleLogin() {
+            addLog('啟動 Google 登入');
+            var returnUrl = encodeURIComponent(window.location.href);
+            var url = 'https://eccal.thinkwithblack.com/api/auth/google-sso?returnTo=' + returnUrl + '&service=audai';
+            window.location.href = url;
+        }
+        
+        function doTokenTest() {
+            var stored = localStorage.getItem('eccal_auth_token');
+            if (stored) {
+                testToken(stored);
+            } else {
+                addLog('沒有本地 Token');
+            }
+        }
+        
+        function doClearData() {
             localStorage.removeItem('eccal_auth_token');
             localStorage.removeItem('eccal_auth_user');
-            currentUser = null;
-            currentToken = null;
-            hideUserInfo();
-            log('認證資料已清除', 'info');
+            document.getElementById('userinfo').classList.add('hidden');
+            addLog('資料已清除');
+            location.reload();
         }
         
-        // 清除所有資料
-        function clearAllData() {
-            clearAuthData();
-            
-            // 清理 URL
-            var url = new URL(window.location);
-            url.searchParams.delete('auth_success');
-            url.searchParams.delete('token');
-            url.searchParams.delete('user_id');
-            url.searchParams.delete('auth_error');
-            url.searchParams.delete('error_message');
-            window.history.replaceState({}, document.title, url.toString());
-            
-            log('所有資料已清除', 'info');
-            
-            // 重新載入頁面
-            setTimeout(function() {
-                location.reload();
-            }, 1000);
-        }
-        
-        // 登出
-        function logout() {
-            log('用戶登出', 'info');
-            clearAllData();
-        }
-        
-        // 頁面載入完成後初始化
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initialize);
-        } else {
-            initialize();
-        }
+        checkStatus();
     </script>
 </body>
 </html>
