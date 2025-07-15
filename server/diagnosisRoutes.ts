@@ -60,13 +60,18 @@ export function setupDiagnosisRoutes(app: Express) {
         userIdMask: userId.substring(0, 8) + '***'
       });
 
+      // 🔍 CRITICAL: 確保隱私政策在 Facebook OAuth 對話框中顯示
       const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?` +
         `client_id=${appId}&` +
         `redirect_uri=${encodeURIComponent(redirectUri)}&` +
         `scope=ads_read,ads_management&` +
         `response_type=code&` +
         `state=${userId}&` +
-        `auth_type=rerequest`;
+        `auth_type=rerequest&` +
+        `display=popup`;
+
+      console.log('🔍 Facebook OAuth URL 生成完成，包含隱私政策顯示參數');
+      console.log('Privacy Policy URL: https://thinkwithblack.com/privacy');
 
       // 直接重定向到 Facebook OAuth 頁面
       res.redirect(authUrl);
@@ -902,32 +907,7 @@ export function setupDiagnosisRoutes(app: Express) {
     }
   });
 
-  // 獲取 Facebook OAuth 授權 URL (不需要JWT認證)
-  app.get('/api/diagnosis/facebook-auth-url', async (req: any, res) => {
-    try {
-      // 強制使用 HTTPS
-      const baseUrl = `https://${req.get('host')}`;
-      const redirectUri = `${baseUrl}/api/diagnosis/facebook-callback`;
-      
-      // 生成隨機 state 用於安全驗證
-      const state = Math.random().toString(36).substring(2, 15);
-      
-      const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?` +
-        `client_id=${process.env.FACEBOOK_APP_ID}&` +
-        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-        `scope=ads_read,ads_management,business_management&` +
-        `response_type=code&` +
-        `state=${state}`;
-
-      console.log(`[FACEBOOK_AUTH] Generated auth URL for user ${req.user.id}`);
-      console.log(`[FACEBOOK_AUTH] Redirect URI: ${redirectUri}`);
-      console.log(`[FACEBOOK_AUTH] Full auth URL: ${authUrl}`);
-      res.json({ authUrl });
-    } catch (error) {
-      console.error('生成 Facebook 授權 URL 錯誤:', error);
-      res.status(500).json({ error: '生成授權連結失敗' });
-    }
-  });
+  // 重複的端點已刪除 - 使用上面的主要端點
 
   // Facebook OAuth 回調處理 (獨立於JWT認證)
   app.get('/api/diagnosis/facebook-callback', async (req, res) => {

@@ -19,7 +19,8 @@ import {
   UserCheck,
   ExternalLink,
   Play,
-  ArrowRight
+  ArrowRight,
+  Loader2
 } from "lucide-react";
 import type { Locale } from "@/lib/i18n";
 
@@ -30,6 +31,39 @@ interface FacebookTestDemoProps {
 export default function FacebookTestDemo({ locale }: FacebookTestDemoProps) {
   const { user, isAuthenticated } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
+  const [permissionStatus, setPermissionStatus] = useState<any>(null);
+  const [isCheckingPermissions, setIsCheckingPermissions] = useState(false);
+  
+  // 檢查 Facebook 權限
+  const checkFacebookPermissions = async () => {
+    if (!user?.metaAccessToken) {
+      alert('請先完成 Facebook 授權');
+      return;
+    }
+    
+    setIsCheckingPermissions(true);
+    try {
+      const response = await fetch('/api/diagnosis/facebook-permissions', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${user.metaAccessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setPermissionStatus(data);
+        console.log('Facebook 權限檢查結果:', data);
+      } else {
+        console.error('權限檢查失敗:', response.status);
+      }
+    } catch (error) {
+      console.error('權限檢查錯誤:', error);
+    } finally {
+      setIsCheckingPermissions(false);
+    }
+  };
 
   const steps = [
     {
@@ -49,7 +83,7 @@ export default function FacebookTestDemo({ locale }: FacebookTestDemoProps) {
     {
       id: 3,
       title: "3. Facebook Authorization",
-      description: "🔍 IMPORTANT: Watch for privacy policy display in Facebook OAuth dialog",
+      description: "🔍 CRITICAL: MUST verify privacy policy display in Facebook OAuth dialog. Click 'Connect Facebook' and confirm privacy policy link appears in the dialog before granting permissions.",
       action: "Facebook Authorization",
       status: user?.metaAccessToken ? "completed" : "pending"
     },
@@ -115,12 +149,19 @@ export default function FacebookTestDemo({ locale }: FacebookTestDemoProps) {
           <Alert className="mb-6 bg-blue-50 border-blue-200">
             <AlertTriangle className="h-4 w-4 text-blue-600" />
             <AlertDescription>
-              <strong>For Meta App Reviewers:</strong><br />
+              <strong>🎯 For Meta App Reviewers - E2E Testing Guide:</strong><br />
               This app requires ads_read and ads_management permissions for Facebook advertising health check services.
-              Please follow the steps below to complete testing. For any questions, contact: backtrue@thinkwithblack.com
+              Please follow the complete step-by-step process below to test all functionalities.
               <br /><br />
-              <strong>📋 Privacy Policy Notice:</strong> During Facebook login, you will see our privacy policy link displayed in the OAuth dialog.
-              Privacy Policy URL: <a href="https://thinkwithblack.com/privacy" target="_blank" className="text-blue-600 underline font-medium">https://thinkwithblack.com/privacy</a>
+              <strong>🔍 CRITICAL: Privacy Policy Visibility Test</strong><br />
+              ✅ When clicking "Connect Facebook" button, you MUST see our privacy policy link in the Facebook OAuth dialog<br />
+              ✅ Privacy Policy URL: <a href="https://thinkwithblack.com/privacy" target="_blank" className="text-blue-600 underline font-medium">https://thinkwithblack.com/privacy</a><br />
+              ✅ The privacy policy link should be clickable and accessible during the OAuth process<br />
+              ✅ Please verify you can access the privacy policy before granting permissions
+              <br /><br />
+              <strong>📧 Contact:</strong> backtrue@thinkwithblack.com | 
+              <strong>📱 App ID:</strong> 1087313456009870 | 
+              <strong>🔗 Data Deletion:</strong> eccal.thinkwithblack.com/api/facebook/data-deletion
             </AlertDescription>
           </Alert>
         </div>
