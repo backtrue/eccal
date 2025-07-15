@@ -136,24 +136,24 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <a 
-                  href="https://thinkwithblack.com/privacy" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
+                <Link
+                  href={getCurrentLocale() === 'zh-TW' ? '/privacy-policy' :
+                       getCurrentLocale() === 'en' ? '/en/privacy-policy' :
+                       '/jp/privacy-policy'} 
                   className="text-gray-300 hover:text-white transition-colors"
                 >
                   {t.privacy}
-                </a>
+                </Link>
               </li>
               <li>
-                <a 
-                  href="https://thinkwithblack.com/terms" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
+                <Link
+                  href={getCurrentLocale() === 'zh-TW' ? '/terms-of-service' :
+                       getCurrentLocale() === 'en' ? '/en/terms-of-service' :
+                       '/jp/terms-of-service'} 
                   className="text-gray-300 hover:text-white transition-colors"
                 >
                   {t.terms}
-                </a>
+                </Link>
               </li>
               <li>
                 <Link href={getCurrentLocale() === 'zh-TW' ? '/help/calculator' :

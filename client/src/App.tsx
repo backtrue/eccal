@@ -144,6 +144,8 @@ function Router() {
       <Route path="/brevo-sync" component={() => <BrevoSync />} />
       <Route path="/facebook-permissions" component={() => <FacebookPermissions />} />
       <Route path="/facebook-setup" component={() => <FacebookSetup locale="zh-TW" />} />
+      <Route path="/privacy-policy" component={() => <Privacy locale="zh-TW" />} />
+      <Route path="/terms-of-service" component={() => <Terms locale="zh-TW" />} />
       <Route path="/privacy" component={() => <Privacy locale="zh-TW" />} />
       <Route path="/terms" component={() => <Terms locale="zh-TW" />} />
       <Route path="/about" component={() => <About locale="zh-TW" />} />
@@ -164,6 +166,8 @@ function Router() {
       <Route path="/en/dashboard" component={() => <Dashboard locale="en" />} />
       <Route path="/en/brevo-sync" component={() => <BrevoSync />} />
       <Route path="/en/facebook-setup" component={() => <FacebookSetup locale="en" />} />
+      <Route path="/en/privacy-policy" component={() => <Privacy locale="en" />} />
+      <Route path="/en/terms-of-service" component={() => <Terms locale="en" />} />
       <Route path="/en/privacy" component={() => <Privacy locale="en" />} />
       <Route path="/en/terms" component={() => <Terms locale="en" />} />
       <Route path="/en/about" component={() => <About locale="en" />} />
@@ -183,6 +187,8 @@ function Router() {
       <Route path="/jp/dashboard" component={() => <Dashboard locale="ja" />} />
       <Route path="/jp/brevo-sync" component={() => <BrevoSync />} />
       <Route path="/jp/facebook-setup" component={() => <FacebookSetup locale="ja" />} />
+      <Route path="/jp/privacy-policy" component={() => <Privacy locale="ja" />} />
+      <Route path="/jp/terms-of-service" component={() => <Terms locale="ja" />} />
       <Route path="/jp/privacy" component={() => <Privacy locale="ja" />} />
       <Route path="/jp/terms" component={() => <Terms locale="ja" />} />
       <Route path="/jp/about" component={() => <About locale="ja" />} />

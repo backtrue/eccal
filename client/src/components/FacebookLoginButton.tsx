@@ -45,7 +45,7 @@ export default function FacebookLoginButton({ className }: FacebookLoginButtonPr
           <>
             {t.privacyTermsNotice.split('隱私政策')[0]}
             <a 
-              href="https://thinkwithblack.com/privacy" 
+              href="/privacy-policy" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-700 underline"
@@ -54,7 +54,7 @@ export default function FacebookLoginButton({ className }: FacebookLoginButtonPr
             </a>
             {t.privacyTermsNotice.split('隱私政策')[1].split('使用條款')[0]}
             <a 
-              href="https://thinkwithblack.com/terms" 
+              href="/terms-of-service" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-700 underline"
@@ -67,7 +67,7 @@ export default function FacebookLoginButton({ className }: FacebookLoginButtonPr
           <>
             {t.privacyTermsNotice.split('Privacy Policy')[0]}
             <a 
-              href="https://thinkwithblack.com/privacy" 
+              href="/en/privacy-policy" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-700 underline"
@@ -76,7 +76,7 @@ export default function FacebookLoginButton({ className }: FacebookLoginButtonPr
             </a>
             {t.privacyTermsNotice.split('Privacy Policy')[1].split('Terms of Service')[0]}
             <a 
-              href="https://thinkwithblack.com/terms" 
+              href="/en/terms-of-service" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-700 underline"
@@ -89,7 +89,7 @@ export default function FacebookLoginButton({ className }: FacebookLoginButtonPr
           <>
             {t.privacyTermsNotice.split('プライバシーポリシー')[0]}
             <a 
-              href="https://thinkwithblack.com/privacy" 
+              href="/jp/privacy-policy" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-700 underline"
@@ -98,7 +98,7 @@ export default function FacebookLoginButton({ className }: FacebookLoginButtonPr
             </a>
             {t.privacyTermsNotice.split('プライバシーポリシー')[1].split('利用規約')[0]}
             <a 
-              href="https://thinkwithblack.com/terms" 
+              href="/jp/terms-of-service" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-700 underline"

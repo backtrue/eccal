@@ -155,7 +155,7 @@ export default function FacebookTestDemo({ locale }: FacebookTestDemoProps) {
               <br /><br />
               <strong>🔍 CRITICAL: Privacy Policy Visibility Test</strong><br />
               ✅ When clicking "Connect Facebook" button, you MUST see our privacy policy link in the Facebook OAuth dialog<br />
-              ✅ Privacy Policy URL: <a href="https://thinkwithblack.com/privacy" target="_blank" className="text-blue-600 underline font-medium">https://thinkwithblack.com/privacy</a><br />
+              ✅ Privacy Policy URL: <a href="/privacy-policy" target="_blank" className="text-blue-600 underline font-medium">eccal.thinkwithblack.com/privacy-policy</a><br />
               ✅ The privacy policy link should be clickable and accessible during the OAuth process<br />
               ✅ Please verify you can access the privacy policy before granting permissions
               <br /><br />
@@ -249,7 +249,7 @@ export default function FacebookTestDemo({ locale }: FacebookTestDemoProps) {
                           <AlertDescription className="text-red-800">
                             <strong>🔍 FOR META REVIEWERS - PRIVACY POLICY VERIFICATION:</strong><br />
                             Clicking the button below will open the Facebook login dialog. <strong>Please verify that our privacy policy link is displayed in the OAuth dialog.</strong><br />
-                            Privacy Policy URL: <span className="font-mono text-sm bg-white px-2 py-1 rounded">https://thinkwithblack.com/privacy</span><br />
+                            Privacy Policy URL: <span className="font-mono text-sm bg-white px-2 py-1 rounded">eccal.thinkwithblack.com/privacy-policy</span><br />
                             This demonstrates compliance with Meta Platform Policy Section 4.a - Privacy Policy requirements.
                           </AlertDescription>
                         </Alert>
@@ -337,11 +337,11 @@ export default function FacebookTestDemo({ locale }: FacebookTestDemoProps) {
             <div className="mt-6 pt-6 border-t">
               <h3 className="font-semibold mb-3">Related Links (For Reviewers)</h3>
               <div className="flex flex-wrap gap-4">
-                <Button variant="outline" onClick={() => window.open('https://thinkwithblack.com/privacy', '_blank')}>
+                <Button variant="outline" onClick={() => window.open('/privacy-policy', '_blank')}>
                   <ExternalLink className="w-4 h-4 mr-2" />
                   Privacy Policy
                 </Button>
-                <Button variant="outline" onClick={() => window.open('https://thinkwithblack.com/terms', '_blank')}>
+                <Button variant="outline" onClick={() => window.open('/terms-of-service', '_blank')}>
                   <ExternalLink className="w-4 h-4 mr-2" />
                   Terms of Service
                 </Button>
