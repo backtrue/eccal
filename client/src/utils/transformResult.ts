@@ -21,6 +21,10 @@ export const transformBackendToFrontendResult = (backendResult: any, inputData: 
   // Use dailyBreakdown directly or create empty array
   const dailyBudgets: DailyBudget[] = dailyBreakdown || [];
 
+  console.log('transformResult - original funnelAllocation:', funnelAllocation);
+  console.log('transformResult - funnelAllocation type:', typeof funnelAllocation);
+  console.log('transformResult - funnelAllocation keys:', funnelAllocation ? Object.keys(funnelAllocation) : 'No keys');
+  
   return {
     totalTraffic: totalTraffic || 0,
     totalBudget: totalBudget || 0,
