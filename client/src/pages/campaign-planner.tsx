@@ -155,7 +155,7 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
 
   // Transform backend calculation result to frontend PlanningResult format
   const transformBackendToFrontendResult = (backendResult: any, inputData: CampaignPlannerFormData): PlanningResult => {
-    const { totalTraffic, totalBudget, campaignDays, budgetBreakdown, trafficBreakdown, periodDays } = backendResult;
+    const { totalTraffic, totalBudget, campaignDays, budgetBreakdown, trafficBreakdown, periodDays, funnelAllocation } = backendResult;
     const startDate = new Date(inputData.startDate);
     const endDate = new Date(inputData.endDate);
 
@@ -265,6 +265,7 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
       totalBudget,
       campaignPeriods,
       dailyBudgets,
+      funnelAllocation: funnelAllocation || null,
     };
   };
 
