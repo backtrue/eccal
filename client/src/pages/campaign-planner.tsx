@@ -17,6 +17,8 @@ import { apiRequest } from "@/lib/queryClient";
 import NavigationBar from "@/components/NavigationBar";
 import SaveProjectDialog from "@/components/SaveProjectDialog";
 import Footer from "@/components/Footer";
+import { transformBackendToFrontendResult } from "@/utils/transformResult";
+import { CampaignPlannerFormData, PlanningResult } from "@/types/campaign-planner";
 
 // Form validation schema
 const campaignPlannerSchema = z.object({
@@ -28,22 +30,9 @@ const campaignPlannerSchema = z.object({
   cpc: z.number().min(0.1, "CPC必須大於0.1"),
 });
 
-type CampaignPlannerFormData = z.infer<typeof campaignPlannerSchema>;
+type CampaignPlannerFormDataLocal = z.infer<typeof campaignPlannerSchema>;
 
-interface PlanningResult {
-  totalTraffic: number;
-  totalBudget: number;
-  campaignPeriods: any;
-  dailyBudgets?: any[];
-  funnelAllocation?: any;
-}
 
-interface DailyBudget {
-  date: string;
-  period: string;
-  budget: number;
-  traffic: number;
-}
 
 export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string }) {
   const { toast } = useToast();
@@ -52,7 +41,7 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
   const { data: analyticsData } = useAnalyticsData();
   const [results, setResults] = useState<PlanningResult | null>(null);
 
-  const form = useForm<CampaignPlannerFormData>({
+  const form = useForm<CampaignPlannerFormDataLocal>({
     resolver: zodResolver(campaignPlannerSchema),
     defaultValues: {
       startDate: undefined,
@@ -95,7 +84,7 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
   };
 
   // Secure backend calculation API call
-  const onSubmit = async (data: CampaignPlannerFormData) => {
+  const onSubmit = async (data: CampaignPlannerFormDataLocal) => {
     // Check authentication first
     if (!isAuthenticated || !user) {
       toast({
@@ -110,7 +99,8 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
     }
 
     try {
-      const response = await apiRequest('POST', '/api/campaign-planner/calculate', {
+      const response = await apiRequest('POST', '/api/v2/campaign-planner/create', {
+        name: data.name,
         startDate: data.startDate,
         endDate: data.endDate,
         targetRevenue: data.targetRevenue,
@@ -121,7 +111,7 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
 
       if ((response as any).success) {
         // Transform backend result to frontend format
-        const backendResult = (response as any).result;
+        const backendResult = (response as any).data;
         console.log('Backend result:', backendResult);
         console.log('Backend funnelAllocation:', backendResult.funnelAllocation);
         
@@ -160,121 +150,7 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
     }
   };
 
-  // Transform backend calculation result to frontend PlanningResult format
-  const transformBackendToFrontendResult = (backendResult: any, inputData: CampaignPlannerFormData): PlanningResult => {
-    const { totalTraffic, totalBudget, campaignDays, budgetBreakdown, trafficBreakdown, periodDays, funnelAllocation } = backendResult;
-    const startDate = new Date(inputData.startDate);
-    const endDate = new Date(inputData.endDate);
 
-    // Generate daily budget breakdown for UI display
-    const dailyBudgets: DailyBudget[] = [];
-
-    // Build campaign periods based on campaign type
-    let campaignPeriods: any = {};
-
-    if (campaignDays === 3) {
-      // 3-day campaign structure
-      campaignPeriods = {
-        day1: {
-          startDate: format(startDate, 'yyyy-MM-dd'),
-          endDate: format(startDate, 'yyyy-MM-dd'),
-          budget: budgetBreakdown.day1,
-          traffic: trafficBreakdown.day1,
-        },
-        day2: {
-          startDate: format(addDays(startDate, 1), 'yyyy-MM-dd'),
-          endDate: format(addDays(startDate, 1), 'yyyy-MM-dd'),
-          budget: budgetBreakdown.day2,
-          traffic: trafficBreakdown.day2,
-        },
-        day3: {
-          startDate: format(addDays(startDate, 2), 'yyyy-MM-dd'),
-          endDate: format(addDays(startDate, 2), 'yyyy-MM-dd'),
-          budget: budgetBreakdown.day3,
-          traffic: trafficBreakdown.day3,
-        },
-      };
-
-      // Generate daily budgets for 3-day campaign
-      for (let i = 0; i < 3; i++) {
-        const date = format(addDays(startDate, i), 'yyyy-MM-dd');
-        const periods = ['第一天', '第二天', '第三天'];
-        const budgets = [budgetBreakdown.day1, budgetBreakdown.day2, budgetBreakdown.day3];
-        const traffics = [trafficBreakdown.day1, trafficBreakdown.day2, trafficBreakdown.day3];
-        
-        dailyBudgets.push({
-          date,
-          period: periods[i],
-          budget: budgets[i],
-          traffic: traffics[i],
-        });
-      }
-    } else if (campaignDays >= 4 && campaignDays <= 9) {
-      // 4-9 day campaign structure
-      campaignPeriods = {
-        launch: {
-          startDate: format(startDate, 'yyyy-MM-dd'),
-          endDate: format(addDays(startDate, periodDays.launch - 1), 'yyyy-MM-dd'),
-          budget: budgetBreakdown.launch,
-          traffic: trafficBreakdown.launch,
-        },
-        main: {
-          startDate: format(addDays(startDate, periodDays.launch), 'yyyy-MM-dd'),
-          endDate: format(addDays(startDate, periodDays.launch + periodDays.main - 1), 'yyyy-MM-dd'),
-          budget: budgetBreakdown.main,
-          traffic: trafficBreakdown.main,
-        },
-        final: {
-          startDate: format(addDays(startDate, periodDays.launch + periodDays.main), 'yyyy-MM-dd'),
-          endDate: format(endDate, 'yyyy-MM-dd'),
-          budget: budgetBreakdown.final,
-          traffic: trafficBreakdown.final,
-        },
-      };
-    } else {
-      // 10+ day campaign structure (full 5 periods)
-      campaignPeriods = {
-        preheat: {
-          startDate: format(subDays(startDate, 4), 'yyyy-MM-dd'),
-          endDate: format(subDays(startDate, 1), 'yyyy-MM-dd'),
-          budget: budgetBreakdown.preheat,
-          traffic: trafficBreakdown.preheat,
-        },
-        launch: {
-          startDate: format(startDate, 'yyyy-MM-dd'),
-          endDate: format(addDays(startDate, 2), 'yyyy-MM-dd'),
-          budget: budgetBreakdown.launch,
-          traffic: trafficBreakdown.launch,
-        },
-        main: {
-          startDate: format(addDays(startDate, 3), 'yyyy-MM-dd'),
-          endDate: format(subDays(endDate, 3), 'yyyy-MM-dd'),
-          budget: budgetBreakdown.main,
-          traffic: trafficBreakdown.main,
-        },
-        final: {
-          startDate: format(subDays(endDate, 2), 'yyyy-MM-dd'),
-          endDate: format(endDate, 'yyyy-MM-dd'),
-          budget: budgetBreakdown.final,
-          traffic: trafficBreakdown.final,
-        },
-        repurchase: {
-          startDate: format(addDays(endDate, 1), 'yyyy-MM-dd'),
-          endDate: format(addDays(endDate, 7), 'yyyy-MM-dd'),
-          budget: budgetBreakdown.repurchase,
-          traffic: trafficBreakdown.repurchase,
-        },
-      };
-    }
-
-    return {
-      totalTraffic,
-      totalBudget,
-      campaignPeriods,
-      dailyBudgets,
-      funnelAllocation: funnelAllocation || null,
-    };
-  };
 
   const formatCurrency = (amount: number) => {
     return `NT$ ${amount.toLocaleString()}`;

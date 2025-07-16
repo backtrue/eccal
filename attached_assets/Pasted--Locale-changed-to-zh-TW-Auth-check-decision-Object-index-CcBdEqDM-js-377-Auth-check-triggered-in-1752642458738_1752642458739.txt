@@ -1,0 +1,107 @@
+ Locale changed to: zh-TW
+ Auth check decision: Object
+index-CcBdEqDM.js:377 Auth check triggered
+index-CcBdEqDM.js:377 Detected auth_success parameter, checking authentication...
+contentScript.bundle.js:6 🚧 👷 key 'required_field_warning' not found in localizedStrings for language zh 🚧
+contentScript.bundle.js:6 🚧 👷 key 'required_field_warning' not found in localizedStrings for language zh 🚧
+contentScript.bundle.js:347 Strategy 4: No clear indicators found, assuming All tab 
+multi-tabs.js:4806 Injected CSS loaded successfully
+index-CcBdEqDM.js:377 Auth check successful: backtrue@gmail.com
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Form submitted with data: Object
+index-CcBdEqDM.js:426 User authenticated: true
+index-CcBdEqDM.js:426 User object: Object
+index-CcBdEqDM.js:426 Making API request to: /api/v2/campaign-planner/create
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 API Response (raw): Response
+index-CcBdEqDM.js:426 API Response (parsed): Object
+index-CcBdEqDM.js:426 Setting results with data: Object
+index-CcBdEqDM.js:426 Current results state: Object
+index-CcBdEqDM.js:426 Results exists: true
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Form submitted with data: {name: '行銷活動 2025-07-02', startDate: '2025-07-10', endDate: '2025-07-30', targetRevenue: 1000000, targetAov: 1200, …}
+index-CcBdEqDM.js:426 User authenticated: true
+index-CcBdEqDM.js:426 User object: {id: '102598988575056957509', email: 'backtrue@gmail.com', name: '邱煜庭（邱小黑）', firstName: '煜庭', lastName: '邱', …}
+index-CcBdEqDM.js:426 Making API request to: /api/v2/campaign-planner/create
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 API Response (raw): Response {type: 'basic', url: 'https://eccal.thinkwithblack.com/api/v2/campaign-planner/create', redirected: false, status: 200, ok: true, …}
+index-CcBdEqDM.js:426 API Response (parsed): {success: true, data: {…}, usage: {…}}
+index-CcBdEqDM.js:426 Setting results with data: {campaign: {…}, periods: Array(5), dailyBreakdown: Array(28), funnelAllocation: {…}, summary: {…}}
+index-CcBdEqDM.js:426 Current results state: {campaign: {…}, periods: Array(5), dailyBreakdown: Array(28), funnelAllocation: {…}, summary: {…}}campaign: {id: 'd09e422f-2b70-4aae-93a8-455d98b94b91', userId: '102598988575056957509', name: '行銷活動 2025-07-02', description: '目標營收: NT$ 1,000,000，預計21天活動', startDate: '2025-07-10T00:00:00.000Z', …}dailyBreakdown: (28) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]funnelAllocation: {preheat: {…}, launch: {…}, main: {…}, final: {…}, repurchase: {…}}periods: (5) [{…}, {…}, {…}, {…}, {…}]summary: {totalBudget: 166800, totalTraffic: 33360, totalOrders: 834, totalDays: 21, avgDailyBudget: 7943, …}[[Prototype]]: Object
+index-CcBdEqDM.js:426 Results exists: true
+index-CcBdEqDM.js:48 擷取 已完成載入:POST "https://eccal.thinkwithblack.com/api/v2/campaign-planner/create"。
+In @ index-CcBdEqDM.js:48
+f @ index-CcBdEqDM.js:426
+(匿名) @ index-CcBdEqDM.js:417
+await in (匿名)
+S2 @ index-CcBdEqDM.js:37
+P2 @ index-CcBdEqDM.js:37
+T2 @ index-CcBdEqDM.js:37
+ny @ index-CcBdEqDM.js:37
+Mb @ index-CcBdEqDM.js:37
+(匿名) @ index-CcBdEqDM.js:37
+Yp @ index-CcBdEqDM.js:40
+ab @ index-CcBdEqDM.js:37
+zh @ index-CcBdEqDM.js:37
+wp @ index-CcBdEqDM.js:37
+U2 @ index-CcBdEqDM.js:37
+index-CcBdEqDM.js:48 擷取 已完成載入:GET "https://eccal.thinkwithblack.com/api/campaign-planner/usage"。
+(匿名) @ index-CcBdEqDM.js:48
+i @ index-CcBdEqDM.js:48
+b @ index-CcBdEqDM.js:48
+start @ index-CcBdEqDM.js:48
+fetch @ index-CcBdEqDM.js:48
+Vo @ index-CcBdEqDM.js:48
+fetch @ index-CcBdEqDM.js:48
+refetch @ index-CcBdEqDM.js:48
+f @ index-CcBdEqDM.js:426
+await in f
+(匿名) @ index-CcBdEqDM.js:417
+await in (匿名)
+S2 @ index-CcBdEqDM.js:37
+P2 @ index-CcBdEqDM.js:37
+T2 @ index-CcBdEqDM.js:37
+ny @ index-CcBdEqDM.js:37
+Mb @ index-CcBdEqDM.js:37
+(匿名) @ index-CcBdEqDM.js:37
+Yp @ index-CcBdEqDM.js:40
+ab @ index-CcBdEqDM.js:37
+zh @ index-CcBdEqDM.js:37
+wp @ index-CcBdEqDM.js:37
+U2 @ index-CcBdEqDM.js:37
