@@ -17,6 +17,7 @@ import { useCampaignPlannerUsage } from "@/hooks/useCampaignPlannerUsage";
 import { apiRequest } from "@/lib/queryClient";
 import NavigationBar from "@/components/NavigationBar";
 import Footer from "@/components/Footer";
+import SaveProjectDialog from "@/components/SaveProjectDialog";
 
 // 表單驗證 Schema
 const campaignFormSchema = z.object({
@@ -487,10 +488,23 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
             {/* 預算期間分配 */}
             <Card>
               <CardHeader>
-                <CardTitle>預算期間分配</CardTitle>
-                <CardDescription>
-                  根據活動長度自動分配的預算策略
-                </CardDescription>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>預算期間分配</CardTitle>
+                    <CardDescription>
+                      根據活動長度自動分配的預算策略
+                    </CardDescription>
+                  </div>
+                  {isAuthenticated && (
+                    <SaveProjectDialog 
+                      projectType="campaign_planner"
+                      projectData={{
+                        ...form.getValues(),
+                        results: results
+                      }}
+                    />
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
