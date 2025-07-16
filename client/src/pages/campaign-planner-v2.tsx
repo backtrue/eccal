@@ -712,11 +712,20 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
                     </div>
                   )}
 
+                  {/* 五期活動提示 */}
+                  {results.periods.length === 5 && (
+                    <div className="mb-4 p-3 bg-green-50 rounded-lg">
+                      <p className="text-sm text-green-700 font-medium">
+                        💡 檢測到五期活動配置，以下為完整五期漏斗分配建議
+                      </p>
+                    </div>
+                  )}
+
                   {/* 五期活動：預熱期漏斗分配 */}
                   {results.periods.length === 5 && results.periods.some(p => p.displayName.includes('預熱')) && (
                     <div className="border border-gray-200 rounded-lg p-4">
                       <h5 className="font-semibold text-lg mb-4 text-gray-800">
-                        預熱期 漏斗分配
+                        預熱期 漏斗分配（五期活動）
                       </h5>
                       
                       <div className="space-y-3">
@@ -752,11 +761,11 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
                     </div>
                   )}
 
-                  {/* 啟動期漏斗分配 */}
-                  {results.periods.some(p => p.displayName.includes('啟動')) && (
+                  {/* 五期活動：啟動期漏斗分配 */}
+                  {results.periods.length === 5 && results.periods.some(p => p.displayName.includes('啟動')) && (
                     <div className="border border-gray-200 rounded-lg p-4">
                       <h5 className="font-semibold text-lg mb-4 text-gray-800">
-                        啟動期 漏斗分配
+                        啟動期 漏斗分配（五期活動）
                       </h5>
                       
                       <div className="space-y-3">
@@ -823,11 +832,11 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
                     </div>
                   )}
 
-                  {/* 主推期漏斗分配 */}
-                  {results.periods.some(p => p.displayName.includes('主推')) && (
+                  {/* 五期活動：主推期漏斗分配 */}
+                  {results.periods.length === 5 && results.periods.some(p => p.displayName.includes('主推')) && (
                     <div className="border border-gray-200 rounded-lg p-4">
                       <h5 className="font-semibold text-lg mb-4 text-gray-800">
-                        主推期 漏斗分配
+                        主推期 漏斗分配（五期活動）
                       </h5>
                       
                       <div className="space-y-3">
@@ -894,11 +903,11 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
                     </div>
                   )}
 
-                  {/* 收尾期漏斗分配 */}
-                  {results.periods.some(p => p.displayName.includes('收尾')) && (
+                  {/* 五期活動：收尾期漏斗分配 */}
+                  {results.periods.length === 5 && results.periods.some(p => p.displayName.includes('收尾')) && (
                     <div className="border border-gray-200 rounded-lg p-4">
                       <h5 className="font-semibold text-lg mb-4 text-gray-800">
-                        收尾期 漏斗分配
+                        收尾期 漏斗分配（五期活動）
                       </h5>
                       
                       <div className="space-y-3">
@@ -950,11 +959,11 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
                     </div>
                   )}
 
-                  {/* 回購期漏斗分配 */}
-                  {results.periods.some(p => p.displayName.includes('回購')) && (
+                  {/* 五期活動：回購期漏斗分配 */}
+                  {results.periods.length === 5 && results.periods.some(p => p.displayName.includes('回購')) && (
                     <div className="border border-gray-200 rounded-lg p-4">
                       <h5 className="font-semibold text-lg mb-4 text-gray-800">
-                        回購期 漏斗分配
+                        回購期 漏斗分配（五期活動）
                       </h5>
                       
                       <div className="space-y-3">
