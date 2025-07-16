@@ -403,10 +403,9 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
               </Card>
 
               {/* 漏斗架構分配建議 */}
-              {console.log('Checking funnelAllocation:', (results as any).funnelAllocation)}
-              {console.log('funnelAllocation type:', typeof (results as any).funnelAllocation)}
-              {console.log('funnelAllocation keys:', (results as any).funnelAllocation ? Object.keys((results as any).funnelAllocation) : 'No keys')}
-              {(results as any).funnelAllocation && Object.keys((results as any).funnelAllocation).length > 0 ? (
+              {console.log('FUNNEL DEBUG - results:', results)}
+              {console.log('FUNNEL DEBUG - funnelAllocation:', results ? (results as any).funnelAllocation : 'No results')}
+              {results && (results as any).funnelAllocation && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
