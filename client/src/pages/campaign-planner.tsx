@@ -122,7 +122,13 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
       if ((response as any).success) {
         // Transform backend result to frontend format
         const backendResult = (response as any).result;
+        console.log('Backend result:', backendResult);
+        console.log('Backend funnelAllocation:', backendResult.funnelAllocation);
+        
         const frontendResult = transformBackendToFrontendResult(backendResult, data);
+        console.log('Frontend result:', frontendResult);
+        console.log('Frontend funnelAllocation:', frontendResult.funnelAllocation);
+        
         setResults(frontendResult);
         
         // Update usage info from backend response
@@ -521,7 +527,8 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
               </Card>
 
               {/* 漏斗架構分配建議 */}
-              {(results as any).funnelAllocation && (
+              {console.log('Checking funnelAllocation:', (results as any).funnelAllocation)}
+              {(results as any).funnelAllocation ? (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -632,6 +639,21 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
                         <p><strong>流量導引：</strong>導引流量進入網站，包含興趣標籤和再行銷受眾</p>
                         <p><strong>轉換促成：</strong>主力為再行銷，搭配 Facebook ASC 廣告促成轉換</p>
                       </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      漏斗架構分配建議
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center text-gray-500 p-4">
+                      <p>漏斗架構分配功能正在開發中...</p>
+                      <p className="text-sm mt-2">Debug: funnelAllocation = {JSON.stringify((results as any).funnelAllocation)}</p>
                     </div>
                   </CardContent>
                 </Card>
