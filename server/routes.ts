@@ -1665,6 +1665,60 @@ echo "Bulk import completed!"`;
     }
   });
 
+  // Get NPS ratings data
+  app.get('/api/bdmin/nps-ratings', requireJWTAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const { fbHealthChecks, users } = await import('@shared/schema');
+      const { isNotNull, desc } = await import('drizzle-orm');
+      
+      const ratings = await db
+        .select({
+          id: fbHealthChecks.id,
+          userId: fbHealthChecks.userId,
+          userEmail: users.email,
+          userName: users.name,
+          npsScore: fbHealthChecks.npsScore,
+          npsComment: fbHealthChecks.npsComment,
+          npsSubmittedAt: fbHealthChecks.npsSubmittedAt,
+          campaignName: fbHealthChecks.campaignName,
+          createdAt: fbHealthChecks.createdAt
+        })
+        .from(fbHealthChecks)
+        .leftJoin(users, eq(fbHealthChecks.userId, users.id))
+        .where(isNotNull(fbHealthChecks.npsScore))
+        .orderBy(desc(fbHealthChecks.npsSubmittedAt));
+      
+      const stats = {
+        total: ratings.length,
+        averageScore: ratings.length > 0 ? 
+          (ratings.reduce((sum, r) => sum + (r.npsScore || 0), 0) / ratings.length).toFixed(1) : 0,
+        distribution: {
+          detractors: ratings.filter(r => (r.npsScore || 0) <= 6).length,
+          passives: ratings.filter(r => (r.npsScore || 0) >= 7 && (r.npsScore || 0) <= 8).length,
+          promoters: ratings.filter(r => (r.npsScore || 0) >= 9).length
+        }
+      };
+      
+      res.json({
+        success: true,
+        stats,
+        ratings: ratings.map(r => ({
+          id: r.id,
+          userEmail: r.userEmail,
+          userName: r.userName,
+          score: r.npsScore,
+          comment: r.npsComment,
+          submittedAt: r.npsSubmittedAt,
+          campaignName: r.campaignName,
+          healthCheckDate: r.createdAt
+        }))
+      });
+    } catch (error) {
+      console.error('Error fetching NPS ratings:', error);
+      res.status(500).json({ message: 'Failed to fetch NPS ratings' });
+    }
+  });
+
   // ===== Advanced Admin Features =====
   
   // User behavior analytics
@@ -2103,6 +2157,49 @@ echo "Bulk import completed!"`;
   // Health check endpoint
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
+  // Quick NPS check endpoint (public for easy access)
+  app.get('/api/nps-check', async (req, res) => {
+    try {
+      const { fbHealthChecks, users } = await import('@shared/schema');
+      const { isNotNull, ne } = await import('drizzle-orm');
+      
+      const ratings = await db
+        .select({
+          userEmail: users.email,
+          npsScore: fbHealthChecks.npsScore,
+          npsSubmittedAt: fbHealthChecks.npsSubmittedAt
+        })
+        .from(fbHealthChecks)
+        .leftJoin(users, eq(fbHealthChecks.userId, users.id))
+        .where(
+          and(
+            isNotNull(fbHealthChecks.npsScore),
+            ne(users.email, 'backtrue@gmail.com')
+          )
+        );
+      
+      const nonAdminRatings = ratings.filter(r => 
+        r.userEmail && 
+        r.userEmail !== 'backtrue@gmail.com' && 
+        r.userEmail !== 'backtrue@seo-tw.org'
+      );
+      
+      res.json({
+        success: true,
+        totalRatings: ratings.length,
+        nonAdminRatings: nonAdminRatings.length,
+        ratings: nonAdminRatings.map(r => ({
+          email: r.userEmail,
+          score: r.npsScore,
+          date: r.npsSubmittedAt
+        }))
+      });
+    } catch (error) {
+      console.error('Error checking NPS ratings:', error);
+      res.status(500).json({ message: 'Failed to check NPS ratings' });
+    }
   });
 
   // Admin Dashboard API Routes - Real data connections
