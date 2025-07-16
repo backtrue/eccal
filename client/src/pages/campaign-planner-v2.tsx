@@ -532,6 +532,314 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
               </CardContent>
             </Card>
 
+            {/* 漏斗架構分配建議 */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  漏斗架構分配建議
+                </CardTitle>
+                <CardDescription>
+                  根據活動期間特性，為您規劃最佳的廣告受眾預算分配策略
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {/* 預熱期漏斗分配 */}
+                  {results.periods.some(p => p.displayName.includes('預熱')) && (
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <h5 className="font-semibold text-lg mb-4 text-gray-800">
+                        預熱期 漏斗分配
+                      </h5>
+                      
+                      <div className="space-y-3">
+                        <div className="bg-blue-50 p-3 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium text-blue-800">
+                              認知廣告 (Awareness)
+                            </span>
+                            <span className="text-blue-600 font-semibold">
+                              40% · {formatCurrency(results.summary.totalBudget * 0.04 * 0.4)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-blue-700">
+                            建立品牌認知度，觸及潛在客戶群體
+                          </p>
+                        </div>
+
+                        <div className="bg-green-50 p-3 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium text-green-800">
+                              興趣廣告 (Interest)
+                            </span>
+                            <span className="text-green-600 font-semibold">
+                              35% · {formatCurrency(results.summary.totalBudget * 0.04 * 0.35)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-green-700">
+                            吸引感興趣的用戶，建立初步連結
+                          </p>
+                        </div>
+
+                        <div className="bg-yellow-50 p-3 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium text-yellow-800">
+                              考慮廣告 (Consideration)
+                            </span>
+                            <span className="text-yellow-600 font-semibold">
+                              25% · {formatCurrency(results.summary.totalBudget * 0.04 * 0.25)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-yellow-700">
+                            促使用戶深入了解產品，提高購買意願
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 啟動期漏斗分配 */}
+                  {results.periods.some(p => p.displayName.includes('啟動')) && (
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <h5 className="font-semibold text-lg mb-4 text-gray-800">
+                        啟動期 漏斗分配
+                      </h5>
+                      
+                      <div className="space-y-3">
+                        <div className="bg-blue-50 p-3 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium text-blue-800">
+                              認知廣告 (Awareness)
+                            </span>
+                            <span className="text-blue-600 font-semibold">
+                              30% · {formatCurrency(results.summary.totalBudget * 0.32 * 0.3)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-blue-700">
+                            持續擴大品牌曝光，觸及更多潛在客戶
+                          </p>
+                        </div>
+
+                        <div className="bg-green-50 p-3 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium text-green-800">
+                              興趣廣告 (Interest)
+                            </span>
+                            <span className="text-green-600 font-semibold">
+                              25% · {formatCurrency(results.summary.totalBudget * 0.32 * 0.25)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-green-700">
+                            強化用戶興趣，提高互動率
+                          </p>
+                        </div>
+
+                        <div className="bg-yellow-50 p-3 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium text-yellow-800">
+                              考慮廣告 (Consideration)
+                            </span>
+                            <span className="text-yellow-600 font-semibold">
+                              35% · {formatCurrency(results.summary.totalBudget * 0.32 * 0.35)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-yellow-700">
+                            加強產品介紹，建立購買信心
+                          </p>
+                        </div>
+
+                        <div className="bg-red-50 p-3 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium text-red-800">
+                              轉換廣告 (Conversion)
+                            </span>
+                            <span className="text-red-600 font-semibold">
+                              10% · {formatCurrency(results.summary.totalBudget * 0.32 * 0.1)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-red-700">
+                            針對高意願客戶，促成首批轉換
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 主推期漏斗分配 */}
+                  {results.periods.some(p => p.displayName.includes('主推')) && (
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <h5 className="font-semibold text-lg mb-4 text-gray-800">
+                        主推期 漏斗分配
+                      </h5>
+                      
+                      <div className="space-y-3">
+                        <div className="bg-blue-50 p-3 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium text-blue-800">
+                              認知廣告 (Awareness)
+                            </span>
+                            <span className="text-blue-600 font-semibold">
+                              20% · {formatCurrency(results.summary.totalBudget * 0.38 * 0.2)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-blue-700">
+                            維持品牌曝光，持續獲取新客戶
+                          </p>
+                        </div>
+
+                        <div className="bg-green-50 p-3 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium text-green-800">
+                              興趣廣告 (Interest)
+                            </span>
+                            <span className="text-green-600 font-semibold">
+                              20% · {formatCurrency(results.summary.totalBudget * 0.38 * 0.2)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-green-700">
+                            持續培養用戶興趣，建立品牌好感
+                          </p>
+                        </div>
+
+                        <div className="bg-yellow-50 p-3 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium text-yellow-800">
+                              考慮廣告 (Consideration)
+                            </span>
+                            <span className="text-yellow-600 font-semibold">
+                              30% · {formatCurrency(results.summary.totalBudget * 0.38 * 0.3)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-yellow-700">
+                            強化產品優勢，消除購買疑慮
+                          </p>
+                        </div>
+
+                        <div className="bg-red-50 p-3 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium text-red-800">
+                              轉換廣告 (Conversion)
+                            </span>
+                            <span className="text-red-600 font-semibold">
+                              30% · {formatCurrency(results.summary.totalBudget * 0.38 * 0.3)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-red-700">
+                            全力促成轉換，達成銷售目標
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 收尾期漏斗分配 */}
+                  {results.periods.some(p => p.displayName.includes('收尾')) && (
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <h5 className="font-semibold text-lg mb-4 text-gray-800">
+                        收尾期 漏斗分配
+                      </h5>
+                      
+                      <div className="space-y-3">
+                        <div className="bg-yellow-50 p-3 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium text-yellow-800">
+                              考慮廣告 (Consideration)
+                            </span>
+                            <span className="text-yellow-600 font-semibold">
+                              20% · {formatCurrency(results.summary.totalBudget * 0.24 * 0.2)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-yellow-700">
+                            最後推動猶豫客戶下單決定
+                          </p>
+                        </div>
+
+                        <div className="bg-red-50 p-3 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium text-red-800">
+                              轉換廣告 (Conversion)
+                            </span>
+                            <span className="text-red-600 font-semibold">
+                              50% · {formatCurrency(results.summary.totalBudget * 0.24 * 0.5)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-red-700">
+                            集中火力促成最後轉換機會
+                          </p>
+                        </div>
+
+                        <div className="bg-purple-50 p-3 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium text-purple-800">
+                              再行銷 (Retargeting)
+                            </span>
+                            <span className="text-purple-600 font-semibold">
+                              30% · {formatCurrency(results.summary.totalBudget * 0.24 * 0.3)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-purple-700">
+                            重新觸及未轉換用戶，挽回流失機會
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 回購期漏斗分配 */}
+                  {results.periods.some(p => p.displayName.includes('回購')) && (
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <h5 className="font-semibold text-lg mb-4 text-gray-800">
+                        回購期 漏斗分配
+                      </h5>
+                      
+                      <div className="space-y-3">
+                        <div className="bg-orange-50 p-3 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium text-orange-800">
+                              客戶保留 (Retention)
+                            </span>
+                            <span className="text-orange-600 font-semibold">
+                              60% · {formatCurrency(results.summary.totalBudget * 0.02 * 0.6)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-orange-700">
+                            維護既有客戶關係，提升忠誠度
+                          </p>
+                        </div>
+
+                        <div className="bg-indigo-50 p-3 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium text-indigo-800">
+                              交叉銷售 (Cross-sell)
+                            </span>
+                            <span className="text-indigo-600 font-semibold">
+                              25% · {formatCurrency(results.summary.totalBudget * 0.02 * 0.25)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-indigo-700">
+                            推薦相關產品，提高客戶價值
+                          </p>
+                        </div>
+
+                        <div className="bg-pink-50 p-3 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium text-pink-800">
+                              口碑推薦 (Advocacy)
+                            </span>
+                            <span className="text-pink-600 font-semibold">
+                              15% · {formatCurrency(results.summary.totalBudget * 0.02 * 0.15)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-pink-700">
+                            鼓勵客戶推薦，建立口碑效應
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
 
           </div>
         )}
