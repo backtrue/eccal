@@ -556,43 +556,30 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
                         <div className="bg-blue-50 p-3 rounded-lg">
                           <div className="flex justify-between items-center mb-2">
                             <span className="font-medium text-blue-800">
-                              認知廣告 (Awareness)
+                              觸及/互動/影觀
                             </span>
                             <span className="text-blue-600 font-semibold">
-                              40% · {formatCurrency(results.summary.totalBudget * 0.04 * 0.4)}
+                              30% · {formatCurrency(results.summary.totalBudget * 0.04 * 0.3)}
                             </span>
                           </div>
                           <p className="text-sm text-blue-700">
-                            建立品牌認知度，觸及潛在客戶群體
+                            建立品牌認知度，擴大觸及範圍
                           </p>
                         </div>
 
                         <div className="bg-green-50 p-3 rounded-lg">
                           <div className="flex justify-between items-center mb-2">
                             <span className="font-medium text-green-800">
-                              興趣廣告 (Interest)
+                              流量廣告
                             </span>
                             <span className="text-green-600 font-semibold">
-                              35% · {formatCurrency(results.summary.totalBudget * 0.04 * 0.35)}
+                              70% · {formatCurrency(results.summary.totalBudget * 0.04 * 0.7)}
                             </span>
                           </div>
-                          <p className="text-sm text-green-700">
-                            吸引感興趣的用戶，建立初步連結
-                          </p>
-                        </div>
-
-                        <div className="bg-yellow-50 p-3 rounded-lg">
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="font-medium text-yellow-800">
-                              考慮廣告 (Consideration)
-                            </span>
-                            <span className="text-yellow-600 font-semibold">
-                              25% · {formatCurrency(results.summary.totalBudget * 0.04 * 0.25)}
-                            </span>
+                          <div className="text-sm text-green-700 space-y-1">
+                            <p>導引高品質流量至網站</p>
+                            <p className="text-green-600">• 精準興趣標籤 (70%)</p>
                           </div>
-                          <p className="text-sm text-yellow-700">
-                            促使用戶深入了解產品，提高購買意願
-                          </p>
                         </div>
                       </div>
                     </div>
@@ -609,10 +596,10 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
                         <div className="bg-blue-50 p-3 rounded-lg">
                           <div className="flex justify-between items-center mb-2">
                             <span className="font-medium text-blue-800">
-                              認知廣告 (Awareness)
+                              觸及/互動/影觀
                             </span>
                             <span className="text-blue-600 font-semibold">
-                              30% · {formatCurrency(results.summary.totalBudget * 0.32 * 0.3)}
+                              10% · {formatCurrency(results.summary.totalBudget * 0.32 * 0.1)}
                             </span>
                           </div>
                           <p className="text-sm text-blue-700">
@@ -623,43 +610,47 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
                         <div className="bg-green-50 p-3 rounded-lg">
                           <div className="flex justify-between items-center mb-2">
                             <span className="font-medium text-green-800">
-                              興趣廣告 (Interest)
+                              流量廣告
                             </span>
                             <span className="text-green-600 font-semibold">
-                              25% · {formatCurrency(results.summary.totalBudget * 0.32 * 0.25)}
+                              20% · {formatCurrency(results.summary.totalBudget * 0.32 * 0.2)}
                             </span>
                           </div>
-                          <p className="text-sm text-green-700">
-                            強化用戶興趣，提高互動率
-                          </p>
+                          <div className="text-sm text-green-700 space-y-1">
+                            <p>導引高品質流量至網站</p>
+                            <p className="text-green-600">• 精準興趣標籤 (10%)</p>
+                          </div>
                         </div>
 
-                        <div className="bg-yellow-50 p-3 rounded-lg">
+                        <div className="bg-purple-50 p-3 rounded-lg">
                           <div className="flex justify-between items-center mb-2">
-                            <span className="font-medium text-yellow-800">
-                              考慮廣告 (Consideration)
+                            <span className="font-medium text-purple-800">
+                              再行銷第一層受眾
                             </span>
-                            <span className="text-yellow-600 font-semibold">
-                              35% · {formatCurrency(results.summary.totalBudget * 0.32 * 0.35)}
+                            <span className="text-purple-600 font-semibold">
+                              10% · {formatCurrency(results.summary.totalBudget * 0.32 * 0.1)}
                             </span>
                           </div>
-                          <p className="text-sm text-yellow-700">
-                            加強產品介紹，建立購買信心
+                          <p className="text-sm text-purple-700">
+                            針對已有互動的潛在客戶進行再行銷
                           </p>
                         </div>
 
                         <div className="bg-red-50 p-3 rounded-lg">
                           <div className="flex justify-between items-center mb-2">
                             <span className="font-medium text-red-800">
-                              轉換廣告 (Conversion)
+                              轉換廣告
                             </span>
                             <span className="text-red-600 font-semibold">
-                              10% · {formatCurrency(results.summary.totalBudget * 0.32 * 0.1)}
+                              70% · {formatCurrency(results.summary.totalBudget * 0.32 * 0.7)}
                             </span>
                           </div>
-                          <p className="text-sm text-red-700">
-                            針對高意願客戶，促成首批轉換
-                          </p>
+                          <div className="text-sm text-red-700 space-y-1">
+                            <p>重點推動轉換成交</p>
+                            <p className="text-red-600">• 再行銷第一層受眾 (20%)</p>
+                            <p className="text-red-600">• 再行銷第二層受眾 (30%)</p>
+                            <p className="text-red-600">• ASC 廣告 (20%)</p>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -676,10 +667,10 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
                         <div className="bg-blue-50 p-3 rounded-lg">
                           <div className="flex justify-between items-center mb-2">
                             <span className="font-medium text-blue-800">
-                              認知廣告 (Awareness)
+                              觸及/互動/影觀
                             </span>
                             <span className="text-blue-600 font-semibold">
-                              20% · {formatCurrency(results.summary.totalBudget * 0.38 * 0.2)}
+                              5% · {formatCurrency(results.summary.totalBudget * 0.38 * 0.05)}
                             </span>
                           </div>
                           <p className="text-sm text-blue-700">
@@ -690,43 +681,47 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
                         <div className="bg-green-50 p-3 rounded-lg">
                           <div className="flex justify-between items-center mb-2">
                             <span className="font-medium text-green-800">
-                              興趣廣告 (Interest)
+                              流量廣告
                             </span>
                             <span className="text-green-600 font-semibold">
-                              20% · {formatCurrency(results.summary.totalBudget * 0.38 * 0.2)}
+                              15% · {formatCurrency(results.summary.totalBudget * 0.38 * 0.15)}
                             </span>
                           </div>
-                          <p className="text-sm text-green-700">
-                            持續培養用戶興趣，建立品牌好感
-                          </p>
+                          <div className="text-sm text-green-700 space-y-1">
+                            <p>導引高品質流量至網站</p>
+                            <p className="text-green-600">• 精準興趣標籤 (10%)</p>
+                          </div>
                         </div>
 
-                        <div className="bg-yellow-50 p-3 rounded-lg">
+                        <div className="bg-purple-50 p-3 rounded-lg">
                           <div className="flex justify-between items-center mb-2">
-                            <span className="font-medium text-yellow-800">
-                              考慮廣告 (Consideration)
+                            <span className="font-medium text-purple-800">
+                              再行銷第一層受眾
                             </span>
-                            <span className="text-yellow-600 font-semibold">
-                              30% · {formatCurrency(results.summary.totalBudget * 0.38 * 0.3)}
+                            <span className="text-purple-600 font-semibold">
+                              5% · {formatCurrency(results.summary.totalBudget * 0.38 * 0.05)}
                             </span>
                           </div>
-                          <p className="text-sm text-yellow-700">
-                            強化產品優勢，消除購買疑慮
+                          <p className="text-sm text-purple-700">
+                            針對已有互動的潛在客戶進行再行銷
                           </p>
                         </div>
 
                         <div className="bg-red-50 p-3 rounded-lg">
                           <div className="flex justify-between items-center mb-2">
                             <span className="font-medium text-red-800">
-                              轉換廣告 (Conversion)
+                              轉換廣告
                             </span>
                             <span className="text-red-600 font-semibold">
-                              30% · {formatCurrency(results.summary.totalBudget * 0.38 * 0.3)}
+                              80% · {formatCurrency(results.summary.totalBudget * 0.38 * 0.8)}
                             </span>
                           </div>
-                          <p className="text-sm text-red-700">
-                            全力促成轉換，達成銷售目標
-                          </p>
+                          <div className="text-sm text-red-700 space-y-1">
+                            <p>全力促成轉換，達成銷售目標</p>
+                            <p className="text-red-600">• 再行銷第一層受眾 (10%)</p>
+                            <p className="text-red-600">• 再行銷第二層受眾 (40%)</p>
+                            <p className="text-red-600">• ASC 廣告 (30%)</p>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -740,46 +735,49 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
                       </h5>
                       
                       <div className="space-y-3">
-                        <div className="bg-yellow-50 p-3 rounded-lg">
+                        <div className="bg-green-50 p-3 rounded-lg">
                           <div className="flex justify-between items-center mb-2">
-                            <span className="font-medium text-yellow-800">
-                              考慮廣告 (Consideration)
+                            <span className="font-medium text-green-800">
+                              流量廣告
                             </span>
-                            <span className="text-yellow-600 font-semibold">
-                              20% · {formatCurrency(results.summary.totalBudget * 0.24 * 0.2)}
+                            <span className="text-green-600 font-semibold">
+                              5% · {formatCurrency(results.summary.totalBudget * 0.24 * 0.05)}
                             </span>
                           </div>
-                          <p className="text-sm text-yellow-700">
-                            最後推動猶豫客戶下單決定
-                          </p>
-                        </div>
-
-                        <div className="bg-red-50 p-3 rounded-lg">
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="font-medium text-red-800">
-                              轉換廣告 (Conversion)
-                            </span>
-                            <span className="text-red-600 font-semibold">
-                              50% · {formatCurrency(results.summary.totalBudget * 0.24 * 0.5)}
-                            </span>
-                          </div>
-                          <p className="text-sm text-red-700">
-                            集中火力促成最後轉換機會
+                          <p className="text-sm text-green-700">
+                            維持基本流量導引
                           </p>
                         </div>
 
                         <div className="bg-purple-50 p-3 rounded-lg">
                           <div className="flex justify-between items-center mb-2">
                             <span className="font-medium text-purple-800">
-                              再行銷 (Retargeting)
+                              再行銷第一層受眾
                             </span>
                             <span className="text-purple-600 font-semibold">
-                              30% · {formatCurrency(results.summary.totalBudget * 0.24 * 0.3)}
+                              5% · {formatCurrency(results.summary.totalBudget * 0.24 * 0.05)}
                             </span>
                           </div>
                           <p className="text-sm text-purple-700">
-                            重新觸及未轉換用戶，挽回流失機會
+                            針對已有互動的潛在客戶進行再行銷
                           </p>
+                        </div>
+
+                        <div className="bg-red-50 p-3 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium text-red-800">
+                              轉換廣告
+                            </span>
+                            <span className="text-red-600 font-semibold">
+                              95% · {formatCurrency(results.summary.totalBudget * 0.24 * 0.95)}
+                            </span>
+                          </div>
+                          <div className="text-sm text-red-700 space-y-1">
+                            <p>最後衝刺期，全力促成轉換</p>
+                            <p className="text-red-600">• 再行銷第一層受眾 (10%)</p>
+                            <p className="text-red-600">• 再行銷第二層受眾 (45%)</p>
+                            <p className="text-red-600">• ASC 廣告 (40%)</p>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -793,46 +791,21 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
                       </h5>
                       
                       <div className="space-y-3">
-                        <div className="bg-orange-50 p-3 rounded-lg">
+                        <div className="bg-red-50 p-3 rounded-lg">
                           <div className="flex justify-between items-center mb-2">
-                            <span className="font-medium text-orange-800">
-                              客戶保留 (Retention)
+                            <span className="font-medium text-red-800">
+                              轉換廣告
                             </span>
-                            <span className="text-orange-600 font-semibold">
-                              60% · {formatCurrency(results.summary.totalBudget * 0.02 * 0.6)}
+                            <span className="text-red-600 font-semibold">
+                              100% · {formatCurrency(results.summary.totalBudget * 0.02 * 1.0)}
                             </span>
                           </div>
-                          <p className="text-sm text-orange-700">
-                            維護既有客戶關係，提升忠誠度
-                          </p>
-                        </div>
-
-                        <div className="bg-indigo-50 p-3 rounded-lg">
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="font-medium text-indigo-800">
-                              交叉銷售 (Cross-sell)
-                            </span>
-                            <span className="text-indigo-600 font-semibold">
-                              25% · {formatCurrency(results.summary.totalBudget * 0.02 * 0.25)}
-                            </span>
+                          <div className="text-sm text-red-700 space-y-1">
+                            <p className="font-medium">目標設定：只針對在本次活動期間有成功轉換的顧客</p>
+                            <p>• 促進已購買客戶的再次購買</p>
+                            <p>• 提升客戶終身價值 (LTV)</p>
+                            <p>• 針對轉換客戶進行精準再行銷</p>
                           </div>
-                          <p className="text-sm text-indigo-700">
-                            推薦相關產品，提高客戶價值
-                          </p>
-                        </div>
-
-                        <div className="bg-pink-50 p-3 rounded-lg">
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="font-medium text-pink-800">
-                              口碑推薦 (Advocacy)
-                            </span>
-                            <span className="text-pink-600 font-semibold">
-                              15% · {formatCurrency(results.summary.totalBudget * 0.02 * 0.15)}
-                            </span>
-                          </div>
-                          <p className="text-sm text-pink-700">
-                            鼓勵客戶推薦，建立口碑效應
-                          </p>
                         </div>
                       </div>
                     </div>
