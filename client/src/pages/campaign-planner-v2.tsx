@@ -851,22 +851,8 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
                           </div>
                           <div className="text-sm text-green-700 space-y-1">
                             <p>導引高品質流量至網站</p>
-                            <p className="text-green-600">• 精準興趣標籤 (10%)</p>
+                            <p className="text-green-600">• 精準興趣標籤 (15%)</p>
                           </div>
-                        </div>
-
-                        <div className="bg-purple-50 p-3 rounded-lg">
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="font-medium text-purple-800">
-                              再行銷第一層受眾
-                            </span>
-                            <span className="text-purple-600 font-semibold">
-                              5% · {formatCurrency(results.summary.totalBudget * 0.38 * 0.05)}
-                            </span>
-                          </div>
-                          <p className="text-sm text-purple-700">
-                            針對已有互動的潛在客戶進行再行銷
-                          </p>
                         </div>
 
                         <div className="bg-red-50 p-3 rounded-lg">
@@ -908,20 +894,6 @@ export default function CampaignPlannerV2({ locale = "zh-TW" }: { locale?: strin
                           </div>
                           <p className="text-sm text-green-700">
                             維持基本流量導引
-                          </p>
-                        </div>
-
-                        <div className="bg-purple-50 p-3 rounded-lg">
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="font-medium text-purple-800">
-                              再行銷第一層受眾
-                            </span>
-                            <span className="text-purple-600 font-semibold">
-                              5% · {formatCurrency(results.summary.totalBudget * 0.24 * 0.05)}
-                            </span>
-                          </div>
-                          <p className="text-sm text-purple-700">
-                            針對已有互動的潛在客戶進行再行銷
                           </p>
                         </div>
 
