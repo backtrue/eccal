@@ -68,10 +68,13 @@ export class CampaignPlannerService {
       endDate: end
     });
 
-    // 4. 儲存預算期間
+    // 4. 計算漏斗架構分配
+    const funnelAllocation = this.calculateFunnelAllocation(periods);
+
+    // 5. 儲存預算期間
     const campaignPeriods = await storage.createCampaignPeriods(periods);
 
-    // 5. 更新每日預算的 period_id 並儲存
+    // 6. 更新每日預算的 period_id 並儲存
     const dailyBudgetsWithPeriodIds = this.assignPeriodIds(dailyBreakdown, campaignPeriods);
     const dailyBudgets = await storage.createDailyBudgets(dailyBudgetsWithPeriodIds);
 
@@ -79,6 +82,7 @@ export class CampaignPlannerService {
       campaign: campaignPlan,
       periods: campaignPeriods,
       dailyBreakdown: dailyBudgets,
+      funnelAllocation,
       summary: {
         totalBudget,
         totalTraffic,
@@ -382,6 +386,225 @@ export class CampaignPlannerService {
   // 刪除活動計畫
   async deleteCampaignPlan(campaignId: string, userId: string) {
     return await storage.deleteCampaignPlan(campaignId, userId);
+  }
+
+  // 計算漏斗架構分配
+  private calculateFunnelAllocation(periods: any[]) {
+    const funnelAllocation: any = {};
+
+    periods.forEach(period => {
+      const periodName = period.name;
+      const periodBudget = parseInt(period.budgetAmount);
+      
+      let allocation: any = {};
+
+      switch (periodName) {
+        case 'preheat':
+          allocation = {
+            awareness: {
+              label: '觸及/互動/影觀',
+              percentage: 30,
+              budget: Math.ceil(periodBudget * 0.30),
+              description: '擴大觸及面，累積潛在受眾'
+            },
+            traffic: {
+              label: '流量導引',
+              percentage: 70,
+              budget: Math.ceil(periodBudget * 0.70),
+              breakdown: {
+                interests: {
+                  label: '精準興趣標籤',
+                  percentage: 100,
+                  budget: Math.ceil(periodBudget * 0.70)
+                }
+              }
+            }
+          };
+          break;
+
+        case 'launch':
+          allocation = {
+            awareness: {
+              label: '觸及/互動/影觀',
+              percentage: 10,
+              budget: Math.ceil(periodBudget * 0.10)
+            },
+            traffic: {
+              label: '流量導引',
+              percentage: 20,
+              budget: Math.ceil(periodBudget * 0.20),
+              breakdown: {
+                interests: {
+                  label: '精準興趣標籤',
+                  percentage: 50,
+                  budget: Math.ceil(periodBudget * 0.10)
+                },
+                remarketing_l1: {
+                  label: '再行銷第一層受眾',
+                  percentage: 50,
+                  budget: Math.ceil(periodBudget * 0.10)
+                }
+              }
+            },
+            conversion: {
+              label: '轉換促成',
+              percentage: 70,
+              budget: Math.ceil(periodBudget * 0.70),
+              breakdown: {
+                remarketing_l1: {
+                  label: '再行銷第一層受眾',
+                  percentage: 28.6,
+                  budget: Math.ceil(periodBudget * 0.20)
+                },
+                remarketing_l2: {
+                  label: '再行銷第二層受眾',
+                  percentage: 42.9,
+                  budget: Math.ceil(periodBudget * 0.30)
+                },
+                asc: {
+                  label: 'ASC 廣告',
+                  percentage: 28.6,
+                  budget: Math.ceil(periodBudget * 0.20)
+                }
+              }
+            }
+          };
+          break;
+
+        case 'main':
+          allocation = {
+            awareness: {
+              label: '觸及/互動/影觀',
+              percentage: 5,
+              budget: Math.ceil(periodBudget * 0.05)
+            },
+            traffic: {
+              label: '流量導引',
+              percentage: 15,
+              budget: Math.ceil(periodBudget * 0.15),
+              breakdown: {
+                interests: {
+                  label: '精準興趣標籤',
+                  percentage: 66.7,
+                  budget: Math.ceil(periodBudget * 0.10)
+                },
+                remarketing_l1: {
+                  label: '再行銷第一層受眾',
+                  percentage: 33.3,
+                  budget: Math.ceil(periodBudget * 0.05)
+                }
+              }
+            },
+            conversion: {
+              label: '轉換促成',
+              percentage: 80,
+              budget: Math.ceil(periodBudget * 0.80),
+              breakdown: {
+                remarketing_l1: {
+                  label: '再行銷第一層受眾',
+                  percentage: 12.5,
+                  budget: Math.ceil(periodBudget * 0.10)
+                },
+                remarketing_l2: {
+                  label: '再行銷第二層受眾',
+                  percentage: 50,
+                  budget: Math.ceil(periodBudget * 0.40)
+                },
+                asc: {
+                  label: 'ASC 廣告',
+                  percentage: 37.5,
+                  budget: Math.ceil(periodBudget * 0.30)
+                }
+              }
+            }
+          };
+          break;
+
+        case 'final':
+          allocation = {
+            traffic: {
+              label: '流量導引',
+              percentage: 5,
+              budget: Math.ceil(periodBudget * 0.05),
+              breakdown: {
+                remarketing_l1: {
+                  label: '再行銷第一層受眾',
+                  percentage: 100,
+                  budget: Math.ceil(periodBudget * 0.05)
+                }
+              }
+            },
+            conversion: {
+              label: '轉換促成',
+              percentage: 95,
+              budget: Math.ceil(periodBudget * 0.95),
+              breakdown: {
+                remarketing_l1: {
+                  label: '再行銷第一層受眾',
+                  percentage: 10.5,
+                  budget: Math.ceil(periodBudget * 0.10)
+                },
+                remarketing_l2: {
+                  label: '再行銷第二層受眾',
+                  percentage: 47.4,
+                  budget: Math.ceil(periodBudget * 0.45)
+                },
+                asc: {
+                  label: 'ASC 廣告',
+                  percentage: 42.1,
+                  budget: Math.ceil(periodBudget * 0.40)
+                }
+              }
+            }
+          };
+          break;
+
+        case 'repurchase':
+          allocation = {
+            conversion: {
+              label: '轉換促成',
+              percentage: 100,
+              budget: periodBudget,
+              breakdown: {
+                repurchase_remarketing: {
+                  label: '活動轉換受眾再行銷',
+                  percentage: 100,
+                  budget: periodBudget,
+                  description: '僅針對活動檔期間有轉換的受眾做再行銷'
+                }
+              }
+            }
+          };
+          break;
+
+        default:
+          // 短期活動（1-3天）的情況
+          if (periodName.includes('day_') || periodName.includes('日')) {
+            allocation = {
+              awareness: {
+                label: '觸及/互動/影觀',
+                percentage: 20,
+                budget: Math.ceil(periodBudget * 0.20)
+              },
+              traffic: {
+                label: '流量導引',
+                percentage: 30,
+                budget: Math.ceil(periodBudget * 0.30)
+              },
+              conversion: {
+                label: '轉換促成',
+                percentage: 50,
+                budget: Math.ceil(periodBudget * 0.50)
+              }
+            };
+          }
+          break;
+      }
+
+      funnelAllocation[periodName] = allocation;
+    });
+
+    return funnelAllocation;
   }
 
   // 為每日預算分配正確的 period_id

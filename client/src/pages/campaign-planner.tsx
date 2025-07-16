@@ -445,77 +445,196 @@ export default function CampaignPlanner({ locale = "zh-TW" }: { locale?: string 
           </Card>
 
           {results && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  活動預算規劃結果
-                </CardTitle>
-                <CardDescription>根據您的活動參數計算出的最佳預算分配</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {formatCurrency(results.totalBudget)}
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5" />
+                    活動預算規劃結果
+                  </CardTitle>
+                  <CardDescription>根據您的活動參數計算出的最佳預算分配</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="text-center p-4 bg-blue-50 rounded-lg">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {formatCurrency(results.totalBudget)}
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">總預算</div>
                     </div>
-                    <div className="text-sm text-gray-600 mt-1">總預算</div>
-                  </div>
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">
-                      {results.totalTraffic.toLocaleString()}
+                    <div className="text-center p-4 bg-green-50 rounded-lg">
+                      <div className="text-2xl font-bold text-green-600">
+                        {results.totalTraffic.toLocaleString()}
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">總流量</div>
                     </div>
-                    <div className="text-sm text-gray-600 mt-1">總流量</div>
                   </div>
-                </div>
 
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-semibold text-gray-800">活動期間預算分配</h4>
-                    {isAuthenticated && (
-                      <SaveProjectDialog 
-                        projectType="campaign_planner"
-                        projectData={{
-                          ...form.getValues(),
-                          results: results
-                        }}
-                      />
-                    )}
-                  </div>
-                  
-                  {/* Display campaign periods based on structure */}
-                  <div className="grid gap-3">
-                    {Object.entries(results.campaignPeriods).map(([period, data]: [string, any]) => {
-                      const periodNames: { [key: string]: string } = {
-                        preheat: '預熱期',
-                        launch: '起跑期',
-                        main: '活動期',
-                        final: '倒數期',
-                        repurchase: '回購期',
-                        day1: '第一天',
-                        day2: '第二天',
-                        day3: '第三天'
-                      };
-                      
-                      return (
-                        <div key={period} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                          <div>
-                            <div className="font-medium">{periodNames[period]}</div>
-                            <div className="text-sm text-gray-500">
-                              {data.startDate} - {data.endDate}
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-semibold text-gray-800">活動期間預算分配</h4>
+                      {isAuthenticated && (
+                        <SaveProjectDialog 
+                          projectType="campaign_planner"
+                          projectData={{
+                            ...form.getValues(),
+                            results: results
+                          }}
+                        />
+                      )}
+                    </div>
+                    
+                    {/* Display campaign periods based on structure */}
+                    <div className="grid gap-3">
+                      {Object.entries(results.campaignPeriods).map(([period, data]: [string, any]) => {
+                        const periodNames: { [key: string]: string } = {
+                          preheat: '預熱期',
+                          launch: '起跑期',
+                          main: '活動期',
+                          final: '倒數期',
+                          repurchase: '回購期',
+                          day1: '第一天',
+                          day2: '第二天',
+                          day3: '第三天'
+                        };
+                        
+                        return (
+                          <div key={period} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div>
+                              <div className="font-medium">{periodNames[period]}</div>
+                              <div className="text-sm text-gray-500">
+                                {data.startDate} - {data.endDate}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-semibold">{formatCurrency(data.budget)}</div>
+                              <div className="text-sm text-gray-500">{data.traffic.toLocaleString()} 流量</div>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="font-semibold">{formatCurrency(data.budget)}</div>
-                            <div className="text-sm text-gray-500">{data.traffic.toLocaleString()} 流量</div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+
+              {/* 漏斗架構分配建議 */}
+              {(results as any).funnelAllocation && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      漏斗架構分配建議
+                    </CardTitle>
+                    <CardDescription>
+                      根據活動期間特性，為您規劃最佳的廣告受眾預算分配策略
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      {Object.entries((results as any).funnelAllocation).map(([period, allocation]: [string, any]) => {
+                        const periodNames: { [key: string]: string } = {
+                          preheat: '預熱期',
+                          launch: '啟動期',
+                          main: '主推期',
+                          final: '收尾期',
+                          repurchase: '回購期',
+                          day1: '第一天',
+                          day2: '第二天',
+                          day3: '第三天'
+                        };
+
+                        return (
+                          <div key={period} className="border border-gray-200 rounded-lg p-4">
+                            <h5 className="font-semibold text-lg mb-4 text-gray-800">
+                              {periodNames[period]} 漏斗分配
+                            </h5>
+                            
+                            <div className="space-y-3">
+                              {allocation.awareness && (
+                                <div className="bg-blue-50 p-3 rounded-lg">
+                                  <div className="flex justify-between items-center mb-2">
+                                    <span className="font-medium text-blue-800">
+                                      {allocation.awareness.label}
+                                    </span>
+                                    <span className="text-blue-600 font-semibold">
+                                      {allocation.awareness.percentage}% · {formatCurrency(allocation.awareness.budget)}
+                                    </span>
+                                  </div>
+                                  {allocation.awareness.description && (
+                                    <p className="text-sm text-blue-700">{allocation.awareness.description}</p>
+                                  )}
+                                </div>
+                              )}
+
+                              {allocation.traffic && (
+                                <div className="bg-green-50 p-3 rounded-lg">
+                                  <div className="flex justify-between items-center mb-2">
+                                    <span className="font-medium text-green-800">
+                                      {allocation.traffic.label}
+                                    </span>
+                                    <span className="text-green-600 font-semibold">
+                                      {allocation.traffic.percentage}% · {formatCurrency(allocation.traffic.budget)}
+                                    </span>
+                                  </div>
+                                  {allocation.traffic.breakdown && (
+                                    <div className="ml-4 space-y-1">
+                                      {Object.entries(allocation.traffic.breakdown).map(([key, item]: [string, any]) => (
+                                        <div key={key} className="flex justify-between text-sm">
+                                          <span className="text-green-700">└ {item.label}</span>
+                                          <span className="text-green-600">{formatCurrency(item.budget)}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {allocation.conversion && (
+                                <div className="bg-purple-50 p-3 rounded-lg">
+                                  <div className="flex justify-between items-center mb-2">
+                                    <span className="font-medium text-purple-800">
+                                      {allocation.conversion.label}
+                                    </span>
+                                    <span className="text-purple-600 font-semibold">
+                                      {allocation.conversion.percentage}% · {formatCurrency(allocation.conversion.budget)}
+                                    </span>
+                                  </div>
+                                  {allocation.conversion.breakdown && (
+                                    <div className="ml-4 space-y-1">
+                                      {Object.entries(allocation.conversion.breakdown).map(([key, item]: [string, any]) => (
+                                        <div key={key}>
+                                          <div className="flex justify-between text-sm">
+                                            <span className="text-purple-700">└ {item.label}</span>
+                                            <span className="text-purple-600">{formatCurrency(item.budget)}</span>
+                                          </div>
+                                          {item.description && (
+                                            <p className="text-xs text-purple-600 ml-4">{item.description}</p>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    
+                    <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <h6 className="font-semibold text-yellow-800 mb-2">📋 漏斗架構說明</h6>
+                      <div className="text-sm text-yellow-700 space-y-1">
+                        <p><strong>觸及/互動/影觀：</strong>擴大觸及面，累積看過影片和貼文互動的受眾</p>
+                        <p><strong>流量導引：</strong>導引流量進入網站，包含興趣標籤和再行銷受眾</p>
+                        <p><strong>轉換促成：</strong>主力為再行銷，搭配 Facebook ASC 廣告促成轉換</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           )}
         </div>
       </div>
