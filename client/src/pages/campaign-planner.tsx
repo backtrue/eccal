@@ -35,6 +35,7 @@ interface PlanningResult {
   totalBudget: number;
   campaignPeriods: any;
   dailyBudgets?: any[];
+  funnelAllocation?: any;
 }
 
 interface DailyBudget {

@@ -636,7 +636,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         budgetBreakdown,
         trafficBreakdown,
         periodDays,
-        funnelAllocation: this.calculateFunnelAllocation(budgetBreakdown, campaignDays),
+        funnelAllocation: calculateFunnelAllocation(budgetBreakdown, campaignDays),
         calculations: {
           targetRevenue,
           targetAov,
@@ -661,10 +661,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           membershipLevel: membershipStatus.level
         }
       });
+    } catch (error) {
+      console.error('Error calculating campaign plan:', error);
+      res.status(500).json({ error: 'Campaign calculation failed' });
     }
+  });
 
-    // 計算漏斗架構分配
-    calculateFunnelAllocation(budgetBreakdown: any, campaignDays: number) {
+  // 計算漏斗架構分配
+  function calculateFunnelAllocation(budgetBreakdown: any, campaignDays: number) {
       const funnelAllocation: any = {};
 
       Object.keys(budgetBreakdown).forEach(period => {
@@ -878,12 +882,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       return funnelAllocation;
-
-    } catch (error) {
-      console.error("Campaign planner calculation error:", error);
-      res.status(500).json({ message: "計算失敗，請稍後再試" });
-    }
-  });
+  }
 
   app.post('/api/campaign-planner/record-usage', requireJWTAuth, async (req: any, res) => {
     try {
