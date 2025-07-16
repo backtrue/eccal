@@ -1,0 +1,38 @@
+index-CcBdEqDM.js:377 Locale changed to: zh-TW
+index-CcBdEqDM.js:377 Auth check decision: Object
+index-CcBdEqDM.js:377 Auth check triggered
+index-CcBdEqDM.js:377 Detected auth_success parameter, checking authentication...
+contentScript.bundle.js:6 🚧 👷 key 'required_field_warning' not found in localizedStrings for language zh 🚧
+contentScript.bundle.js:6 🚧 👷 key 'required_field_warning' not found in localizedStrings for language zh 🚧
+multi-tabs.js:4806 Injected CSS loaded successfully
+contentScript.bundle.js:347 Strategy 4: No clear indicators found, assuming All tab 
+index-CcBdEqDM.js:377 Auth check successful: backtrue@gmail.com
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 Form submitted with data: Object
+index-CcBdEqDM.js:426 User authenticated: true
+index-CcBdEqDM.js:426 User object: Object
+index-CcBdEqDM.js:426 Making API request to: /api/v2/campaign-planner/create
+index-CcBdEqDM.js:426 Current results state: null
+index-CcBdEqDM.js:426 Results exists: false
+index-CcBdEqDM.js:426 API Response (raw): Response
+index-CcBdEqDM.js:426 API Response (parsed): Object
+index-CcBdEqDM.js:426 Setting results with data: Object
+index-CcBdEqDM.js:426 Current results state: Object
+index-CcBdEqDM.js:426 Results exists: true
