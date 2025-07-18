@@ -2048,6 +2048,34 @@ app.use('/api/facebook/data-deletion', express.json(), (req, res) => {
 });
 
 // -------------------- 2. 中間件設定 --------------------
+// Favicon 處理 - 減少不必要的請求
+app.get('/favicon.ico', (req, res) => {
+  // 設置適當的 cache headers 減少重複請求
+  res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 年
+  res.setHeader('Expires', new Date(Date.now() + 31536000000).toUTCString());
+  
+  // 返回 SVG favicon 的重定向
+  res.redirect(301, '/favicon.svg');
+});
+
+// 處理其他 favicon 相關請求
+app.get('/favicon-:size.png', (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=31536000');
+  res.redirect(301, '/favicon.svg');
+});
+
+app.get('/apple-touch-icon.png', (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=31536000');
+  res.redirect(301, '/favicon.svg');
+});
+
+// 為 SVG favicon 設置適當的 cache headers
+app.get('/favicon.svg', (req, res, next) => {
+  res.setHeader('Cache-Control', 'public, max-age=86400'); // 24 小時
+  res.setHeader('Content-Type', 'image/svg+xml');
+  next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser()); // 用於處理 JWT cookie
