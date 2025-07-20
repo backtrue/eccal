@@ -1918,7 +1918,7 @@ ${heroPosts.map((hero, index) =>
   }
 
   /**
-   * 建立增強版預算建議內容（包含CPA和效率數據）
+   * 建立簡潔的預算建議內容
    */
   buildEnhancedBudgetRecommendation(adSets: Array<{
     adSetName: string;
@@ -1937,35 +1937,36 @@ ${heroPosts.map((hero, index) =>
     
     let recommendation = '';
     
-    // 添加效率分析表格
+    // 添加簡潔的預算建議
     if (locale === 'zh-TW') {
-      recommendation += '📊 廣告組合效率分析:\n\n';
-      recommendation += '廣告組合 | 現有日預算 | CPA | 效率(每$100產出) | 建議日預算 | 預期增加訂單\n';
-      recommendation += '---|---|---|---|---|---\n';
+      recommendation += '💰 預算加碼建議:\n\n';
     } else if (locale === 'en') {
-      recommendation += '📊 Ad Set Efficiency Analysis:\n\n';
-      recommendation += 'Ad Set | Current Daily Budget | CPA | Efficiency(per $100) | Suggested Budget | Expected Additional Orders\n';
-      recommendation += '---|---|---|---|---|---\n';
+      recommendation += '💰 Budget Increase Recommendations:\n\n';
     } else if (locale === 'ja') {
-      recommendation += '📊 広告セット効率分析:\n\n';
-      recommendation += '広告セット | 現在の日予算 | CPA | 効率($100あたり) | 推奨予算 | 期待追加注文数\n';
-      recommendation += '---|---|---|---|---|---\n';
+      recommendation += '💰 予算増額提案:\n\n';
     }
     
-    // 為每個廣告組合添加詳細信息
+    // 為每個廣告組合添加簡潔建議
     for (let i = 0; i < Math.min(adSets.length, allocations.length); i++) {
       const adSet = adSets[i];
       const allocation = allocations[i];
       
-      recommendation += `${adSet.adSetName} | $${adSet.dailyBudget} | $${Math.round(adSet.cpa)} | ${adSet.efficiency.toFixed(2)}單 | $${allocation.suggestedBudget} | ${allocation.expectedAdditionalPurchases}單\n`;
+      if (locale === 'zh-TW') {
+        recommendation += `• ${adSet.adSetName}: 現在日預算 $${adSet.dailyBudget}，建議加到 $${allocation.suggestedBudget}\n`;
+      } else if (locale === 'en') {
+        recommendation += `• ${adSet.adSetName}: Current daily budget $${adSet.dailyBudget}, suggest increasing to $${allocation.suggestedBudget}\n`;
+      } else if (locale === 'ja') {
+        recommendation += `• ${adSet.adSetName}: 現在の日予算 $${adSet.dailyBudget}、$${allocation.suggestedBudget}への増額を推奨\n`;
+      }
     }
     
-    // 添加分配邏輯說明
+    // 添加簡短說明
     if (locale === 'zh-TW') {
-      recommendation += '\n💡 預算分配策略:\n';
-      recommendation += '• 高效率組合(A)：獲得60%增量預算，重點投放\n';
-      recommendation += '• 中效率組合(B)：獲得25%增量預算，穩定放量\n';
-      recommendation += '• 低效率組合(C)：獲得15%增量預算，觀察性測試\n';
+      recommendation += '\n💡 這樣的調整將有助於提升平均每天購買數，朝著目標邁進。\n';
+    } else if (locale === 'en') {
+      recommendation += '\n💡 These adjustments will help increase average daily purchases towards your target.\n';
+    } else if (locale === 'ja') {
+      recommendation += '\n💡 これらの調整により、平均毎日購入数の目標達成に近づけます。\n';
     }
     
     return recommendation;
