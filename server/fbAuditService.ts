@@ -144,16 +144,33 @@ export class FbAuditService {
       // 確保廣告帳戶 ID 格式正確，避免重複 act_ 前綴
       const accountId = adAccountId.startsWith('act_') ? adAccountId : `act_${adAccountId}`;
       
-      // 使用 actions 但透過 action_breakdowns 限制只拉取 purchase 相關數據
+      // 使用完整的 Facebook Insights API 欄位，確保能抓取所有購買數據
       const fields = [
         'spend',                    // 花費
-        'actions',                  // 行動數據（只拉取 purchase）
-        'action_values',            // 行動價值（只拉取 purchase_roas）
-        'outbound_clicks_ctr'       // 外連點擊率
+        'actions',                  // 行動數據（包含所有轉換）
+        'action_values',            // 行動價值（包含購買金額）
+        'outbound_clicks_ctr',      // 外連點擊率
+        'impressions',              // 曝光數
+        'clicks',                   // 點擊數
+        'inline_link_clicks'        // 連結點擊數
       ].join(',');
       
-      // 簡化 API 調用，移除可能有問題的 filtering，改用後端篩選
-      const url = `${this.baseUrl}/${accountId}/insights?fields=${fields}&time_range={"since":"${since}","until":"${until}"}&access_token=${accessToken}`;
+      // 修正 API 調用：添加重要參數確保數據完整性
+      const apiParams = new URLSearchParams({
+        fields: fields,
+        time_range: JSON.stringify({ since, until }),
+        level: 'account',              // 帳戶層級聚合
+        attribution_spec: JSON.stringify([{
+          event_type: 'click_through',
+          window_days: 7
+        }, {
+          event_type: 'view_through', 
+          window_days: 1
+        }]),                           // 7天點擊 + 1天瀏覽歸因
+        access_token: accessToken
+      });
+      
+      const url = `${this.baseUrl}/${accountId}/insights?${apiParams.toString()}`;
       
       console.log('Facebook API URL:', url);
       console.log('Ad Account ID:', adAccountId);
@@ -176,64 +193,116 @@ export class FbAuditService {
         throw new Error(`No advertising data found for account ${adAccountId} in the specified date range (${since} to ${until}). Please check if the account has active campaigns with data.`);
       }
 
-      const insights = data.data[0];
-      console.log('=== Facebook API 原始數據（優化後）===');
-      console.log('完整 insights:', JSON.stringify(insights, null, 2));
-      console.log('purchase:', insights.purchase);
-      console.log('purchase_roas:', insights.purchase_roas);
-      console.log('outbound_clicks_ctr:', insights.outbound_clicks_ctr);
-      console.log('spend:', insights.spend);
+      // 檢查是否有多筆數據需要聚合
+      console.log('=== Facebook API 完整回應分析 ===');
+      console.log('回傳數據筆數:', data.data.length);
+      console.log('完整 data.data:', JSON.stringify(data.data, null, 2));
       
-      // 使用篩選後的 actions 陣列解析購買數據
-      const spend = parseFloat(insights.spend || '0');
+      // 聚合所有數據（如果有多筆的話）
+      let totalSpend = 0;
+      let totalPurchases = 0;
+      let totalImpressions = 0;
+      let totalClicks = 0;
+      let allActions: any[] = [];
+      let allActionValues: any[] = [];
       
-      // 從篩選後的 actions 陣列中解析購買數
+      for (let i = 0; i < data.data.length; i++) {
+        const insights = data.data[i];
+        console.log(`=== 第 ${i + 1} 筆數據 ===`);
+        console.log('單筆 insights:', JSON.stringify(insights, null, 2));
+        
+        // 累加數值
+        totalSpend += parseFloat(insights.spend || '0');
+        totalImpressions += parseInt(insights.impressions || '0');
+        totalClicks += parseInt(insights.clicks || '0');
+        
+        // 收集所有 actions 和 action_values
+        if (insights.actions && Array.isArray(insights.actions)) {
+          allActions = allActions.concat(insights.actions);
+          console.log(`第 ${i + 1} 筆 actions:`, insights.actions);
+        }
+        
+        if (insights.action_values && Array.isArray(insights.action_values)) {
+          allActionValues = allActionValues.concat(insights.action_values);
+          console.log(`第 ${i + 1} 筆 action_values:`, insights.action_values);
+        }
+      }
+      
+      console.log('=== 聚合後的原始數據 ===');
+      console.log('累計花費:', totalSpend);
+      console.log('所有 actions:', allActions);
+      console.log('所有 action_values:', allActionValues);
+      
+      // 從聚合的 actions 中計算總購買數
+      const purchaseActions = allActions.filter(action => action.action_type === 'purchase');
+      console.log('所有 purchase actions:', purchaseActions);
+      
       let purchases = 0;
-      if (insights.actions && Array.isArray(insights.actions)) {
-        const purchaseAction = insights.actions.find((action: any) => action.action_type === 'purchase');
-        if (purchaseAction && purchaseAction.value) {
-          purchases = parseInt(purchaseAction.value);
+      purchaseActions.forEach(action => {
+        const value = parseInt(action.value || '0');
+        purchases += value;
+        console.log('累加購買數:', value, '總計:', purchases);
+      });
+      
+      const spend = totalSpend;
+      
+      // 從聚合的 action_values 中計算 ROAS
+      const roasActions = allActionValues.filter(action => action.action_type === 'purchase_roas');
+      console.log('所有 ROAS actions:', roasActions);
+      
+      let totalRoasValue = 0;
+      let roasCount = 0;
+      roasActions.forEach(action => {
+        const value = parseFloat(action.value || '0');
+        if (value > 0) {
+          totalRoasValue += value;
+          roasCount++;
         }
-      }
+      });
       
-      // 從篩選後的 action_values 陣列中解析 ROAS
-      let roas = 0;
-      if (insights.action_values && Array.isArray(insights.action_values)) {
-        const roasAction = insights.action_values.find((action: any) => action.action_type === 'purchase_roas');
-        if (roasAction && roasAction.value) {
-          roas = parseFloat(roasAction.value);
-        }
-      }
+      let roas = roasCount > 0 ? totalRoasValue / roasCount : 0;
+      console.log('聚合 ROAS 計算:', { totalRoasValue, roasCount, averageRoas: roas });
       
-      console.log('Parsed purchases (篩選後的 actions):', purchases);
-      console.log('Parsed ROAS (篩選後的 action_values):', roas);
-      
-      // 如果 ROAS 沒有數據，手動計算：購買價值 / 廣告花費
+      // 如果沒有 ROAS 數據，手動計算：購買價值 / 廣告花費
       if (roas === 0 && spend > 0) {
-        const purchaseValue = this.extractActionValue(insights.action_values || [], 'purchase');
-        if (purchaseValue) {
-          const purchaseValueNum = parseFloat(purchaseValue.toString());
-          if (!isNaN(purchaseValueNum) && purchaseValueNum > 0) {
-            roas = purchaseValueNum / spend;
-            console.log('手動計算 ROAS:', { purchaseValue: purchaseValueNum, spend, roas });
+        const purchaseValueActions = allActionValues.filter(action => action.action_type === 'purchase');
+        let totalPurchaseValue = 0;
+        purchaseValueActions.forEach(action => {
+          totalPurchaseValue += parseFloat(action.value || '0');
+        });
+        
+        if (totalPurchaseValue > 0) {
+          roas = totalPurchaseValue / spend;
+          console.log('手動計算 ROAS:', { totalPurchaseValue, spend, calculatedRoas: roas });
+        }
+      }
+      
+      console.log('最終購買數據:', { purchases, spend, roas });
+      
+      // 計算 CTR：從聚合數據或 API 提供的 CTR 數據
+      let ctr = 0;
+      
+      // 嘗試從第一筆數據獲取 CTR（通常 Facebook 會提供聚合的 CTR）
+      if (data.data.length > 0) {
+        const firstInsight = data.data[0];
+        console.log('CTR 原始數據:', firstInsight.outbound_clicks_ctr);
+        
+        if (firstInsight.outbound_clicks_ctr !== undefined && firstInsight.outbound_clicks_ctr !== null) {
+          if (Array.isArray(firstInsight.outbound_clicks_ctr) && firstInsight.outbound_clicks_ctr.length > 0) {
+            const ctrValue = firstInsight.outbound_clicks_ctr[0]?.value;
+            ctr = !isNaN(parseFloat(ctrValue)) ? parseFloat(ctrValue) : 0;
+          } else if (typeof firstInsight.outbound_clicks_ctr === 'string' || typeof firstInsight.outbound_clicks_ctr === 'number') {
+            ctr = !isNaN(parseFloat(firstInsight.outbound_clicks_ctr.toString())) ? parseFloat(firstInsight.outbound_clicks_ctr.toString()) : 0;
           }
         }
       }
       
-      console.log('purchase_roas 最終值:', roas);
-      
-      // 3. CTR：確保正確解析 outbound_clicks_ctr，避免 NaN
-      let ctr = 0;
-      console.log('CTR 原始數據類型和值:', typeof insights.outbound_clicks_ctr, insights.outbound_clicks_ctr);
-      
-      if (insights.outbound_clicks_ctr !== undefined && insights.outbound_clicks_ctr !== null) {
-        if (Array.isArray(insights.outbound_clicks_ctr) && insights.outbound_clicks_ctr.length > 0) {
-          const ctrValue = insights.outbound_clicks_ctr[0]?.value;
-          ctr = !isNaN(parseFloat(ctrValue)) ? parseFloat(ctrValue) : 0;
-        } else if (typeof insights.outbound_clicks_ctr === 'string' || typeof insights.outbound_clicks_ctr === 'number') {
-          ctr = !isNaN(parseFloat(insights.outbound_clicks_ctr.toString())) ? parseFloat(insights.outbound_clicks_ctr.toString()) : 0;
-        }
+      // 如果沒有 CTR 數據，手動計算：總點擊數 / 總曝光數
+      if (ctr === 0 && totalImpressions > 0) {
+        ctr = (totalClicks / totalImpressions) * 100;
+        console.log('手動計算 CTR:', { totalClicks, totalImpressions, calculatedCtr: ctr });
       }
+      
       console.log('CTR 最終值:', ctr);
 
       // 調試資料

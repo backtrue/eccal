@@ -272,6 +272,54 @@ export function setupFbAuditRoutes(app: Express) {
     }
   });
 
+  // 測試 Facebook API 購買數據調試端點
+  app.get('/api/fbaudit/debug-purchase/:accountId', requireJWTAuth, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      const { accountId } = req.params;
+
+      if (!user.metaAccessToken) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Facebook access token not found' 
+        });
+      }
+
+      console.log('=== 調試 Facebook API 購買數據 ===');
+      console.log('帳戶 ID:', accountId);
+      console.log('存取權杖長度:', user.metaAccessToken.length);
+
+      // 使用新的修正 API 調用
+      const adAccountData = await fbAuditService.getAdAccountData(user.metaAccessToken, accountId);
+      
+      return res.json({
+        success: true,
+        debugInfo: {
+          accountId: accountId,
+          dataSource: 'Facebook Marketing API v19.0 with enhanced aggregation',
+          timeRange: adAccountData.dateRange,
+          rawData: {
+            spend: adAccountData.spend,
+            purchases: adAccountData.purchases,
+            roas: adAccountData.roas,
+            ctr: adAccountData.ctr
+          },
+          comparison: {
+            backendReported: adAccountData.purchases,
+            manualBackendCount: '請檢查 console.log 查看詳細聚合過程',
+            note: '如果後台顯示 118 筆，但 API 回傳 5 筆，可能是歸因視窗或聚合設定問題'
+          }
+        }
+      });
+    } catch (error) {
+      console.error('調試購買數據時發生錯誤:', error);
+      return res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : '調試失敗'
+      });
+    }
+  });
+
   // 測試 Facebook API 原始資料端點
   app.get('/api/fbaudit/test-api/:accountId', requireJWTAuth, async (req: Request, res: Response) => {
     try {
