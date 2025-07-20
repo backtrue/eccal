@@ -134,12 +134,30 @@ export class FbAuditService {
    */
   async getAdAccountData(accessToken: string, adAccountId: string): Promise<FbAdAccountData> {
     try {
-      const endDate = new Date();
-      const startDate = new Date();
-      startDate.setDate(endDate.getDate() - 28);
+      // 修正日期計算：確保包含今天的數據
+      const now = new Date();
+      
+      // Facebook API 的 until 是 exclusive，所以要用明天的日期才能包含今天
+      const endDate = new Date(now);
+      endDate.setDate(now.getDate() + 1);  // 明天（確保今天被包含）
+      
+      // 開始日期：28天前（包含今天，所以實際是29天範圍）
+      const startDate = new Date(now);
+      startDate.setDate(now.getDate() - 28);
 
       const since = startDate.toISOString().split('T')[0];
       const until = endDate.toISOString().split('T')[0];
+      
+      console.log('=== 日期範圍計算 ===');
+      console.log('今天:', now.toISOString().split('T')[0]);
+      console.log('開始日期 (since):', since);
+      console.log('結束日期 (until):', until);
+      console.log('實際包含天數:', Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)), '天');
+      console.log('說明: until 是 exclusive，設定為明天可確保包含今天的數據');
+      
+      // 計算實際包含的日期範圍說明
+      const actualDays = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      console.log(`實際數據範圍: ${since} 到 ${now.toISOString().split('T')[0]} (${actualDays} 天，包含今天)`);
 
       // 確保廣告帳戶 ID 格式正確，避免重複 act_ 前綴
       const accountId = adAccountId.startsWith('act_') ? adAccountId : `act_${adAccountId}`;
