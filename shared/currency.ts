@@ -87,9 +87,10 @@ export function convertCurrency(
 /**
  * 檢測 Facebook 廣告帳戶的幣值
  * 根據帳戶所在地區或設定推測幣值
+ * 注意：這個函數已被棄用，請使用 FbAuditService.getAccountCurrency() 來獲取真實的帳戶貨幣
  */
 export function detectFacebookAccountCurrency(accountId: string): string {
-  // 這裡可以根據實際 Facebook API 回應來判斷
-  // 暫時返回 USD 作為 Facebook 廣告的默認幣值
+  // 警告：這個函數僅作為後備方案，實際應用中應使用 Facebook API 查詢真實貨幣
+  console.warn('detectFacebookAccountCurrency 已被棄用，請使用 FbAuditService.getAccountCurrency()');
   return 'USD';
 }

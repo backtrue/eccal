@@ -130,6 +130,30 @@ export class FbAuditService {
   }
 
   /**
+   * 獲取廣告帳戶的貨幣信息
+   */
+  async getAccountCurrency(accessToken: string, adAccountId: string): Promise<string> {
+    try {
+      const accountId = adAccountId.startsWith('act_') ? adAccountId : `act_${adAccountId}`;
+      const url = `${this.baseUrl}/${accountId}?fields=currency&access_token=${accessToken}`;
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        console.error('Failed to fetch account currency, defaulting to USD');
+        return 'USD';
+      }
+      
+      const data = await response.json();
+      const currency = data.currency || 'USD';
+      console.log('廣告帳戶實際貨幣:', currency);
+      return currency;
+    } catch (error) {
+      console.error('Error fetching account currency:', error);
+      return 'USD';
+    }
+  }
+
+  /**
    * 獲取廣告帳號過去28天的數據
    */
   async getAdAccountData(accessToken: string, adAccountId: string): Promise<FbAdAccountData> {
@@ -404,7 +428,7 @@ export class FbAuditService {
 
       // 以預算計劃的幣值為基準
       const planCurrency = planResult.currency || 'TWD';
-      const facebookCurrency = detectFacebookAccountCurrency(adAccountId || '');
+      const facebookCurrency = await this.getAccountCurrency(accessToken, adAccountId || '');
       
       // 目標值直接使用計劃中的原始值
       const targetDailySpend = parseFloat(planResult.dailyAdBudget.toString());
@@ -570,7 +594,7 @@ export class FbAuditService {
 
       // 檢測計劃和 Facebook 廣告帳戶的幣值
       const planCurrency = planResult.currency || 'TWD'; // 預設為 TWD
-      const fbAccountCurrency = detectFacebookAccountCurrency(adAccountId || ''); // 通常是 USD
+      const fbAccountCurrency = await this.getAccountCurrency(accessToken, adAccountId || ''); // 從 Facebook API 獲取真實貨幣
 
       console.log('===== 幣值轉換資訊 =====');
       console.log('計劃幣值:', planCurrency);
