@@ -737,6 +737,112 @@ export class FbAuditService {
   }
 
   /**
+   * 獲取廣告組合詳細數據（包含每日預算和CPA）
+   */
+  async getAdSetBudgetInsights(accessToken: string, adAccountId: string): Promise<Array<{
+    adSetId: string;
+    adSetName: string;
+    purchases: number;
+    spend: number;
+    dailyBudget: number;
+    cpa: number;
+    efficiency: number; // 每$100可產出幾單
+  }>> {
+    try {
+      const accountId = adAccountId.startsWith('act_') ? adAccountId : `act_${adAccountId}`;
+      
+      // 計算日期範圍（過去28天）
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - 28);
+      
+      const since = startDate.toISOString().split('T')[0];
+      const until = endDate.toISOString().split('T')[0];
+      
+      // 獲取廣告組合 insights 數據
+      const insightsUrl = `${this.baseUrl}/${accountId}/insights?` +
+        `level=adset&` +
+        `fields=adset_id,adset_name,spend,actions&` +
+        `time_range={"since":"${since}","until":"${until}"}&` +
+        `limit=100&` +
+        `access_token=${accessToken}`;
+
+      console.log('獲取廣告組合 insights 數據...');
+      const insightsResponse = await fetch(insightsUrl);
+      const insightsData = await insightsResponse.json();
+      
+      if (!insightsResponse.ok) {
+        console.error('獲取 insights 數據失敗:', insightsData);
+        return [];
+      }
+
+      // 獲取廣告組合詳細配置（包含每日預算）
+      const adSetsUrl = `${this.baseUrl}/${accountId}/adsets?` +
+        `fields=id,name,daily_budget,lifetime_budget,budget_remaining,status&` +
+        `limit=100&` +
+        `access_token=${accessToken}`;
+
+      console.log('獲取廣告組合配置數據...');
+      const adSetsResponse = await fetch(adSetsUrl);
+      const adSetsData = await adSetsResponse.json();
+      
+      if (!adSetsResponse.ok) {
+        console.error('獲取廣告組合配置失敗:', adSetsData);
+        return [];
+      }
+
+      // 將 insights 和配置數據合併
+      const mergedData = [];
+      
+      for (const insight of insightsData.data || []) {
+        // 找到對應的廣告組合配置
+        const adSetConfig = adSetsData.data?.find((config: any) => config.id === insight.adset_id);
+        
+        if (!adSetConfig || adSetConfig.status !== 'ACTIVE') {
+          continue; // 跳過非活躍的廣告組合
+        }
+
+        // 解析購買數據
+        let purchases = 0;
+        if (insight.actions && Array.isArray(insight.actions)) {
+          const purchaseAction = insight.actions.find((action: any) => action.action_type === 'purchase');
+          if (purchaseAction && purchaseAction.value) {
+            purchases = parseInt(purchaseAction.value);
+          }
+        }
+
+        const spend = parseFloat(insight.spend || '0');
+        const dailyBudget = parseFloat(adSetConfig.daily_budget || '0') / 100; // Facebook API 返回分為單位
+        
+        // 計算 CPA (每次購買成本)
+        const cpa = purchases > 0 ? spend / purchases : 0;
+        
+        // 計算效率 (每$100可產出幾單)
+        const efficiency = cpa > 0 ? 100 / cpa : 0;
+
+        mergedData.push({
+          adSetId: insight.adset_id,
+          adSetName: insight.adset_name || adSetConfig.name,
+          purchases,
+          spend,
+          dailyBudget,
+          cpa,
+          efficiency
+        });
+      }
+
+      // 按效率排序（效率高的排前面）
+      return mergedData
+        .filter(item => item.purchases > 0 && item.efficiency > 0)
+        .sort((a, b) => b.efficiency - a.efficiency);
+
+    } catch (error) {
+      console.error('獲取廣告組合預算數據錯誤:', error);
+      return [];
+    }
+  }
+
+  /**
    * 獲取廣告組合數據 (過去7天，計算購買轉換率)
    */
   async getAdSetInsights(accessToken: string, adAccountId: string): Promise<Array<{
@@ -839,15 +945,19 @@ export class FbAuditService {
       console.log('目標平均每天購買數:', target);
       console.log('實際平均每天購買數:', actual);
       
-      // 獲取前三名轉換率最高的廣告組合
-      const topAdSets = await this.getAdSetInsights(accessToken, adAccountId);
-      const top3AdSets = topAdSets.slice(0, 3);
+      // 獲取廣告組合詳細預算數據（包含CPA和效率）
+      const adSetBudgets = await this.getAdSetBudgetInsights(accessToken, adAccountId);
+      const top3AdSets = adSetBudgets.slice(0, 3);
       
-      console.log('前三名廣告組合:', top3AdSets);
+      console.log('前三名效率廣告組合:', top3AdSets);
       
-      const adSetRecommendation = this.buildAdSetRecommendation(top3AdSets, 'purchase', locale);
+      // 計算缺口和預算分配建議
+      const shortfall = target - actual;
+      const budgetAllocation = this.calculateEfficiencyBasedAllocation(top3AdSets, shortfall);
       
-      const { prompt, systemMessage } = this.buildPurchasePrompt(target, actual, adSetRecommendation, locale, isAchieved);
+      const enhancedRecommendation = this.buildEnhancedBudgetRecommendation(top3AdSets, budgetAllocation, locale);
+      
+      const { prompt, systemMessage } = this.buildPurchasePrompt(target, actual, enhancedRecommendation, locale, isAchieved);
 
       const response = await this.openai.chat.completions.create({
         model: "gpt-4o-mini",
@@ -1750,6 +1860,117 @@ ${heroPosts.map((hero, index) =>
   /**
    * 構建多語言的廣告組合推薦內容
    */
+  /**
+   * 根據效率計算預算分配建議
+   */
+  calculateEfficiencyBasedAllocation(adSets: Array<{
+    adSetName: string;
+    cpa: number;
+    efficiency: number;
+    dailyBudget: number;
+    purchases: number;
+  }>, shortfall: number): Array<{
+    adSetName: string;
+    currentBudget: number;
+    suggestedBudget: number;
+    additionalBudget: number;
+    expectedAdditionalPurchases: number;
+    allocationRatio: number;
+  }> {
+    if (adSets.length === 0) {
+      return [];
+    }
+
+    // 計算每個廣告組合的效率比例
+    const totalEfficiency = adSets.reduce((sum, adSet) => sum + adSet.efficiency, 0);
+    
+    // 估算總預算增量需求（基於缺口和平均CPA）
+    const avgCPA = adSets.reduce((sum, adSet) => sum + adSet.cpa, 0) / adSets.length;
+    const estimatedBudgetIncrease = shortfall * avgCPA * 1.2; // 增加20%緩衝
+    
+    // 按效率比例分配預算
+    return adSets.map((adSet, index) => {
+      const efficiencyRatio = adSet.efficiency / totalEfficiency;
+      let allocationRatio: number;
+      
+      // 根據效率排名設定分配比例（高效率組合獲得更多預算）
+      if (index === 0) {
+        allocationRatio = 0.6; // 最高效率組合獲得60%
+      } else if (index === 1) {
+        allocationRatio = 0.25; // 次高效率組合獲得25%
+      } else {
+        allocationRatio = 0.15; // 第三名獲得15%（觀察性投放）
+      }
+      
+      const additionalBudget = estimatedBudgetIncrease * allocationRatio;
+      const suggestedBudget = adSet.dailyBudget + additionalBudget;
+      const expectedAdditionalPurchases = additionalBudget / adSet.cpa;
+      
+      return {
+        adSetName: adSet.adSetName,
+        currentBudget: adSet.dailyBudget,
+        suggestedBudget: Math.round(suggestedBudget),
+        additionalBudget: Math.round(additionalBudget),
+        expectedAdditionalPurchases: Math.round(expectedAdditionalPurchases * 10) / 10,
+        allocationRatio
+      };
+    });
+  }
+
+  /**
+   * 建立增強版預算建議內容（包含CPA和效率數據）
+   */
+  buildEnhancedBudgetRecommendation(adSets: Array<{
+    adSetName: string;
+    cpa: number;
+    efficiency: number;
+    dailyBudget: number;
+    purchases: number;
+  }>, allocations: Array<{
+    adSetName: string;
+    currentBudget: number;
+    suggestedBudget: number;
+    additionalBudget: number;
+    expectedAdditionalPurchases: number;
+    allocationRatio: number;
+  }>, locale: string): string {
+    
+    let recommendation = '';
+    
+    // 添加效率分析表格
+    if (locale === 'zh-TW') {
+      recommendation += '📊 廣告組合效率分析:\n\n';
+      recommendation += '廣告組合 | 現有日預算 | CPA | 效率(每$100產出) | 建議日預算 | 預期增加訂單\n';
+      recommendation += '---|---|---|---|---|---\n';
+    } else if (locale === 'en') {
+      recommendation += '📊 Ad Set Efficiency Analysis:\n\n';
+      recommendation += 'Ad Set | Current Daily Budget | CPA | Efficiency(per $100) | Suggested Budget | Expected Additional Orders\n';
+      recommendation += '---|---|---|---|---|---\n';
+    } else if (locale === 'ja') {
+      recommendation += '📊 広告セット効率分析:\n\n';
+      recommendation += '広告セット | 現在の日予算 | CPA | 効率($100あたり) | 推奨予算 | 期待追加注文数\n';
+      recommendation += '---|---|---|---|---|---\n';
+    }
+    
+    // 為每個廣告組合添加詳細信息
+    for (let i = 0; i < Math.min(adSets.length, allocations.length); i++) {
+      const adSet = adSets[i];
+      const allocation = allocations[i];
+      
+      recommendation += `${adSet.adSetName} | $${adSet.dailyBudget} | $${Math.round(adSet.cpa)} | ${adSet.efficiency.toFixed(2)}單 | $${allocation.suggestedBudget} | ${allocation.expectedAdditionalPurchases}單\n`;
+    }
+    
+    // 添加分配邏輯說明
+    if (locale === 'zh-TW') {
+      recommendation += '\n💡 預算分配策略:\n';
+      recommendation += '• 高效率組合(A)：獲得60%增量預算，重點投放\n';
+      recommendation += '• 中效率組合(B)：獲得25%增量預算，穩定放量\n';
+      recommendation += '• 低效率組合(C)：獲得15%增量預算，觀察性測試\n';
+    }
+    
+    return recommendation;
+  }
+
   private buildAdSetRecommendation(adSets: any[], type: 'purchase' | 'roas', locale: string = 'zh-TW'): string {
     if (adSets.length === 0) {
       switch (locale) {
