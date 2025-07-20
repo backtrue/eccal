@@ -204,9 +204,9 @@ export default function FbAudit({ locale }: FbAuditProps) {
                   </div>
                 </div>
 
-                {/* 總購買數 */}
+                {/* 平均每天購買數 */}
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-sm text-gray-600 mb-1">總購買數</div>
+                  <div className="text-sm text-gray-600 mb-1">平均每天購買數</div>
                   <div className="text-2xl font-bold text-green-600 mb-1">
                     {(checkMutation.data as any)?.actualMetrics?.purchases || 0}
                   </div>
@@ -245,7 +245,7 @@ export default function FbAudit({ locale }: FbAuditProps) {
             {((checkMutation.data as any)?.comparisons || []).map((comparison: any, index: number) => {
               const metricNames = {
                 dailySpend: '日均花費',
-                purchases: '購買數',
+                purchases: '平均每天購買數',
                 roas: 'ROAS',
                 ctr: '連結點擊率'
               };

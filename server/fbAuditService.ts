@@ -661,7 +661,7 @@ export class FbAuditService {
             isAchieved
           );
         } else if (comparison.metric === 'purchases' && accessToken && adAccountId) {
-          // 購買數建議函數（支援達標和未達標）
+          // 平均每天購買數建議函數（支援達標和未達標）
           comparison.advice = await this.generatePurchaseAdvice(
             accessToken,
             adAccountId,
@@ -807,13 +807,13 @@ export class FbAuditService {
   }
 
   /**
-   * 生成購買數建議 (使用 ChatGPT 4o mini)
+   * 生成平均每天購買數建議 (使用 ChatGPT 4o mini)
    */
   async generatePurchaseAdvice(accessToken: string, adAccountId: string, target: number, actual: number, locale: string = 'zh-TW', isAchieved: boolean = false): Promise<string> {
     try {
-      console.log('=== ChatGPT 購買數建議生成開始 ===');
-      console.log('目標購買數:', target);
-      console.log('實際購買數:', actual);
+      console.log('=== ChatGPT 平均每天購買數建議生成開始 ===');
+      console.log('目標平均每天購買數:', target);
+      console.log('實際平均每天購買數:', actual);
       
       // 獲取前三名轉換率最高的廣告組合
       const topAdSets = await this.getAdSetInsights(accessToken, adAccountId);
@@ -838,7 +838,7 @@ export class FbAuditService {
       let advice = response.choices[0].message.content || '';
       advice = advice.replace(/```html\s*/g, '').replace(/```\s*$/g, '').trim();
       
-      console.log('=== ChatGPT 購買數建議生成完成 ===');
+      console.log('=== ChatGPT 平均每天購買數建議生成完成 ===');
       console.log('建議內容長度:', advice.length);
       
       return advice;
@@ -1653,7 +1653,7 @@ ${heroPosts.map((hero, index) =>
   `🎯 Hero Post ${index + 1}：【${hero.adName}】
    📊 外部クリック率：${hero.outboundCtr.toFixed(2)}%（優秀な成果！）
    🎯 全体クリック率：${hero.ctr.toFixed(2)}%
-   🛒 購入コンバージョン：${hero.purchases} 回
+   🛒 平均毎日購入数：${hero.purchases} 回
    💰 広告費用：$${hero.spend.toFixed(2)}
    👁️ インプレッション数：${hero.impressions.toLocaleString()}`
 ).join('\n\n')}
@@ -1673,7 +1673,7 @@ ${heroPosts.map((hero, index) =>
   `🎯 Hero Post ${index + 1}: 【${hero.adName}】
    📊 Outbound Click Rate: ${hero.outboundCtr.toFixed(2)}% (Excellent performance!)
    🎯 Overall Click Rate: ${hero.ctr.toFixed(2)}%
-   🛒 Purchase Conversions: ${hero.purchases} times
+   🛒 Average Daily Purchases: ${hero.purchases} times
    💰 Ad Spend: $${hero.spend.toFixed(2)}
    👁️ Impressions: ${hero.impressions.toLocaleString()}`
 ).join('\n\n')}
@@ -1693,7 +1693,7 @@ ${heroPosts.map((hero, index) =>
   `🎯 Hero Post ${index + 1}：【${hero.adName}】
    📊 連外點擊率：${hero.outboundCtr.toFixed(2)}%（表現優異！）
    🎯 整體點擊率：${hero.ctr.toFixed(2)}%
-   🛒 購買轉換：${hero.purchases} 次
+   🛒 平均每天購買數：${hero.purchases} 次
    💰 廣告花費：$${hero.spend.toFixed(2)}
    👁️ 曝光次數：${hero.impressions.toLocaleString()}`
 ).join('\n\n')}
@@ -1754,7 +1754,7 @@ ${heroPosts.map((hero, index) =>
 ${adSets.map((adSet, index) => 
   `${index + 1}. 【${adSet.adSetName}】
    - ${metricLabel[locale]}：${metricValue(adSet)}
-   - 購入数：${adSet.purchases} 回
+   - 平均毎日購入数：${adSet.purchases} 回
    - 支出：${adSet.spend.toLocaleString()} 円`
 ).join('\n\n')}
 
@@ -1767,7 +1767,7 @@ Based on the past 7 days of data analysis, here are your top 3 ad sets with the 
 ${adSets.map((adSet, index) => 
   `${index + 1}. 【${adSet.adSetName}】
    - ${metricLabel[locale]}: ${metricValue(adSet)}
-   - Purchases: ${adSet.purchases} times
+   - Average Daily Purchases: ${adSet.purchases} times
    - Spend: ${adSet.spend.toLocaleString()} dollars`
 ).join('\n\n')}
 
@@ -1780,7 +1780,7 @@ I recommend immediately scaling up these high-performing ad sets since they have
 ${adSets.map((adSet, index) => 
   `${index + 1}. 【${adSet.adSetName}】
    - ${metricLabel[locale]}：${metricValue(adSet)}
-   - 購買數：${adSet.purchases} 次
+   - 平均每天購買數：${adSet.purchases} 次
    - 花費：${adSet.spend.toLocaleString()} 元`
 ).join('\n\n')}
 
@@ -1789,7 +1789,7 @@ ${adSets.map((adSet, index) =>
   }
 
   /**
-   * 構建多語言的購買數提示語
+   * 構建多語言的平均每天購買數提示語
    */
   private buildPurchasePrompt(target: number, actual: number, adSetRecommendation: string, locale: string = 'zh-TW', isAchieved: boolean = false): { prompt: string; systemMessage: string } {
     const gap = isAchieved ? actual - target : target - actual;
@@ -1797,11 +1797,11 @@ ${adSets.map((adSet, index) =>
     switch (locale) {
       case 'ja':
         return {
-          prompt: isAchieved ? `Facebook電子商取引広告のエキスパートとして、購入数指標の達成に関する加碼提案を提供してください。
+          prompt: isAchieved ? `Facebook電子商取引広告のエキスパートとして、平均毎日購入数指標の達成に関する加碼提案を提供してください。
 
 **データ概要：**
-- 目標購入数：${target} 回
-- 実際の購入数：${actual} 回
+- 目標平均毎日購入数：${target} 回
+- 実際の平均毎日購入数：${actual} 回
 - 超過実績：${gap} 回
 
 🎉 素晴らしい！目標を達成しました！以下の構造で加碼提案を出力してください：
@@ -1818,11 +1818,11 @@ ${adSetRecommendation}
 ## 4. 次のステップ提案
 成功している高コンバージョン率広告セットに対して、より大きな予算での拡大提案を提供します。
 
-小黒先生の親しみやすく直接的な語調で、HTML形式で直接出力してください。各章のタイトルは<h3>タグで、内容は<p>と<ul>タグを使用してください。` : `Facebook電子商取引広告のエキスパートとして、購入数指標の最適化について構造化された提案を提供してください。
+小黒先生の親しみやすく直接的な語調で、HTML形式で直接出力してください。各章のタイトルは<h3>タグで、内容は<p>と<ul>タグを使用してください。` : `Facebook電子商取引広告のエキスパートとして、平均毎日購入数指標の最適化について構造化された提案を提供してください。
 
 **データ概要：**
-- 目標購入数：${target} 回
-- 実際の購入数：${actual} 回
+- 目標平均毎日購入数：${target} 回
+- 実際の平均毎日購入数：${actual} 回
 - 差異：${gap} 回
 
 以下の構造で提案を出力してください：
@@ -1831,7 +1831,7 @@ ${adSetRecommendation}
 目標vs実際のギャップと、全体的な広告効果への影響を分析します。
 
 ## 2. 核心戦略説明
-購入数指標の重要性と、「最高のコンバージョン率の広告セットを見つける」ことでこの指標を最適化する方法を説明します。
+平均毎日購入数指標の重要性と、「最高のコンバージョン率の広告セットを見つける」ことでこの指標を最適化する方法を説明します。
 
 ## 3. 具体的なデータ分析と提案
 ${adSetRecommendation}
@@ -1844,11 +1844,11 @@ ${adSetRecommendation}
         };
       case 'en':
         return {
-          prompt: `As a Facebook e-commerce advertising expert, please provide structured optimization recommendations for the purchase metric.
+          prompt: `As a Facebook e-commerce advertising expert, please provide structured optimization recommendations for the average daily purchase metric.
 
 **Data Overview:**
-- Target Purchases: ${target} times
-- Actual Purchases: ${actual} times
+- Target Average Daily Purchases: ${target} times
+- Actual Average Daily Purchases: ${actual} times
 - Gap: ${gap} times
 
 Please output recommendations in the following structure:
@@ -1857,7 +1857,7 @@ Please output recommendations in the following structure:
 Analyze the gap between target vs actual performance and its impact on overall ad effectiveness.
 
 ## 2. Core Strategy Explanation
-Explain the importance of the purchase metric and how to optimize it by "identifying the highest conversion rate ad sets."
+Explain the importance of the average daily purchase metric and how to optimize it by "identifying the highest conversion rate ad sets."
 
 ## 3. Specific Data Analysis and Recommendations
 ${adSetRecommendation}
@@ -1870,11 +1870,11 @@ Please use Mr.Kuro's friendly and direct tone, output directly in HTML format. W
         };
       default:
         return {
-          prompt: isAchieved ? `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對購買數指標達標提供結構化的加碼建議。
+          prompt: isAchieved ? `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對平均每天購買數指標達標提供結構化的加碼建議。
 
 **數據概況：**
-- 目標購買數：${target} 次
-- 實際購買數：${actual} 次
+- 目標平均每天購買數：${target} 次
+- 實際平均每天購買數：${actual} 次
 - 超標表現：${gap} 次
 
 🎉 太棒了！你已經達到目標！請按照以下結構輸出加碼建議：
@@ -1891,11 +1891,11 @@ ${adSetRecommendation}
 ## 4. 下一步建議
 針對表現優秀的高轉換率廣告組合，提供具體的擴大加碼建議。
 
-請用小黑老師親切直接的語調，直接輸出HTML格式。每個章節用 <h3> 標籤包裝標題，內容用 <p> 和 <ul> 標籤。` : `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對購買數指標提供結構化的優化建議。
+請用小黑老師親切直接的語調，直接輸出HTML格式。每個章節用 <h3> 標籤包裝標題，內容用 <p> 和 <ul> 標籤。` : `你是一位擁有超過十年經驗的 Facebook 電商廣告專家『小黑老師』。請針對平均每天購買數指標提供結構化的優化建議。
 
 **數據概況：**
-- 目標購買數：${target} 次
-- 實際購買數：${actual} 次
+- 目標平均每天購買數：${target} 次
+- 實際平均每天購買數：${actual} 次
 - 落差：${gap} 次
 
 請按照以下結構輸出建議：
@@ -1904,7 +1904,7 @@ ${adSetRecommendation}
 分析目標 vs 實際的落差情況，以及對整體廣告成效的影響。
 
 ## 2. 核心策略說明
-解釋購買數指標的重要性，以及如何透過「找出轉換率最高的廣告組合」來優化此指標。
+解釋平均每天購買數指標的重要性，以及如何透過「找出轉換率最高的廣告組合」來優化此指標。
 
 ## 3. 具體數據分析和建議
 ${adSetRecommendation}
