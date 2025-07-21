@@ -20,7 +20,9 @@ import CampaignPlannerV2 from "./pages/campaign-planner-v2";
 import Dashboard from "./pages/dashboard";
 import BrevoSync from "./pages/brevo-sync";
 import ProjectDetail from "./pages/project-detail";
-import AdminDashboard from "./pages/admin-dashboard-simple";
+import AdminDashboardSimple from "./pages/admin-dashboard-simple";
+import AdminDashboard from "./pages/admin-dashboard";
+import NPSRatingsPage from "./pages/nps-ratings";
 import DiagnosisReport from "./pages/diagnosis-report";
 import DiagnosisReportDetail from "./pages/diagnosis-report-detail";
 import AuthDebug from "./pages/auth-debug";
@@ -91,10 +93,10 @@ class ErrorBoundary extends Component<
 function Router() {
   const { locale, changeLocale } = useLocale();
   const [location] = useLocation();
-  
+
   // Track page views when routes change
   useAnalytics();
-  
+
   // Route-based language switching - only change if explicit language prefix is detected
   useEffect(() => {
     try {
@@ -150,7 +152,7 @@ function Router() {
       <Route path="/terms" component={() => <Terms locale="zh-TW" />} />
       <Route path="/about" component={() => <About locale="zh-TW" />} />
       <Route path="/facebook-test-demo" component={() => <FacebookTestDemo locale="zh-TW" />} />
-      
+
       {/* English routes */}
       <Route path="/en" component={() => <Home locale="en" />} />
       <Route path="/en/calculator" component={() => <Calculator locale="en" />} />
@@ -171,7 +173,7 @@ function Router() {
       <Route path="/en/privacy" component={() => <Privacy locale="en" />} />
       <Route path="/en/terms" component={() => <Terms locale="en" />} />
       <Route path="/en/about" component={() => <About locale="en" />} />
-      
+
       {/* Japanese routes */}
       <Route path="/jp" component={() => <Home locale="ja" />} />
       <Route path="/jp/calculator" component={() => <Calculator locale="ja" />} />
@@ -192,10 +194,13 @@ function Router() {
       <Route path="/jp/privacy" component={() => <Privacy locale="ja" />} />
       <Route path="/jp/terms" component={() => <Terms locale="ja" />} />
       <Route path="/jp/about" component={() => <About locale="ja" />} />
-      
+
       {/* Debug routes */}
       <Route path="/auth-debug" component={() => <AuthDebug />} />
-      
+      <Route path="/admin-dashboard" element={<AdminDashboard />} />
+      <Route path="/admin-dashboard-simple" element={<AdminDashboardSimple />} />
+      <Route path="/nps-ratings" element={<NPSRatingsPage />} />
+
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>

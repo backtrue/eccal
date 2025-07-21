@@ -1669,6 +1669,71 @@ echo "Bulk import completed!"`;
   app.get('/api/bdmin/nps-ratings', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
       const { fbHealthChecks, users } = await import('@shared/schema');
+      const { isNotNull, desc, sql } = await import('drizzle-orm');
+      
+      // 獲取所有 NPS 評分記錄
+      const ratings = await db
+        .select({
+          id: fbHealthChecks.id,
+          userId: fbHealthChecks.userId,
+          userEmail: users.email,
+          userName: users.name,
+          npsScore: fbHealthChecks.npsScore,
+          npsComment: fbHealthChecks.npsComment,
+          npsSubmittedAt: fbHealthChecks.npsSubmittedAt,
+          adAccountName: fbHealthChecks.adAccountName,
+          industryType: fbHealthChecks.industryType,
+        })
+        .from(fbHealthChecks)
+        .leftJoin(users, eq(fbHealthChecks.userId, users.id))
+        .where(isNotNull(fbHealthChecks.npsScore))
+        .orderBy(desc(fbHealthChecks.npsSubmittedAt));
+
+      // 計算 NPS 統計數據
+      const totalRatings = ratings.length;
+      let promoters = 0;
+      let passives = 0; 
+      let detractors = 0;
+      let totalScore = 0;
+
+      ratings.forEach(rating => {
+        const score = rating.npsScore;
+        totalScore += score;
+        
+        if (score >= 9) {
+          promoters++;
+        } else if (score >= 7) {
+          passives++;
+        } else {
+          detractors++;
+        }
+      });
+
+      const averageScore = totalRatings > 0 ? totalScore / totalRatings : 0;
+      const promoterPercentage = totalRatings > 0 ? (promoters / totalRatings) * 100 : 0;
+      const detractorPercentage = totalRatings > 0 ? (detractors / totalRatings) * 100 : 0;
+      const npsScore = promoterPercentage - detractorPercentage;
+
+      const stats = {
+        totalRatings,
+        averageScore,
+        promoters,
+        passives,
+        detractors,
+        npsScore
+      };
+
+      res.json({
+        ratings,
+        stats
+      });
+    } catch (error) {
+      console.error('Error fetching NPS ratings:', error);
+      res.status(500).json({ message: 'Failed to fetch NPS ratings' });
+    }
+  });get('/api/bdmin/nps-ratings', requireJWTAuth, requireAdmin, async (req: any, res) => {
+    try {
+      const { fbHealthChecks, users } = await import('@shared/schema');
       const { isNotNull, desc } = await import('drizzle-orm');
       
       const ratings = await db
