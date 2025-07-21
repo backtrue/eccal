@@ -965,8 +965,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true, data: savedPlan });
     } catch (error) {
       console.error('儲存計劃結果失敗:', error);
-      console.error('Error stack:', error.stack);
-      res.status(500).json({ success: false, message: '儲存失敗', error: error.message });
+      console.error('Error stack:', (error as Error).stack);
+      res.status(500).json({ success: false, message: '儲存失敗', error: (error as Error).message });
     }
   });
 
@@ -1697,7 +1697,7 @@ echo "Bulk import completed!"`;
       let totalScore = 0;
 
       ratings.forEach(rating => {
-        const score = rating.npsScore;
+        const score = rating.npsScore || 0;
         totalScore += score;
         
         if (score >= 9) {
@@ -1731,7 +1731,9 @@ echo "Bulk import completed!"`;
       console.error('Error fetching NPS ratings:', error);
       res.status(500).json({ message: 'Failed to fetch NPS ratings' });
     }
-  });get('/api/bdmin/nps-ratings', requireJWTAuth, requireAdmin, async (req: any, res) => {
+  });
+
+  app.get('/api/bdmin/nps-ratings', requireJWTAuth, requireAdmin, async (req: any, res) => {
     try {
       const { fbHealthChecks, users } = await import('@shared/schema');
       const { isNotNull, desc } = await import('drizzle-orm');
@@ -1745,7 +1747,7 @@ echo "Bulk import completed!"`;
           npsScore: fbHealthChecks.npsScore,
           npsComment: fbHealthChecks.npsComment,
           npsSubmittedAt: fbHealthChecks.npsSubmittedAt,
-          campaignName: fbHealthChecks.campaignName,
+          adAccountName: fbHealthChecks.adAccountName,
           createdAt: fbHealthChecks.createdAt
         })
         .from(fbHealthChecks)
@@ -1774,7 +1776,7 @@ echo "Bulk import completed!"`;
           score: r.npsScore,
           comment: r.npsComment,
           submittedAt: r.npsSubmittedAt,
-          campaignName: r.campaignName,
+          adAccountName: r.adAccountName,
           healthCheckDate: r.createdAt
         }))
       });
@@ -2228,7 +2230,7 @@ echo "Bulk import completed!"`;
   app.get('/api/nps-check', async (req, res) => {
     try {
       const { fbHealthChecks, users } = await import('@shared/schema');
-      const { isNotNull, ne } = await import('drizzle-orm');
+      const { isNotNull, ne, and } = await import('drizzle-orm');
       
       const ratings = await db
         .select({
