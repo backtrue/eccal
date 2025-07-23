@@ -116,7 +116,7 @@ export default function RecruitmentEn({ locale = 'en' }: RecruitmentProps) {
             <div className="flex flex-col md:flex-row items-center gap-8 mb-8">
               <div className="flex-shrink-0">
                 <img 
-                  src="/attached_assets/image_1753281122819.png" 
+                  src="/teacher-black-photo.png" 
                   alt="Yu-Ting Chiu Teacher Black" 
                   className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover shadow-lg"
                 />
@@ -126,7 +126,7 @@ export default function RecruitmentEn({ locale = 'en' }: RecruitmentProps) {
                   I'm Yu-Ting Chiu, known as "Teacher Black"
                 </h2>
                 <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
-                  Over a decade of experience, starting from MIS and web planning, serving as Marketing Director at uitox Global E-commerce Group and Marketing Manager at Buynow China HQ. Currently Chief Consultant at Siumai Institute. I specialize in "Inbound Marketing," author of "Web Attraction Power," recognized as Taiwan's e-commerce "battle strategy" expert.
+                  Over a decade of experience, starting from MIS and web planning, serving as Marketing Director at uitox Global E-commerce Group and Marketing Manager at Buynow China HQ. My marketing strategies have been successfully applied across China, USA, Taiwan, Japan and 30+ different industries, effectively using my marketing logic to drive e-commerce growth. Currently Chief Consultant at Siumai Institute. I specialize in "Inbound Marketing," author of "Web Attraction Power," recognized as Taiwan's e-commerce "battle strategy" expert, teaching Facebook advertising continuously for over 10 years.
                 </p>
                 <p className="text-lg text-blue-600 font-semibold">
                   I don't teach theory - I give you actionable systems you can implement immediately.

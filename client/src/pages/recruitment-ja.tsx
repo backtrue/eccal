@@ -116,7 +116,7 @@ export default function RecruitmentJa({ locale = 'ja' }: RecruitmentProps) {
             <div className="flex flex-col md:flex-row items-center gap-8 mb-8">
               <div className="flex-shrink-0">
                 <img 
-                  src="/attached_assets/image_1753281122819.png" 
+                  src="/teacher-black-photo.png" 
                   alt="邱煜庭 小黒先生" 
                   className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover shadow-lg"
                 />
@@ -126,7 +126,7 @@ export default function RecruitmentJa({ locale = 'ja' }: RecruitmentProps) {
                   私は邱煜庭、皆さんは「小黒先生」と呼んでくれます
                 </h2>
                 <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
-                  十年以上にわたり、MIS、ウェブ企画から始まり、uitox グローバルEC集団マーケティング責任者、百脳匯中国本部マーケティングマネージャーを歴任し、現在は燒賣研究所の主席コンサルタントです。「インバウンドマーケティング」を専門とし、『ネット集客力』の著者で、台湾EC業界の「肉搏戦略」専門家として知られています。
+                  十年以上にわたり、MIS、ウェブ企画から始まり、uitox グローバルEC集団マーケティング責任者、百脳匯中国本部マーケティングマネージャーを歴任し、マーケティング理論を中国、アメリカ、台湾、日本などで30以上の異なる業界に応用し、私のマーケティングロジックを効果的に活用してECビジネスの成果を創出してきました。現在は燒賣研究所の主席コンサルタントです。「インバウンドマーケティング」を専門とし、『ネット集客力』の著者で、台湾EC業界の「肉搏戦略」専門家として知られ、Facebook広告指導は10年以上途切れることなく続けています。
                 </p>
                 <p className="text-lg text-blue-600 font-semibold">
                   私は理論を教えません。すぐに実行できる実戦システムを提供します。

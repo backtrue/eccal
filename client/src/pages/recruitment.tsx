@@ -116,7 +116,7 @@ export default function Recruitment({ locale = 'zh-TW' }: RecruitmentProps) {
             <div className="flex flex-col md:flex-row items-center gap-8 mb-8">
               <div className="flex-shrink-0">
                 <img 
-                  src="/attached_assets/image_1753281122819.png" 
+                  src="/teacher-black-photo.png" 
                   alt="邱煜庭 小黑老師" 
                   className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover shadow-lg"
                 />
@@ -126,7 +126,7 @@ export default function Recruitment({ locale = 'zh-TW' }: RecruitmentProps) {
                   我是邱煜庭，大家都叫我「小黑老師」
                 </h2>
                 <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
-                  十餘年來，我從 MIS、網站企劃做起，歷任 uitox 全球電商集團行銷總監、百腦匯中國總部行銷經理，現在是燒賣研究所首席顧問。我專精「集客式行銷」，著有《網路集客力》一書，被譽為台灣電商界的「肉搏戰策略」專家。
+                  十餘年來，我從 MIS、網站企劃做起，歷任 uitox 全球電商集團行銷總監、百腦匯中國總部行銷經理，行銷理論應用在中國、美國、台灣、日本等地、三十餘個不同的產業，都能有效的運用我的行銷邏輯來開創電商業績。現在是燒賣研究所首席顧問。我專精「集客式行銷」，著有《網路集客力》一書，被譽為台灣電商界的「肉搏戰策略」專家，教臉書廣告更是十多年未曾間斷。
                 </p>
                 <p className="text-lg text-blue-600 font-semibold">
                   我不教理論，只給你能立刻執行的實戰系統。
