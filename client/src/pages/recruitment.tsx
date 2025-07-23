@@ -314,7 +314,7 @@ export default function Recruitment({ locale = 'zh-TW' }: RecruitmentProps) {
             <div className="mb-6">
               <p className="text-lg text-gray-600 mb-2">創始會員資格，僅需：</p>
               <div className="text-6xl font-bold text-red-600 mb-2">
-                NT$ 3,980
+                NT$ 5,990
               </div>
               <p className="text-sm text-gray-500">（全球僅限 300 席，額滿即止）</p>
             </div>

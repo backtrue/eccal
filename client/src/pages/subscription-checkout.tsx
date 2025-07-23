@@ -177,7 +177,7 @@ export default function SubscriptionCheckout({ locale }: SubscriptionCheckoutPro
       savings: '現省 2 個月費用！'
     },
     founders: {
-      twdPrice: 3980,
+      twdPrice: 5990,
       priceId: 'price_0Rnx9tYDQY3sAQESumeM9k1g', // 實際 Stripe Lifetime Price ID  
       displayName: '創始會員方案',
       oneTime: true

@@ -41,7 +41,7 @@ export default function Pricing({ locale }: PricingProps) {
       savings: '現省 2 個月費用！'
     },
     founders: {
-      twdPrice: 3980,
+      twdPrice: 5990,
       priceId: 'price_0Rnx9tYDQY3sAQESumeM9k1g',
       special: true,
       oneTime: true
@@ -203,7 +203,7 @@ export default function Pricing({ locale }: PricingProps) {
                   </li>
                 ))}
               </ul>
-              <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/subscription-checkout?plan=founders&priceId=${pricingData.founders.priceId}`}>
+              <Link href="https://eccal.thinkwithblack.com/recruitment">
                 <Button className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold" size="lg">
                   立即鎖定創始席次
                 </Button>
