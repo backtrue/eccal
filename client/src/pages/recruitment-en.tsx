@@ -112,13 +112,36 @@ export default function RecruitmentEn({ locale = 'en' }: RecruitmentProps) {
             This isn't another theory course - I'm giving you a proven system to boost your ROAS.
           </p>
           
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg max-w-3xl mx-auto">
-            <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
-              Have you ever stared at Facebook Ads Manager numbers wondering: "Is my ad spend really being used effectively?" "Why do others' ads make money while mine just burn cash?" You bought courses, read articles, but when it comes to setting budgets, you still rely on "feelings".
-            </p>
-            <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mt-4 font-medium">
-              If this resonates with you, this isn't just another live class - this is the answer you've been searching for.
-            </p>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg max-w-4xl mx-auto">
+            <div className="flex flex-col md:flex-row items-center gap-8 mb-8">
+              <div className="flex-shrink-0">
+                <img 
+                  src="/attached_assets/image_1753281122819.png" 
+                  alt="Yu-Ting Chiu Teacher Black" 
+                  className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover shadow-lg"
+                />
+              </div>
+              <div className="flex-1 text-left">
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                  I'm Yu-Ting Chiu, known as "Teacher Black"
+                </h2>
+                <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
+                  Over a decade of experience, starting from MIS and web planning, serving as Marketing Director at uitox Global E-commerce Group and Marketing Manager at Buynow China HQ. Currently Chief Consultant at Siumai Institute. I specialize in "Inbound Marketing," author of "Web Attraction Power," recognized as Taiwan's e-commerce "battle strategy" expert.
+                </p>
+                <p className="text-lg text-blue-600 font-semibold">
+                  I don't teach theory - I give you actionable systems you can implement immediately.
+                </p>
+              </div>
+            </div>
+            
+            <div className="border-t border-gray-200 dark:border-gray-600 pt-6">
+              <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
+                Have you ever stared at Facebook Ads Manager numbers wondering: "Is my ad spend really being used effectively?" "Why do others' ads make money while mine just burn cash?" You bought courses, read articles, but when it comes to setting budgets, you still rely on "feelings".
+              </p>
+              <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mt-4 font-medium">
+                If this resonates with you, this isn't just another live class - this is the answer you've been searching for.
+              </p>
+            </div>
           </div>
         </div>
       </section>

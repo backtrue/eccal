@@ -112,13 +112,36 @@ export default function RecruitmentJa({ locale = 'ja' }: RecruitmentProps) {
             これは理論を教える別のコースではありません。私はROASを向上させる実証済みのシステムを提供します。
           </p>
           
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg max-w-3xl mx-auto">
-            <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
-              Facebook広告マネージャーの数字を見つめて疑問に思ったことはありませんか：「私の広告費は本当に効果的に使われているのか？」「なぜ他人の広告は利益を生むのに、私の広告はお金を燃やすだけなのか？」コースを買い、記事を読んだが、予算設定の段階になると、やはり「感覚」に頼るしかない。
-            </p>
-            <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mt-4 font-medium">
-              これに共感されるなら、これは単なるライブクラスではありません。これはあなたが探し続けてきた答えです。
-            </p>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg max-w-4xl mx-auto">
+            <div className="flex flex-col md:flex-row items-center gap-8 mb-8">
+              <div className="flex-shrink-0">
+                <img 
+                  src="/attached_assets/image_1753281122819.png" 
+                  alt="邱煜庭 小黒先生" 
+                  className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover shadow-lg"
+                />
+              </div>
+              <div className="flex-1 text-left">
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                  私は邱煜庭、皆さんは「小黒先生」と呼んでくれます
+                </h2>
+                <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
+                  十年以上にわたり、MIS、ウェブ企画から始まり、uitox グローバルEC集団マーケティング責任者、百脳匯中国本部マーケティングマネージャーを歴任し、現在は燒賣研究所の主席コンサルタントです。「インバウンドマーケティング」を専門とし、『ネット集客力』の著者で、台湾EC業界の「肉搏戦略」専門家として知られています。
+                </p>
+                <p className="text-lg text-blue-600 font-semibold">
+                  私は理論を教えません。すぐに実行できる実戦システムを提供します。
+                </p>
+              </div>
+            </div>
+            
+            <div className="border-t border-gray-200 dark:border-gray-600 pt-6">
+              <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
+                Facebook広告マネージャーの数字を見つめて疑問に思ったことはありませんか：「私の広告費は本当に効果的に使われているのか？」「なぜ他人の広告は利益を生むのに、私の広告はお金を燃やすだけなのか？」コースを買い、記事を読んだが、予算設定の段階になると、やはり「感覚」に頼るしかない。
+              </p>
+              <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mt-4 font-medium">
+                これに共感されるなら、これは単なるライブクラスではありません。これはあなたが探し続けてきた答えです。
+              </p>
+            </div>
           </div>
         </div>
       </section>

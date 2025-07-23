@@ -112,13 +112,36 @@ export default function Recruitment({ locale = 'zh-TW' }: RecruitmentProps) {
             這不是另一堂教你理論的課，我直接給你一套能提升 ROAS 的作戰系統。
           </p>
           
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg max-w-3xl mx-auto">
-            <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
-              你是否也曾盯著 Facebook 廣告後台的數字，心中充滿疑問：「我的廣告費，真的花在刀口上了嗎？」「為什麼別人的廣告會賺錢，我的卻總是在燒錢？」你買了課程、看了文章，但到了設定預算那一步，依然只能靠「感覺」下決定。
-            </p>
-            <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mt-4 font-medium">
-              如果你對以上情境心有戚戚焉，那麼，這不僅僅是一堂直播課，這是你一直在尋找的答案。
-            </p>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg max-w-4xl mx-auto">
+            <div className="flex flex-col md:flex-row items-center gap-8 mb-8">
+              <div className="flex-shrink-0">
+                <img 
+                  src="/attached_assets/image_1753281122819.png" 
+                  alt="邱煜庭 小黑老師" 
+                  className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover shadow-lg"
+                />
+              </div>
+              <div className="flex-1 text-left">
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                  我是邱煜庭，大家都叫我「小黑老師」
+                </h2>
+                <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
+                  十餘年來，我從 MIS、網站企劃做起，歷任 uitox 全球電商集團行銷總監、百腦匯中國總部行銷經理，現在是燒賣研究所首席顧問。我專精「集客式行銷」，著有《網路集客力》一書，被譽為台灣電商界的「肉搏戰策略」專家。
+                </p>
+                <p className="text-lg text-blue-600 font-semibold">
+                  我不教理論，只給你能立刻執行的實戰系統。
+                </p>
+              </div>
+            </div>
+            
+            <div className="border-t border-gray-200 dark:border-gray-600 pt-6">
+              <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
+                你是否也曾盯著 Facebook 廣告後台的數字，心中充滿疑問：「我的廣告費，真的花在刀口上了嗎？」「為什麼別人的廣告會賺錢，我的卻總是在燒錢？」你買了課程、看了文章，但到了設定預算那一步，依然只能靠「感覺」下決定。
+              </p>
+              <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mt-4 font-medium">
+                如果你對以上情境心有戚戚焉，那麼，這不僅僅是一堂直播課，這是你一直在尋找的答案。
+              </p>
+            </div>
           </div>
         </div>
       </section>
