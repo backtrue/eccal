@@ -223,7 +223,7 @@ export default function RecruitmentJa({ locale = 'ja' }: RecruitmentProps) {
                   ログインが必要なプライベートソフトウェアで、GA4とFacebook APIを統合し、GPT-4で駆動されます。3つのコアエンジンが含まれています：GA予算計算機、Proキャンペーンプランナー、AI広告ヘルスチェックシステム。
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                  将来の独立年額価格：¥20,000
+                  将来の独立年額価格：¥57,600
                 </p>
               </CardContent>
             </Card>
@@ -246,7 +246,7 @@ export default function RecruitmentJa({ locale = 'ja' }: RecruitmentProps) {
                   Google/Facebookアカウント統合からプラットフォームコア機能操作まで、私がオンラインで直接すべての設定をガイドします。質問があれば、ライブで質問し、即座に回答を得られます。
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                  価値：¥7,500
+                  価値：¥21,600
                 </p>
               </CardContent>
             </Card>
@@ -269,7 +269,7 @@ export default function RecruitmentJa({ locale = 'ja' }: RecruitmentProps) {
                   ライブワークショップに加えて、小黒先生の完全な事前録画オンラインコースを取得できます。永続的な学習サポートとして、いつでも復習し、広告運用のすべての詳細を深く研究できます。
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                  価格：¥6,500
+                  価格：¥17,910
                 </p>
               </CardContent>
             </Card>
@@ -290,20 +290,20 @@ export default function RecruitmentJa({ locale = 'ja' }: RecruitmentProps) {
             <div className="space-y-3 text-lg">
               <div className="flex justify-between">
                 <span>SaaSプラットフォーム終身使用権：</span>
-                <span className="line-through">¥20,000+</span>
+                <span className="line-through">¥57,600+</span>
               </div>
               <div className="flex justify-between">
                 <span>ライブワークショップ：</span>
-                <span className="line-through">¥7,500</span>
+                <span className="line-through">¥21,600</span>
               </div>
               <div className="flex justify-between">
                 <span>完全オンラインコース：</span>
-                <span className="line-through">¥6,500</span>
+                <span className="line-through">¥17,910</span>
               </div>
               <hr className="border-white/30" />
               <div className="flex justify-between text-xl font-bold">
                 <span>総価値：</span>
-                <span>¥34,000以上</span>
+                <span>¥97,110以上</span>
               </div>
             </div>
           </div>

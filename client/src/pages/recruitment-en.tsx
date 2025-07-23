@@ -223,7 +223,7 @@ export default function RecruitmentEn({ locale = 'en' }: RecruitmentProps) {
                   You'll get a login-required private software integrating GA4 and Facebook API, powered by GPT-4. It includes three core engines: GA Budget Calculator, Pro Campaign Planner, and AI Ad Health Check System.
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                  Future standalone annual price: $190
+                  Future standalone annual price: $427
                 </p>
               </CardContent>
             </Card>
@@ -246,7 +246,7 @@ export default function RecruitmentEn({ locale = 'en' }: RecruitmentProps) {
                   I'll personally guide you through all setup online, from Google/Facebook account integration to platform core functions. Any questions? Ask live, get answers immediately.
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                  Value: $69
+                  Value: $160
                 </p>
               </CardContent>
             </Card>
@@ -269,7 +269,7 @@ export default function RecruitmentEn({ locale = 'en' }: RecruitmentProps) {
                   Besides live workshop, you'll get Teacher Black's complete pre-recorded online course. As your permanent learning backup, allowing you to review and dive deeper into every advertising detail.
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                  Price: $59
+                  Price: $133
                 </p>
               </CardContent>
             </Card>
@@ -290,20 +290,20 @@ export default function RecruitmentEn({ locale = 'en' }: RecruitmentProps) {
             <div className="space-y-3 text-lg">
               <div className="flex justify-between">
                 <span>SaaS Platform Lifetime Access:</span>
-                <span className="line-through">$190+</span>
+                <span className="line-through">$427+</span>
               </div>
               <div className="flex justify-between">
                 <span>Live Workshop:</span>
-                <span className="line-through">$69</span>
+                <span className="line-through">$160</span>
               </div>
               <div className="flex justify-between">
                 <span>Complete Online Course:</span>
-                <span className="line-through">$59</span>
+                <span className="line-through">$133</span>
               </div>
               <hr className="border-white/30" />
               <div className="flex justify-between text-xl font-bold">
                 <span>Total Value:</span>
-                <span>Over $318</span>
+                <span>Over $720</span>
               </div>
             </div>
           </div>
