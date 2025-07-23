@@ -37,6 +37,7 @@ import Checkout from "./pages/checkout";
 import SubscriptionCheckout from "./pages/subscription-checkout";
 import PaymentSuccess from "./pages/payment-success";
 import About from "./pages/about";
+import Recruitment from "./pages/recruitment";
 import FacebookTestDemo from "./pages/facebook-test-demo";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 
@@ -143,14 +144,16 @@ function Router() {
           <AdminDashboard />
         </ProtectedAdminRoute>
       )} />
-      <Route path="/brevo-sync" component={() => <BrevoSync />} />
-      <Route path="/facebook-permissions" component={() => <FacebookPermissions />} />
+      <Route path="/brevo-sync" component={BrevoSync} />
+      <Route path="/facebook-permissions" component={FacebookPermissions} />
       <Route path="/facebook-setup" component={() => <FacebookSetup locale="zh-TW" />} />
       <Route path="/privacy-policy" component={() => <Privacy locale="zh-TW" />} />
       <Route path="/terms-of-service" component={() => <Terms locale="zh-TW" />} />
       <Route path="/privacy" component={() => <Privacy locale="zh-TW" />} />
       <Route path="/terms" component={() => <Terms locale="zh-TW" />} />
       <Route path="/about" component={() => <About locale="zh-TW" />} />
+      <Route path="/recruitment" component={() => <Recruitment locale="zh-TW" />} />
+      <Route path="/zh-tw/recruitment" component={() => <Recruitment locale="zh-TW" />} />
       <Route path="/facebook-test-demo" component={() => <FacebookTestDemo locale="zh-TW" />} />
 
       {/* English routes */}
@@ -166,13 +169,14 @@ function Router() {
       <Route path="/en/help/calculator" component={() => <CalculatorHelp locale="en" />} />
       <Route path="/en/help/campaign-planner" component={() => <CampaignPlannerHelp locale="en" />} />
       <Route path="/en/dashboard" component={() => <Dashboard locale="en" />} />
-      <Route path="/en/brevo-sync" component={() => <BrevoSync />} />
+      <Route path="/en/brevo-sync" component={BrevoSync} />
       <Route path="/en/facebook-setup" component={() => <FacebookSetup locale="en" />} />
       <Route path="/en/privacy-policy" component={() => <Privacy locale="en" />} />
       <Route path="/en/terms-of-service" component={() => <Terms locale="en" />} />
       <Route path="/en/privacy" component={() => <Privacy locale="en" />} />
       <Route path="/en/terms" component={() => <Terms locale="en" />} />
       <Route path="/en/about" component={() => <About locale="en" />} />
+      <Route path="/en/recruitment" component={() => <Recruitment locale="en" />} />
 
       {/* Japanese routes */}
       <Route path="/jp" component={() => <Home locale="ja" />} />
@@ -187,19 +191,20 @@ function Router() {
       <Route path="/jp/help/calculator" component={() => <CalculatorHelp locale="ja" />} />
       <Route path="/jp/help/campaign-planner" component={() => <CampaignPlannerHelp locale="ja" />} />
       <Route path="/jp/dashboard" component={() => <Dashboard locale="ja" />} />
-      <Route path="/jp/brevo-sync" component={() => <BrevoSync />} />
+      <Route path="/jp/brevo-sync" component={BrevoSync} />
       <Route path="/jp/facebook-setup" component={() => <FacebookSetup locale="ja" />} />
       <Route path="/jp/privacy-policy" component={() => <Privacy locale="ja" />} />
       <Route path="/jp/terms-of-service" component={() => <Terms locale="ja" />} />
       <Route path="/jp/privacy" component={() => <Privacy locale="ja" />} />
       <Route path="/jp/terms" component={() => <Terms locale="ja" />} />
       <Route path="/jp/about" component={() => <About locale="ja" />} />
+      <Route path="/jp/recruitment" component={() => <Recruitment locale="ja" />} />
 
       {/* Debug routes */}
-      <Route path="/auth-debug" component={() => <AuthDebug />} />
-      <Route path="/admin-dashboard" element={<AdminDashboard />} />
-      <Route path="/admin-dashboard-simple" element={<AdminDashboardSimple />} />
-      <Route path="/nps-ratings" element={<NPSRatingsPage />} />
+      <Route path="/auth-debug" component={AuthDebug} />
+      <Route path="/admin-dashboard" component={AdminDashboard} />
+      <Route path="/admin-dashboard-simple" component={AdminDashboardSimple} />
+      <Route path="/nps-ratings" component={NPSRatingsPage} />
 
       {/* Fallback to 404 */}
       <Route component={NotFound} />
