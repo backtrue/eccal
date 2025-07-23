@@ -195,33 +195,58 @@ export default function SubscriptionCheckout({ locale }: SubscriptionCheckoutPro
       return;
     }
 
-    // Create subscription
-    const createSubscription = async () => {
+    // Handle different payment types
+    const createPayment = async () => {
       try {
         setLoading(true);
-        const response = await apiRequest("POST", "/api/stripe/create-subscription", {
-          priceId,
-          planType
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to create subscription');
-        }
-
-        const data = await response.json();
         
-        if (data.clientSecret) {
-          setClientSecret(data.clientSecret);
+        // Check if this is a founders plan (one-time payment)
+        if (planType === 'founders') {
+          // Use payment intent for one-time payment
+          const response = await apiRequest("POST", "/api/stripe/create-payment-intent", {
+            amount: pricingData.founders.twdPrice,
+            paymentType: 'founders_membership',
+            currency: 'twd'
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to create payment intent');
+          }
+
+          const data = await response.json();
+          
+          if (data.clientSecret) {
+            setClientSecret(data.clientSecret);
+          } else {
+            throw new Error('No client secret received');
+          }
         } else {
-          throw new Error('No client secret received');
+          // Use subscription for recurring payments
+          const response = await apiRequest("POST", "/api/stripe/create-subscription", {
+            priceId,
+            planType
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to create subscription');
+          }
+
+          const data = await response.json();
+          
+          if (data.clientSecret) {
+            setClientSecret(data.clientSecret);
+          } else {
+            throw new Error('No client secret received');
+          }
         }
       } catch (err: any) {
-        console.error('Error creating subscription:', err);
-        setError(err.message || 'Failed to create subscription');
+        console.error('Error creating payment:', err);
+        setError(err.message || 'Failed to create payment');
         safeToast({
-          title: "訂閱建立失敗",
-          description: err.message || "無法建立訂閱，請重試",
+          title: planType === 'founders' ? "付款建立失敗" : "訂閱建立失敗",
+          description: err.message || "無法建立付款，請重試",
           variant: "destructive",
         });
       } finally {
@@ -229,7 +254,7 @@ export default function SubscriptionCheckout({ locale }: SubscriptionCheckoutPro
       }
     };
 
-    createSubscription();
+    createPayment();
   }, [isAuthenticated, priceId, planType, t]);
 
   // 新的三方案詳細資訊

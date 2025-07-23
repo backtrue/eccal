@@ -441,6 +441,10 @@ async function handlePaymentSuccess(paymentIntent: any) {
     } else if (paymentType === 'lifetime') {
       // Lifetime: 10 years (effectively permanent)
       await storage.upgradeToPro(userId, 365 * 10);
+    } else if (paymentType === 'founders_membership') {
+      // Founders membership: lifetime access (10 years)
+      await storage.upgradeToPro(userId, 365 * 10);
+      console.log(`Upgraded user ${userId} to founders membership (lifetime Pro access)`);
     }
 
     console.log(`Successfully processed ${paymentType} payment for user ${userId}`);
