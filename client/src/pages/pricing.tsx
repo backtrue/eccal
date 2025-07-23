@@ -203,11 +203,11 @@ export default function Pricing({ locale }: PricingProps) {
                   </li>
                 ))}
               </ul>
-              <Link href="https://eccal.thinkwithblack.com/recruitment">
+              <a href="https://eccal.thinkwithblack.com/recruitment" target="_blank" rel="noopener noreferrer">
                 <Button className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold" size="lg">
                   立即鎖定創始席次
                 </Button>
-              </Link>
+              </a>
             </CardContent>
           </Card>
         </div>
