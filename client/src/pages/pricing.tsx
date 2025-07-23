@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import NavigationBar from "@/components/NavigationBar";
@@ -9,20 +8,15 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Check, 
   Star, 
-  Zap, 
-  Target, 
-  TrendingUp, 
-  Clock, 
   Crown,
   Gift,
-  Users,
-  BarChart3,
-  Shield,
+  Calendar,
+  Infinity,
+  Clock,
   Sparkles
 } from "lucide-react";
 import type { Locale } from "@/lib/i18n";
 import { getTranslations } from "@/lib/i18n";
-import CurrencyConverter from "@/components/CurrencyConverter";
 
 interface PricingProps {
   locale: Locale;
@@ -31,418 +25,274 @@ interface PricingProps {
 export default function Pricing({ locale }: PricingProps) {
   const t = getTranslations(locale);
   const { user, isAuthenticated } = useAuth();
-  const [billingType, setBillingType] = useState<'monthly' | 'lifetime'>('monthly');
 
-  // 簡單的日圓定價數據
+  // 新的三方案定價結構
   const pricingData = {
     monthly: {
-      jpyPrice: 2000,
-      priceId: 'price_0RiHY9YDQY3sAQESGLKwBfNm',
-      credits: 350
-    },
-    lifetime: {
-      jpyPrice: 17250,
-      priceId: 'price_0RiHY9YDQY3sAQESlN1UPzu0',
-      credits: 700
+      twdPrice: 1280,
+      priceId: 'price_monthly_1280_twd',
+      popular: false,
+      savings: null
     },
     annual: {
-      jpyPrice: 20000,
-      priceId: 'price_0RiVZOYDQY3sAQESuwqOGvzn', // 年訂閱 price ID
-      credits: 4200 // 350 × 12 = 4200 一年份
+      twdPrice: 12800,
+      priceId: 'price_annual_12800_twd', 
+      popular: true,
+      savings: '現省 2 個月費用！'
+    },
+    founders: {
+      twdPrice: 3980,
+      priceId: 'price_founders_3980_twd',
+      special: true,
+      oneTime: true
     }
   };
 
-  const whyFeatures = [
-    {
-      icon: <Target className="w-6 h-6 text-blue-600" />,
-      title: locale === 'ja' ? '精確な予算計算' : locale === 'en' ? 'Precise Budget Calculation' : '精準預算計算',
-      description: locale === 'ja' ? 'Google Analytics連携で実データに基づいた広告予算を自動計算' : locale === 'en' ? 'Automatic ad budget calculation based on real data via Google Analytics integration' : '整合Google Analytics真實數據自動計算廣告預算'
-    },
-    {
-      icon: <BarChart3 className="w-6 h-6 text-green-600" />,
-      title: locale === 'ja' ? 'Facebook広告診断' : locale === 'en' ? 'Facebook Ads Health Check' : 'Facebook廣告健檢',
-      description: locale === 'ja' ? 'AIによる広告アカウントの詳細分析と改善提案' : locale === 'en' ? 'Detailed ad account analysis and improvement suggestions by AI' : 'AI深度分析廣告帳戶並提供改善建議'
-    },
-    {
-      icon: <TrendingUp className="w-6 h-6 text-purple-600" />,
-      title: locale === 'ja' ? 'キャンペーン最適化' : locale === 'en' ? 'Campaign Optimization' : '活動優化建議',
-      description: locale === 'ja' ? '業界データと比較した最適化戦略の提案' : locale === 'en' ? 'Optimization strategies based on industry data comparison' : '基於行業數據比較的最佳化策略建議'
-    },
-    {
-      icon: <Shield className="w-6 h-6 text-orange-600" />,
-      title: locale === 'ja' ? '専門的な分析' : locale === 'en' ? 'Professional Analysis' : '專業分析報告',
-      description: locale === 'ja' ? '小黒先生による専門的な広告分析とアドバイス' : locale === 'en' ? 'Professional ad analysis and advice by Teacher Black' : '小黑老師專業廣告分析與建議'
-    }
-  ];
-
+  // 三個方案的功能特色
   const monthlyFeatures = [
-    locale === 'ja' ? '月350クレジット付与' : locale === 'en' ? '350 credits monthly' : '每月贈送350點數',
-    locale === 'ja' ? '予算計算機無制限使用' : locale === 'en' ? 'Unlimited budget calculator' : '預算計算機無限使用',
-    locale === 'ja' ? 'Facebook広告診断' : locale === 'en' ? 'Facebook ads health check' : 'Facebook廣告健檢',
-    locale === 'ja' ? '業界比較分析' : locale === 'en' ? 'Industry comparison analysis' : '行業比較分析',
-    locale === 'ja' ? 'AIによる改善提案' : locale === 'en' ? 'AI improvement suggestions' : 'AI改善建議',
-    locale === 'ja' ? '基本レポート機能' : locale === 'en' ? 'Basic reporting features' : '基本報告功能'
+    '預算計算機無限使用',
+    'AI 驅動 Facebook 廣告健檢', 
+    '整合 Google Analytics 真實數據',
+    '智慧活動優化建議',
+    '專業分析報告產出'
   ];
 
-  const lifetimeFeatures = [
-    locale === 'ja' ? '月700クレジット付与' : locale === 'en' ? '700 credits monthly' : '每月贈送700點數',
-    locale === 'ja' ? '新機能優先アクセス' : locale === 'en' ? 'Priority access to new features' : '新功能優先使用',
-    locale === 'ja' ? 'クレジット使用特別割引' : locale === 'en' ? 'Special discount on credit usage' : '點數使用特別折扣',
-    locale === 'ja' ? '高度な分析機能' : locale === 'en' ? 'Advanced analytics features' : '高級分析功能',
-    locale === 'ja' ? '専用サポート' : locale === 'en' ? 'Dedicated support' : '專屬客服支援',
-    locale === 'ja' ? '全機能無制限使用' : locale === 'en' ? 'Unlimited access to all features' : '全功能無限使用'
+  const annualFeatures = [
+    '包含月訂閱所有功能，並升級：',
+    '【Pro 限定】5 階段「活動預算規劃師」',
+    '【Pro 限定】新功能優先體驗權',
+    '【Pro 限定】專屬客服支援'
+  ];
+
+  const foundersFeatures = [
+    '這不只是一個方案，這是一個完整的資格包：',
+    '【軟體權限】「報數據」平台終身使用權',
+    '【專家親授】2.5 小時直播實戰教學',
+    '【完整知識庫】FB 廣告成效攻略完整線上課程',
+    '【專屬身份】創始會員私密社群資格'
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
       <NavigationBar locale={locale} />
       
-      <div className="container mx-auto px-4 py-12 max-w-6xl">
-        {/* Header */}
+      <div className="container mx-auto px-4 py-16">
+        {/* 主標題 */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            {locale === 'ja' ? '報數據プレミアム' : locale === 'en' ? 'Report Data Premium' : '報數據 Premium'}
+          <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-6">
+            加入「報數據」，選擇最適合您的方案
           </h1>
-          <p className="text-xl text-gray-600 mb-8">
-            {locale === 'ja' ? '広告投資を最大化する、プロレベルの分析ツール' : locale === 'en' ? 'Professional-grade analytics tools to maximize your ad investment' : '專業級分析工具，最大化您的廣告投資回報'}
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+            專業電商廣告分析平台，提供 AI 健檢、預算計算、活動規劃三大核心服務
           </p>
-          <div className="flex justify-center items-center gap-4 mb-8">
-            <Badge variant="secondary" className="bg-red-100 text-red-800 px-4 py-2">
-              <Clock className="w-4 h-4 mr-2" />
-              {locale === 'ja' ? '限定セール中' : locale === 'en' ? 'Limited Time Sale' : '限時特價中'}
-            </Badge>
+        </div>
+
+        {/* 三個方案卡片 */}
+        <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          
+          {/* 方案一：月訂閱 */}
+          <Card className="relative overflow-hidden border-2 border-gray-200 hover:border-blue-300 transition-all duration-300">
+            <CardHeader className="text-center pt-8">
+              <div className="flex justify-center mb-4">
+                <Calendar className="w-12 h-12 text-blue-600" />
+              </div>
+              <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+                月訂閱
+              </CardTitle>
+              <div className="mt-6">
+                <div className="text-4xl font-bold text-blue-600">
+                  NT${pricingData.monthly.twdPrice.toLocaleString()}
+                </div>
+                <p className="text-gray-600 dark:text-gray-300 mt-2">每月</p>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <ul className="space-y-4 mb-8">
+                {monthlyFeatures.map((feature, index) => (
+                  <li key={index} className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-700 dark:text-gray-300">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/subscription-checkout?plan=monthly&priceId=${pricingData.monthly.priceId}`}>
+                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" size="lg">
+                  開始月訂閱
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* 方案二：年訂閱（最受歡迎）*/}
+          <Card className="relative overflow-hidden border-2 border-green-500 shadow-2xl transform scale-105">
+            {/* 最受歡迎標籤 */}
+            <div className="absolute top-0 left-0 right-0 bg-green-500 text-white text-center py-3">
+              <span className="text-sm font-bold">一番人気（最受歡迎）</span>
+            </div>
+            <CardHeader className="text-center pt-16">
+              <div className="flex justify-center mb-4">
+                <Crown className="w-12 h-12 text-green-600" />
+              </div>
+              <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+                年訂閱
+              </CardTitle>
+              <div className="mt-6">
+                <div className="text-4xl font-bold text-green-600">
+                  NT${pricingData.annual.twdPrice.toLocaleString()}
+                </div>
+                <p className="text-gray-600 dark:text-gray-300 mt-2">年費</p>
+                <div className="mt-3">
+                  <Badge className="bg-orange-100 text-orange-800 px-3 py-1">
+                    {pricingData.annual.savings}
+                  </Badge>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <ul className="space-y-4 mb-8">
+                {annualFeatures.map((feature, index) => (
+                  <li key={index} className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-700 dark:text-gray-300 font-medium">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/subscription-checkout?plan=annual&priceId=${pricingData.annual.priceId}`}>
+                <Button className="w-full bg-green-600 hover:bg-green-700 text-white" size="lg">
+                  選擇年訂閱
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* 方案三：創始會員方案 */}
+          <Card className="relative overflow-hidden border-2 border-gradient-to-br from-yellow-400 to-orange-500 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20">
+            {/* 特殊標籤 */}
+            <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-center py-3">
+              <span className="text-sm font-bold flex items-center justify-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                僅此一次！
+                <Sparkles className="w-4 h-4" />
+              </span>
+            </div>
+            <CardHeader className="text-center pt-16">
+              <div className="flex justify-center mb-4">
+                <Gift className="w-12 h-12 text-orange-600" />
+              </div>
+              <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+                創始會員方案
+                <div className="text-sm text-orange-600 font-normal mt-1">
+                  (直播課限定)
+                </div>
+              </CardTitle>
+              <div className="mt-6">
+                <div className="text-4xl font-bold text-orange-600">
+                  NT${pricingData.founders.twdPrice.toLocaleString()}
+                </div>
+                <p className="text-gray-600 dark:text-gray-300 mt-2 text-sm">
+                  一次性費用，非訂閱制
+                </p>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <ul className="space-y-4 mb-8">
+                {foundersFeatures.map((feature, index) => (
+                  <li key={index} className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-700 dark:text-gray-300 font-medium">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/subscription-checkout?plan=founders&priceId=${pricingData.founders.priceId}`}>
+                <Button className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold" size="lg">
+                  立即鎖定創始席次
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* 額外說明區塊 */}
+        <div className="mt-16 text-center">
+          <div className="max-w-4xl mx-auto">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              為什麼選擇「報數據」？
+            </h3>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Star className="w-8 h-8 text-blue-600" />
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  真實數據整合
+                </h4>
+                <p className="text-gray-600 dark:text-gray-300">
+                  直接串接 Google Analytics 和 Facebook API，確保分析基於真實廣告數據
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Crown className="w-8 h-8 text-green-600" />
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  AI 智慧分析
+                </h4>
+                <p className="text-gray-600 dark:text-gray-300">
+                  結合 GPT-4 技術，提供個人化的廣告優化建議和策略指導
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Gift className="w-8 h-8 text-orange-600" />
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  專家親自指導
+                </h4>
+                <p className="text-gray-600 dark:text-gray-300">
+                  小黑老師親自開發，結合多年實戰經驗的專業廣告分析工具
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Section 1: Why - 為什麼要買報數據的服務 */}
-        <section className="mb-20">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">
-              {locale === 'ja' ? 'なぜ報數據を選ぶのか？' : locale === 'en' ? 'Why Choose Report Data?' : '為什麼選擇報數據？'}
-            </h2>
-            <p className="text-gray-600 text-lg">
-              {locale === 'ja' ? 'データ駆動型マーケティングの新しいスタンダード' : locale === 'en' ? 'The new standard for data-driven marketing' : '數據驅動行銷的全新標準'}
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {whyFeatures.map((feature, index) => (
-              <Card key={index} className="text-center p-6 hover:shadow-lg transition-shadow">
-                <div className="flex justify-center mb-4">
-                  {feature.icon}
-                </div>
-                <h3 className="font-semibold mb-2">{feature.title}</h3>
-                <p className="text-sm text-gray-600">{feature.description}</p>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        {/* Section 2: How - 報價架構 */}
-        <section className="mb-20">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">
-              {locale === 'ja' ? 'シンプルな価格設定' : locale === 'en' ? 'Simple Pricing Structure' : '簡單透明的價格結構'}
-            </h2>
-            <p className="text-gray-600 text-lg">
-              {locale === 'ja' ? 'あなたのニーズに合わせて選べる2つのプラン' : locale === 'en' ? 'Choose from two plans that fit your needs' : '選擇最適合您需求的方案'}
-            </p>
-          </div>
-
-          {/* Billing Toggle */}
-          <div className="flex justify-center mb-12">
-            <div className="bg-white rounded-lg p-1 shadow-sm border">
-              <button
-                onClick={() => setBillingType('monthly')}
-                className={`px-6 py-3 rounded-md font-medium transition-all ${
-                  billingType === 'monthly' 
-                    ? 'bg-blue-600 text-white shadow-sm' 
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
-              >
-                {locale === 'ja' ? '月額プラン' : locale === 'en' ? 'Monthly Plan' : '月訂閱'}
-              </button>
-              <button
-                onClick={() => setBillingType('lifetime')}
-                className={`px-6 py-3 rounded-md font-medium transition-all ${
-                  billingType === 'lifetime' 
-                    ? 'bg-blue-600 text-white shadow-sm' 
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
-              >
-                {locale === 'ja' ? 'ライフタイム' : locale === 'en' ? 'Lifetime' : '終身訂閱'}
-              </button>
-            </div>
-          </div>
-
-          {/* Pricing Cards */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {/* Monthly Plan */}
-            <Card className={`relative overflow-hidden ${billingType === 'monthly' ? 'ring-2 ring-blue-600 shadow-xl' : ''}`}>
-              {billingType === 'monthly' && (
-                <div className="absolute top-0 left-0 right-0 bg-blue-600 text-white text-center py-2">
-                  <span className="text-sm font-medium">
-                    {locale === 'ja' ? '人気プラン' : locale === 'en' ? 'Popular Plan' : '熱門方案'}
-                  </span>
-                </div>
-              )}
-              <CardHeader className={`text-center ${billingType === 'monthly' ? 'pt-16' : 'pt-6'}`}>
-                <div className="flex justify-center mb-4">
-                  <Star className="w-8 h-8 text-blue-600" />
-                </div>
-                <CardTitle className="text-2xl">
-                  {locale === 'ja' ? '月額プラン' : locale === 'en' ? 'Monthly Plan' : '月訂閱方案'}
-                </CardTitle>
-                <div className="mt-4">
-                  <CurrencyConverter 
-                    jpyAmount={pricingData.monthly.jpyPrice}
-                    locale={locale}
-                    className="text-center"
-                  />
-                  <p className="text-sm text-gray-600 mt-2 text-center">{t.pricing.perMonth}</p>
-                  <div className="flex items-center justify-center gap-2 mt-2">
-                    <Gift className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-green-600">
-                      {pricingData.monthly.credits} {locale === 'ja' ? 'クレジット/月' : locale === 'en' ? 'credits/month' : '點數/月'}
-                    </span>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 mb-6">
-                  {monthlyFeatures.map((feature, index) => (
-                    <li key={index} className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
-                      <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/subscription-checkout?plan=monthly&priceId=${pricingData.monthly.priceId}`}>
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700" size="lg">
-                    {locale === 'ja' ? '月額サブスクリプション' : locale === 'en' ? 'Subscribe Monthly' : '月訂閱制'}
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            {/* Lifetime Plan */}
-            <Card className={`relative overflow-hidden ${billingType === 'lifetime' ? 'ring-2 ring-purple-600 shadow-xl' : ''}`}>
-              {billingType === 'lifetime' && (
-                <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center py-2">
-                  <span className="text-sm font-medium flex items-center justify-center gap-1">
-                    <Crown className="w-4 h-4" />
-                    {locale === 'ja' ? '最もお得' : locale === 'en' ? 'Best Value' : '最超值'}
-                  </span>
-                </div>
-              )}
-              <CardHeader className={`text-center ${billingType === 'lifetime' ? 'pt-16' : 'pt-6'}`}>
-                <div className="flex justify-center mb-4">
-                  <Crown className="w-8 h-8 text-purple-600" />
-                </div>
-                <CardTitle className="text-2xl">
-                  {locale === 'ja' ? 'ライフタイム' : locale === 'en' ? 'Lifetime Plan' : '終身訂閱'}
-                </CardTitle>
-                <div className="mt-4">
-                  <CurrencyConverter 
-                    jpyAmount={pricingData.lifetime.jpyPrice}
-                    locale={locale}
-                    className="text-center"
-                  />
-                  <p className="text-sm text-gray-600 mt-2 text-center">{t.pricing.oneTime}</p>
-                  <div className="flex items-center justify-center gap-2 mt-2">
-                    <Sparkles className="w-4 h-4 text-purple-600" />
-                    <span className="text-sm text-purple-600">
-                      {pricingData.lifetime.credits} {locale === 'ja' ? 'クレジット/月' : locale === 'en' ? 'credits/month' : '點數/月'}
-                    </span>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 mb-6">
-                  {lifetimeFeatures.map((feature, index) => (
-                    <li key={index} className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
-                      <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/subscription-checkout?plan=lifetime&priceId=${pricingData.lifetime.priceId}`}>
-                  <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white" size="lg">
-                    {locale === 'ja' ? '今すぐ購入' : locale === 'en' ? 'Buy Now' : '立即購買'}
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            {/* Annual Plan */}
-            <Card className="relative overflow-hidden border-2 border-green-500 shadow-xl">
-              <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-center py-2">
-                <span className="text-sm font-medium">
-                  {locale === 'ja' ? '最もお得' : locale === 'en' ? 'Best Value' : '最優惠'}
-                </span>
+        {/* 常見問題 */}
+        <div className="mt-16 text-center">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">
+            常見問題
+          </h3>
+          <div className="max-w-4xl mx-auto text-left">
+            <div className="space-y-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Q: 創始會員方案與常規訂閱有什麼不同？
+                </h4>
+                <p className="text-gray-600 dark:text-gray-300">
+                  A: 創始會員方案是限時特殊優惠，包含平台終身使用權、直播教學課程、完整知識庫以及私密社群資格。這是一次性付費，非訂閱制。
+                </p>
               </div>
-              <CardHeader className="text-center pt-16">
-                <div className="flex justify-center mb-4">
-                  <Crown className="w-8 h-8 text-green-500" />
-                </div>
-                <CardTitle className="text-2xl">
-                  {locale === 'ja' ? '年間プラン' : locale === 'en' ? 'Annual Plan' : '年訂閱方案'}
-                </CardTitle>
-                <div className="mt-4">
-                  <CurrencyConverter 
-                    jpyAmount={pricingData.annual.jpyPrice}
-                    locale={locale}
-                    className="text-center"
-                  />
-                  <p className="text-sm text-gray-600 mt-2 text-center">
-                    {locale === 'ja' ? '年額（毎年自動更新）' : locale === 'en' ? 'Annual (Auto-renewal)' : '年費（每年自動續費）'}
-                  </p>
-                  <div className="flex items-center justify-center gap-2 mt-2">
-                    <Crown className="w-4 h-4 text-green-500" />
-                    <span className="text-sm text-green-500">
-                      {pricingData.annual.credits} {locale === 'ja' ? 'クレジット/年' : locale === 'en' ? 'credits/year' : '點數/年'}
-                    </span>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 mb-6">
-                  {/* Annual plan features */}
-                  <li className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
-                    <span className="text-sm">
-                      {locale === 'ja' ? '全機能アクセス' : locale === 'en' ? 'All Features Access' : '所有功能完整使用'}
-                    </span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
-                    <span className="text-sm">
-                      {locale === 'ja' ? '優先サポート' : locale === 'en' ? 'Priority Support' : '優先客戶支援'}
-                    </span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
-                    <span className="text-sm">
-                      {locale === 'ja' ? '年間4,200クレジット' : locale === 'en' ? '4,200 Credits/Year' : '年度4,200點數'}
-                    </span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
-                    <span className="text-sm">
-                      {locale === 'ja' ? '月額より17%節約' : locale === 'en' ? '17% Savings vs Monthly' : '比月費節省17%'}
-                    </span>
-                  </li>
-                </ul>
-                <Link href={`${locale === 'zh-TW' ? '' : `/${locale === 'en' ? 'en' : 'jp'}`}/subscription-checkout?plan=annual&priceId=${pricingData.annual.priceId}`}>
-                  <Button className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white" size="lg">
-                    {locale === 'ja' ? '年間プランを選択' : locale === 'en' ? 'Choose Annual Plan' : '選擇年訂閱'}
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-
-        {/* Section 3: What - 月訂閱跟終身內容差異 */}
-        <section className="mb-20">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">
-              {locale === 'ja' ? 'プラン比較' : locale === 'en' ? 'Plan Comparison' : '方案比較'}
-            </h2>
-            <p className="text-gray-600 text-lg">
-              {locale === 'ja' ? '各プランの詳細な機能比較' : locale === 'en' ? 'Detailed feature comparison for each plan' : '各方案詳細功能比較'}
-            </p>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-4 text-left font-semibold text-gray-900">
-                      {locale === 'ja' ? '機能' : locale === 'en' ? 'Features' : '功能'}
-                    </th>
-                    <th className="px-6 py-4 text-center font-semibold text-gray-900">
-                      {locale === 'ja' ? '月額プラン' : locale === 'en' ? 'Monthly' : '月訂閱'}
-                    </th>
-                    <th className="px-6 py-4 text-center font-semibold text-gray-900">
-                      {locale === 'ja' ? 'ライフタイム' : locale === 'en' ? 'Lifetime' : '終身訂閱'}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  <tr>
-                    <td className="px-6 py-4 font-medium">
-                      {locale === 'ja' ? '月間クレジット' : locale === 'en' ? 'Monthly Credits' : '每月點數'}
-                    </td>
-                    <td className="px-6 py-4 text-center">350</td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="font-semibold text-purple-600">700</span>
-                    </td>
-                  </tr>
-                  <tr className="bg-gray-50">
-                    <td className="px-6 py-4 font-medium">
-                      {locale === 'ja' ? '新機能優先アクセス' : locale === 'en' ? 'Priority Access to New Features' : '新功能優先使用'}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="text-gray-400">-</span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <Check className="w-5 h-5 text-green-600 mx-auto" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="px-6 py-4 font-medium">
-                      {locale === 'ja' ? 'クレジット使用割引' : locale === 'en' ? 'Credit Usage Discount' : '點數使用折扣'}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="text-gray-400">-</span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="font-semibold text-purple-600">
-                        {locale === 'ja' ? '特別割引' : locale === 'en' ? 'Special Discount' : '特別折扣'}
-                      </span>
-                    </td>
-                  </tr>
-                  <tr className="bg-gray-50">
-                    <td className="px-6 py-4 font-medium">
-                      {locale === 'ja' ? '専用サポート' : locale === 'en' ? 'Dedicated Support' : '專屬客服'}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="text-gray-600">
-                        {locale === 'ja' ? '基本サポート' : locale === 'en' ? 'Basic Support' : '基本客服'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <Check className="w-5 h-5 text-green-600 mx-auto" />
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Q: 月訂閱和年訂閱功能有差異嗎？
+                </h4>
+                <p className="text-gray-600 dark:text-gray-300">
+                  A: 年訂閱包含所有月訂閱功能，並額外提供 Pro 限定的「5 階段活動預算規劃師」、新功能優先體驗權，以及專屬客服支援。
+                </p>
+              </div>
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Q: 可以隨時取消訂閱嗎？
+                </h4>
+                <p className="text-gray-600 dark:text-gray-300">
+                  A: 是的，您可以隨時在會員中心取消訂閱。取消後將在當前計費週期結束時停止服務。
+                </p>
+              </div>
             </div>
           </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="text-center bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-12">
-          <h2 className="text-3xl font-bold mb-4">
-            {locale === 'ja' ? '今すぐ始めましょう' : locale === 'en' ? 'Get Started Today' : '立即開始使用'}
-          </h2>
-          <p className="text-xl mb-8 opacity-90">
-            {locale === 'ja' ? '限定セール中、この機会をお見逃しなく' : locale === 'en' ? 'Limited time sale - don\'t miss this opportunity' : '限時特價中，機會難得'}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
-              {locale === 'ja' ? '月額プランを試す' : locale === 'en' ? 'Try Monthly Plan' : '試用月訂閱'}
-            </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600">
-              {locale === 'ja' ? 'ライフタイムを購入' : locale === 'en' ? 'Buy Lifetime' : '購買終身版'}
-            </Button>
-          </div>
-        </section>
+        </div>
       </div>
 
-      <Footer locale={locale} />
+      <Footer />
     </div>
   );
 }
