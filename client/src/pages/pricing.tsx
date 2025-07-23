@@ -29,20 +29,20 @@ export default function Pricing({ locale }: PricingProps) {
   // 新的三方案定價結構
   const pricingData = {
     monthly: {
-      twdPrice: 1280,
-      priceId: 'price_monthly_1280_twd',
+      twdPrice: 690,
+      priceId: 'price_0Rnx9sYDQY3sAQESPdLwXcXF',
       popular: false,
       savings: null
     },
     annual: {
-      twdPrice: 12800,
-      priceId: 'price_annual_12800_twd', 
+      twdPrice: 6900,
+      priceId: 'price_0Rnx9tYDQY3sAQESabS9Mox2', 
       popular: true,
       savings: '現省 2 個月費用！'
     },
     founders: {
-      twdPrice: 3980,
-      priceId: 'price_founders_3980_twd',
+      twdPrice: 5990,
+      priceId: 'price_0Rnx9tYDQY3sAQESumeM9k1g',
       special: true,
       oneTime: true
     }

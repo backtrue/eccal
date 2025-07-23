@@ -143,6 +143,21 @@ export interface TranslationData {
   calculateBudget: string;
   calculationResults: string;
   monthlyRequiredOrders: string;
+  
+  // Checkout translations
+  checkout: {
+    title: string;
+    subtitle: string;
+    loginRequired: string;
+    loginRequiredDesc: string;
+    subscriptionError: string;
+    subscriptionErrorDesc: string;
+    preparingPayment: string;
+    backToPricing: string;
+    user: string;
+    planFeatures: string;
+    securePayment: string;
+  };
   ordersUnit: string;
   dailyApprox: string;
   monthlyRequiredTraffic: string;
