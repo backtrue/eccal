@@ -144,26 +144,40 @@ const CheckoutForm = ({ locale, planType, priceId }: CheckoutFormProps) => {
 
 export default function SubscriptionCheckout({ locale }: SubscriptionCheckoutProps) {
   const { user, isAuthenticated } = useAuth();
+  const { toast } = useToast();
   const [clientSecret, setClientSecret] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [planType, setPlanType] = useState<'monthly' | 'annual' | 'founders'>('monthly');
   const [priceId, setPriceId] = useState<string>('');
+
+  // 安全的 toast 函數，防止生產環境錯誤
+  const safeToast = (options: any) => {
+    try {
+      if (toast && typeof toast === 'function') {
+        toast(options);
+      } else {
+        console.error('Toast function not available:', options);
+      }
+    } catch (error) {
+      console.error('Toast error:', error, options);
+    }
+  };
   // 新的三方案定價結構（與 pricing 頁面同步）
   const pricingData = {
     monthly: {
-      twdPrice: 690,
+      twdPrice: 1280,
       priceId: 'price_0Rnx9sYDQY3sAQESPdLwXcXF', // 實際 Stripe Monthly Price ID
       displayName: '月訂閱'
     },
     annual: {
-      twdPrice: 6900,
+      twdPrice: 12800,
       priceId: 'price_0Rnx9tYDQY3sAQESabS9Mox2', // 實際 Stripe Annual Price ID
       displayName: '年訂閱',
       savings: '現省 2 個月費用！'
     },
     founders: {
-      twdPrice: 5990,
+      twdPrice: 3980,
       priceId: 'price_0Rnx9tYDQY3sAQESumeM9k1g', // 實際 Stripe Lifetime Price ID  
       displayName: '創始會員方案',
       oneTime: true

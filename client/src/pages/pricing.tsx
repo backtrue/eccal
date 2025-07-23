@@ -29,19 +29,19 @@ export default function Pricing({ locale }: PricingProps) {
   // 新的三方案定價結構
   const pricingData = {
     monthly: {
-      twdPrice: 690,
+      twdPrice: 1280,
       priceId: 'price_0Rnx9sYDQY3sAQESPdLwXcXF',
       popular: false,
       savings: null
     },
     annual: {
-      twdPrice: 6900,
+      twdPrice: 12800,
       priceId: 'price_0Rnx9tYDQY3sAQESabS9Mox2', 
       popular: true,
       savings: '現省 2 個月費用！'
     },
     founders: {
-      twdPrice: 5990,
+      twdPrice: 3980,
       priceId: 'price_0Rnx9tYDQY3sAQESumeM9k1g',
       special: true,
       oneTime: true
@@ -103,7 +103,7 @@ export default function Pricing({ locale }: PricingProps) {
                 <div className="text-4xl font-bold text-blue-600">
                   NT${pricingData.monthly.twdPrice.toLocaleString()}
                 </div>
-                <p className="text-gray-600 dark:text-gray-300 mt-2">每月</p>
+                <p className="text-gray-600 dark:text-gray-300 mt-2">/ 每月</p>
               </div>
             </CardHeader>
             <CardContent className="pt-6">
@@ -140,7 +140,7 @@ export default function Pricing({ locale }: PricingProps) {
                 <div className="text-4xl font-bold text-green-600">
                   NT${pricingData.annual.twdPrice.toLocaleString()}
                 </div>
-                <p className="text-gray-600 dark:text-gray-300 mt-2">年費</p>
+                <p className="text-gray-600 dark:text-gray-300 mt-2">/ 年</p>
                 <div className="mt-3">
                   <Badge className="bg-orange-100 text-orange-800 px-3 py-1">
                     {pricingData.annual.savings}
@@ -166,7 +166,7 @@ export default function Pricing({ locale }: PricingProps) {
           </Card>
 
           {/* 方案三：創始會員方案 */}
-          <Card className="relative overflow-hidden border-2 border-gradient-to-br from-yellow-400 to-orange-500 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20">
+          <Card className="relative overflow-hidden border-4 border-yellow-400 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 shadow-2xl shadow-yellow-200 dark:shadow-yellow-900/50">
             {/* 特殊標籤 */}
             <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-center py-3">
               <span className="text-sm font-bold flex items-center justify-center gap-2">
