@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +26,20 @@ interface RecruitmentProps {
 }
 
 export default function RecruitmentJa({ locale = 'ja' }: RecruitmentProps) {
+  useEffect(() => {
+    document.title = '小黒先生「報數據」創始メンバー募集 - データドリブン広告最適化実戦コース ¥6,900';
+    
+    // 更新 meta description
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.setAttribute('content', '小黒先生による2.5時間ライブ実戦授業、データでFacebook広告ROASを最適化する方法を教えます。創始メンバー限定300席、終身ソフトウェア使用権、専用コミュニティ、完全オンラインコース付き。今すぐ参加 ¥6,900');
+    } else {
+      const newMetaDesc = document.createElement('meta');
+      newMetaDesc.name = 'description';
+      newMetaDesc.content = '小黒先生による2.5時間ライブ実戦授業、データでFacebook広告ROASを最適化する方法を教えます。創始メンバー限定300席、終身ソフトウェア使用権、専用コミュニティ、完全オンラインコース付き。今すぐ参加 ¥6,900';
+      document.head.appendChild(newMetaDesc);
+    }
+  }, []);
   const painPoints = [
     "売上目標は明確だが、どれだけの「広告予算」が適切かわからない？",
     "しばらく広告を運用しているが、お金を使っても効果が良いのか悪いのかわからない？", 

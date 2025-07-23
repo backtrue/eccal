@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +26,20 @@ interface RecruitmentProps {
 }
 
 export default function RecruitmentEn({ locale = 'en' }: RecruitmentProps) {
+  useEffect(() => {
+    document.title = 'Teacher Black "Report Data" Founding Members - Data-Driven Ad Optimization Course $169';
+    
+    // 更新 meta description
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.setAttribute('content', 'Teacher Black\'s exclusive 2.5-hour live workshop teaching data-driven Facebook ad ROAS optimization. Limited to 300 founding members with lifetime software access, exclusive community, and complete online course. Join now for $169');
+    } else {
+      const newMetaDesc = document.createElement('meta');
+      newMetaDesc.name = 'description';
+      newMetaDesc.content = 'Teacher Black\'s exclusive 2.5-hour live workshop teaching data-driven Facebook ad ROAS optimization. Limited to 300 founding members with lifetime software access, exclusive community, and complete online course. Join now for $169';
+      document.head.appendChild(newMetaDesc);
+    }
+  }, []);
   const painPoints = [
     "Clear revenue goals but no idea how much 'ad budget' is reasonable?",
     "Been running ads for a while but don't know if the performance is good or bad?", 

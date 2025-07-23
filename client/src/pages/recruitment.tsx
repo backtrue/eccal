@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +26,21 @@ interface RecruitmentProps {
 }
 
 export default function Recruitment({ locale = 'zh-TW' }: RecruitmentProps) {
+  useEffect(() => {
+    document.title = '小黑老師「報數據」創始會員招生 - 數據驅動廣告優化實戰課程 NT$5,990';
+    
+    // 更新 meta description
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.setAttribute('content', '小黑老師親授 2.5 小時直播實戰教學，教你用數據優化 Facebook 廣告 ROAS。創始會員僅限 300 席，含終身軟體使用權、專屬社群、完整線上課程。立即加入 NT$5,990');
+    } else {
+      // 如果沒有現有的 meta description，創建一個新的
+      const newMetaDesc = document.createElement('meta');
+      newMetaDesc.name = 'description';
+      newMetaDesc.content = '小黑老師親授 2.5 小時直播實戰教學，教你用數據優化 Facebook 廣告 ROAS。創始會員僅限 300 席，含終身軟體使用權、專屬社群、完整線上課程。立即加入 NT$5,990';
+      document.head.appendChild(newMetaDesc);
+    }
+  }, []);
   const painPoints = [
     "營收目標很明確，但完全不知道該配多少「廣告預算」才合理？",
     "廣告投了一段時間，錢花出去了，卻不知道成效是好是壞？", 
