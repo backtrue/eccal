@@ -17,7 +17,8 @@ import {
   ChevronRight,
   AlertTriangle,
   CheckCircle,
-  XCircle
+  XCircle,
+  ExternalLink
 } from 'lucide-react';
 
 interface RecruitmentProps {
@@ -350,7 +351,143 @@ export default function Recruitment({ locale = 'zh-TW' }: RecruitmentProps) {
         </div>
       </section>
 
-      {/* 第六部分：受眾輪廓 - Target Audience */}
+      {/* 第六部分：課程核心內容 - Core Curriculum */}
+      <section className="py-20 px-4 bg-white dark:bg-gray-900">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+              這堂課，我要教你的四大核心心法
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+              十餘年實戰經驗濃縮成的精華系統，每一個環節都能直接轉化為你的廣告收益
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 mb-16">
+            {/* 心法一：目標設定 */}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-8 border-2 border-blue-200 dark:border-blue-700 hover:shadow-xl transition-all">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mr-4">
+                  <span className="text-white font-bold text-xl">1</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  廣告起手式：從「目標」開始
+                </h3>
+              </div>
+              <div className="space-y-4">
+                <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
+                  <strong className="text-blue-600">目標營業額是多少？轉換率要提升多少？客單價要提升多少？</strong>
+                </p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  這些不先設定，基本上廣告就是漫無目的的亂投。只靠「我要有訂單」根本是瞎話，沒有規劃的廣告投遞就是瞎忙。
+                </p>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-blue-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                    💡 我的 SaaS 系統會幫你精準計算每個目標數字
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 心法二：放大優勢 */}
+            <div className="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-8 border-2 border-green-200 dark:border-green-700 hover:shadow-xl transition-all">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mr-4">
+                  <span className="text-white font-bold text-xl">2</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  優化心法：放大有效組合
+                </h3>
+              </div>
+              <div className="space-y-4">
+                <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
+                  <strong className="text-green-600">廣告的優化不是一直去「修正錯誤」，而是要放大有效的廣告組合跟廣告。</strong>
+                </p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  我知道這對台灣教育體系長大的你很難體會，因為我們習慣拿不到100分就是錯的，卻沒有想過要在95分的領域裡發光發熱。找出有效的廣告跟受眾放大才是 ROAS 的正解。
+                </p>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-green-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                    🚀 我設計的 SaaS 就是來幫你找到這個可能
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 心法三：正確受眾 */}
+            <div className="bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-900/20 dark:to-amber-900/20 rounded-2xl p-8 border-2 border-orange-200 dark:border-orange-700 hover:shadow-xl transition-all">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center mr-4">
+                  <span className="text-white font-bold text-xl">3</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  受眾心法：跟正確的人說話
+                </h3>
+              </div>
+              <div className="space-y-4">
+                <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
+                  <strong className="text-orange-600">有效的廣告必須基於「跟正確的人說話」</strong>
+                </p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  我們的人生太習慣單向的標準答案，不習慣創造一個雙向的溝通方式。但沒關係，我設計的 GPT 就是來幫你開啟你跟潛在受眾對話的方式。
+                </p>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-orange-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                    🤖 AI 驅動的受眾分析系統，讓你找到真正的目標客群
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 心法四：PDCA系統 */}
+            <div className="bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-900/20 dark:to-violet-900/20 rounded-2xl p-8 border-2 border-purple-200 dark:border-purple-700 hover:shadow-xl transition-all">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mr-4">
+                  <span className="text-white font-bold text-xl">4</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  成效心法：PDCA 優化循環
+                </h3>
+              </div>
+              <div className="space-y-4">
+                <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
+                  <strong className="text-purple-600">更多的 PDCA 的 FB 成效優化邏輯</strong>
+                </p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  上完直播課後，九月有更多內容等待你的學習，包含如何有效產出報表以及數據解讀，都等著你繼續成長。
+                </p>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-purple-600">
+                  <a 
+                    href="https://www.pressplay.cc/project/FF791253840096414A3230304489197A/about" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-purple-600 hover:text-purple-700 font-medium flex items-center gap-2 transition-colors"
+                  >
+                    📚 完整學習：《FB 廣告成效攻略》線上課程
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 價值總結 */}
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-8 text-white text-center">
+            <h3 className="text-3xl font-bold mb-4">
+              光這四大心法，就值回票價
+            </h3>
+            <p className="text-xl opacity-90 mb-6">
+              十餘年實戰淬煉 × AI 智能輔助 × 完整系統工具 = 你的廣告致勝關鍵
+            </p>
+            <div className="flex justify-center items-center gap-4">
+              <span className="text-2xl font-bold">只要 NT$ 5,990</span>
+              <span className="text-lg opacity-75">就能獲得價值超過 NT$ 21,580 的完整系統</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 第七部分：受眾輪廓 - Target Audience */}
       <section className="py-16 px-4">
         <div className="container mx-auto max-w-6xl">
           <h2 className="text-4xl font-bold text-center text-gray-900 dark:text-white mb-12">

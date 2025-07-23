@@ -17,7 +17,8 @@ import {
   ChevronRight,
   AlertTriangle,
   CheckCircle,
-  XCircle
+  XCircle,
+  ExternalLink
 } from 'lucide-react';
 
 interface RecruitmentProps {
@@ -350,7 +351,143 @@ export default function RecruitmentJa({ locale = 'ja' }: RecruitmentProps) {
         </div>
       </section>
 
-      {/* 第六部分：受眾輪廓 - Target Audience */}
+      {/* 第六部分：課程核心內容 - Core Curriculum */}
+      <section className="py-20 px-4 bg-white dark:bg-gray-900">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+              このコースで教える4つの核心法則
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+              十年以上の実戦経験を凝縮したエッセンシャルシステム、各要素が直接あなたの広告収益に転換されます
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 mb-16">
+            {/* 心法一：目標設定 */}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-8 border-2 border-blue-200 dark:border-blue-700 hover:shadow-xl transition-all">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mr-4">
+                  <span className="text-white font-bold text-xl">1</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  広告の出発点：「目標」から始める
+                </h3>
+              </div>
+              <div className="space-y-4">
+                <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
+                  <strong className="text-blue-600">目標売上高はいくら？コンバージョン率をどれだけ向上させる？客単価をどれだけ上げる？</strong>
+                </p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  これらを設定しなければ、基本的に広告は目的のない乱射です。「注文が欲しい」だけでは単なる願望に過ぎません。計画のない広告配信は無駄な忙しさです。
+                </p>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-blue-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                    💡 私のSaaSシステムが各目標数値を精密に計算します
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 心法二：放大優勢 */}
+            <div className="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-8 border-2 border-green-200 dark:border-green-700 hover:shadow-xl transition-all">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mr-4">
+                  <span className="text-white font-bold text-xl">2</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  最適化法則：有効な組み合わせを拡大
+                </h3>
+              </div>
+              <div className="space-y-4">
+                <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
+                  <strong className="text-green-600">広告の最適化は常に「間違いを修正」することではなく、有効な広告組み合わせを拡大することです。</strong>
+                </p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  これは台湾の教育制度で育った方には理解しにくいでしょう。私たちは100点を取れないことを間違いだと思いがちですが、95点の領域で輝くことを考えたことがありません。有効な広告とオーディエンスの拡大こそがROASの正解です。
+                </p>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-green-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                    🚀 私が設計したSaaSがその可能性を見つけるお手伝いをします
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 心法三：正確受眾 */}
+            <div className="bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-900/20 dark:to-amber-900/20 rounded-2xl p-8 border-2 border-orange-200 dark:border-orange-700 hover:shadow-xl transition-all">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center mr-4">
+                  <span className="text-white font-bold text-xl">3</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  オーディエンス法則：正しい人と話す
+                </h3>
+              </div>
+              <div className="space-y-4">
+                <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
+                  <strong className="text-orange-600">有効な広告は「正しい人と話す」ことに基づいている必要があります</strong>
+                </p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  私たちの人生は一方向の標準答案に慣れすぎて、双方向のコミュニケーション方式を作ることに慣れていません。でも大丈夫、私が設計したGPTがあなたと潜在オーディエンスとの対話を開く手助けをします。
+                </p>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-orange-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                    🤖 AI駆動のオーディエンス分析システムで真のターゲット顧客を見つけます
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 心法四：PDCA系統 */}
+            <div className="bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-900/20 dark:to-violet-900/20 rounded-2xl p-8 border-2 border-purple-200 dark:border-purple-700 hover:shadow-xl transition-all">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mr-4">
+                  <span className="text-white font-bold text-xl">4</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  成果法則：PDCA最適化サイクル
+                </h3>
+              </div>
+              <div className="space-y-4">
+                <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
+                  <strong className="text-purple-600">より多くのPDCAのFB成果最適化ロジック</strong>
+                </p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  ライブコース終了後、9月にはさらに多くのコンテンツがあなたの学習を待っています。効果的なレポート作成とデータ解釈の方法など、継続的成長をサポートします。
+                </p>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-purple-600">
+                  <a 
+                    href="https://www.pressplay.cc/project/FF791253840096414A3230304489197A/about" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-purple-600 hover:text-purple-700 font-medium flex items-center gap-2 transition-colors"
+                  >
+                    📚 完全学習：《FB広告効果攻略》オンラインコース
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 價值總結 */}
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-8 text-white text-center">
+            <h3 className="text-3xl font-bold mb-4">
+              この4つの法則だけで元は取れます
+            </h3>
+            <p className="text-xl opacity-90 mb-6">
+              十年の実戦鍛錬 × AI知能補助 × 完全システムツール = あなたの広告成功の鍵
+            </p>
+            <div className="flex justify-center items-center gap-4">
+              <span className="text-2xl font-bold">わずか¥6,900</span>
+              <span className="text-lg opacity-75">で¥97,110以上の価値がある完全システムを獲得</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 第七部分：受眾輪廓 - Target Audience */}
       <section className="py-16 px-4">
         <div className="container mx-auto max-w-6xl">
           <h2 className="text-4xl font-bold text-center text-gray-900 dark:text-white mb-12">

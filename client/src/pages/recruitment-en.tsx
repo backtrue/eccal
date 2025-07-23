@@ -17,7 +17,8 @@ import {
   ChevronRight,
   AlertTriangle,
   CheckCircle,
-  XCircle
+  XCircle,
+  ExternalLink
 } from 'lucide-react';
 
 interface RecruitmentProps {
@@ -350,7 +351,143 @@ export default function RecruitmentEn({ locale = 'en' }: RecruitmentProps) {
         </div>
       </section>
 
-      {/* 第六部分：受眾輪廓 - Target Audience */}
+      {/* 第六部分：課程核心內容 - Core Curriculum */}
+      <section className="py-20 px-4 bg-white dark:bg-gray-900">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+              Four Core Principles I'll Teach You
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+              Over a decade of battle-tested experience condensed into essential systems, each element directly converts to your advertising revenue
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 mb-16">
+            {/* 心法一：目標設定 */}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-8 border-2 border-blue-200 dark:border-blue-700 hover:shadow-xl transition-all">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mr-4">
+                  <span className="text-white font-bold text-xl">1</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Ad Foundation: Start with "Goals"
+                </h3>
+              </div>
+              <div className="space-y-4">
+                <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
+                  <strong className="text-blue-600">What's your target revenue? How much should conversion rates improve? What about average order value?</strong>
+                </p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Without setting these first, your ads are basically aimless shooting. Relying on "I want orders" is just wishful thinking. Unplanned ad delivery is just busy work.
+                </p>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-blue-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                    💡 My SaaS system will help you precisely calculate each target number
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 心法二：放大優勢 */}
+            <div className="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-8 border-2 border-green-200 dark:border-green-700 hover:shadow-xl transition-all">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mr-4">
+                  <span className="text-white font-bold text-xl">2</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Optimization Principle: Scale What Works
+                </h3>
+              </div>
+              <div className="space-y-4">
+                <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
+                  <strong className="text-green-600">Ad optimization isn't about constantly "fixing mistakes" - it's about scaling effective ad combinations.</strong>
+                </p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  I know this is hard for those raised in Taiwan's education system, because we're used to thinking anything less than 100 points is wrong, without considering excelling in the 95-point areas. Finding effective ads and audiences to scale is the real ROAS solution.
+                </p>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-green-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                    🚀 My designed SaaS is here to help you find that possibility
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 心法三：正確受眾 */}
+            <div className="bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-900/20 dark:to-amber-900/20 rounded-2xl p-8 border-2 border-orange-200 dark:border-orange-700 hover:shadow-xl transition-all">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center mr-4">
+                  <span className="text-white font-bold text-xl">3</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Audience Principle: Talk to the Right People
+                </h3>
+              </div>
+              <div className="space-y-4">
+                <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
+                  <strong className="text-orange-600">Effective ads must be based on "talking to the right people"</strong>
+                </p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Our lives are too accustomed to one-way standard answers, not used to creating two-way communication. But that's okay, my designed GPT is here to help you open up dialogue with potential audiences.
+                </p>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-orange-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                    🤖 AI-driven audience analysis system helps you find your true target customers
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 心法四：PDCA系統 */}
+            <div className="bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-900/20 dark:to-violet-900/20 rounded-2xl p-8 border-2 border-purple-200 dark:border-purple-700 hover:shadow-xl transition-all">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mr-4">
+                  <span className="text-white font-bold text-xl">4</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Performance Principle: PDCA Optimization Cycle
+                </h3>
+              </div>
+              <div className="space-y-4">
+                <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
+                  <strong className="text-purple-600">More PDCA Facebook performance optimization logic</strong>
+                </p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  After the live course, more content awaits your learning in September, including effective report generation and data interpretation, all waiting for your continued growth.
+                </p>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-purple-600">
+                  <a 
+                    href="https://www.pressplay.cc/project/FF791253840096414A3230304489197A/about" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-purple-600 hover:text-purple-700 font-medium flex items-center gap-2 transition-colors"
+                  >
+                    📚 Complete Learning: 《FB Ad Performance Strategy》Online Course
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 價值總結 */}
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-8 text-white text-center">
+            <h3 className="text-3xl font-bold mb-4">
+              These Four Principles Alone Are Worth the Price
+            </h3>
+            <p className="text-xl opacity-90 mb-6">
+              Decade of Battle-Tested Experience × AI Intelligence × Complete System Tools = Your Advertising Success Key
+            </p>
+            <div className="flex justify-center items-center gap-4">
+              <span className="text-2xl font-bold">Only $169</span>
+              <span className="text-lg opacity-75">to get a complete system worth over $720</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 第七部分：受眾輪廓 - Target Audience */}
       <section className="py-16 px-4">
         <div className="container mx-auto max-w-6xl">
           <h2 className="text-4xl font-bold text-center text-gray-900 dark:text-white mb-12">
