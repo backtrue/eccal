@@ -69,7 +69,7 @@ export default function Recruitment({ locale = 'zh-TW' }: RecruitmentProps) {
     },
     {
       question: "「終身使用權」是真的嗎？",
-      answer: "是的，這是我們對 300 位創始會員的承諾。未來平台對外皆為年費訂閱制，只有創始會員能享有此資格。"
+      answer: "是的，這是我對 300 位創始會員的承諾。未來平台對外皆為年費訂閱制，只有創始會員能享有此資格。"
     },
     {
       question: "購買後如何上課與使用軟體？",
@@ -109,7 +109,7 @@ export default function Recruitment({ locale = 'zh-TW' }: RecruitmentProps) {
           </h1>
           
           <p className="text-xl md:text-2xl text-blue-600 font-semibold mb-8">
-            這不是另一堂教你理論的課，我們直接給你一套能提升 ROAS 的作戰系統。
+            這不是另一堂教你理論的課，我直接給你一套能提升 ROAS 的作戰系統。
           </p>
           
           <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg max-w-3xl mx-auto">
@@ -151,7 +151,7 @@ export default function Recruitment({ locale = 'zh-TW' }: RecruitmentProps) {
       <section className="py-16 px-4">
         <div className="container mx-auto max-w-4xl text-center">
           <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-8">
-            與其給你另一套理論，我們決定直接給你一套「作戰系統」
+            與其給你另一套理論，我決定直接給你一套「作戰系統」
           </h2>
           
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-8 mb-12">
@@ -162,7 +162,7 @@ export default function Recruitment({ locale = 'zh-TW' }: RecruitmentProps) {
             </div>
             
             <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
-              我們深知廣告主的痛點。所以這次，我們不做空泛的理論教學。我們將透過一場 <strong>2.5 小時的直播實戰</strong>，直接帶你上手我們耗費上千小時、經過上百次迭代優化、專為電商廣告主打造的 SaaS 平台——「報數據」。
+              我深知廣告主的痛點。所以這次，我不做空泛的理論教學。我將透過一場 <strong>2.5 小時的直播實戰</strong>，直接帶你上手我千錘百鍊，十餘年的經驗化成的產品、專為電商廣告主打造的 SaaS 平台——「報數據」。
             </p>
             
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 inline-block">
@@ -243,7 +243,7 @@ export default function Recruitment({ locale = 'zh-TW' }: RecruitmentProps) {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  除了直播實戰，你還能獲得我們完整的預錄線上課程。作為你的永久學習後盾，讓你隨時可以複習、深入研究廣告投放的每一個細節。
+                  除了直播實戰，你還能獲得小黑老師完整的預錄線上課程。作為你的永久學習後盾，讓你隨時可以複習、深入研究廣告投放的每一個細節。
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 line-through">
                   定價：NT$3,980
@@ -258,7 +258,7 @@ export default function Recruitment({ locale = 'zh-TW' }: RecruitmentProps) {
       <section className="py-16 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
         <div className="container mx-auto max-w-4xl text-center">
           <h2 className="text-4xl font-bold mb-12">
-            成為我們的創始會員，只需一次性的投資
+            成為我的創始會員，只需一次性的投資
           </h2>
           
           {/* 價值錨定 */}

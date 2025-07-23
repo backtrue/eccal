@@ -38,6 +38,8 @@ import SubscriptionCheckout from "./pages/subscription-checkout";
 import PaymentSuccess from "./pages/payment-success";
 import About from "./pages/about";
 import Recruitment from "./pages/recruitment";
+import RecruitmentEn from "./pages/recruitment-en";
+import RecruitmentJa from "./pages/recruitment-ja";
 import FacebookTestDemo from "./pages/facebook-test-demo";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 
@@ -176,7 +178,7 @@ function Router() {
       <Route path="/en/privacy" component={() => <Privacy locale="en" />} />
       <Route path="/en/terms" component={() => <Terms locale="en" />} />
       <Route path="/en/about" component={() => <About locale="en" />} />
-      <Route path="/en/recruitment" component={() => <Recruitment locale="en" />} />
+      <Route path="/en/recruitment" component={() => <RecruitmentEn locale="en" />} />
 
       {/* Japanese routes */}
       <Route path="/jp" component={() => <Home locale="ja" />} />
@@ -198,7 +200,7 @@ function Router() {
       <Route path="/jp/privacy" component={() => <Privacy locale="ja" />} />
       <Route path="/jp/terms" component={() => <Terms locale="ja" />} />
       <Route path="/jp/about" component={() => <About locale="ja" />} />
-      <Route path="/jp/recruitment" component={() => <Recruitment locale="ja" />} />
+      <Route path="/jp/recruitment" component={() => <RecruitmentJa locale="ja" />} />
 
       {/* Debug routes */}
       <Route path="/auth-debug" component={AuthDebug} />
