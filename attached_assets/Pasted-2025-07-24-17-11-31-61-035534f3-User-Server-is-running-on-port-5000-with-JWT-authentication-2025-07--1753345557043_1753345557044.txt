@@ -1,0 +1,104 @@
+2025-07-24 17:11:31.61
+035534f3
+User
+Server is running on port 5000 with JWT authentication
+2025-07-24 17:25:20.37
+035534f3
+User
+JWT middleware: User loaded from database: backtrue@gmail.com
+2025-07-24 17:25:20.69
+035534f3
+User
+JWT middleware: User loaded from database: backtrue@gmail.com
+2025-07-24 17:25:20.77
+035534f3
+User
+JWT middleware: User loaded from database: backtrue@gmail.com
+2025-07-24 17:25:25.93
+035534f3
+User
+JWT middleware: User loaded from database: backtrue@gmail.com
+2025-07-24 17:25:26.22
+035534f3
+User
+JWT middleware: User loaded from database: backtrue@gmail.com
+2025-07-24 17:25:26.22
+035534f3
+User
+JWT middleware: User loaded from database: backtrue@gmail.com
+2025-07-24 17:25:26.48
+035534f3
+User
+JWT middleware: User loaded from database: backtrue@gmail.com
+2025-07-24 17:25:26.49
+035534f3
+User
+JWT middleware: User loaded from database: backtrue@gmail.com
+2025-07-24 17:25:26.49
+035534f3
+User
+Starting Google OAuth with JWT
+2025-07-24 17:25:26.49
+035534f3
+User
+Saving returnTo in request: /bdmin
+2025-07-24 17:25:26.51
+035534f3
+User
+JWT middleware: User loaded from database: backtrue@gmail.com
+2025-07-24 17:25:26.51
+035534f3
+User
+Auth check - token present: true
+2025-07-24 17:25:26.51
+035534f3
+User
+JWT auth check successful: backtrue@gmail.com
+2025-07-24 17:25:26.77
+035534f3
+User
+JWT middleware: User loaded from database: backtrue@gmail.com
+2025-07-24 17:25:26.77
+035534f3
+User
+JWT middleware: User loaded from database: backtrue@gmail.com
+2025-07-24 17:25:26.79
+035534f3
+User
+JWT middleware: User loaded from database: backtrue@gmail.com
+2025-07-24 17:25:26.79
+035534f3
+User
+JWT middleware: User loaded from database: backtrue@gmail.com
+2025-07-24 17:25:26.81
+035534f3
+User
+JWT middleware: User loaded from database: backtrue@gmail.com
+2025-07-24 17:25:26.82
+035534f3
+User
+JWT middleware: User loaded from database: backtrue@gmail.com
+2025-07-24 17:25:26.83
+035534f3
+User
+JWT middleware: User loaded from database: backtrue@gmail.com
+2025-07-24 17:25:26.86
+035534f3
+User
+JWT middleware: User loaded from database: backtrue@gmail.com
+2025-07-24 17:25:26.88
+035534f3
+User
+JWT middleware: User loaded from database: backtrue@gmail.com
+2025-07-24 17:25:26.88
+035534f3
+User
+JWT middleware: User loaded from database: backtrue@gmail.com
+2025-07-24 17:25:26.90
+035534f3
+User
+JWT middleware: User loaded from database: backtrue@gmail.com
+
+Wrap
+
+Colors

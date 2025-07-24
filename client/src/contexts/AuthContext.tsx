@@ -30,6 +30,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const checkAuth = async () => {
     setIsLoading(true);
     try {
+      console.log('AuthContext: Starting auth check...');
+      
       const response = await fetch('/api/auth/user', {
         credentials: 'include',
         headers: {
@@ -37,8 +39,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         },
       });
 
+      console.log('AuthContext: Auth response status:', response.status);
+
       if (response.ok) {
         const userData = await response.json();
+        console.log('AuthContext: User data received:', { email: userData.email, id: userData.id });
         setUser(userData);
         setIsAuthenticated(true);
         
@@ -60,13 +65,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
           console.log('Auth check successful:', userData.email || userData.name || 'User logged in');
         }
       } else {
+        const errorText = await response.text();
+        console.log('AuthContext: Auth check failed:', response.status, errorText);
         setUser(null);
         setIsAuthenticated(false);
         setLoginSource(null);
-        console.log('Auth check failed: User not authenticated');
       }
     } catch (error) {
-      console.log('Auth check error:', error);
+      console.log('AuthContext: Auth check error:', error);
       setUser(null);
       setIsAuthenticated(false);
     } finally {

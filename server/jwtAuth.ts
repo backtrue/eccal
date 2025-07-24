@@ -215,12 +215,16 @@ export function setupJWTGoogleAuth(app: Express) {
         const token = jwtUtils.generateToken(user);
         
         // 設置 httpOnly cookie (更安全)
-        res.cookie('auth_token', token, {
+        const cookieOptions = {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 7 * 24 * 60 * 60 * 1000 // 7天
-        });
+          sameSite: 'lax' as const,
+          maxAge: 7 * 24 * 60 * 60 * 1000, // 7天
+          path: '/' // 確保整個網站都能訪問 cookie
+        };
+        
+        console.log('Setting JWT cookie with options:', cookieOptions);
+        res.cookie('auth_token', token, cookieOptions);
 
         // 處理推薦碼 (如果有)
         // Note: 這裡需要從 query 或其他地方獲取推薦碼
@@ -265,10 +269,24 @@ export function setupJWTGoogleAuth(app: Express) {
 
   // 登出 - 清除 JWT cookie
   app.get('/api/auth/logout', (req, res) => {
-    res.clearCookie('auth_token');
+    console.log('Clearing JWT cookie for logout');
+    res.clearCookie('auth_token', { path: '/' });
     const baseUrl = getBaseUrl(req);
     res.redirect(`${baseUrl}/`);
   });
+
+  // 清除 cookie 測試端點 (僅開發環境)
+  if (process.env.NODE_ENV === 'development') {
+    app.get('/api/auth/clear-cookie', (req, res) => {
+      console.log('Clearing JWT cookie for testing');
+      res.clearCookie('auth_token', { path: '/' });
+      res.json({ 
+        success: true, 
+        message: 'JWT cookie cleared',
+        timestamp: new Date().toISOString()
+      });
+    });
+  }
 
   // JWT 狀態診斷端點
   app.get('/api/auth/debug', (req, res) => {
@@ -320,12 +338,16 @@ export function setupJWTGoogleAuth(app: Express) {
         const token = jwtUtils.generateToken(testUser);
         
         // 設置 cookie
-        res.cookie('auth_token', token, {
+        const cookieOptions = {
           httpOnly: true,
-          secure: false, // 開發環境使用 HTTP
-          sameSite: 'lax',
-          maxAge: 7 * 24 * 60 * 60 * 1000 // 7天
-        });
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax' as const,
+          maxAge: 7 * 24 * 60 * 60 * 1000, // 7天
+          path: '/' // 確保整個網站都能訪問 cookie
+        };
+        
+        console.log('Test JWT: Setting cookie with options:', cookieOptions);
+        res.cookie('auth_token', token, cookieOptions);
         
         console.log('Test JWT cookie set for:', testUser.email);
         res.json({ 
