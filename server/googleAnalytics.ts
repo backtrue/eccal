@@ -89,6 +89,7 @@ export class GoogleAnalyticsService {
           
         } catch (error) {
           console.log(`Failed with ${metricSet.name}:`, (error as any).message);
+          console.log('Full error details:', JSON.stringify(error, null, 2));
           if (metricSet === metricSets[metricSets.length - 1]) {
             throw error; // Re-throw if this was the last attempt
           }
@@ -241,10 +242,13 @@ export class GoogleAnalyticsService {
 
       const analyticsAdmin = google.analyticsadmin('v1beta');
       
-      // 取得所有帳戶
-      const accountsResponse = await analyticsAdmin.accounts.list({
-        auth: oauth2Client,
-      });
+      // 取得所有帳戶 - 需要 analytics.manage.users.readonly 權限
+      console.log('Attempting to list Analytics accounts...');
+      const accountsResponse = await safeGoogleApiCall(() => 
+        analyticsAdmin.accounts.list({
+          auth: oauth2Client,
+        })
+      );
 
       const properties: any[] = [];
       
@@ -257,10 +261,13 @@ export class GoogleAnalyticsService {
             
             try {
               // List all properties for each account
-              const propertiesResponse = await analyticsAdmin.properties.list({
-                auth: oauth2Client,
-                filter: `parent:${account.name}`,
-              });
+              console.log(`Listing properties for account: ${account.name}`);
+              const propertiesResponse = await safeGoogleApiCall(() =>
+                analyticsAdmin.properties.list({
+                  auth: oauth2Client,
+                  filter: `parent:${account.name}`,
+                })
+              );
 
               if (propertiesResponse.data.properties) {
                 const accountProperties = propertiesResponse.data.properties.map(prop => ({
