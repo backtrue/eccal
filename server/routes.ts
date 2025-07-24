@@ -1072,16 +1072,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (apiError: any) {
         console.error('GA API Permission Test Error for', user.email, ':', apiError.message);
         
-        // 檢查是否為權限問題
-        if (apiError.code === 403 && apiError.message.includes('insufficient authentication scopes')) {
-          return res.status(403).json({
-            error: 'Insufficient Analytics permissions',
-            code: 'SCOPE_INSUFFICIENT',
-            message: 'User needs to re-authenticate with expanded Analytics permissions',
-            details: apiError.message,
-            needReauth: true,
-            reAuthUrl: '/api/auth/google?returnTo=/calculator'
-          });
+        // 分析 403 錯誤的具體原因
+        if (apiError.code === 403) {
+          if (apiError.message.includes('insufficient authentication scopes')) {
+            return res.status(403).json({
+              error: 'Insufficient Analytics permissions',
+              code: 'SCOPE_INSUFFICIENT',
+              message: 'Token過期或權限不足，請重新登入',
+              details: apiError.message,
+              needReauth: true,
+              reAuthUrl: '/api/auth/google?returnTo=/calculator'
+            });
+          } else if (apiError.message.includes('does not have access')) {
+            return res.status(403).json({
+              error: 'No access to Analytics property',
+              code: 'PROPERTY_ACCESS_DENIED',
+              message: '您沒有權限存取此 GA 資源，請聯繫管理員或選擇其他資源',
+              details: apiError.message,
+              suggestion: 'Check if you have access to this Analytics property'
+            });
+          } else {
+            return res.status(403).json({
+              error: 'Analytics access denied',
+              code: 'ACCESS_DENIED',
+              message: 'GA API 存取被拒絕',
+              details: apiError.message,
+              possibleCauses: [
+                'Token 已過期',
+                '沒有 GA 資源的存取權限',
+                'GA4 vs UA 版本不相容'
+              ]
+            });
+          }
         } else {
           return res.status(apiError.code || 500).json({
             error: 'Analytics API error',
