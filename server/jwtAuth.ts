@@ -155,8 +155,7 @@ export function setupJWTGoogleAuth(app: Express) {
     scope: [
       'profile',
       'email',
-      'https://www.googleapis.com/auth/analytics.readonly',
-      'https://www.googleapis.com/auth/analytics.manage.users.readonly'
+      'https://www.googleapis.com/auth/analytics.readonly'
     ]
   }, async (accessToken, refreshToken, profile, done) => {
     try {
