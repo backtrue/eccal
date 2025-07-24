@@ -499,12 +499,12 @@ export default function AdminDashboard() {
                                 type="checkbox"
                                 onChange={(e) => {
                                   if (e.target.checked) {
-                                    setSelectedUsers(usersData?.users.map(u => u.id) || []);
+                                    setSelectedUsers(usersData?.users?.map(u => u.id) || []);
                                   } else {
                                     setSelectedUsers([]);
                                   }
                                 }}
-                                checked={selectedUsers.length === usersData?.users.length}
+                                checked={!usersLoading && usersData?.users && selectedUsers.length > 0 && selectedUsers.length === usersData.users.length}
                               />
                             </th>
                             <th className="p-3 text-left">用戶信息</th>
@@ -513,8 +513,21 @@ export default function AdminDashboard() {
                           </tr>
                         </thead>
                         <tbody>
-                          {usersData?.users.map((user) => (
-                            <tr key={user.id} className="border-t">
+                          {usersLoading ? (
+                            <tr>
+                              <td colSpan={4} className="p-8 text-center text-gray-500">
+                                載入中...
+                              </td>
+                            </tr>
+                          ) : !usersData?.users || usersData.users.length === 0 ? (
+                            <tr>
+                              <td colSpan={4} className="p-8 text-center text-gray-500">
+                                目前沒有用戶數據
+                              </td>
+                            </tr>
+                          ) : (
+                            usersData.users.map((user) => (
+                              <tr key={user.id} className="border-t">
                               <td className="p-3">
                                 <input
                                   type="checkbox"
@@ -553,8 +566,9 @@ export default function AdminDashboard() {
                                   {new Date(user.createdAt).toLocaleDateString()}
                                 </div>
                               </td>
-                            </tr>
-                          ))}
+                              </tr>
+                            ))
+                          )}
                         </tbody>
                       </table>
                     </div>
