@@ -96,6 +96,13 @@ export function setupGoogleAuth(app: Express) {
     }
   });
 
+  // Login endpoint - redirects to Google OAuth
+  app.get('/api/login', (req, res) => {
+    console.log('Login endpoint triggered, redirecting to Google OAuth');
+    const returnTo = req.query.returnTo as string || req.get('Referer') || '/';
+    res.redirect(`/api/auth/google?returnTo=${encodeURIComponent(returnTo)}`);
+  });
+
   // Auth routes - force consent to ensure refresh token
   app.get('/api/auth/google', (req, res, next) => {
     console.log('Starting Google OAuth');
