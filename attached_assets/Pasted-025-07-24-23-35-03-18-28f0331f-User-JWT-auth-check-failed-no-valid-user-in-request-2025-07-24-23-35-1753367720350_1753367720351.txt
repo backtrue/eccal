@@ -1,0 +1,120 @@
+025-07-24 23:35:03.18
+28f0331f
+User
+JWT auth check failed: no valid user in request
+2025-07-24 23:35:03.22
+28f0331f
+User
+Auth check - token present: false
+2025-07-24 23:35:03.22
+28f0331f
+User
+JWT auth check failed: no valid user in request
+2025-07-24 23:35:03.36
+28f0331f
+User
+Auth check - token present: false
+2025-07-24 23:35:03.36
+28f0331f
+User
+JWT auth check failed: no valid user in request
+2025-07-24 23:35:03.42
+28f0331f
+User
+Auth check - token present: false
+2025-07-24 23:35:03.42
+28f0331f
+User
+JWT auth check failed: no valid user in request
+2025-07-24 23:35:03.53
+28f0331f
+User
+Auth check - token present: false
+2025-07-24 23:35:03.53
+28f0331f
+User
+JWT auth check failed: no valid user in request
+2025-07-24 23:35:03.63
+28f0331f
+User
+Auth check - token present: false
+2025-07-24 23:35:03.63
+28f0331f
+User
+JWT auth check failed: no valid user in request
+2025-07-24 23:35:03.73
+28f0331f
+User
+Auth check - token present: false
+2025-07-24 23:35:03.73
+28f0331f
+User
+JWT auth check failed: no valid user in request
+2025-07-24 23:35:03.83
+28f0331f
+User
+Auth check - token present: false
+2025-07-24 23:35:03.83
+28f0331f
+User
+JWT auth check failed: no valid user in request
+2025-07-24 23:35:03.95
+28f0331f
+User
+Auth check - token present: false
+2025-07-24 23:35:03.95
+28f0331f
+User
+JWT auth check failed: no valid user in request
+2025-07-24 23:35:04.05
+28f0331f
+User
+Auth check - token present: false
+2025-07-24 23:35:04.05
+28f0331f
+User
+JWT auth check failed: no valid user in request
+2025-07-24 23:35:04.14
+28f0331f
+User
+Auth check - token present: false
+2025-07-24 23:35:04.14
+28f0331f
+User
+JWT auth check failed: no valid user in request
+2025-07-24 23:35:04.24
+28f0331f
+User
+Auth check - token present: false
+2025-07-24 23:35:04.24
+28f0331f
+User
+JWT auth check failed: no valid user in request
+2025-07-24 23:35:04.32
+28f0331f
+User
+Auth check - token present: false
+2025-07-24 23:35:04.32
+28f0331f
+User
+JWT auth check failed: no valid user in request
+2025-07-24 23:35:04.43
+28f0331f
+User
+Auth check - token present: false
+2025-07-24 23:35:04.43
+28f0331f
+User
+JWT auth check failed: no valid user in request
+2025-07-24 23:35:04.51
+28f0331f
+User
+Auth check - token present: false
+2025-07-24 23:35:04.51
+28f0331f
+User
+JWT auth check failed: no valid user in request
+2025-07-24 23:35:04.65
+28f0331f
+User
+Auth check - token present: false

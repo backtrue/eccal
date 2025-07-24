@@ -22,10 +22,16 @@ export default function ProtectedAdminRoute({ children }: ProtectedAdminRoutePro
       isAdmin: user ? ADMIN_EMAILS.includes(user.email || '') : false
     });
 
-    // 如果尚未檢查認證狀態，先觸發檢查
+    // 如果尚未檢查認證狀態且不在載入中，先觸發檢查
     if (!isLoading && !isAuthenticated && !user) {
       console.log('Admin route: Triggering auth check...');
-      checkAuth();
+      checkAuth().then(() => {
+        // 認證檢查完成後，如果仍未認證，重定向到登入
+        if (!isAuthenticated && !user) {
+          console.log('Auth check completed - still not authenticated, redirecting to login');
+          window.location.href = '/api/auth/google?returnTo=/bdmin';
+        }
+      });
       return;
     }
 
@@ -56,14 +62,40 @@ export default function ProtectedAdminRoute({ children }: ProtectedAdminRoutePro
     );
   }
 
-  // 未登入或非管理員，顯示錯誤訊息
-  if (!isAuthenticated || !user || !ADMIN_EMAILS.includes(user.email || '')) {
+  // 未登入時顯示登入選項，非管理員時顯示錯誤訊息
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🔐</div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">需要登入</h1>
+          <p className="text-gray-600 mb-4">請先登入您的管理員帳號</p>
+          <button
+            onClick={() => window.location.href = '/api/auth/google?returnTo=/bdmin'}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mr-4"
+          >
+            Google 登入
+          </button>
+          <button
+            onClick={() => setLocation('/')}
+            className="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+          >
+            返回首頁
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 已登入但非管理員，顯示錯誤訊息
+  if (!ADMIN_EMAILS.includes(user.email || '')) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🚫</div>
           <h1 className="text-2xl font-bold text-gray-800 mb-2">存取被拒絕</h1>
           <p className="text-gray-600 mb-4">您沒有權限訪問此管理頁面</p>
+          <p className="text-sm text-gray-500 mb-4">當前登入帳號：{user.email}</p>
           <button
             onClick={() => setLocation('/')}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
