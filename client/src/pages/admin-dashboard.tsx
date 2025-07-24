@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Users, TrendingUp, CreditCard, Settings, Monitor, FileText, Download, Bell, Activity, BarChart3, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import Footer from "@/components/Footer";
+// Removed Footer import as we'll use a simple admin footer instead
 
 interface UserStats {
   totalUsers: number;
@@ -1391,7 +1391,13 @@ export default function AdminDashboard() {
         </Tabs>
       </div>
       
-      <Footer />
+      {/* Admin Footer - Simple and Clean */}
+      <div className="mt-16 border-t border-gray-200 py-6">
+        <div className="max-w-7xl mx-auto text-center text-sm text-gray-500">
+          <p>報數據系統管理後台 © 2025 煜言顧問有限公司</p>
+          <p className="mt-1">管理介面僅供授權用戶使用</p>
+        </div>
+      </div>
     </div>
   );
 }
