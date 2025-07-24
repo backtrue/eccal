@@ -192,11 +192,18 @@ export function setupJWTGoogleAuth(app: Express) {
 
   // Google OAuth 起始點
   app.get('/api/auth/google', (req, res, next) => {
-    console.log('Starting Google OAuth with JWT');
+    console.log('[GOOGLE-OAUTH] Starting Google OAuth with JWT');
+    
+    // 防止無限重定向循環
+    const userAgent = req.get('User-Agent') || '';
+    if (userAgent.includes('HeadlessChrome') || userAgent.includes('bot')) {
+      console.log('[GOOGLE-OAUTH] Blocking OAuth for automated request');
+      return res.status(400).json({ error: 'OAuth not available for automated requests' });
+    }
     
     // 儲存 returnTo 參數到 req 物件 (因為沒有 session)
     const returnTo = req.query.returnTo as string || req.get('Referer') || '/';
-    console.log('Saving returnTo in request:', returnTo);
+    console.log('[GOOGLE-OAUTH] Saving returnTo in request:', returnTo);
     
     // 將 returnTo 作為 state 參數傳遞
     const state = Buffer.from(JSON.stringify({ returnTo })).toString('base64');
@@ -387,6 +394,43 @@ export function setupJWTGoogleAuth(app: Express) {
       timestamp: new Date().toISOString()
     });
   });
+
+  // 簡單的測試登入端點 (開發環境)
+  if (process.env.NODE_ENV === 'development') {
+    app.post('/api/auth/test-login', async (req, res) => {
+      try {
+        const testUser = {
+          id: 'test-admin-' + Date.now(),
+          email: 'backtrue@gmail.com',
+          firstName: 'Test',
+          lastName: 'Admin'
+        };
+
+        const token = jwtUtils.generateToken(testUser);
+        
+        const cookieOptions = {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'lax' as const,
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+          path: '/'
+        };
+        
+        res.cookie('auth_token', token, cookieOptions);
+        console.log('[TEST-LOGIN] Test admin login created for:', testUser.email);
+        
+        res.json({ 
+          success: true, 
+          message: 'Test admin login successful',
+          user: testUser,
+          redirectTo: '/bdmin'
+        });
+      } catch (error) {
+        console.error('[TEST-LOGIN] Test login error:', error);
+        res.status(500).json({ error: 'Test login failed' });
+      }
+    });
+  }
 
   // 用戶認證狀態 API - 使用 JWT
   app.get('/api/auth/user', jwtMiddleware, (req, res) => {

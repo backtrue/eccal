@@ -62,6 +62,26 @@ export default function ProtectedAdminRoute({ children }: ProtectedAdminRoutePro
           >
             Google 登入
           </button>
+          {process.env.NODE_ENV === 'development' && (
+            <button
+              onClick={async () => {
+                try {
+                  const response = await fetch('/api/auth/test-login', {
+                    method: 'POST',
+                    credentials: 'include'
+                  });
+                  if (response.ok) {
+                    window.location.reload();
+                  }
+                } catch (error) {
+                  console.error('Test login failed:', error);
+                }
+              }}
+              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 mr-4"
+            >
+              測試登入
+            </button>
+          )}
           <button
             onClick={() => setLocation('/')}
             className="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
