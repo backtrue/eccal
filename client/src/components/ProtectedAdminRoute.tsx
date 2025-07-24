@@ -22,31 +22,17 @@ export default function ProtectedAdminRoute({ children }: ProtectedAdminRoutePro
       isAdmin: user ? ADMIN_EMAILS.includes(user.email || '') : false
     });
 
-    // 如果尚未檢查認證狀態且不在載入中，先觸發檢查
+    // 避免無限重定向 - 只在首次載入時檢查認證
     if (!isLoading && !isAuthenticated && !user) {
-      console.log('Admin route: Triggering auth check...');
-      checkAuth().then(() => {
-        // 認證檢查完成後，如果仍未認證，重定向到登入
-        if (!isAuthenticated && !user) {
-          console.log('Auth check completed - still not authenticated, redirecting to login');
-          window.location.href = '/api/auth/google?returnTo=/bdmin';
-        }
-      });
+      console.log('Admin route: User not authenticated, will show login UI');
+      // 不自動重定向，讓用戶手動點擊登入按鈕
       return;
     }
 
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        console.log('Redirecting to login - not authenticated');
-        window.location.href = '/api/auth/google?returnTo=/bdmin';
-        return;
-      }
-
-      if (user && !ADMIN_EMAILS.includes(user.email || '')) {
-        console.log('Redirecting to home - not admin:', user.email);
-        setLocation('/');
-        return;
-      }
+    if (!isLoading && isAuthenticated && user && !ADMIN_EMAILS.includes(user.email || '')) {
+      console.log('Redirecting to home - not admin:', user.email);
+      setLocation('/');
+      return;
     }
   }, [isAuthenticated, isLoading, user, setLocation, checkAuth]);
 

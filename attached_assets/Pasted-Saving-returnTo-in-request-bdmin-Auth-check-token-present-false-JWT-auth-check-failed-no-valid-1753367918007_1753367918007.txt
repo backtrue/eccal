@@ -1,0 +1,97 @@
+Saving returnTo in request: /bdmin
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Starting Google OAuth with JWT
+Saving returnTo in request: /bdmin
+Auth check - token present: false
+JWT auth check failed: no valid user in request
+Auth check - token present: false
+JWT auth check failed: no valid user in request
