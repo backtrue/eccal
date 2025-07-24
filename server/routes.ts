@@ -1600,24 +1600,64 @@ echo "Bulk import completed!"`;
   // Admin authentication middleware (simplified - just checking if user is admin)
   const requireAdmin = async (req: any, res: any, next: any) => {
     try {
-      const userId = req.user?.claims?.sub || req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: 'Unauthorized' });
+      // JWT middleware should have already set req.user
+      const user = req.user;
+      console.log('[ADMIN-CHECK] User object from JWT:', { id: user?.id, email: user?.email });
+      
+      if (!user) {
+        console.log('[ADMIN-CHECK] No user object in request');
+        return res.status(401).json({ message: 'Unauthorized - no user' });
       }
       
       // Check if user is admin (you can customize this logic)
-      const adminEmails = ['backtrue@gmail.com', 'backtrue@seo-tw.org']; // Add your admin emails
-      const user = await storage.getUser(userId);
+      const adminEmails = ['backtrue@gmail.com', 'backtrue@seo-tw.org'];
+      console.log('[ADMIN-CHECK] Checking if', user.email, 'is in admin list:', adminEmails);
       
-      if (!user || !adminEmails.includes(user.email || '')) {
-        return res.status(403).json({ message: 'Admin access required' });
+      if (!user.email || !adminEmails.includes(user.email)) {
+        console.log('[ADMIN-CHECK] Admin access denied for:', user.email);
+        return res.status(403).json({ 
+          message: 'Admin access required',
+          userEmail: user.email,
+          adminEmails: adminEmails,
+          isAdmin: false
+        });
       }
       
+      console.log('[ADMIN-CHECK] Admin access granted for:', user.email);
       next();
     } catch (error) {
+      console.error('[ADMIN-CHECK] Admin middleware error:', error);
       res.status(500).json({ message: 'Admin auth check failed' });
     }
   };
+
+  // Admin debug endpoint
+  app.get('/api/bdmin/debug', requireJWTAuth, async (req: any, res) => {
+    try {
+      const user = req.user;
+      const adminEmails = ['backtrue@gmail.com', 'backtrue@seo-tw.org'];
+      const isAdmin = user && adminEmails.includes(user.email || '');
+      
+      console.log('[ADMIN-DEBUG] Debug request from:', user?.email);
+      
+      res.json({
+        user: {
+          id: user?.id,
+          email: user?.email,
+          firstName: user?.firstName,
+          lastName: user?.lastName
+        },
+        isAdmin: isAdmin,
+        adminEmails: adminEmails,
+        timestamp: new Date().toISOString(),
+        hasJWTAuth: !!user,
+        debugInfo: 'Admin debug endpoint working'
+      });
+    } catch (error) {
+      console.error('[ADMIN-DEBUG] Debug endpoint error:', error);
+      res.status(500).json({ error: 'Debug failed' });
+    }
+  });
 
   // Get user statistics for BI dashboard
   app.get('/api/bdmin/stats', requireJWTAuth, requireAdmin, async (req: any, res) => {

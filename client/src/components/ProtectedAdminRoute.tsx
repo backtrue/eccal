@@ -9,7 +9,7 @@ interface ProtectedAdminRouteProps {
 const ADMIN_EMAILS = ['backtrue@gmail.com', 'backtrue@seo-tw.org'];
 
 export default function ProtectedAdminRoute({ children }: ProtectedAdminRouteProps) {
-  const { user, isLoading, isAuthenticated } = useAuth();
+  const { user, isLoading, isAuthenticated, checkAuth } = useAuth();
   const [, setLocation] = useLocation();
 
   useEffect(() => {
@@ -21,6 +21,13 @@ export default function ProtectedAdminRoute({ children }: ProtectedAdminRoutePro
       userEmail: user?.email,
       isAdmin: user ? ADMIN_EMAILS.includes(user.email || '') : false
     });
+
+    // 如果尚未檢查認證狀態，先觸發檢查
+    if (!isLoading && !isAuthenticated && !user) {
+      console.log('Admin route: Triggering auth check...');
+      checkAuth();
+      return;
+    }
 
     if (!isLoading) {
       if (!isAuthenticated) {
@@ -35,7 +42,7 @@ export default function ProtectedAdminRoute({ children }: ProtectedAdminRoutePro
         return;
       }
     }
-  }, [isAuthenticated, isLoading, user, setLocation]);
+  }, [isAuthenticated, isLoading, user, setLocation, checkAuth]);
 
   // 載入中顯示載入畫面
   if (isLoading) {
