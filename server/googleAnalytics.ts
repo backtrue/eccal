@@ -244,6 +244,13 @@ export class GoogleAnalyticsService {
       
       // 取得所有帳戶 - 需要 analytics.manage.users.readonly 權限
       console.log('Attempting to list Analytics accounts...');
+      console.log('OAuth token details:', {
+        hasAccessToken: !!oauth2Client.credentials.access_token,
+        hasRefreshToken: !!oauth2Client.credentials.refresh_token,
+        expiryDate: oauth2Client.credentials.expiry_date,
+        scopes: oauth2Client.credentials.scope
+      });
+      
       const accountsResponse = await safeGoogleApiCall(() => 
         analyticsAdmin.accounts.list({
           auth: oauth2Client,
@@ -294,13 +301,25 @@ export class GoogleAnalyticsService {
       console.error('Error fetching Analytics properties:', error);
       console.error('Error details:', JSON.stringify(error, null, 2));
       
-      // Check if it's an authentication error
+      // Enhanced error checking for different types of 403 errors
       if (error instanceof Error) {
+        console.log('Error analysis:', {
+          message: error.message,
+          includes403: error.message.includes('403'),
+          includesInsufficientPermissions: error.message.includes('insufficient permissions'),
+          includesInvalidGrant: error.message.includes('invalid_grant'),
+          includesInvalidToken: error.message.includes('invalid_token'),
+          includesRequestHadInsufficientAuthentication: error.message.includes('Request had insufficient authentication')
+        });
+        
         if (error.message.includes('invalid_grant') || error.message.includes('invalid_token')) {
           throw new Error('Authentication expired. Please logout and login again.');
         }
-        if (error.message.includes('insufficient permissions')) {
-          throw new Error('Insufficient permissions to access Google Analytics. Please ensure you have Analytics access.');
+        if (error.message.includes('insufficient permissions') || error.message.includes('Request had insufficient authentication')) {
+          throw new Error('Insufficient permissions to access Google Analytics. This might be due to: 1) You need to be added as a user in Google Analytics, 2) Your account lacks the necessary permissions, or 3) The access token needs to be refreshed. Please logout and login again.');
+        }
+        if (error.message.includes('403')) {
+          throw new Error('Access denied to Google Analytics API. Please check: 1) You have access to Google Analytics, 2) The property ID is correct, 3) Your Google account has the necessary permissions.');
         }
       }
       
