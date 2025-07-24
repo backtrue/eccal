@@ -25,7 +25,7 @@ export default function ProtectedAdminRoute({ children }: ProtectedAdminRoutePro
     if (!isLoading) {
       if (!isAuthenticated) {
         console.log('Redirecting to login - not authenticated');
-        window.location.href = '/api/login';
+        window.location.href = '/api/auth/google?returnTo=/bdmin';
         return;
       }
 
