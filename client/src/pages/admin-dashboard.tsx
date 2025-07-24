@@ -798,7 +798,7 @@ export default function AdminDashboard() {
                   </Button>
 
                   <div className="space-y-4">
-                    {announcements?.map((announcement: any) => (
+                    {(announcements || []).map((announcement: any) => (
                       <Card key={announcement.id}>
                         <CardContent className="p-4">
                           <div className="flex justify-between items-start">
@@ -985,7 +985,7 @@ export default function AdminDashboard() {
 
                     <div className="space-y-2">
                       <h4 className="font-medium">服務配額使用情況</h4>
-                      {apiUsageStats?.quotaUsage?.map((quota: any, index: number) => (
+                      {(apiUsageStats?.quotaUsage || []).map((quota: any, index: number) => (
                         <div key={index} className="space-y-1">
                           <div className="flex justify-between text-sm">
                             <span>{quota.service}</span>
@@ -1166,7 +1166,7 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {marketingPlans?.map((plan) => (
+                    {(marketingPlans || []).map((plan) => (
                       <div
                         key={plan.id}
                         className={`p-4 border rounded-lg cursor-pointer transition-colors ${
@@ -1231,7 +1231,7 @@ export default function AdminDashboard() {
                       <div>
                         <h3 className="font-semibold text-lg mb-3 text-blue-600">預熱期策略</h3>
                         <div className="space-y-3">
-                          {analysisItems
+                          {(analysisItems || [])
                             .filter(item => item.phase === 'pre_heat')
                             .map((item) => (
                               <div key={item.id} className="p-4 border rounded-lg bg-blue-50">
@@ -1281,7 +1281,7 @@ export default function AdminDashboard() {
                       <div>
                         <h3 className="font-semibold text-lg mb-3 text-green-600">活動期策略</h3>
                         <div className="space-y-3">
-                          {analysisItems
+                          {(analysisItems || [])
                             .filter(item => item.phase === 'campaign')
                             .map((item) => (
                               <div key={item.id} className="p-4 border rounded-lg bg-green-50">
@@ -1331,7 +1331,7 @@ export default function AdminDashboard() {
                       <div>
                         <h3 className="font-semibold text-lg mb-3 text-purple-600">回購期策略</h3>
                         <div className="space-y-3">
-                          {analysisItems
+                          {(analysisItems || [])
                             .filter(item => item.phase === 'repurchase')
                             .map((item) => (
                               <div key={item.id} className="p-4 border rounded-lg bg-purple-50">

@@ -265,7 +265,7 @@ export class DatabaseStorage implements IStorage {
 
   async upsertUser(userData: UpsertUser): Promise<User> {
     // Check if user already exists
-    const existingUser = await this.getUser(userData.id);
+    const existingUser = userData.id ? await this.getUser(userData.id) : undefined;
     const isNewUser = !existingUser;
 
     const [user] = await db
@@ -1540,20 +1540,25 @@ export class DatabaseStorage implements IStorage {
 
   // Campaign Templates operations
   async getCampaignTemplates(userId?: string): Promise<CampaignTemplate[]> {
-    let query = db.select().from(campaignTemplates);
-
     if (userId) {
       // Get user's templates + public templates
-      query = query.where(
-        sql`${campaignTemplates.userId} = ${userId} OR ${campaignTemplates.isPublic} = true`
-      );
+      const templates = await db
+        .select()
+        .from(campaignTemplates)
+        .where(
+          sql`${campaignTemplates.userId} = ${userId} OR ${campaignTemplates.isPublic} = true`
+        )
+        .orderBy(desc(campaignTemplates.useCount));
+      return templates;
     } else {
       // Get only public templates
-      query = query.where(eq(campaignTemplates.isPublic, true));
+      const templates = await db
+        .select()
+        .from(campaignTemplates)
+        .where(eq(campaignTemplates.isPublic, true))
+        .orderBy(desc(campaignTemplates.useCount));
+      return templates;
     }
-
-    const templates = await query.orderBy(desc(campaignTemplates.useCount));
-    return templates;
   }
 
   async createCampaignTemplate(templateData: InsertCampaignTemplate): Promise<CampaignTemplate> {
