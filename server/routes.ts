@@ -110,16 +110,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
       
+      console.log(`[ANALYTICS-API] Properties request from user: ${userId}, email: ${req.user.email}`);
+      
       // 只有 Google 用戶才能查詢 GA 屬性
       if (!user || !user.googleAccessToken) {
+        console.log(`[ANALYTICS-API] User ${userId} has no Google access token, returning empty array`);
         return res.json([]);
       }
       
       const properties = await analyticsService.getUserAnalyticsProperties(userId);
+      console.log(`[ANALYTICS-API] Successfully returned ${properties?.length || 0} properties for user: ${userId}`);
       res.json(properties || []);
     } catch (error) {
-      console.error('Error fetching analytics properties:', error);
-      res.status(500).json({ message: 'Failed to fetch analytics properties' });
+      console.error(`[ANALYTICS-API-ERROR] Failed to fetch properties for user ${req.user.id} (${req.user.email}):`, error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      // Provide specific guidance for user-specific 403 errors
+      if (errorMessage.includes('USER-SPECIFIC ERROR')) {
+        res.status(403).json({ 
+          error: 'User-specific permission issue',
+          message: errorMessage,
+          needsReauth: true,
+          userId: req.user.id,
+          userEmail: req.user.email,
+          suggestion: 'This user may need to be added to Google Analytics with proper permissions, or re-authenticate their account.'
+        });
+      } else {
+        res.status(500).json({ 
+          error: 'Failed to fetch Analytics properties',
+          message: errorMessage,
+          userId: req.user.id,
+          userEmail: req.user.email
+        });
+      }
     }
   });
 

@@ -220,18 +220,28 @@ export class GoogleAnalyticsService {
   }
 
   async getUserAnalyticsProperties(userId: string): Promise<any[]> {
-    console.log(`Fetching Analytics properties for user: ${userId}`);
+    console.log(`[GA-DEBUG] Fetching Analytics properties for user: ${userId}`);
     try {
       const user = await storage.getUser(userId);
       if (!user || !user.googleAccessToken) {
         throw new Error('User not found or no access token');
       }
 
+      console.log(`[GA-DEBUG] User ${userId} - Token info:`, {
+        hasAccessToken: !!user.googleAccessToken,
+        hasRefreshToken: !!user.googleRefreshToken,
+        tokenExpiresAt: user.tokenExpiresAt,
+        userEmail: user.email,
+        userName: user.username
+      });
+
       // Try to refresh token first to ensure it's valid
+      console.log(`[GA-DEBUG] Refreshing token for user: ${userId}`);
       await this.refreshAccessToken(userId);
       
       // Get updated credentials after refresh
       const updatedUser = await storage.getUser(userId);
+      console.log(`[GA-DEBUG] Token refreshed for user: ${userId}`);
       
       // Use safe OAuth2 client for API calls
       const oauth2Client = createSafeOAuth2Client({
@@ -242,13 +252,14 @@ export class GoogleAnalyticsService {
 
       const analyticsAdmin = google.analyticsadmin('v1beta');
       
-      // 取得所有帳戶 - 需要 analytics.manage.users.readonly 權限
-      console.log('Attempting to list Analytics accounts...');
-      console.log('OAuth token details:', {
+      // 取得所有帳戶
+      console.log(`[GA-DEBUG] User ${userId} - Attempting to list Analytics accounts...`);
+      console.log(`[GA-DEBUG] User ${userId} - OAuth token details:`, {
         hasAccessToken: !!oauth2Client.credentials.access_token,
         hasRefreshToken: !!oauth2Client.credentials.refresh_token,
         expiryDate: oauth2Client.credentials.expiry_date,
-        scopes: oauth2Client.credentials.scope
+        scopes: oauth2Client.credentials.scope,
+        tokenLength: oauth2Client.credentials.access_token?.length
       });
       
       const accountsResponse = await safeGoogleApiCall(() => 
@@ -260,7 +271,7 @@ export class GoogleAnalyticsService {
       const properties: any[] = [];
       
       if (accountsResponse.data.accounts) {
-        console.log(`Found ${accountsResponse.data.accounts.length} accounts`);
+        console.log(`[GA-DEBUG] User ${userId} - Found ${accountsResponse.data.accounts.length} accounts`);
         
         for (const account of accountsResponse.data.accounts) {
           if (account.name) {
@@ -316,7 +327,7 @@ export class GoogleAnalyticsService {
           throw new Error('Authentication expired. Please logout and login again.');
         }
         if (error.message.includes('insufficient permissions') || error.message.includes('Request had insufficient authentication')) {
-          throw new Error('Insufficient permissions to access Google Analytics. This might be due to: 1) You need to be added as a user in Google Analytics, 2) Your account lacks the necessary permissions, or 3) The access token needs to be refreshed. Please logout and login again.');
+          throw new Error(`[USER-SPECIFIC ERROR] Insufficient permissions for user ${userId}. This user may need to: 1) Be added as a user in Google Analytics with proper permissions, 2) Have their GA account permissions updated, or 3) Re-authenticate to refresh access token. Please logout and login again.`);
         }
         if (error.message.includes('403')) {
           throw new Error('Access denied to Google Analytics API. Please check: 1) You have access to Google Analytics, 2) The property ID is correct, 3) Your Google account has the necessary permissions.');
