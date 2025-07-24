@@ -240,12 +240,56 @@ export class GoogleAnalyticsService {
         expiry_date: updatedUser?.tokenExpiresAt,
       });
 
-      // 改用更簡單的方法：讓用戶直接輸入 Property ID
-      // 不需要列出所有帳戶，避免權限問題和複雜的 Admin API 調用
-      console.log('Using simple property access method to avoid Admin API permissions');
+      const analyticsAdmin = google.analyticsadmin('v1beta');
       
-      // 返回空陣列，讓前端提示用戶手動輸入 Property ID
-      return [];
+      // 取得所有帳戶 - 需要 analytics.manage.users.readonly 權限
+      console.log('Attempting to list Analytics accounts...');
+      const accountsResponse = await safeGoogleApiCall(() => 
+        analyticsAdmin.accounts.list({
+          auth: oauth2Client,
+        })
+      );
+
+      const properties: any[] = [];
+      
+      if (accountsResponse.data.accounts) {
+        console.log(`Found ${accountsResponse.data.accounts.length} accounts`);
+        
+        for (const account of accountsResponse.data.accounts) {
+          if (account.name) {
+            console.log(`Processing account: ${account.displayName} (${account.name})`);
+            
+            try {
+              // List all properties for each account
+              console.log(`Listing properties for account: ${account.name}`);
+              const propertiesResponse = await safeGoogleApiCall(() =>
+                analyticsAdmin.properties.list({
+                  auth: oauth2Client,
+                  filter: `parent:${account.name}`,
+                })
+              );
+
+              if (propertiesResponse.data.properties) {
+                const accountProperties = propertiesResponse.data.properties.map(prop => ({
+                  id: prop.name?.split('/')[1], // Extract property ID
+                  displayName: prop.displayName,
+                  accountName: account.displayName,
+                }));
+                
+                console.log(`Adding ${accountProperties.length} properties from ${account.displayName}`);
+                properties.push(...accountProperties);
+              }
+            } catch (propError) {
+              console.error(`Error fetching properties for account ${account.displayName}:`, propError);
+            }
+          }
+        }
+      } else {
+        console.log('No accounts found in response');
+      }
+
+      console.log(`Total properties found: ${properties.length}`);
+      return properties;
     } catch (error) {
       console.error('Error fetching Analytics properties:', error);
       console.error('Error details:', JSON.stringify(error, null, 2));

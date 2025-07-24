@@ -177,8 +177,8 @@ export default function Calculator({ locale }: CalculatorProps) {
           </Card>
         )}
 
-        {/* GA Property Manual Input */}
-        {isAuthenticated && (
+        {/* GA Property Selection */}
+        {isAuthenticated && Array.isArray(properties) && properties.length > 0 && (
           <Card className="mb-6 border-green-200 bg-green-50">
             <CardContent className="p-4">
               <div className="flex items-start space-x-3">
@@ -187,28 +187,25 @@ export default function Calculator({ locale }: CalculatorProps) {
                 </div>
                 <div className="flex-1">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-green-900">✓ Google Analytics 已連接</h3>
+                    <h3 className="font-semibold text-green-900">{t.loadGaData}</h3>
                   </div>
                   <p className="text-sm text-green-700 mb-4">
-                    輸入 GA4 Property ID 來自動載入您的電商數據
+                    {t.autoFill}
                   </p>
 
                   <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium text-green-800 mb-1">
-                        GA4 Property ID
-                      </label>
-                      <input
-                        type="text"
-                        value={selectedProperty}
-                        onChange={(e) => setSelectedProperty(e.target.value)}
-                        placeholder="例如：123456789"
-                        className="w-full px-3 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
-                      />
-                      <p className="text-xs text-green-600 mt-1">
-                        在 GA4 中找到：管理 → 資源設定 → 資源詳細資訊
-                      </p>
-                    </div>
+                    <Select value={selectedProperty} onValueChange={setSelectedProperty}>
+                      <SelectTrigger className="bg-white">
+                        <SelectValue placeholder={t.selectGaProperty} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(properties as any[]).map((property: any) => (
+                          <SelectItem key={property.id} value={property.id}>
+                            {property.displayName} ({property.accountName})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
 
                     <Button
                       type="button"
@@ -219,12 +216,12 @@ export default function Calculator({ locale }: CalculatorProps) {
                       {loadingGaData ? (
                         <>
                           <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                          載入中...
+                          {t.loading}...
                         </>
                       ) : (
                         <>
                           <BarChart3 className="w-4 h-4 mr-2" />
-                          載入 GA 數據
+                          {t.loadGaData}
                         </>
                       )}
                     </Button>
