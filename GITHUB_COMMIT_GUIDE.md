@@ -3,7 +3,7 @@
 ## 問題診斷（更新）
 - ✅ Git 配置正確：backtrue / 65640984+backtrue@users.noreply.github.com  
 - ✅ 遠程倉庫正確：https://github.com/backtrue/eccal
-- ✅ GitHub Token 已設定：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...
+- ✅ GitHub Token 已設定：ghp_****（已隱藏安全性）
 - ❌ **Git 索引鎖定**：.git/index.lock 文件阻止所有操作
 - ❌ **Replit Git 介面錯誤**：`unrecognized fatal error with Git`
 - ⚠️  待推送：73個本地提交尚未推送
