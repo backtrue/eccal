@@ -41,7 +41,20 @@ export const jwtUtils = {
   // 驗證 JWT token
   verifyToken(token: string): JWTUser | null {
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as any;
+      // 檢查 token 格式
+      if (!token || typeof token !== 'string') {
+        console.log('JWT verification failed: invalid token format');
+        return null;
+      }
+      
+      // 清理 token（移除可能的前綴或空白）
+      const cleanToken = token.trim();
+      if (cleanToken.length === 0) {
+        console.log('JWT verification failed: empty token');
+        return null;
+      }
+      
+      const decoded = jwt.verify(cleanToken, JWT_SECRET) as any;
       return {
         id: decoded.id,
         email: decoded.email,
