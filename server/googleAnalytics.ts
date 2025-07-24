@@ -71,15 +71,17 @@ export class GoogleAnalyticsService {
         try {
           console.log(`Trying metric set: ${metricSet.name} - [${metricSet.metrics.join(', ')}]`);
           
-          response = await analyticsData.properties.runReport({
-            auth: oauth2Client,
-            property: `properties/${propertyId}`,
-            requestBody: {
-              dateRanges: [dateRange],
-              metrics: metricSet.metrics.map(name => ({ name })),
-              dimensions: [],
-            },
-          });
+          response = await safeGoogleApiCall(() => 
+            analyticsData.properties.runReport({
+              auth: oauth2Client,
+              property: `properties/${propertyId}`,
+              requestBody: {
+                dateRanges: [dateRange],
+                metrics: metricSet.metrics.map(name => ({ name })),
+                dimensions: [],
+              },
+            })
+          );
           
           metricsUsed = metricSet.name;
           console.log(`Success with metric set: ${metricSet.name}`);

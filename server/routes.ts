@@ -1023,6 +1023,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Google Analytics API 權限診斷
+  app.get("/api/analytics/test-permissions", requireJWTAuth, async (req: any, res: any) => {
+    try {
+      const user = (req as any).user;
+      if (!user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+
+      const dbUser = await storage.getUser(user.id);
+      if (!dbUser || !dbUser.googleAccessToken) {
+        return res.status(400).json({ 
+          error: 'No Google access token found',
+          message: 'Please re-login to grant Analytics permissions',
+          needReauth: true
+        });
+      }
+
+      const { google } = require('googleapis');
+      const { createSafeOAuth2Client } = require('./googleOAuthHelper');
+
+      const oauth2Client = createSafeOAuth2Client({
+        access_token: dbUser.googleAccessToken,
+        refresh_token: dbUser.googleRefreshToken,
+        expiry_date: dbUser.tokenExpiresAt,
+      });
+
+      // 測試 GA4 API 權限
+      try {
+        // 簡單的測試請求 - 只獲取 accounts
+        const analyticsAdmin = google.analyticsadmin('v1beta');
+        const accounts = await analyticsAdmin.accounts.list({
+          auth: oauth2Client,
+          pageSize: 10
+        });
+
+        console.log(`Analytics permissions test successful for ${user.email}, found ${accounts.data.accounts?.length || 0} accounts`);
+
+        return res.json({
+          success: true,
+          message: 'Analytics permissions working correctly',
+          accountsFound: accounts.data.accounts?.length || 0,
+          userEmail: user.email,
+          tokenStatus: 'valid',
+          timestamp: new Date().toISOString()
+        });
+
+      } catch (apiError: any) {
+        console.error('GA API Permission Test Error for', user.email, ':', apiError.message);
+        
+        // 檢查是否為權限問題
+        if (apiError.code === 403 && apiError.message.includes('insufficient authentication scopes')) {
+          return res.status(403).json({
+            error: 'Insufficient Analytics permissions',
+            code: 'SCOPE_INSUFFICIENT',
+            message: 'User needs to re-authenticate with expanded Analytics permissions',
+            details: apiError.message,
+            needReauth: true,
+            reAuthUrl: '/api/auth/google?returnTo=/calculator'
+          });
+        } else {
+          return res.status(apiError.code || 500).json({
+            error: 'Analytics API error',
+            details: apiError.message,
+            code: apiError.code
+          });
+        }
+      }
+
+    } catch (error) {
+      console.error('Analytics permissions test error:', error);
+      return res.status(500).json({ 
+        error: 'Internal server error',
+        details: (error as any).message 
+      });
+    }
+  });
+
   // Test referral system endpoint
   app.post('/api/admin/test-referral', requireJWTAuth, async (req: any, res) => {
     try {
